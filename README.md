@@ -5,18 +5,18 @@
 
 <h2>Components</h2>
 <p>
-**ESEvents.py**: A Flask script that listens for HTTP requests and updates the marquee image on the secondary screen.
-**ESEventPush.py**: Script to send event information (like game or system selection) to ESEvents.py.
-**events.ini**: Configuration file to set paths for marquees, accepted formats, and commands to interact with MPV (media player).
-**RenameMarquees.bat**: Batch script for renaming marquees to prevent them from being overwritten in future updates.
-**StartRetrobatMarquees.bat**: Batch script to start RetroBat with the dynamic marquee system enabled.
+**ESEvents.py**: A Flask script that listens for HTTP requests and updates the marquee image on the secondary screen.<br>
+**ESEventPush.py**: Script to send event information (like game or system selection) to ESEvents.py.<br>
+**events.ini**: Configuration file to set paths for marquees, accepted formats, and commands to interact with MPV (media player).<br>
+**RenameMarquees.bat**: Batch script for renaming marquees to prevent them from being overwritten in future updates.<br>
+**StartRetrobatMarquees.bat**: Batch script to start RetroBat with the dynamic marquee system enabled.<br>
 Compiling Scripts
 Use PyInstaller to compile Python scripts into executables. Ensure Python 3.8 is installed, especially for 32-bit machines. Use the following command to prevent EmulationStation from losing focus:
 
-<code>
-pyinstaller --onefile --noconsole ESEvents.py
-pyinstaller --onefile --noconsole ESEventPush.py
-</code>
+
+<code>pyinstaller --onefile --noconsole ESEvents.py
+pyinstaller --onefile --noconsole ESEventPush.py</code>
+
 
 <h2>Configuring events.ini File</h2>
 <p>
