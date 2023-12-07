@@ -55,7 +55,7 @@ def find_marquee_file(system_name, game_name):
         print(f"Marquee du jeu trouvé : {marquee_file}")
         return marquee_file
 
-    system_marquee_path = os.path.join(config['Settings']['SystemMarqueePath'], f"{system_name}-logo")
+    system_marquee_path = os.path.join(config['Settings']['SystemMarqueePath'], f"{system_name}")
     print(f"Chemin du marquee du système : {system_marquee_path}")
     system_marquee = find_file(system_marquee_path)
     if system_marquee:
@@ -129,6 +129,7 @@ def handle_request():
     ensure_mpv_running()
     action = request.args.get('event', '')
     params = dict(request.args)
+    print(f"Action reçue : {action}, Paramètres : {params}")  # Imprimer les paramètres reçus
     params.pop('event', None)
     return execute_command(action, params)
 

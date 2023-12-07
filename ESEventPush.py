@@ -3,6 +3,8 @@ import os
 import requests
 import urllib.parse
 import configparser
+import subprocess
+import shlex
 
 def find_ini_file(start_path):
     current_path = start_path
@@ -32,18 +34,32 @@ def send_event(event, params, server_url):
 def get_current_directory_event():
     return os.path.basename(os.getcwd())
 
-def clean_argument(arg):
-    if arg.startswith('""') and arg.endswith('""'):
-        return arg[1:-1]
-    return arg.strip('"')
+def get_command_line():
+    pid = os.getpid()
+    command = f'wmic process where ProcessId={pid} get CommandLine'
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    output, error = process.communicate()
+    if error:
+        print(f"Error: {error.decode().strip()}")
+        return ""
+    return output.decode().strip()
 
-def extract_params(args):
-    cleaned_args = [clean_argument(arg) for arg in args]
-    return {f'param{i+1}': arg for i, arg in enumerate(cleaned_args)}
+def clean_and_split_arguments(command_line):
+    command_line = command_line.replace('""', '"')
+    try:
+        arguments = shlex.split(command_line)
+    except ValueError as e:
+        print(f"Erreur lors du découpage des arguments: {e}")
+        arguments = []
+    if arguments:
+        arguments = arguments[2:]
+    return arguments
 
 if __name__ == "__main__":
     config = load_config()
     server_url = f"http://{config['Settings']['host']}:{config['Settings']['port']}"
     event = get_current_directory_event()
-    params = extract_params(sys.argv[1:])
+    command_line = get_command_line()
+    arguments = clean_and_split_arguments(command_line)
+    params = {f'param{i}': arg for i, arg in enumerate(arguments, start=1)}
     send_event(event, params, server_url)
