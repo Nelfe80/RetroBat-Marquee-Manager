@@ -52,13 +52,13 @@ The [Commands] section defines the actions to be taken for different events trig
 <h3>Game Marquees</h3>
 <p>
 Place your game marquee images in the directory specified by MarqueeImagePath. The images should follow the naming structure defined in MarqueeFilePath.
-Example: For a game "Super Mario" in the "NES" system, and if MarqueeFilePath is set to {system_name}-{game_name}, the marquee image should be named NES-Super Mario.jpg and placed in C:\RetroBat\marquees\images\NES-Super Mario.jpg.
+Example: For a game "Super Mario" in the "NES" system, and if MarqueeFilePath is set to {system_name}-{game_name}, the marquee image should be named nes-Super Mario.jpg and placed in C:\RetroBat\marquees\images\nes-Super Mario.jpg. (system_name like rom's folders)
 </p>
 <h3>System Marquees</h3>
 <p>
 System marquees represent the gaming systems or consoles. Place these images in the SystemMarqueePath.
-The naming convention is defined by SystemFilePath. For example, if it's {system_name}-logo, the NES system marquee should be named NES-logo.jpg.
-Example path: C:\RetroBat\marquees\images\NES-logo.jpg.
+The naming convention is defined by SystemFilePath. For example, if it's {system_name}-logo, the NES system marquee should be named nes-logo.jpg.
+Example path: C:\RetroBat\marquees\images\nes-logo.jpg.
 </p>
 <h3>Default Marquee</h3>
 <p>
@@ -66,7 +66,7 @@ The DefaultImagePath is used when a specific game or system marquee is not found
 </p>
 <h3>Additional Tips</h3>
 <p>
-For a more personalized marquee display with RetroBat, you can create images named -recent.png or -favorite.jpg in the root of the DefaultImagePath directory.
+For a more personalized marquee display with RetroBat, you can create images named -recent.png or -favorites.jpg in the root of the DefaultImagePath directory.
 It's possible to customize the marquee system further by editing the events.ini file. For instance, you can create different structures for game marquees or use different naming conventions for system marquees.
 </p>
 <h2>Starting the Marquee System</h2>
