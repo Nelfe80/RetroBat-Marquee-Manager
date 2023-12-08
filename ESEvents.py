@@ -55,12 +55,14 @@ def find_marquee_file(system_name, game_name):
         print(f"Marquee du jeu trouvé : {marquee_file}")
         return marquee_file
 
-    system_marquee_path = os.path.join(config['Settings']['SystemMarqueePath'], f"{system_name}")
-    print(f"Chemin du marquee du système : {system_marquee_path}")
-    system_marquee = find_file(system_marquee_path)
-    if system_marquee:
-        print(f"Marquee du système trouvé : {system_marquee}")
-        return system_marquee
+    marquee_structure = config['Settings']['SystemFilePath']
+    marquee_path = marquee_structure.format(system_name=system_name)
+    full_marquee_path = os.path.join(config['Settings']['SystemMarqueePath'], marquee_path)
+    print(f"Chemin du marquee du système : {full_marquee_path}")
+    marquee_file = find_file(full_marquee_path)
+    if marquee_file:
+        print(f"Marquee du système trouvé : {marquee_file}")
+        return marquee_file
 
     print(f"Utilisation de l'image par défaut : {config['Settings']['DefaultImagePath']}")
     return config['Settings']['DefaultImagePath']
