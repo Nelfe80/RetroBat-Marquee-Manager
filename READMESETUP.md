@@ -65,11 +65,15 @@ Example path: C:\RetroBat\marquees\images\nes-logo.jpg.
 For managing marquees related to collections, the file naming follows a specific convention. The name of the file should start with a hyphen (-) followed by the name of the collection. Each word in the collection's name is separated by a plus sign (+). For example, for a collection named "BEAT THEM ALL", the corresponding marquee image file should be named "-BEAT+THEM+ALL.jpg".<br>
 These collection marquee images should be placed in the root directory of your marquees folder, typically located at /marquees/images/ by default in ini file.<br>
 Additional Examples for Special Collections:<br>
+<code>MarqueeImagePath = C:\RetroBat\marquees\images\</code>
+<code>MarqueeFilePath = {system_name}-{game_name}</code>
 "-all.jpg" for a collection named "All".<br>
 "-recent.jpg" for recently played games.<br>
 "-favorites.jpg" for favorite games.<br>
 "-collections.jpg" for general collections.<br>
 "es_menu-retroarch.jpg" for items related to emulators.<br>
+If <code>MarqueeFilePath = {system_name}/{game_name}</code>
+Then "es_menu/retroarch.jpg" for items related to emulators.<br>
 This naming convention ensures that the correct marquee is displayed for each specific collection, adding a personalized touch to your gaming setup.
 </p>
 <h3>Default Marquee</h3>
