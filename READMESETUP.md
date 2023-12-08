@@ -60,6 +60,18 @@ System marquees represent the gaming systems or consoles. Place these images in 
 The naming convention is defined by SystemFilePath. For example, if it's {system_name}-logo, the NES system marquee should be named nes-logo.jpg.
 Example path: C:\RetroBat\marquees\images\nes-logo.jpg.
 </p>
+<h3>Others</h3>
+<p>
+For managing marquees related to collections, the file naming follows a specific convention. The name of the file should start with a hyphen (-) followed by the name of the collection. Each word in the collection's name is separated by a plus sign (+). For example, for a collection named "BEAT THEM ALL", the corresponding marquee image file should be named "-BEAT+THEM+ALL.jpg".<br>
+These collection marquee images should be placed in the root directory of your marquees folder, typically located at /marquees/images/ by default in ini file.<br>
+Additional Examples for Special Collections:<br>
+"-all.jpg" for a collection named "All".<br>
+"-recent.jpg" for recently played games.<br>
+"-favorites.jpg" for favorite games.<br>
+"-collections.jpg" for general collections.<br>
+"es_menu-retroarch.jpg" for items related to emulators.<br>
+This naming convention ensures that the correct marquee is displayed for each specific collection, adding a personalized touch to your gaming setup.
+</p>
 <h3>Default Marquee</h3>
 <p>
 The DefaultImagePath is used when a specific game or system marquee is not found. This could be a generic image indicating that no marquee is available for the selected game/system.
