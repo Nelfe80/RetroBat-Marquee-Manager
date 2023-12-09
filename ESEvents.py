@@ -23,10 +23,14 @@ def load_systems_config(xml_relative_path):
     system_folders = {}
 
     for system in root.findall('system'):
-        name = system.find('name').text
-        path = system.find('path').text
-        folder_rom_name = os.path.basename(os.path.normpath(path.strip('~\\..')))
-        system_folders[name] = folder_rom_name
+        if system.find('name') is not None and system.find('path') is not None:
+            name = system.find('name').text
+            path = system.find('path').text
+            folder_rom_name = os.path.basename(os.path.normpath(path.strip('~\\..')))
+            print(f"Systeme {name} chargé avec le folder_rom_name {folder_rom_name} path {path}")
+            system_folders[name] = folder_rom_name
+        else:
+            print(f"Élément manquant name et/ou path dans le fichier es_systems.cfg pour le système {system.tag}")
 
     return system_folders
 
