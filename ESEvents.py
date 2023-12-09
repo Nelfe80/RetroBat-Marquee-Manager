@@ -79,6 +79,9 @@ def find_marquee_file(system_name, game_name, systems_config):
 
     marquee_structure = config['Settings']['SystemFilePath']
     marquee_path = marquee_structure.format(system_name=folder_rom_name)
+    print(f"Cor : system_name : {system_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
+    if not system_name and not folder_rom_name and not marquee_path:
+            marquee_path = 'retrobat'
     full_marquee_path = os.path.join(config['Settings']['SystemMarqueePath'], marquee_path)
     print(f"Chemin du marquee du système : {full_marquee_path}")
     marquee_file = find_file(full_marquee_path)
@@ -153,10 +156,10 @@ def handle_request():
     params = dict(request.args)
     print(f"Action reçue : {action}, Paramètres : {params}")
     params.pop('event', None)
-    systems_config = load_systems_config(os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_systems.cfg'))
     return execute_command(action, params, systems_config)
 
 if __name__ == '__main__':
     load_config()
     launch_media_player()
+    systems_config = load_systems_config(os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_systems.cfg'))
     app.run(host=config['Settings']['Host'], port=int(config['Settings']['Port']), debug=False)
