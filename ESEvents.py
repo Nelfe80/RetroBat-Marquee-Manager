@@ -111,8 +111,11 @@ def parse_path(params, systems_config):
         print(f"Chemin formaté : {formatted_path}")
 
         folder_rom_name = systems_config.get(decoded_param, '')
-        if os.path.isdir(os.path.join(config['Settings']['RomsPath'], folder_rom_name)):
-            print(f"Nom du système détecté : {decoded_param}")
+        print(f"folder_rom_name : {folder_rom_name}")
+        folder_rom_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name)
+        print(f"folder_rom_path : {folder_rom_path}")
+        if folder_rom_name and os.path.isdir(folder_rom_path):
+            print(f"Dossier de roms système détecté : {decoded_param}")
             system_detected = True
             system_name = decoded_param
 
@@ -121,7 +124,7 @@ def parse_path(params, systems_config):
             path_parts = formatted_path.split(os.sep)
             game_name = os.path.splitext(os.path.basename(formatted_path))[0]
             system_name = path_parts[-2] if len(path_parts) > 1 else ''
-            print(f"Nom du système : {system_name}, Nom du jeu : {game_name}")
+            print(f"Dossier de roms système : {system_name}, Nom du jeu : {game_name}")
             return system_name, game_name
 
     if system_detected:
@@ -129,7 +132,7 @@ def parse_path(params, systems_config):
 
     if not game_detected and not system_detected and params:
         first_param = next(iter(params.values()))
-        print(f"Utilisation du premier paramètre comme chaîne : {first_param}")
+        print(f"Simple paramètre détecté : {first_param}")
         return '', first_param
 
     print("Aucun chemin de fichier valide trouvé dans les paramètres.")
