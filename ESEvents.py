@@ -26,7 +26,11 @@ def load_systems_config(xml_relative_path):
         if system.find('name') is not None and system.find('path') is not None:
             name = system.find('name').text
             path = system.find('path').text
+
+            # Recherche du nom du dossier des roms
+            roms_path = config['Settings']['RomsPath']
             folder_rom_name = os.path.basename(os.path.normpath(path.strip('~\\..')))
+
             print(f"Systeme {name} chargé avec le folder_rom_name {folder_rom_name} path {path}")
             system_folders[name] = folder_rom_name
         else:
@@ -68,10 +72,20 @@ def escape_file_path(path):
 def find_marquee_file(system_name, game_name, systems_config):
     folder_rom_name = systems_config.get(system_name, system_name)
 
+    if system_name == 'collection':
+        full_marquee_path = os.path.join(config['Settings']['RetroBatPath'], 'marquees\images',game_name)
+        print(f"COLLECTION param1 : {system_name} - param2 : {game_name} - folder_rom_name : {folder_rom_name}")
+        print(f"Chemin du marquee de la collection(full_marquee_path) : {full_marquee_path}")
+        marquee_file = find_file(full_marquee_path)
+        if marquee_file:
+            print(f"Marquee de la collection trouvé : {marquee_file}")
+            return marquee_file
+
     marquee_structure = config['Settings']['MarqueeFilePath']
     marquee_path = marquee_structure.format(system_name=folder_rom_name, game_name=game_name)
+    print(f"GAME marquee_structure : {marquee_structure} system_name : {system_name} - game_name : {game_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
     full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
-    print(f"Chemin du marquee du jeu : {full_marquee_path}")
+    print(f"Chemin du marquee du jeu(full_marquee_path) : {full_marquee_path}")
     marquee_file = find_file(full_marquee_path)
     if marquee_file:
         print(f"Marquee du jeu trouvé : {marquee_file}")
@@ -79,11 +93,11 @@ def find_marquee_file(system_name, game_name, systems_config):
 
     marquee_structure = config['Settings']['SystemFilePath']
     marquee_path = marquee_structure.format(system_name=folder_rom_name)
-    print(f"Cor : system_name : {system_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
+    print(f"SYSTEM marquee_structure : {marquee_structure} system_name : {system_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
     if not system_name and not folder_rom_name and not marquee_path:
             marquee_path = 'retrobat'
     full_marquee_path = os.path.join(config['Settings']['SystemMarqueePath'], marquee_path)
-    print(f"Chemin du marquee du système : {full_marquee_path}")
+    print(f"Chemin du marquee du système(full_marquee_path) : {full_marquee_path}")
     marquee_file = find_file(full_marquee_path)
     if marquee_file:
         print(f"Marquee du système trouvé : {marquee_file}")
@@ -104,6 +118,7 @@ def find_file(base_path):
 def parse_path(params, systems_config):
     system_detected = False
     game_detected = False
+    system_name = ''
     for param in params.values():
         decoded_param = urllib.parse.unquote_plus(param)
         print(f"Paramètre décodé : {decoded_param}")
@@ -111,19 +126,30 @@ def parse_path(params, systems_config):
         print(f"Chemin formaté : {formatted_path}")
 
         folder_rom_name = systems_config.get(decoded_param, '')
+        if folder_rom_name == '' :
+            roms_path = config['Settings']['RomsPath']
+            if formatted_path.startswith(roms_path):
+                folder_rom_name = formatted_path[len(roms_path):].strip('\\/')
+                folder_rom_name = folder_rom_name.split('\\')[0] if '\\' in folder_rom_name else folder_rom_name
+                system_name = folder_rom_name
+            else:
+                folder_rom_name = os.path.basename(os.path.normpath(formatted_path))
+
         print(f"folder_rom_name : {folder_rom_name}")
         folder_rom_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name)
         print(f"folder_rom_path : {folder_rom_path}")
         if folder_rom_name and os.path.isdir(folder_rom_path):
             print(f"Dossier de roms système détecté : {decoded_param}")
             system_detected = True
-            system_name = decoded_param
+            if system_name == '' :
+                system_name = decoded_param
 
         if os.path.isfile(formatted_path):
             game_detected = True
             path_parts = formatted_path.split(os.sep)
             game_name = os.path.splitext(os.path.basename(formatted_path))[0]
-            system_name = path_parts[-2] if len(path_parts) > 1 else ''
+            if system_name == '' :
+                system_name = path_parts[-2] if len(path_parts) > 1 else ''
             print(f"Dossier de roms système : {system_name}, Nom du jeu : {game_name}")
             return system_name, game_name
 
@@ -133,7 +159,7 @@ def parse_path(params, systems_config):
     if not game_detected and not system_detected and params:
         first_param = next(iter(params.values()))
         print(f"Simple paramètre détecté : {first_param}")
-        return '', first_param
+        return 'collection', first_param
 
     print("Aucun chemin de fichier valide trouvé dans les paramètres.")
     return '', ''
