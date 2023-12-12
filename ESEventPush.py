@@ -60,6 +60,7 @@ if __name__ == "__main__":
     server_url = f"http://{config['Settings']['host']}:{config['Settings']['port']}"
     event = get_current_directory_event()
     command_line = get_command_line()
+    print(f"command_line: {command_line}")
     arguments = clean_and_split_arguments(command_line)
     params = {f'param{i}': arg for i, arg in enumerate(arguments, start=1)}
     send_event(event, params, server_url)

@@ -74,38 +74,37 @@ def find_marquee_file(system_name, game_name, systems_config):
 
     if system_name == 'collection':
         full_marquee_path = os.path.join(config['Settings']['RetroBatPath'], 'marquees\images',game_name)
-        print(f"COLLECTION param1 : {system_name} - param2 : {game_name} - folder_rom_name : {folder_rom_name}")
-        print(f"Chemin du marquee de la collection(full_marquee_path) : {full_marquee_path}")
+        print(f"FMF COLLECTION param1 : {system_name} - param2 : {game_name} - folder_rom_name : {folder_rom_name}")
+        print(f"FMF Chemin du marquee de la collection(full_marquee_path) : {full_marquee_path}")
         marquee_file = find_file(full_marquee_path)
         if marquee_file:
-            print(f"Marquee de la collection trouvé : {marquee_file}")
+            print(f"FMF Marquee de la collection trouvé : {marquee_file}")
             return marquee_file
 
     marquee_structure = config['Settings']['MarqueeFilePath']
     marquee_path = marquee_structure.format(system_name=folder_rom_name, game_name=game_name)
-    if game_name == '':
-        game_name = folder_rom_name
-    print(f"GAME marquee_structure : {marquee_structure} system_name : {system_name} - game_name : {game_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
+
+    print(f"FMF GAME marquee_structure : {marquee_structure} system_name : {system_name} - game_name : {game_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
     full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
-    print(f"Chemin du marquee du jeu(full_marquee_path) : {full_marquee_path}")
+    print(f"FMF Chemin du marquee du jeu(full_marquee_path) : {full_marquee_path}")
     marquee_file = find_file(full_marquee_path)
     if marquee_file:
-        print(f"Marquee du jeu trouvé : {marquee_file}")
+        print(f"FMF Marquee du jeu trouvé : {marquee_file}")
         return marquee_file
 
     marquee_structure = config['Settings']['SystemFilePath']
     marquee_path = marquee_structure.format(system_name=folder_rom_name)
-    print(f"SYSTEM marquee_structure : {marquee_structure} system_name : {system_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
+    print(f"FMF SYSTEM marquee_structure : {marquee_structure} system_name : {system_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
     if not system_name and not folder_rom_name and not marquee_path:
             marquee_path = 'retrobat'
     full_marquee_path = os.path.join(config['Settings']['SystemMarqueePath'], marquee_path)
-    print(f"Chemin du marquee du système(full_marquee_path) : {full_marquee_path}")
+    print(f"FMF Chemin du marquee du système(full_marquee_path) : {full_marquee_path}")
     marquee_file = find_file(full_marquee_path)
     if marquee_file:
-        print(f"Marquee du système trouvé : {marquee_file}")
+        print(f"FMF Marquee du système trouvé : {marquee_file}")
         return marquee_file
 
-    print(f"Utilisation de l'image par défaut : {config['Settings']['DefaultImagePath']}")
+    print(f"FMF Utilisation de l'image par défaut : {config['Settings']['DefaultImagePath']}")
     return config['Settings']['DefaultImagePath']
 
 def find_file(base_path):
@@ -123,9 +122,9 @@ def parse_path(params, systems_config):
     system_name = ''
     for param in params.values():
         decoded_param = urllib.parse.unquote_plus(param)
-        print(f"Paramètre décodé : {decoded_param}")
+        print(f"PP Paramètre décodé : {decoded_param}")
         formatted_path = os.path.normpath(decoded_param)
-        print(f"Chemin formaté : {formatted_path}")
+        print(f"PP Chemin formaté : {formatted_path}")
 
         folder_rom_name = systems_config.get(decoded_param, '')
         if folder_rom_name == '' :
@@ -137,11 +136,20 @@ def parse_path(params, systems_config):
             else:
                 folder_rom_name = os.path.basename(os.path.normpath(formatted_path))
 
-        print(f"folder_rom_name : {folder_rom_name}")
+# folder_rom_name : Dragon Ball ZENKAI Battle Royale
+# folder_rom_path : R:\Beta\RetroBat\roms\Dragon Ball ZENKAI Battle Royale
+# GAME marquee_structure : {system_name}\images\{game_name}-marquee system_name : namco357 - game_name : namco357 - folder_rom_name : namco357 - marquee_path : namco357\images\-marquee
+# Chemin du marquee du jeu(full_marquee_path) : R:\Beta\RetroBat\roms\namco357\images\-marquee
+# Aucun fichier trouvé pour : R:\Beta\RetroBat\roms\namco357\images\-marquee
+
+        print(f"PP folder_rom_name : {folder_rom_name}")
         folder_rom_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name)
-        print(f"folder_rom_path : {folder_rom_path}")
+        print(f"PP folder_rom_path : {folder_rom_path}")
+        folder_rom_images_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name, 'images')
+        print(f"PP folder_rom_images_path : {folder_rom_images_path}")
+
         if folder_rom_name and os.path.isdir(folder_rom_path):
-            print(f"Dossier de roms système détecté : {decoded_param}")
+            print(f"PP Dossier de roms système détecté : {decoded_param}")
             system_detected = True
             if system_name == '' :
                 system_name = decoded_param
@@ -152,7 +160,7 @@ def parse_path(params, systems_config):
             game_name = os.path.splitext(os.path.basename(formatted_path))[0]
             if system_name == '' :
                 system_name = path_parts[-2] if len(path_parts) > 1 else ''
-            print(f"Dossier de roms système : {system_name}, Nom du jeu : {game_name}")
+            print(f"PP Dossier de roms système : {system_name}, Nom du jeu : {game_name}")
             return system_name, game_name
 
     if system_detected:
@@ -160,10 +168,10 @@ def parse_path(params, systems_config):
 
     if not game_detected and not system_detected and params:
         first_param = next(iter(params.values()))
-        print(f"Simple paramètre détecté : {first_param}")
+        print(f"PP Simple paramètre détecté : {first_param}")
         return 'collection', first_param
 
-    print("Aucun chemin de fichier valide trouvé dans les paramètres.")
+    print(f"PP Aucun chemin de fichier valide trouvé dans les paramètres.")
     return '', ''
 
 def execute_command(action, params, systems_config):
