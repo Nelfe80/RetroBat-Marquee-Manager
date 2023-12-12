@@ -83,6 +83,8 @@ def find_marquee_file(system_name, game_name, systems_config):
 
     marquee_structure = config['Settings']['MarqueeFilePath']
     marquee_path = marquee_structure.format(system_name=folder_rom_name, game_name=game_name)
+    if game_name == '':
+        game_name = folder_rom_name
     print(f"GAME marquee_structure : {marquee_structure} system_name : {system_name} - game_name : {game_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
     full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
     print(f"Chemin du marquee du jeu(full_marquee_path) : {full_marquee_path}")
