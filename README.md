@@ -1,4 +1,4 @@
-<p>Thanks to @Aynshe et Retrobat's community testers. </p>
+<p>Thanks to Aynshe et Retrobat's community testers. </p>
 
 <h1>Dynamic Marquees for RetroBat</h1>
 
