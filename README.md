@@ -1,3 +1,5 @@
+<p>Thanks to @Aynshe et Retrobat's community testers. </p>
+
 <h1>Dynamic Marquees for RetroBat</h1>
 
 <p>This project enables **dynamic display of marquees** on a secondary screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
