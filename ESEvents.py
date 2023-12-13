@@ -151,9 +151,6 @@ def parse_path(params, systems_config):
             if system_name == '' :
                 system_name = decoded_param
 
-        # formatted_path = directory_path = os.path.dirname(formatted_path)
-        # formatted_path = formatted_path+'.587'
-        # print(f"PP directory_formatted_path : {formatted_path}")
         # Test si le chemin vers la rom est un simple dossier, sans connaitre le lien exacte ver la rom derrière
         if os.path.isdir(formatted_path):
             print(f"PP >>> formatted_path : {formatted_path}")
