@@ -35,7 +35,7 @@ The events.ini file contains several settings that dictate how the marquee syste
 **SystemMarqueePath** : Directory where system marquees (like MAME, NES) are stored. These images are used as marquees for the system itself.<br>
 **SystemFilePath** : File naming structure for system marquees. Typically in the format {system_name}-logo.<br>
 **DefaultImagePath** : Path to a default marquee image, used when a specific game or system marquee is not available.<br>
-**AcceptedFormats** : Lists the image formats (like jpg, png) that the system can use for marquees.<br>
+**AcceptedFormats** : Lists the image formats (like jpg, png) that the system can use for marquees. Enumerates the acceptable file formats for marquees, prioritized in the order they are listed. This setting supports a range of formats, including both static and animated images, as well as video files. Common formats include .jpg, .png, .gif (for animated images), and .mp4 or .webm for video marquees. The system will search for marquee files in the specified order, giving preference to the formats listed first.<br>
 **IPCChannel** : Name of the IPC (Inter-Process Communication) channel for sending commands to the MPV player.<br>
 **ScreenNumber** : Identifies the screen where marquees will be displayed. Useful for setups with multiple monitors. (value 1 or 2)<br>
 **MPVPath** : Path to the MPV media player executable.<br>
