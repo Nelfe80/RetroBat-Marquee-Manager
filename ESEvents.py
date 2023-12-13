@@ -111,21 +111,23 @@ def find_file(base_path):
     for fmt in config['Settings']['AcceptedFormats'].split(','):
         full_path = f"{base_path}.{fmt.strip()}"
         if os.path.isfile(full_path):
-            print(f"Fichier trouvé : {full_path}")
+            print(f"FF Fichier trouvé : {full_path}")
             return full_path
-    print(f"Aucun fichier trouvé pour : {base_path}")
+    print(f"FF Aucun fichier trouvé pour : {base_path}")
     return None
 
 def parse_path(params, systems_config):
     system_detected = False
     game_detected = False
     system_name = ''
+    game_name = ''
     for param in params.values():
         decoded_param = urllib.parse.unquote_plus(param)
         print(f"PP Paramètre décodé : {decoded_param}")
         formatted_path = os.path.normpath(decoded_param)
         print(f"PP Chemin formaté : {formatted_path}")
 
+        # Récupération du nom du système en récuperant le dossier juste derrieres roms/
         folder_rom_name = systems_config.get(decoded_param, '')
         if folder_rom_name == '' :
             roms_path = config['Settings']['RomsPath']
@@ -136,32 +138,43 @@ def parse_path(params, systems_config):
             else:
                 folder_rom_name = os.path.basename(os.path.normpath(formatted_path))
 
-# folder_rom_name : Dragon Ball ZENKAI Battle Royale
-# folder_rom_path : R:\Beta\RetroBat\roms\Dragon Ball ZENKAI Battle Royale
-# GAME marquee_structure : {system_name}\images\{game_name}-marquee system_name : namco357 - game_name : namco357 - folder_rom_name : namco357 - marquee_path : namco357\images\-marquee
-# Chemin du marquee du jeu(full_marquee_path) : R:\Beta\RetroBat\roms\namco357\images\-marquee
-# Aucun fichier trouvé pour : R:\Beta\RetroBat\roms\namco357\images\-marquee
-
         print(f"PP folder_rom_name : {folder_rom_name}")
         folder_rom_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name)
         print(f"PP folder_rom_path : {folder_rom_path}")
         folder_rom_images_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name, 'images')
         print(f"PP folder_rom_images_path : {folder_rom_images_path}")
 
+        # Test si la chaine est simplement le nom du dossier contenant les roms (avec la table de correspondance folder_rom_name)
         if folder_rom_name and os.path.isdir(folder_rom_path):
             print(f"PP Dossier de roms système détecté : {decoded_param}")
             system_detected = True
             if system_name == '' :
                 system_name = decoded_param
 
+        # formatted_path = directory_path = os.path.dirname(formatted_path)
+        # formatted_path = formatted_path+'.587'
+        # print(f"PP directory_formatted_path : {formatted_path}")
+        # Test si le chemin vers la rom est un simple dossier, sans connaitre le lien exacte ver la rom derrière
+        if os.path.isdir(formatted_path):
+            print(f"PP >>> formatted_path : {formatted_path}")
+            print(f"PP >>> os.path.basename(formatted_path) : {os.path.basename(formatted_path)}")
+            print(f"PP >>> os.path.splitext(os.path.basename(formatted_path))[0] : {os.path.splitext(os.path.basename(formatted_path))[0]}")
+            game_detected = True
+            game_name = os.path.splitext(os.path.basename(formatted_path))[0]
+            print(f"PP Path DOSSIER Dossier de roms système : {system_name}, Nom du jeu : {game_name}")
+            if system_name != game_name:
+                return system_name, game_name
+
+        # Test si le chemin correspond bien à une rom d'un dossier système
         if os.path.isfile(formatted_path):
             game_detected = True
             path_parts = formatted_path.split(os.sep)
             game_name = os.path.splitext(os.path.basename(formatted_path))[0]
             if system_name == '' :
                 system_name = path_parts[-2] if len(path_parts) > 1 else ''
-            print(f"PP Dossier de roms système : {system_name}, Nom du jeu : {game_name}")
-            return system_name, game_name
+            print(f"PP Path FICHIER Dossier de roms système : {system_name}, Nom du jeu : {game_name}")
+            if system_name != game_name:
+                return system_name, game_name
 
     if system_detected:
         return system_name, ''
