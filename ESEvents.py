@@ -188,9 +188,9 @@ def execute_command(action, params, systems_config):
     if action in config['Commands']:
         system_name, game_name = parse_path(params, systems_config)
         marquee_file = find_marquee_file(system_name, game_name, systems_config)
-        escaped_marquee_file = escape_file_path(marquee_file)
+        #escaped_marquee_file = escape_file_path(marquee_file)
         command = config['Commands'][action].format(
-            marquee_file=escaped_marquee_file,
+            marquee_file=marquee_file,
             IPCChannel=config['Settings']['IPCChannel']
         )
         print(f"Exécution de la commande : {command}")
