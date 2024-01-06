@@ -5,6 +5,10 @@ setlocal enabledelayedexpansion
 tasklist | find /I "ESEvents.exe" > NUL
 if not errorlevel 1 taskkill /IM ESEvents.exe /F
 
+:: Vérifier et fermer ESEventPush.exe si en cours d'exécution
+tasklist | find /I "ESEventPush.exe" > NUL
+if not errorlevel 1 taskkill /IM ESEventPush.exe /F
+
 :: Vérifier et fermer mpv.exe si en cours d'exécution
 tasklist | find /I "mpv.exe" > NUL
 if not errorlevel 1 taskkill /IM mpv.exe /F

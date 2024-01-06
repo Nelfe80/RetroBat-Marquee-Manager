@@ -6,21 +6,12 @@ This guide provides an expert-level, comprehensive walkthrough on setting up and
 <h3>Prerequisites</h3>
 <p>
 A Windows PC (Windows 8 or later) with RetroBat installed.
-Two monitors setup.
-MPV Media Player installed in a specific directory (e.g., C:\RetroBat\marquees\mpv).
-Marquee images downloaded and ready for organization.
-Installation and Setup
-Install RetroBat and MPV Player: Ensure RetroBat is set up correctly on your system and that MPV Player is installed in the directory where your marquees will be stored.
-Compile Python Scripts: Use PyInstaller to compile ESEvents.py and ESEventPush.py into executables. This ensures that EmulationStation does not lose focus when these scripts are executed. Use the command:
-</p>
-<code>pyinstaller --onefile --noconsole ESEvents.py
-pyinstaller --onefile --noconsole ESEventPush.py</code>
-
-<h3>Placement of Compiled Scripts:</h3>
-<p>
-Place ESEventPush.exe in each script folder within EmulationStation where you want to trigger marquee changes. Common folders include game-start, game-select, system-select.
-Place ESEvents.exe in a central location, typically within the RetroBat\marquees directory.
-Configure events.ini: This file is critical for specifying the paths and formats for your marquees. More detailed configuration is explained in the next section.
+Two monitors setup.<br>
+MPV Media Player <a href="https://mpv.io">[MPV's Website]</a> installed in a specific directory (e.g., C:\RetroBat\marquees\mpv\mpv.exe).<br>
+Image Magick <a href="https://imagemagick.org">[Image Magick Website]</a> installed in a specific directory (e.g., C:\RetroBat\marquees\imagemagick\convert.exe).<br>
+Marquee images downloaded and ready for organization.<br>
+<h3>Installation and Setup</h3>
+Install RetroBat, MPV Player and ImageMagick: Ensure RetroBat is set up correctly on your system. Check links to mpv and imagemagick in your events.ini in (e.g., C:\RetroBat\marquees\events.ini)<br>
 </p>
 
 <h2>Configuring events.ini</h2>
@@ -28,53 +19,79 @@ Configure events.ini: This file is critical for specifying the paths and formats
 The events.ini file contains several settings that dictate how the marquee system behaves. Here's a breakdown of each setting:
 </p>
 <p>
-**RetroBatPath** : The path to your RetroBat installation. Used as a reference to locate related components.<br>
-**RomsPath** : The directory where your ROMs are stored. This path is used to check if a given system exists.<br>
-**MarqueeImagePath** : Base path where marquee images are stored.<br>
-**MarqueeFilePath** : Defines the file naming structure for game marquees. {system_name} and {game_name} are placeholders replaced dynamically based on the current game.<br>
-**SystemMarqueePath** : Directory where system marquees (like MAME, NES) are stored. These images are used as marquees for the system itself.<br>
-**SystemFilePath** : File naming structure for system marquees. Typically in the format {system_name}-logo.<br>
-**DefaultImagePath** : Path to a default marquee image, used when a specific game or system marquee is not available.<br>
-**AcceptedFormats** : Lists the image formats (like jpg, png) that the system can use for marquees. Enumerates the acceptable file formats for marquees, prioritized in the order they are listed. This setting supports a range of formats, including both static and animated images, as well as video files. Common formats include .jpg, .png, .gif (for animated images), and .mp4 or .webm for video marquees. The system will search for marquee files in the specified order, giving preference to the formats listed first.<br>
-**IPCChannel** : Name of the IPC (Inter-Process Communication) channel for sending commands to the MPV player.<br>
-**ScreenNumber** : Identifies the screen where marquees will be displayed. Useful for setups with multiple monitors. (value 1 or 2)<br>
-**MPVPath** : Path to the MPV media player executable.<br>
-**MPVLaunchCommand** : Command to launch MPV with necessary parameters for displaying marquees.<br>
-**MPVKillCommand** : Command to kill any running instances of MPV. Ensures no conflicting or multiple instances of MPV.<br>
-**MPVTestCommand** : Command to test if MPV is currently running. Used to ensure MPV is active before attempting to display a marquee.<br>
-**host and port** : Settings for the Flask server (ESEvents.py). The server listens on this IP address and port for incoming requests.<br>
-</p>
-<h3>Commands Section</h3>
-<p>
-The [Commands] section defines the actions to be taken for different events triggered by EmulationStation. For example, game-start would execute a command to display the marquee for the started game.
+<b>[Settings]</b><br>
+<b>Language</b>: Sets the default language. Example: <b>fr</b> for French.<br>
+<b>MarqueeWidth</b>: Width of the marquee images. Example: <b>1920</b>.<br>
+<b>MarqueeHeight</b>: Height of the marquee images. Example: <b>360</b>.<br>
+<b>MarqueeBorder</b>: Size of the border around the marquee images. Example: <b>30</b>.<br>
+<b>MarqueeAutoConvert</b>: Convert image to png, marquee size, naming + "-topper" (true) or use current file (false). Example: <b>false</b>.<br> 
+<b>AcceptedFormats</b>: List of accepted image or videos formats. Example: <b>jpg, png</b>.<br>
+<b>RetroBatPath</b>: Path to the RetroBat directory. Example: <b>C:\RetroBat\</b>.<br>
+<b>RomsPath</b>: Path to the directory where ROMs are stored. Example: <b>C:\RetroBat\roms\</b>.<br>
+<b>DefaultImagePath</b>: Path to the default image displayed. Example: <b>C:\RetroBat\marquees\images\default.png</b>.<br>
+<b>MarqueeImagePath</b>: Path to where marquee images are stored. Example: <b>C:\RetroBat\roms\</b>.<br>
+<b>MarqueeFilePath</b>: Format for marquee file paths. Example: <b>{system_name}\images\{game_name}-marquee</b>.<br>
+<b>SystemMarqueePath</b>: Path to system marquees. Example: <b>C:\RetroBat\emulationstation\.emulationstation\themes\es-theme-carbon\art\logos</b>.<br>
+<b>SystemFilePath</b>: Format for system file paths. Example: <b>{system_name}</b>.<br>
+<b>CollectionMarqueePath</b>: Path to collection marquees. Example: <b>C:\RetroBat\emulationstation\.emulationstation\themes\es-theme-carbon\art\logos</b>.<br>
+<b>CollectionFilePath</b>: Format for collection file paths. Example: <b>auto-{collection_name}</b>.<br>
+<b>CollectionAlternativNames</b>: Alternative names for collections. Example: <b>custom-, arcade (prefix/suffix)</b>.<br>
+<b>CollectionCorrelation</b>: Mapping for special (automatic renaming to target your theme) collection names. Example: <b>recent:lastplayed, all:allgames, 2players:at2players, 4players:at4players, collections:custom-collections</b>.<br>
+<b>IPCChannel</b>: Inter-process communication channel for MPV. Example: <b>\\.\pipe\mpv-pipe</b>.<br>
+<b>ScreenNumber</b>: Screen number for displaying images. Example: <b>1</b> or <b>2</b>.<br>
+<b>MPVPath</b>: Path to MPV executable. Example: <b>C:\RetroBat\marquees\mpv\mpv.exe</b>.<br>
+<b>MPVLaunchCommand</b>: Command to launch MPV with parameters.<br>
+<b>MPVKillCommand</b>: Command to terminate MPV. Example: <b>taskkill /IM mpv.exe /F</b>.<br>
+<b>MPVTestCommand</b>: Command to test MPV status.<br>
+<b>IMPath</b>: Path to ImageMagick's convert executable. Example: <b>C:\RetroBat\marquees\imagemagick\convert.exe</b>.<br>
+<b>IMConvertCommand</b>: Command format for ImageMagick conversion.<br>
+<b>host</b>: Host address for the server. Example: <b>127.0.0.1</b>.<br>
+<b>port</b>: Port number for the server. Example: <b>8080</b>.<br>
+<b>logFile</b>: Logs in ESEvents.log Example: <b>true</b>.<br><br>
+<b>[Commands]</b><br>
+<b>quit</b>: Command action for quitting.<br>
+<b>reboot</b>: Command action for rebooting.<br>
+<b>shutdown</b>: Command action for shutting down.<br>
+<b>config-changed</b>: Command action when configuration changes.<br>
+<b>controls-changed</b>: Command action when controls change.<br>
+<b>settings-changed</b>: Command action when settings change.<br>
+<b>theme-changed</b>: Command action when theme changes.<br>
+<b>game-start</b>: Command action when a game starts.<br>
+<b>game-end</b>: Command action when a game ends.<br>
+<b>sleep</b>: Command action for sleep mode.<br>
+<b>wake</b>: Command action for wake-up.<br>
+<b>screensaver-start</b>: Command action when screensaver starts.<br>
+<b>screensaver-stop</b>: Command action when screensaver stops.<br>
+<b>screensaver-game-select</b>: Command action during screensaver game selection.<br>
+<b>system-select</b>: Command action when a system is selected.<br>
+<b>system-selected</b>: Command action after a system is selected.<br>
+<b>game-select</b>: Command action when a game is selected.<br>
+<b>game-selected</b>: Command action after a game is selected.<br><br>
 </p>
 <h2>Managing Marquee Images</h2>
 <h3>Game Marquees</h3>
 <p>
-Place your game marquee images in the directory specified by MarqueeImagePath. The images should follow the naming structure defined in MarqueeFilePath.
-Example: For a game "Super Mario" in the "NES" system, and if MarqueeFilePath is set to {system_name}-{game_name}, the marquee image should be named nes-Super Mario.jpg and placed in C:\RetroBat\marquees\images\nes-Super Mario.jpg. (system_name like rom's folders)
+To customize game marquee images, place your images in the directory specified by <b>MarqueeImagePath</b> in the configuration file. The naming structure of these images should follow the pattern defined in <b>MarqueeFilePath</b>. 
+</p>
+<p>
+For example, if you have a game named "Super Mario" in the "NES" system, and <b>MarqueeFilePath</b> is set to <code>{system_name}\images\{game_name}-marquee</code>, the marquee image should be named "Super Mario-marquee.jpg" (assuming the image is a .jpg file). This file should be placed in the path like "C:\RetroBat\roms\nes\images\Super Mario-marquee.jpg", where "nes" is equivalent to the system's name similar to the name of the folder where its ROMs are stored.<br>
+>> events.ini : <b>MarqueeFilePath</b>: Format for marquee file paths. Example: <b>{system_name}\images\{game_name}-marquee</b>
 </p>
 <h3>System Marquees</h3>
 <p>
-System marquees represent the gaming systems or consoles. Place these images in the SystemMarqueePath.
-The naming convention is defined by SystemFilePath. For example, if it's {system_name}-logo, the NES system marquee should be named nes-logo.jpg.
-Example path: C:\RetroBat\marquees\images\nes-logo.jpg.
+System marquees are used to represent the gaming systems or consoles. These images should be placed in the directory specified by <b>SystemMarqueePath</b>. The naming convention for system marquee images is defined by <b>SystemFilePath</b>. <br>
 </p>
-<h3>Others</h3>
 <p>
-For managing marquees related to collections, the file naming follows a specific convention. The name of the file should start with a hyphen (-) followed by the name of the collection. Each word in the collection's name is separated by a plus sign (+). For example, for a collection named "BEAT THEM ALL", the corresponding marquee image file should be named "-BEAT+THEM+ALL.jpg".<br>
-These collection marquee images should be placed in the root directory of your marquees folder, typically located at /marquees/images/ by default in ini file.<br>
-Additional Examples for Special Collections:<br>
-<code>MarqueeImagePath = C:\RetroBat\marquees\images\</code><br>
-<code>MarqueeFilePath = {system_name}-{game_name}</code><br>
-"-all.jpg" for a collection named "All".<br>
-"-recent.jpg" for recently played games.<br>
-"-favorites.jpg" for favorite games.<br>
-"-collections.jpg" for general collections.<br>
-"es_menu-retroarch.jpg" for items related to emulators.<br>
-If <code>MarqueeFilePath = {system_name}/{game_name}</code>
-Then "es_menu/retroarch.jpg" for items related to emulators.<br>
-This naming convention ensures that the correct marquee is displayed for each specific collection, adding a personalized touch to your gaming setup.
+For instance, if <b>SystemFilePath</b> is set to <code>{system_name}</code>, and you want to set a marquee for the NES system, the image should be named "nes.jpg" (or "nes.png" depending on the file format). The full path for this image would be something like "C:\RetroBat\emulationstation\.emulationstation\themes\es-theme-carbon\art\logos\nes.jpg" (or nes.png).<br>
+>> events.ini : <b>SystemFilePath</b>: Format for system file paths. Example: <b>{system_name}</b>
+</p>
+<h3>Collection Marquees</h3>
+<p>
+For custom collections, marquee images can be managed similarly. Set the path for these images using <b>CollectionMarqueePath</b> and define the naming structure with <b>CollectionFilePath</b>. For example, if <b>CollectionFilePath</b> is set to <code>auto-{collection_name}</code>, and you have a collection named "Classics", the marquee image should be named "auto-Classics.jpg" and placed accordingly.<br>
+>> events.ini : <b>CollectionFilePath</b>: Format for collection file paths. Example: <b>auto-{collection_name}</b>
+</p>
+<p>
+Remember to adjust the paths and file names according to your own setup and preferences. The configuration settings allow for a high degree of customization to match your specific requirements.
 </p>
 <h3>Default Marquee</h3>
 <p>
@@ -82,11 +99,24 @@ The DefaultImagePath is used when a specific game or system marquee is not found
 </p>
 <h3>Additional Tips</h3>
 <p>
-For a more personalized marquee display with RetroBat, you can create images named -recent.png or -favorites.jpg in the root of the DefaultImagePath directory.
-It's possible to customize the marquee system further by editing the events.ini file. For instance, you can create different structures for game marquees or use different naming conventions for system marquees.
+For a more personalized marquee display with RetroBat, you can create configure in the .ini correlation's names to point to collecntions images like favorites / lastplayeed / 2players images.
+It's possible to customize the marquee system further by editing the events.ini file. For instance, you can create different structures for game marquees or use different naming conventions for system and collections marquees.
 </p>
 <h2>Starting the Marquee System</h2>
 <p>
-Use StartRetrobatMarquees.bat to start RetroBat with the dynamic marquee system enabled. This script initializes everything necessary for the marquee system to function.
+Use StartRetrobatMarquees.bat to launch RetroBat with the dynamic marquee system enabled. This script initializes everything necessary for the marquee system to function.
 You can also create a Windows startup shortcut to launch StartRetrobatMarquees.bat automatically.
+</p>
+<h3>EXPERT PYTHON (not necessary if you want just to install .exe)</h3>
+<p>
+Compile Python Scripts: <br>
+Use PyInstaller to compile ESEvents.py and ESEventPush.py into executables. This ensures that EmulationStation does not lose focus when these scripts are executed. Use the command:
+</p>
+<code>pyinstaller --onefile --noconsole ESEvents.py</code>
+<code>pyinstaller --onefile --noconsole ESEventPush.py</code>
+<h4>Placement of Compiled Scripts:</h4>
+<p>
+Place ESEventPush.exe in each script folder within EmulationStation where you want to trigger marquee changes. Common folders include game-start, game-select or game-selected, system-select or system-selected.
+Place ESEvents.exe in a central location, typically within the RetroBat\marquees directory.
+Configure events.ini: This file is critical for specifying the paths and formats for your marquees. More detailed configuration is explained in the dedicated section.
 </p>

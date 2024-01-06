@@ -18,7 +18,6 @@ def find_ini_file(start_path):
 def load_config():
     current_working_dir = os.getcwd()
     config_path = find_ini_file(current_working_dir)
-
     config = configparser.ConfigParser()
     config.read(config_path)
     return config
@@ -29,7 +28,8 @@ def send_event(event, params, server_url):
         response = requests.get(f"{server_url}", params={'event': event, **encoded_params})
         print(response.text)
     except requests.exceptions.RequestException as e:
-        print(f"Erreur lors de l'envoi de l'événement : {e}")
+        logging.info(f"Erreur lors de l'envoi de l'événement : {e}")
+        #input("Appuyez sur Entrée pour continuer...")
 
 def get_current_directory_event():
     return os.path.basename(os.getcwd())
@@ -40,16 +40,20 @@ def get_command_line():
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     output, error = process.communicate()
     if error:
-        print(f"Error: {error.decode().strip()}")
+        logging.info(f"Error: {error.decode('cp1252').strip()}")
+        #input("Appuyez sur Entrée pour continuer...")
         return ""
-    return output.decode().strip()
+    try:
+        return output.decode('utf-8').strip()
+    except UnicodeDecodeError:
+        return output.decode('cp1252').strip()
 
 def clean_and_split_arguments(command_line):
     command_line = command_line.replace('""', '"')
     try:
         arguments = shlex.split(command_line)
     except ValueError as e:
-        print(f"Erreur lors du découpage des arguments: {e}")
+        logging.info(f"Erreur lors du découpage des arguments: {e}")
         arguments = []
     if arguments:
         arguments = arguments[2:]
@@ -60,7 +64,10 @@ if __name__ == "__main__":
     server_url = f"http://{config['Settings']['host']}:{config['Settings']['port']}"
     event = get_current_directory_event()
     command_line = get_command_line()
-    print(f"command_line: {command_line}")
+    logging.info(f"command_line: {command_line}")
     arguments = clean_and_split_arguments(command_line)
     params = {f'param{i}': arg for i, arg in enumerate(arguments, start=1)}
+    logging.info(f"arguments: {arguments}")
+    logging.info(f"params: {params}")
+    #input("Appuyez sur Entrée pour continuer...")
     send_event(event, params, server_url)
