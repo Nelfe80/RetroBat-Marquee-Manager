@@ -51,7 +51,7 @@ def load_systems_config(xml_relative_path):
 
 def launch_media_player():
     kill_command = config['Settings']['MPVKillCommand']
-    subprocess.run(kill_command, shell=True)
+    subprocess.run(kill_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
     logging.info(f"Execute kill command : {kill_command}")
 
     launch_command = config['Settings']['MPVLaunchCommand'].format(
@@ -61,13 +61,13 @@ def launch_media_player():
         DefaultImagePath=config['Settings']['DefaultImagePath'],
         MarqueeBackgroundCodeColor=config['Settings']['MarqueeBackgroundCodeColor']
     )
-    subprocess.Popen(launch_command, shell=True)
+    subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
     logging.info(f"MPV launch command executed : {launch_command}")
 
 def is_mpv_running():
     try:
         test_command = config['Settings']['MPVTestCommand'].format(IPCChannel=config['Settings']['IPCChannel'])
-        subprocess.run(test_command, shell=True, check=True)
+        subprocess.run(test_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
         logging.info(f"MPV is currently running.")
         return True
     except subprocess.CalledProcessError:
@@ -348,7 +348,7 @@ def execute_command(action, params, systems_config):
             IPCChannel=config['Settings']['IPCChannel']
         )
         logging.info(f"Executing the command : {command}")
-        subprocess.run(command, shell=True)
+        subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
         return json.dumps({"status": "success", "action": action, "command": command})
     return json.dumps({"status": "error", "message": "No command configured for this action"})
 
