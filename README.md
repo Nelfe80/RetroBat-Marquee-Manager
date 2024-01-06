@@ -11,21 +11,22 @@
 <p>
 Important Setup Instructions<br>
 Create a marquees folder : "C:\RetroBat\marquees"<br>
-(download the project and go to the /dist folder and copy all files in "C:\RetroBat\marquees\")<br>
+Download the project and go to the /dist folder and copy all files in "C:\RetroBat\marquees\"<br>
+In the "C:\RetroBat\marquees" folder :
 - events.ini (settings file)<br>
 - ESEvents.exe (events listener like game-selected/game-start/system-selected...)<br>
 - StartRetrobatMarquees.bat (to launch without dynamic scraping) or StartRetrobatMarqueesAS.bat (to launche with Auto dynamic Scraping)<br>
 - ESEventsScrapTopper.exe (dynamic scraping listener, download image on screenscraper then rename and push scraped image in MarqueeImagePath\MarqueeFilePath)<br>
 - screenscraper.ini (dynamic scraping dictionnary)<br>
 - systems.scrap (screenscraper systems ids) [use ESEventsScrapSystems.exe to update this file if needed]<br>
-<br>in the "C:\RetroBat\marquees" directory.<br>
-Place ESEventPush.exe in directories such as <br>
+<br><br>
+Copy ESEventPush.exe in folders such as <br>
 - "C:\RetroBat\emulationstation\.emulationstation\scripts\game-selected" >> update marquee when a game is selected<br>
 - "C:\RetroBat\emulationstation\.emulationstation\scripts\system-selected" >> update marquee when a system is selected<br>
 - "C:\RetroBat\emulationstation\.emulationstation\scripts\game-start" >> update marquee when a game start<br><br>
 <b>Configuration File Setup</b>:<br>
 Ensure that the ini file is correctly configured for proper operation of the executables.<br><br>
-<b>Downloading and Installing Dependencies</b>:<br>
+<b>Updating and installing dependencies if needed</b>:<br>
 Download and install mpv and ImageMagick. These are essential for the functioning of the system.<br>
 MPV to target screen and display images and videos : for mpv, visit their official website <a href="https://mpv.io">MPV's Website</a> and install it to the marquees directory, resulting in a path like "C:\RetroBat\marquees\mpv\mpv.exe".<br>
 ImageMagick to convert (svg to png), resize and optimize images : for ImageMagick, visit <a href="https://imagemagick.org">ImageMagick's Website</a> and install it similarly in the marquees directory. This should result in a path like "C:\RetroBat\marquees\imagemagick\convert.exe".<br>
@@ -36,7 +37,7 @@ By following these instructions, you'll ensure that ESEvents.exe and ESEventPush
 Configure events.ini to specify paths for marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly.
 </p>
 <h2>Download and install marquees</h2>
-You can download marquees here :<br>
+You can download marquees here then install in the default folder "C:\RetroBat\marquees\images" :<br>
 Launchbox Games Database : <a href="https://gamesdb.launchbox-app.com/">https://gamesdb.launchbox-app.com/</a><br>
 Pixelcade Forums : <a href="https://pixelcade.org/forum/art-exchange-lcd/a-few-lcd-marquees-links/#post-2071">https://pixelcade.org/forum/art-exchange-lcd/a-few-lcd-marquees-links/#post-2071</a><br>
 <p></p>
