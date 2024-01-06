@@ -33,10 +33,11 @@ By following these instructions, you'll ensure that ESEvents.exe and ESEventPush
 Configure events.ini to specify paths for marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly.
 </p>
 <h2>Scrapping usage</h2>
+<p>You can activate dynamic scrapping (MarqueeAutoScraping = true in events.ini file), which allows you to download marquee image (the real toppers, not the logos) of arcade machines directly, without having to go through the RetroBat scraper. Once scrapping is complete, a small message appears on your marquee's screen. If you reselect or play the game again, the marquee will be updated. If you don't see the marquee appear, there may be no marquee image for that game in the screenscraper image database. The "Screenmarquee" images are not downloaded, only arcade cabinet marquees are scraped. If the scraperfailed option is enabled, failed scraping will be indicated in a scrapfailed.pool file. I encourage you to take part in the screenscraper visual enhancement if you want to see a marquee appear or put it manually in your marquee folder.</p>
 <p>
 If you plan to use scraped marquees or incorporate your own custom marquee images into the system, please be aware of an issue in the scraping process. Both logos and marquee images are currently saved with the same suffix <b>-marquee</b> at the end of the file name. This can lead to confusion and potential file conflicts within the system.
 </p>
-<h3>How to Scrape Marquees from RetroBat (Workaround solution in Retrobat 5.3 stable version)</h3
+<h3>How to Scrape Marquees from RetroBat</h3
 <p>
 To scrape marquees directly within RetroBat:
 <ol>
