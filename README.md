@@ -4,6 +4,9 @@
 <p>This project enables <b>dynamic display of marquees</b> on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
 </p>
 <p>Thanks to Aynshe and Retrobat's community testers. </p>
+<p><a href="https://www.youtube.com/watch?v=hIZQ-0b998A" target="_blank">
+    <img src="https://img.youtube.com/vi/hIZQ-0b998A/0.jpg" alt="Lien vers la vidéo YouTube">
+</a></p>
 <h2>Install</h2>
 <p>
 Important Setup Instructions<br>
