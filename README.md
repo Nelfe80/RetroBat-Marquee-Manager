@@ -1,6 +1,6 @@
 <img src="https://github.com/Nelfe80/RetroBat-Marquee-Manager/blob/master/dist/images/logo.png" style="width:100%;">
 <h1>RetroBat Marquee Manager (V2)</h1>
-<h2>A Dynamic Marquees for RetroBat with Svg support / Auto-resizing / Dynamic Scrapping</h2>
+<h2>A Dynamic Marquees for RetroBat with Svg support / Auto-resizing / Dynamic Scraping</h2>
 <p>This project enables <b>dynamic display of marquees</b> on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
 </p>
 <p>Thanks to Aynshe and Retrobat's community testers. </p>
@@ -11,9 +11,9 @@ Create a marquees folder : "C:\RetroBat\marquees"<br>
 (download the project and go to the /dist folder and copy all files in "C:\RetroBat\marquees\")<br>
 - events.ini (settings file)<br>
 - ESEvents.exe (events listener like game-selected/game-start/system-selected...)<br>
-- StartRetrobatMarquees.bat (to launch without dynamic scrapping) or StartRetrobatMarqueesAS.bat (to launche with Auto dynamic Scrapping)<br>
-- ESEventsScrapTopper.exe (dynamic scrapping listener, download image on screenscraper then rename and push scraped image in MarqueeImagePath\MarqueeFilePath)<br>
-- screenscraper.ini (dynamic scrapping dictionnary)<br>
+- StartRetrobatMarquees.bat (to launch without dynamic scraping) or StartRetrobatMarqueesAS.bat (to launche with Auto dynamic Scraping)<br>
+- ESEventsScrapTopper.exe (dynamic scraping listener, download image on screenscraper then rename and push scraped image in MarqueeImagePath\MarqueeFilePath)<br>
+- screenscraper.ini (dynamic scraping dictionnary)<br>
 - systems.scrap (screenscraper systems ids) [use ESEventsScrapSystems.exe to update this file if needed]<br>
 <br>in the "C:\RetroBat\marquees" directory.<br>
 Place ESEventPush.exe in directories such as <br>
@@ -33,11 +33,11 @@ By following these instructions, you'll ensure that ESEvents.exe and ESEventPush
 Configure events.ini to specify paths for marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly.
 </p>
 <h2>Scrapping usage</h2>
-<p>You can activate dynamic scrapping (MarqueeAutoScraping = true in events.ini file), which allows you to download marquee image (the real toppers, not the logos) of arcade machines directly, without having to go through the RetroBat scraper. Once scrapping is complete, a small message appears on your marquee's screen. If you reselect or play the game again, the marquee will be updated. If you don't see the marquee appear, there may be no marquee image for that game in the screenscraper image database. The "Screenmarquee" images are not downloaded, only arcade cabinet marquees are scraped. If the scraperfailed option is enabled, failed scraping will be indicated in a scrapfailed.pool file. I encourage you to take part in the screenscraper visual enhancement if you want to see a marquee appear or put it manually in your marquee folder.</p>
+<p>You can activate dynamic scrapping (MarqueeAutoScraping = true in events.ini file), which allows you to download marquee image (the real toppers, not the logos) of arcade machines directly, without having to go through the RetroBat scraper "screenscraper" (check your screenscraper id/password in Retrobat). Once scrapping is complete, a small message appears on your marquee's screen. If you reselect or play the game again, the marquee will be updated. If you don't see the marquee appear, there may be no marquee image for that game in the screenscraper image database. The "Screenmarquee" images are not downloaded, only arcade cabinet marquees are scraped. If the scraperfailed option is enabled, failed scraping will be indicated in a scrapfailed.pool file. I encourage you to take part in the screenscraper visual enhancement if you want to see a marquee appear or put it manually in your marquee folder.</p>
+<h3>How to Scrape Marquees from RetroBat</h3>
 <p>
 If you plan to use scraped marquees or incorporate your own custom marquee images into the system, please be aware of an issue in the scraping process. Both logos and marquee images are currently saved with the same suffix <b>-marquee</b> at the end of the file name. This can lead to confusion and potential file conflicts within the system.
 </p>
-<h3>How to Scrape Marquees from RetroBat</h3
 <p>
 To scrape marquees directly within RetroBat:
 <ol>
@@ -48,12 +48,12 @@ To scrape marquees directly within RetroBat:
 This approach allows you to scrape specific marquee images that are more suited for use as toppers.
 </p>
 <p>
-After scraping, you might encounter the situation where both marquees and logos are labeled with <b>-marquee</b>. To resolve this, use the script <b>RenameMarquees.bat</b>. This script will rename all marquee images, changing the <b>-marquee</b> suffix to <b>-marqueescrapped</b>. This renaming step is crucial for ensuring that marquee images are properly recognized and prioritized by the system. Moreover, it allows you to rescrape for the actual logos without overwriting the marquees you've just scraped. Once the script has been executed, and the marquee images are renamed to include <b>-marqueescrapped.png</b>, you can safely scrape again to obtain the true <b>-marquee</b> logos without any file conflicts.
+After scraping, you might encounter the situation where both marquees and logos are labeled with <b>-marquee</b>. To resolve this, use the script <b>RenameMarquees.bat</b>. This script will rename all marquee images, changing the <b>-marquee</b> suffix to <b>-marqueescraped</b>. This renaming step is crucial for ensuring that marquee images are properly recognized and prioritized by the system. Moreover, it allows you to rescrape for the actual logos without overwriting the marquees you've just scraped. Once the script has been executed, and the marquee images are renamed to include <b>-marqueescraped.png</b>, you can safely scrape again to obtain the true <b>-marquee</b> logos without any file conflicts.
 </p>
 <p>
 It is important to note that SVG files may require additional processing time during their first use. However, once they are converted to PNG format, you will experience smoother navigation and quicker access to these images within the system.
 </p>
-<h3>StartRetroBat with StartRetrobatMarquees.bat to activate the dynamic marquee system and launch RetroBat.</h3> 
+<h3>StartRetroBat with StartRetrobatMarqueesAS.bat (with dynamic scraping) or with StartRetrobatMarquees.bat (without dynamic scraping) to activate the dynamic marquee system and launch RetroBat.</h3> 
 <h2>Notes</h2>
 <p>
 Ensure MPV and IMAGEMAGICK are installed in /RetroBat/marquees directory.
