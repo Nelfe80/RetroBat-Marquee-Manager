@@ -29,8 +29,13 @@ The events.ini file contains several settings that dictate how the marquee syste
 <b>RetroBatPath</b>: Path to the RetroBat directory. Example: <b>C:\RetroBat\</b>.<br>
 <b>RomsPath</b>: Path to the directory where ROMs are stored. Example: <b>C:\RetroBat\roms\</b>.<br>
 <b>DefaultImagePath</b>: Path to the default image displayed. Example: <b>C:\RetroBat\marquees\images\default.png</b>.<br>
-<b>MarqueeImagePath</b>: Path to where marquee images are stored. Example: <b>C:\RetroBat\roms\</b>.<br>
-<b>MarqueeFilePath</b>: Format for marquee file paths. Example: <b>{system_name}\images\{game_name}-marquee</b>.<br>
+<b>MarqueeImagePath</b>: Path to where marquee images are stored. Example: <b>C:\RetroBat\marquees\images\</b>.<br>
+<b>MarqueeFilePath</b>: Format for marquee file paths. Example: <b>{system_name}-{game_name}</b>.<br>
+<b>MarqueeImagePathDefault</b>: Default Path to where marquee images are stored. Example: <b>C:\RetroBat\roms\</b>.<br>
+<b>MarqueeFilePathDefault</b>: Default Format for marquee file paths. Example: <b>{system_name}\images\{game_name}-marquee</b>.<br>
+<b>MarqueeAutoConvert</b>: Resize and convert marquee image with MarqueeImagePath structure name + "-topper" suffix<br>
+<b>MarqueeAutoScraping</b>: Dynamic scrap marquee image on screenscraper (add image url to scrap in a "scrap.pool" pool file) and download and save image in folder MarqueeImagePath with name structure MarqueeImagePath<br>
+<b>MarqueeAutoScrapingDebug</b>: Save failed scraps in a "scrapfailed.pool" file in C:\RetroBat\marquees\ folder<br>
 <b>SystemMarqueePath</b>: Path to system marquees. Example: <b>C:\RetroBat\emulationstation\.emulationstation\themes\es-theme-carbon\art\logos</b>.<br>
 <b>SystemFilePath</b>: Format for system file paths. Example: <b>{system_name}</b>.<br>
 <b>CollectionMarqueePath</b>: Path to collection marquees. Example: <b>C:\RetroBat\emulationstation\.emulationstation\themes\es-theme-carbon\art\logos</b>.<br>
@@ -67,6 +72,7 @@ The events.ini file contains several settings that dictate how the marquee syste
 <b>system-selected</b>: Command action after a system is selected.<br>
 <b>game-select</b>: Command action when a game is selected.<br>
 <b>game-selected</b>: Command action after a game is selected.<br><br>
+<b>mpv-show-text</b>: Command action to push text into mpv when an image has been successfully scrapped.<br><br>
 </p>
 <h2>Managing Marquee Images</h2>
 <h3>Game Marquees</h3>
