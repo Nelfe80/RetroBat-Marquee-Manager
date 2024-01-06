@@ -1,7 +1,7 @@
+<img src="https://github.com/Nelfe80/RetroBat-Marquee-Manager/blob/master/dist/images/logo.png" style="width:50%;">
 <h1>RetroBat-Marquee-Manager V2 - a Dynamic Marquees for RetroBat</h1>
-<h2>Svg support, resizing, converting and dynamic scrapping</h2>
-<img src="https://github.com/Nelfe80/RetroBat-Marquee-Manager/blob/master/dist/images/logo.png" style="width:60%">
-<p>This project enables **dynamic display of marquees** on a secondary screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
+<h2>Svg support / Auto-resizing / Dynamic Scrapping</h2>
+<p>This project enables **dynamic display of marquees** on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
 </p>
 <p>Thanks to Aynshe and Retrobat's community testers. </p>
 
