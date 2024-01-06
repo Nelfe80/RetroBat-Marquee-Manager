@@ -1,13 +1,12 @@
 <img src="https://github.com/Nelfe80/RetroBat-Marquee-Manager/blob/master/dist/images/logo.png" style="width:100%;">
 <h1>RetroBat Marquee Manager (V2)</h1>
 <h2>A Dynamic Marquees for RetroBat with Svg support / Auto-resizing / Dynamic Scrapping</h2>
-<p>This project enables **dynamic display of marquees** on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
+<p>This project enables <b>dynamic display of marquees</b> on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
 </p>
 <p>Thanks to Aynshe and Retrobat's community testers. </p>
 <h2>Install</h2>
 <p>
-Important Setup Instructions for ESEvents and ESEventPush<br>
-<b>Placement of Files</b>:<br>
+Important Setup Instructions<br>
 Create a marquees folder : "C:\RetroBat\marquees"<br>
 (download the project and go to the /dist folder and copy all files in "C:\RetroBat\marquees\")<br>
 - events.ini ()<br>
