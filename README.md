@@ -9,7 +9,7 @@
 Important Setup Instructions<br>
 Create a marquees folder : "C:\RetroBat\marquees"<br>
 (download the project and go to the /dist folder and copy all files in "C:\RetroBat\marquees\")<br>
-- events.ini ()<br>
+- events.ini (settings file)<br>
 - ESEvents.exe (events listener like game-selected/game-start/system-selected...)<br>
 - StartRetrobatMarquees.bat (to launch without dynamic scrapping) or StartRetrobatMarqueesAS.bat (to launche with Auto dynamic Scrapping)<br>
 - ESEventsScrapTopper.exe (dynamic scrapping listener, download image on screenscraper then rename and push scraped image in MarqueeImagePath\MarqueeFilePath)<br>
