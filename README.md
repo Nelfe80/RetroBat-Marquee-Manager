@@ -36,7 +36,7 @@ By following these instructions, you'll ensure that ESEvents.exe and ESEventPush
 Configure events.ini to specify paths for marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly.
 </p>
 <h2>Download and install marquees</h2>
-You can find marquees here :<br>
+You can download marquees here :<br>
 Launchbox Games Database : <a href="https://gamesdb.launchbox-app.com/">https://gamesdb.launchbox-app.com/</a><br>
 Pixelcade Forums : <a href="https://pixelcade.org/forum/art-exchange-lcd/a-few-lcd-marquees-links/#post-2071">https://pixelcade.org/forum/art-exchange-lcd/a-few-lcd-marquees-links/#post-2071</a><br>
 <p></p>
