@@ -9,6 +9,10 @@ if not errorlevel 1 taskkill /IM ESEvents.exe /F
 tasklist | find /I "ESEventPush.exe" > NUL
 if not errorlevel 1 taskkill /IM ESEventPush.exe /F
 
+:: Vérifier et fermer ESEventsScrapTopper.exe si en cours d'exécution
+tasklist | find /I "ESEventsScrapTopper.exe" > NUL
+if not errorlevel 1 taskkill /IM ESEventsScrapTopper.exe /F
+
 :: Vérifier et fermer mpv.exe si en cours d'exécution
 tasklist | find /I "mpv.exe" > NUL
 if not errorlevel 1 taskkill /IM mpv.exe /F
