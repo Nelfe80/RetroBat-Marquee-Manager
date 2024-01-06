@@ -1,17 +1,22 @@
-<img src="https://github.com/Nelfe80/RetroBat-Marquee-Manager/blob/master/dist/images/logo.png" style="width:50%;">
+<img src="https://github.com/Nelfe80/RetroBat-Marquee-Manager/blob/master/dist/images/logo.png" style="width:100%;">
 <h1>RetroBat-Marquee-Manager V2 - a Dynamic Marquees for RetroBat</h1>
 <h2>Svg support / Auto-resizing / Dynamic Scrapping</h2>
 <p>This project enables **dynamic display of marquees** on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
 </p>
 <p>Thanks to Aynshe and Retrobat's community testers. </p>
-
 <h2>Install</h2>
 <p>
 Important Setup Instructions for ESEvents and ESEventPush<br>
 <b>Placement of Files</b>:<br>
 Create a marquees folder : "C:\RetroBat\marquees"<br>
-(download the project and go to the /dist folder and copy all files in "C:\RetroBat\marquees")<br>
-Place events.ini and ESEvents.exe and StartRetrobatMarquees.bat in the "C:\RetroBat\marquees" directory.<br>
+(download the project and go to the /dist folder and copy all files in "C:\RetroBat\marquees\")<br>
+- events.ini ()<br>
+- ESEvents.exe (events listener like game-selected/game-start/system-selected...)<br>
+- StartRetrobatMarquees.bat (to launch without dynamic scrapping) or StartRetrobatMarqueesAS.bat (to launche with Auto dynamic Scrapping)<br>
+- ESEventsScrapTopper.exe (dynamic scrapping listener, download image on screenscraper then rename and push scraped image in MarqueeImagePath\MarqueeFilePath)<br>
+- screenscraper.ini (dynamic scrapping dictionnary)<br>
+- systems.scrap (screenscraper systems ids) [use ESEventsScrapSystems.exe to update this file if needed]<br>
+<br>in the "C:\RetroBat\marquees" directory.<br>
 Place ESEventPush.exe in directories such as <br>
 - "C:\RetroBat\emulationstation\.emulationstation\scripts\game-selected" >> update marquee when a game is selected<br>
 - "C:\RetroBat\emulationstation\.emulationstation\scripts\system-selected" >> update marquee when a system is selected<br>
@@ -24,12 +29,10 @@ MPV to target screen and display images and videos : for mpv, visit their offici
 ImageMagick to convert (svg to png), resize and optimize images : for ImageMagick, visit <a href="https://imagemagick.org">ImageMagick's Website</a> and install it similarly in the marquees directory. This should result in a path like "C:\RetroBat\marquees\imagemagick\convert.exe".<br>
 By following these instructions, you'll ensure that ESEvents.exe and ESEventPush.exe are correctly placed, and the necessary tools (mpv and ImageMagick) are installed and configured for optimal performance.
 </p>
-
 <h2>Configuring events.ini File</h2>
 <p>
 Configure events.ini to specify paths for marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly.
 </p>
-
 <h2>Scrapping usage</h2>
 <p>
 If you plan to use scraped marquees or incorporate your own custom marquee images into the system, please be aware of an issue in the scraping process. Both logos and marquee images are currently saved with the same suffix <b>-marquee</b> at the end of the file name. This can lead to confusion and potential file conflicts within the system.
@@ -50,8 +53,6 @@ After scraping, you might encounter the situation where both marquees and logos 
 <p>
 It is important to note that SVG files may require additional processing time during their first use. However, once they are converted to PNG format, you will experience smoother navigation and quicker access to these images within the system.
 </p>
-
-
 <h3>StartRetroBat with StartRetrobatMarquees.bat to activate the dynamic marquee system and launch RetroBat.</h3> 
 <h2>Notes</h2>
 <p>
