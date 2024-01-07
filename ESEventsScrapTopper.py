@@ -159,9 +159,9 @@ def scrape_marquee(game_system, game_title, game_name, marquee_path, full_marque
 
     # Préparation des paramètres pour l'appel API
     api_params = {
-        'devid': '',
+        'devid': 'Nelfe',
         'devpassword': '',
-        'softname': 'ESEventsScrapTopper',
+        'softname': '',
         'output': 'json',
         'ssid': es_settings['ScreenScraperUser'],
         'sspassword': es_settings['ScreenScraperPass'],
@@ -193,7 +193,7 @@ def scrape_marquee(game_system, game_title, game_name, marquee_path, full_marque
         logging.debug(f"full_marquee_path: {full_marquee_path}")
         if scraper.downloadAndSaveImage(marquee_media['url'], full_marquee_path, marquee_media['format']):
             logging.debug(f"URL du marquee trouvé: {marquee_media['url']}.{marquee_media['format']}")
-            command = config['Commands']['mpv-show-text'].format(
+            command = config['Settings']['MPVShowText'].format(
                                     message=(f"{game_title.replace('+', ' ')} topper successfully scrapped!"),
                                     IPCChannel=config['Settings']['IPCChannel']
                                 )
