@@ -1,0 +1,3411 @@
+[
+    {
+        "Title": ".hack//Link",
+        "ID": 3470,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061280.png",
+        "NumAchievements": 132,
+        "NumLeaderboards": 0,
+        "Points": 834,
+        "DateModified": "2023-05-01 00:44:30",
+        "ForumTopicID": 14027,
+        "Hashes": [
+            "c3c4d4743281c1ed721ca8f189712689"
+        ]
+    },
+    {
+        "Title": "20Q",
+        "ID": 6352,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048439.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 0,
+        "Points": 51,
+        "DateModified": "2021-12-11 22:03:46",
+        "ForumTopicID": 13981,
+        "Hashes": [
+            "d15abb1e055ae654683382a08e71d701"
+        ]
+    },
+    {
+        "Title": "3rd Birthday, The",
+        "ID": 3511,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/071386.png",
+        "NumAchievements": 75,
+        "NumLeaderboards": 7,
+        "Points": 1230,
+        "DateModified": "2023-08-16 17:37:14",
+        "ForumTopicID": 17592,
+        "Hashes": [
+            "f4a5ab3f304023ced53b0c38fd5e521a"
+        ]
+    },
+    {
+        "Title": "5-in-1 Solitaire",
+        "ID": 21510,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/078593.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 10,
+        "Points": 123,
+        "DateModified": "2023-08-03 03:44:52",
+        "ForumTopicID": 22676,
+        "Hashes": [
+            "7af033156fdd0635eb4bc408fa9086ef",
+            "79f3af1ed146cae57dc3e26e7d662074"
+        ]
+    },
+    {
+        "Title": "Angry Birds",
+        "ID": 5360,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/062993.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 63,
+        "Points": 315,
+        "DateModified": "2023-09-11 11:05:17",
+        "ForumTopicID": 16209,
+        "Hashes": [
+            "5570869cfdb29a4244527df0c76d0e68"
+        ]
+    },
+    {
+        "Title": "Ape Escape: On the Loose",
+        "ID": 3514,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/070401.png",
+        "NumAchievements": 121,
+        "NumLeaderboards": 23,
+        "Points": 955,
+        "DateModified": "2023-09-04 22:42:44",
+        "ForumTopicID": 15225,
+        "Hashes": [
+            "a7a67425a2b24a1d3d76d5008c3bc0d7"
+        ]
+    },
+    {
+        "Title": "Archer Maclean's Mercury",
+        "ID": 18764,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/056028.png",
+        "NumAchievements": 111,
+        "NumLeaderboards": 83,
+        "Points": 752,
+        "DateModified": "2023-03-15 00:07:44",
+        "ForumTopicID": 17159,
+        "Hashes": [
+            "fb96070bcab62309f02052dff3c53f0c"
+        ]
+    },
+    {
+        "Title": "Ben 10: Alien Force",
+        "ID": 18009,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/059702.png",
+        "NumAchievements": 43,
+        "NumLeaderboards": 0,
+        "Points": 254,
+        "DateModified": "2022-12-21 04:54:35",
+        "ForumTopicID": 17151,
+        "Hashes": [
+            "40256500757957fbdc744cac84ab2027"
+        ]
+    },
+    {
+        "Title": "Ben 10: Protector of Earth",
+        "ID": 17978,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050406.png",
+        "NumAchievements": 97,
+        "NumLeaderboards": 24,
+        "Points": 702,
+        "DateModified": "2023-10-26 06:03:20",
+        "ForumTopicID": 14025,
+        "Hashes": [
+            "eea6ee9b573e8244629416482595982b"
+        ]
+    },
+    {
+        "Title": "Black Rock Shooter: The Game",
+        "ID": 2923,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047115.png",
+        "NumAchievements": 105,
+        "NumLeaderboards": 0,
+        "Points": 444,
+        "DateModified": "2021-10-08 19:05:15",
+        "ForumTopicID": 13786,
+        "Hashes": [
+            "bd70e59736710b18cb0ce9167d72d012"
+        ]
+    },
+    {
+        "Title": "BlazBlue: Calamity Trigger",
+        "ID": 2915,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/053079.png",
+        "NumAchievements": 102,
+        "NumLeaderboards": 0,
+        "Points": 1063,
+        "DateModified": "2022-03-26 07:17:53",
+        "ForumTopicID": 15224,
+        "Hashes": [
+            "1fcb9839d670dd08c85e2baaadd5d4b1"
+        ]
+    },
+    {
+        "Title": "BlazBlue: Continuum Shift II",
+        "ID": 18512,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/053677.png",
+        "NumAchievements": 66,
+        "NumLeaderboards": 7,
+        "Points": 1310,
+        "DateModified": "2022-08-26 22:09:08",
+        "ForumTopicID": 15418,
+        "Hashes": [
+            "04c334a6d406ae5219f366b13e1838e1"
+        ]
+    },
+    {
+        "Title": "Bleach: Heat the Soul",
+        "ID": 18088,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049501.png",
+        "NumAchievements": 60,
+        "NumLeaderboards": 6,
+        "Points": 571,
+        "DateModified": "2022-08-20 21:49:30",
+        "ForumTopicID": 14188,
+        "Hashes": [
+            "1d3f83cff18fa4e23f15d8e486e64a2c"
+        ]
+    },
+    {
+        "Title": "Bleach: Heat the Soul 2",
+        "ID": 18121,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049781.png",
+        "NumAchievements": 105,
+        "NumLeaderboards": 12,
+        "Points": 801,
+        "DateModified": "2023-09-07 00:25:39",
+        "ForumTopicID": 14248,
+        "Hashes": [
+            "19cc0fb5d46cf30e83177a37f0224445"
+        ]
+    },
+    {
+        "Title": "Bleach: Heat the Soul 3",
+        "ID": 18127,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050051.png",
+        "NumAchievements": 61,
+        "NumLeaderboards": 1,
+        "Points": 512,
+        "DateModified": "2022-01-23 14:05:17",
+        "ForumTopicID": 14270,
+        "Hashes": [
+            "ba0044e63b2cebad2a10f98e05e9073d"
+        ]
+    },
+    {
+        "Title": "Bleach: Heat the Soul 4",
+        "ID": 18168,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050196.png",
+        "NumAchievements": 61,
+        "NumLeaderboards": 51,
+        "Points": 695,
+        "DateModified": "2021-11-19 16:53:22",
+        "ForumTopicID": 14344,
+        "Hashes": [
+            "d54ccb1eb8ecb57f807f1604d887cf33"
+        ]
+    },
+    {
+        "Title": "Bleach: Heat the Soul 5",
+        "ID": 18181,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050261.png",
+        "NumAchievements": 84,
+        "NumLeaderboards": 1,
+        "Points": 555,
+        "DateModified": "2022-07-03 19:09:55",
+        "ForumTopicID": 14384,
+        "Hashes": [
+            "94d2d5fa7806c60dbc65018a9507d80c"
+        ]
+    },
+    {
+        "Title": "Bleach: Heat the Soul 6",
+        "ID": 18337,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/051989.png",
+        "NumAchievements": 123,
+        "NumLeaderboards": 72,
+        "Points": 831,
+        "DateModified": "2022-01-20 13:08:02",
+        "ForumTopicID": 14771,
+        "Hashes": [
+            "fc6e27eaf6f54d95255d9ab52d20a277"
+        ]
+    },
+    {
+        "Title": "Bleach: Heat the Soul 7",
+        "ID": 18344,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/052525.png",
+        "NumAchievements": 43,
+        "NumLeaderboards": 0,
+        "Points": 345,
+        "DateModified": "2022-07-20 14:53:07",
+        "ForumTopicID": 14821,
+        "Hashes": [
+            "875430ee163a66c0e8e6efe9be1153c5"
+        ]
+    },
+    {
+        "Title": "Bleach: Heat the Soul 7 [Subset - DLC Normal and Battle Royale]",
+        "ID": 20241,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/060478.png",
+        "NumAchievements": 85,
+        "NumLeaderboards": 0,
+        "Points": 85,
+        "DateModified": "2022-12-21 02:46:58",
+        "ForumTopicID": 17500,
+        "Hashes": [
+            "517d050a4bb9de87d16c1219b9dff22f"
+        ]
+    },
+    {
+        "Title": "Bloons",
+        "ID": 16227,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/080697.png",
+        "NumAchievements": 28,
+        "NumLeaderboards": 0,
+        "Points": 153,
+        "DateModified": "2023-08-15 14:21:51",
+        "ForumTopicID": 22850,
+        "Hashes": [
+            "ae2cfa6d46f1d2abb4971f53aa475696"
+        ]
+    },
+    {
+        "Title": "Brick Breaker",
+        "ID": 15395,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/082085.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 64,
+        "Points": 208,
+        "DateModified": "2023-09-05 16:20:33",
+        "ForumTopicID": 23231,
+        "Hashes": [
+            "a180b85b5f0385674043c8491e1c21e3"
+        ]
+    },
+    {
+        "Title": "Burnout Legends",
+        "ID": 3185,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/059681.png",
+        "NumAchievements": 118,
+        "NumLeaderboards": 170,
+        "Points": 680,
+        "DateModified": "2023-01-05 05:10:57",
+        "ForumTopicID": 17167,
+        "Hashes": [
+            "8120f27104a6018698433582a52b1bf2",
+            "e88343b1225dd91b9c5c826ad3b8410a"
+        ]
+    },
+    {
+        "Title": "Canabalt",
+        "ID": 2388,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061568.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 1,
+        "Points": 101,
+        "DateModified": "2022-11-28 23:13:59",
+        "ForumTopicID": 18109,
+        "Hashes": [
+            "bcefea03082c402b8ef418cf84610ec8"
+        ]
+    },
+    {
+        "Title": "Carnivores: Dinosaur Hunter",
+        "ID": 17977,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048589.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 0,
+        "Points": 425,
+        "DateModified": "2021-10-28 16:16:22",
+        "ForumTopicID": 14018,
+        "Hashes": [
+            "617582e93f4364880ad28e94375156a5"
+        ]
+    },
+    {
+        "Title": "Carnivores: Ice Age",
+        "ID": 25694,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/082520.png",
+        "NumAchievements": 43,
+        "NumLeaderboards": 11,
+        "Points": 431,
+        "DateModified": "2023-10-10 00:46:21",
+        "ForumTopicID": 23313,
+        "Hashes": [
+            "37d7ea68e2e0924dd6ea1b81805b9f3c"
+        ]
+    },
+    {
+        "Title": "Castlevania: The Dracula X Chronicles",
+        "ID": 3165,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/085805.png",
+        "NumAchievements": 191,
+        "NumLeaderboards": 32,
+        "Points": 1570,
+        "DateModified": "2023-10-22 20:07:24",
+        "ForumTopicID": 13800,
+        "Hashes": [
+            "09ec75105c748f366acbbcc56817fe03"
+        ]
+    },
+    {
+        "Title": "Cho Aniki Zero: Muscle Brothers",
+        "ID": 3463,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049000.png",
+        "NumAchievements": 32,
+        "NumLeaderboards": 0,
+        "Points": 430,
+        "DateModified": "2023-07-16 12:38:29",
+        "ForumTopicID": 14053,
+        "Hashes": [
+            "c2330bf563b33c189e0e23cb9613638b"
+        ]
+    },
+    {
+        "Title": "Cladun: This Is An RPG",
+        "ID": 14498,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/052377.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 0,
+        "Points": 323,
+        "DateModified": "2023-03-05 23:59:24",
+        "ForumTopicID": 14985,
+        "Hashes": [
+            "9b88104b6423736d3eefbd6f890d922b"
+        ]
+    },
+    {
+        "Title": "Coconut Dodge",
+        "ID": 18071,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049374.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 1,
+        "Points": 575,
+        "DateModified": "2023-04-12 22:57:26",
+        "ForumTopicID": 14150,
+        "Hashes": [
+            "4be9f7e361ef700e696e13540ced33c1"
+        ]
+    },
+    {
+        "Title": "Corpse Party",
+        "ID": 3541,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048450.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 0,
+        "Points": 197,
+        "DateModified": "2021-10-02 05:29:39",
+        "ForumTopicID": 13962,
+        "Hashes": [
+            "ae42cde972de8cb6a47f332b04b13b61"
+        ]
+    },
+    {
+        "Title": "Corpse Party: Book of Shadows",
+        "ID": 3980,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049362.png",
+        "NumAchievements": 44,
+        "NumLeaderboards": 0,
+        "Points": 310,
+        "DateModified": "2022-06-13 00:07:23",
+        "ForumTopicID": 14145,
+        "Hashes": [
+            "dab14ca32593c36bf5061aced3438c7f"
+        ]
+    },
+    {
+        "Title": "Crash of the Titans",
+        "ID": 18160,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/081112.png",
+        "NumAchievements": 77,
+        "NumLeaderboards": 0,
+        "Points": 620,
+        "DateModified": "2023-02-09 01:30:02",
+        "ForumTopicID": 16579,
+        "Hashes": [
+            "de6ef03ccfbc839beafa318a7884e22e"
+        ]
+    },
+    {
+        "Title": "Crash Tag Team Racing",
+        "ID": 3192,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/074990.png",
+        "NumAchievements": 75,
+        "NumLeaderboards": 8,
+        "Points": 696,
+        "DateModified": "2023-08-21 11:21:41",
+        "ForumTopicID": 15425,
+        "Hashes": [
+            "97935e8ade91558f945418fa7716587e"
+        ]
+    },
+    {
+        "Title": "Creature Defense",
+        "ID": 20317,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061053.png",
+        "NumAchievements": 35,
+        "NumLeaderboards": 5,
+        "Points": 450,
+        "DateModified": "2022-08-16 09:01:28",
+        "ForumTopicID": 17796,
+        "Hashes": [
+            "0a93a81342d03339b472d64170c39f10"
+        ]
+    },
+    {
+        "Title": "Crisis Core: Final Fantasy VII",
+        "ID": 10387,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/056892.png",
+        "NumAchievements": 238,
+        "NumLeaderboards": 0,
+        "Points": 1590,
+        "DateModified": "2023-01-01 20:01:02",
+        "ForumTopicID": 13885,
+        "Hashes": [
+            "652584a02890f2b5c77444eabe64a928"
+        ]
+    },
+    {
+        "Title": "Crisis Core: Final Fantasy VII [Subset - Cursed - Lv.6]",
+        "ID": 22826,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/069297.png",
+        "NumAchievements": 103,
+        "NumLeaderboards": 0,
+        "Points": 915,
+        "DateModified": "2023-03-05 05:33:57",
+        "ForumTopicID": 20639,
+        "Hashes": [
+            "2d69def245cd3b3f6ac87b267e2ee8e2"
+        ]
+    },
+    {
+        "Title": "Crush",
+        "ID": 13173,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/076659.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 50,
+        "Points": 685,
+        "DateModified": "2022-12-14 11:53:31",
+        "ForumTopicID": 18484,
+        "Hashes": [
+            "d37a6997e16556553b9a810723a728f8"
+        ]
+    },
+    {
+        "Title": "Crystal Defenders",
+        "ID": 3466,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048344.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 0,
+        "Points": 300,
+        "DateModified": "2021-11-19 19:44:26",
+        "ForumTopicID": 13954,
+        "Hashes": [
+            "23e4f731dafa5e07a5038f5302dbca8e"
+        ]
+    },
+    {
+        "Title": "Danganronpa: Kibou no Gakuen to Zetsubou no Koukousei",
+        "ID": 3729,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049283.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 0,
+        "Points": 835,
+        "DateModified": "2023-09-09 17:12:09",
+        "ForumTopicID": 14038,
+        "Hashes": [
+            "7763b2ed360183ea3f9ea7e34b783239"
+        ]
+    },
+    {
+        "Title": "Daxter",
+        "ID": 10477,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047449.png",
+        "NumAchievements": 83,
+        "NumLeaderboards": 6,
+        "Points": 989,
+        "DateModified": "2023-09-21 11:06:44",
+        "ForumTopicID": 17076,
+        "Hashes": [
+            "e24af2582d948cb24d2959cd61cdcbb6"
+        ]
+    },
+    {
+        "Title": "Death Jr.",
+        "ID": 3467,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049472.png",
+        "NumAchievements": 56,
+        "NumLeaderboards": 16,
+        "Points": 659,
+        "DateModified": "2022-06-17 03:32:05",
+        "ForumTopicID": 13926,
+        "Hashes": [
+            "7c51dfeecd1e1a5a512e0b92ae2b3748"
+        ]
+    },
+    {
+        "Title": "Diner Dash",
+        "ID": 18133,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050365.png",
+        "NumAchievements": 83,
+        "NumLeaderboards": 6,
+        "Points": 586,
+        "DateModified": "2023-08-13 02:18:16",
+        "ForumTopicID": 14302,
+        "Hashes": [
+            "d3692110bb9d2f30368c49fddfea4c02"
+        ]
+    },
+    {
+        "Title": "Disgaea 2: Dark Hero Days",
+        "ID": 3597,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/069073.png",
+        "NumAchievements": 103,
+        "NumLeaderboards": 0,
+        "Points": 1127,
+        "DateModified": "2023-05-04 18:39:56",
+        "ForumTopicID": 19108,
+        "Hashes": [
+            "7e132f728e1fa60a9e63ac6af67aca4a"
+        ]
+    },
+    {
+        "Title": "Disgaea: Afternoon of Darkness",
+        "ID": 3979,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061059.png",
+        "NumAchievements": 82,
+        "NumLeaderboards": 0,
+        "Points": 929,
+        "DateModified": "2023-03-29 05:03:08",
+        "ForumTopicID": 14729,
+        "Hashes": [
+            "67a54b647e5e747ed9780254f923eed0"
+        ]
+    },
+    {
+        "Title": "Dissidia 012: Duodecim Final Fantasy",
+        "ID": 3515,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049140.png",
+        "NumAchievements": 196,
+        "NumLeaderboards": 0,
+        "Points": 1410,
+        "DateModified": "2023-08-18 06:41:56",
+        "ForumTopicID": 15099,
+        "Hashes": [
+            "535fbe171339b284f2a307aa33a8bfa5",
+            "caac80fb17c12895b90fbc42f6b34d47"
+        ]
+    },
+    {
+        "Title": "Dissidia: Final Fantasy",
+        "ID": 3517,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049135.png",
+        "NumAchievements": 152,
+        "NumLeaderboards": 0,
+        "Points": 1100,
+        "DateModified": "2023-05-23 03:27:02",
+        "ForumTopicID": 14092,
+        "Hashes": [
+            "64b0160ea4b81f208e82b732271924ed"
+        ]
+    },
+    {
+        "Title": "DJ Max Fever",
+        "ID": 18157,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/080862.png",
+        "NumAchievements": 467,
+        "NumLeaderboards": 624,
+        "Points": 3300,
+        "DateModified": "2023-11-22 10:21:58",
+        "ForumTopicID": 18165,
+        "Hashes": [
+            "28a895eeebf757f41ce07682620ffac3"
+        ]
+    },
+    {
+        "Title": "DJMax Portable",
+        "ID": 18153,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/067955.png",
+        "NumAchievements": 419,
+        "NumLeaderboards": 331,
+        "Points": 2700,
+        "DateModified": "2023-11-22 10:53:07",
+        "ForumTopicID": 20316,
+        "Hashes": [
+            "a9d0ee1827936d55e2079d9fb2d37cf8"
+        ]
+    },
+    {
+        "Title": "Downstream Panic! | Aqua Panic!",
+        "ID": 18724,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/071354.png",
+        "NumAchievements": 108,
+        "NumLeaderboards": 0,
+        "Points": 801,
+        "DateModified": "2022-03-17 08:23:34",
+        "ForumTopicID": 15656,
+        "Hashes": [
+            "2a06f94e626df63530187f02b5cc1119"
+        ]
+    },
+    {
+        "Title": "Dr. Mini Games",
+        "ID": 17984,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048676.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 3,
+        "Points": 75,
+        "DateModified": "2021-10-07 17:53:42",
+        "ForumTopicID": 14046,
+        "Hashes": [
+            "7b12b53ef8d420607da2190a85e39791"
+        ]
+    },
+    {
+        "Title": "Dragon Ball Z: Shin Budokai",
+        "ID": 3910,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049788.png",
+        "NumAchievements": 70,
+        "NumLeaderboards": 8,
+        "Points": 840,
+        "DateModified": "2023-08-30 10:56:52",
+        "ForumTopicID": 14242,
+        "Hashes": [
+            "9eafbdbb000a3df7e82c0f0574590dd3"
+        ]
+    },
+    {
+        "Title": "Dragon Ball Z: Shin Budokai 2 - Another Road",
+        "ID": 18128,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049948.png",
+        "NumAchievements": 86,
+        "NumLeaderboards": 15,
+        "Points": 1165,
+        "DateModified": "2021-11-15 23:49:39",
+        "ForumTopicID": 14278,
+        "Hashes": [
+            "b99c8d48e41b1f6fb076c3f7a7b79391"
+        ]
+    },
+    {
+        "Title": "Dragon Ball Z: Tenkaichi Tag Team",
+        "ID": 18158,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050137.png",
+        "NumAchievements": 84,
+        "NumLeaderboards": 0,
+        "Points": 1115,
+        "DateModified": "2022-05-30 21:45:07",
+        "ForumTopicID": 14330,
+        "Hashes": [
+            "6cc44721266a2edda33729548b8d1056"
+        ]
+    },
+    {
+        "Title": "Dragon Quest & Final Fantasy in Itadaki Street Portable",
+        "ID": 7047,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/077730.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 0,
+        "Points": 475,
+        "DateModified": "2023-02-08 20:20:23",
+        "ForumTopicID": 14024,
+        "Hashes": [
+            "48e16a08ecd615273970e69a6599ebff"
+        ]
+    },
+    {
+        "Title": "Drums Challenge",
+        "ID": 6175,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/063387.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 0,
+        "Points": 549,
+        "DateModified": "2022-11-16 07:47:17",
+        "ForumTopicID": 18721,
+        "Hashes": [
+            "cc25400d2806a8431aca7b487548bd93"
+        ]
+    },
+    {
+        "Title": "Dungeon Maker: Hunting Ground",
+        "ID": 18094,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061972.png",
+        "NumAchievements": 68,
+        "NumLeaderboards": 0,
+        "Points": 410,
+        "DateModified": "2023-08-12 05:57:53",
+        "ForumTopicID": 14197,
+        "Hashes": [
+            "e7979749a4fb950f1cf00f2a5f67e956"
+        ]
+    },
+    {
+        "Title": "Dungeon Siege: Throne of Agony",
+        "ID": 15419,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050791.png",
+        "NumAchievements": 82,
+        "NumLeaderboards": 0,
+        "Points": 408,
+        "DateModified": "2021-12-11 17:21:48",
+        "ForumTopicID": 14328,
+        "Hashes": [
+            "e5ab9c22bf2ec50d1a2cbc7ac2186ede"
+        ]
+    },
+    {
+        "Title": "Dynasty Warriors",
+        "ID": 10478,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047317.png",
+        "NumAchievements": 113,
+        "NumLeaderboards": 0,
+        "Points": 763,
+        "DateModified": "2022-08-12 00:38:39",
+        "ForumTopicID": 13773,
+        "Hashes": [
+            "569ab9b233977db0ebe3c236bf97b7cf"
+        ]
+    },
+    {
+        "Title": "Dynasty Warriors: Strikeforce",
+        "ID": 3053,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047325.png",
+        "NumAchievements": 266,
+        "NumLeaderboards": 0,
+        "Points": 1955,
+        "DateModified": "2021-10-26 20:35:54",
+        "ForumTopicID": 13783,
+        "Hashes": [
+            "e9bafd52a1abfc7bc4e41e62088d3fbf"
+        ]
+    },
+    {
+        "Title": "Echochrome",
+        "ID": 2977,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047566.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 0,
+        "Points": 360,
+        "DateModified": "2021-09-14 09:11:05",
+        "ForumTopicID": 13844,
+        "Hashes": [
+            "c6493f1e0f6027d5691b44c00b20aaa8"
+        ]
+    },
+    {
+        "Title": "Evangelion New Theatrical Edition: 3nd Impact",
+        "ID": 2922,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047933.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 30,
+        "Points": 385,
+        "DateModified": "2022-05-12 22:20:43",
+        "ForumTopicID": 13860,
+        "Hashes": [
+            "1261b66ed5c0ceec4eb6557301a5af61"
+        ]
+    },
+    {
+        "Title": "Fate/Extra",
+        "ID": 18159,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/087496.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 0,
+        "Points": 627,
+        "DateModified": "2024-01-03 18:58:36",
+        "ForumTopicID": 24742,
+        "Hashes": [
+            "51702cfb0d15b515e63fc725244ed51a",
+            "efd7f9d175c4bd961b48e2652888db76"
+        ]
+    },
+    {
+        "Title": "Fate/unlimited codes",
+        "ID": 18355,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/086681.png",
+        "NumAchievements": 60,
+        "NumLeaderboards": 1,
+        "Points": 455,
+        "DateModified": "2023-12-14 21:06:31",
+        "ForumTopicID": 24729,
+        "Hashes": [
+            "42c3807be83428353c98e96d11d1e0b3"
+        ]
+    },
+    {
+        "Title": "FIFA 09",
+        "ID": 23962,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/074622.png",
+        "NumAchievements": 46,
+        "NumLeaderboards": 2,
+        "Points": 210,
+        "DateModified": "2023-08-21 17:18:34",
+        "ForumTopicID": 21771,
+        "Hashes": [
+            "93607528d58f3e7f6d98f39dde76b3d5"
+        ]
+    },
+    {
+        "Title": "Final Fantasy",
+        "ID": 3215,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/070784.png",
+        "NumAchievements": 58,
+        "NumLeaderboards": 0,
+        "Points": 576,
+        "DateModified": "2023-08-29 18:52:38",
+        "ForumTopicID": 14034,
+        "Hashes": [
+            "ccf5f988f7cd98e53adb40300f478f28"
+        ]
+    },
+    {
+        "Title": "Final Fantasy [Subset - Solo Class]",
+        "ID": 17996,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/071169.png",
+        "NumAchievements": 192,
+        "NumLeaderboards": 0,
+        "Points": 1548,
+        "DateModified": "2021-11-12 19:11:11",
+        "ForumTopicID": 14070,
+        "Hashes": [
+            "252260d705d7a01842c989936a58fa00"
+        ]
+    },
+    {
+        "Title": "Final Fantasy II",
+        "ID": 3822,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/070786.png",
+        "NumAchievements": 115,
+        "NumLeaderboards": 0,
+        "Points": 840,
+        "DateModified": "2023-10-31 11:40:59",
+        "ForumTopicID": 15419,
+        "Hashes": [
+            "89a7e92dc1b2288bf03009063157e34c",
+            "e16ddbe67ccd31e3e18e24e4b394b655"
+        ]
+    },
+    {
+        "Title": "Final Fantasy III",
+        "ID": 3216,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/070789.png",
+        "NumAchievements": 152,
+        "NumLeaderboards": 0,
+        "Points": 840,
+        "DateModified": "2023-09-17 02:52:34",
+        "ForumTopicID": 15677,
+        "Hashes": [
+            "f7590869f703e942a0942ac8ec489bb3"
+        ]
+    },
+    {
+        "Title": "Final Fantasy III [Subset - Max Jobs]",
+        "ID": 22178,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/073193.png",
+        "NumAchievements": 93,
+        "NumLeaderboards": 0,
+        "Points": 560,
+        "DateModified": "2023-03-21 18:47:26",
+        "ForumTopicID": 19978,
+        "Hashes": [
+            "5eac66c4aa132af4d5369c2a42332305"
+        ]
+    },
+    {
+        "Title": "Final Fantasy IV: The Complete Collection",
+        "ID": 3169,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047344.png",
+        "NumAchievements": 306,
+        "NumLeaderboards": 0,
+        "Points": 2081,
+        "DateModified": "2023-12-25 00:27:59",
+        "ForumTopicID": 13805,
+        "Hashes": [
+            "c8ca4bb4b63a8a1f5b452608a6ca9f3d"
+        ]
+    },
+    {
+        "Title": "Final Fantasy Tactics: The War of the Lions",
+        "ID": 3236,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/074335.png",
+        "NumAchievements": 172,
+        "NumLeaderboards": 0,
+        "Points": 1415,
+        "DateModified": "2023-10-09 14:09:20",
+        "ForumTopicID": 13793,
+        "Hashes": [
+            "0f1d6ad5c862533fd3320498027f02ed",
+            "1b538c44b03f78d9c5dbda58a687d402",
+            "1c83615beb62802d5bea34954ef4bdf0",
+            "dddba8f9b1d9e3d9c32f5b08f29d9f32"
+        ]
+    },
+    {
+        "Title": "Flying Hamster",
+        "ID": 5967,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061905.png",
+        "NumAchievements": 32,
+        "NumLeaderboards": 0,
+        "Points": 400,
+        "DateModified": "2023-07-22 13:08:58",
+        "ForumTopicID": 22632,
+        "Hashes": [
+            "7e9f7b528dc37bf7d819dedc8b792ea4"
+        ]
+    },
+    {
+        "Title": "Gitaroo Man Lives!",
+        "ID": 3474,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/071889.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 0,
+        "Points": 330,
+        "DateModified": "2022-05-02 20:05:48",
+        "ForumTopicID": 13834,
+        "Hashes": [
+            "4e2c9bc38cb4878c86dc0daba2f27513"
+        ]
+    },
+    {
+        "Title": "Gladiator Begins",
+        "ID": 18068,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049552.png",
+        "NumAchievements": 60,
+        "NumLeaderboards": 1,
+        "Points": 486,
+        "DateModified": "2022-11-12 22:04:59",
+        "ForumTopicID": 14155,
+        "Hashes": [
+            "d2a6d01bb04db407ea8c82d6974bda7a"
+        ]
+    },
+    {
+        "Title": "Go! Sudoku",
+        "ID": 18295,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/051227.png",
+        "NumAchievements": 100,
+        "NumLeaderboards": 0,
+        "Points": 192,
+        "DateModified": "2021-12-18 19:45:17",
+        "ForumTopicID": 14566,
+        "Hashes": [
+            "4550b7b5b665715728e1be6f9f6b27c9"
+        ]
+    },
+    {
+        "Title": "God of War: Chains of Olympus",
+        "ID": 3537,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/062097.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 32,
+        "Points": 516,
+        "DateModified": "2023-10-29 17:09:47",
+        "ForumTopicID": 13804,
+        "Hashes": [
+            "a3ca1c33a9fbf5934a77d94ee123a060"
+        ]
+    },
+    {
+        "Title": "God of War: Ghost of Sparta",
+        "ID": 3538,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061616.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 48,
+        "Points": 600,
+        "DateModified": "2022-09-28 03:24:47",
+        "ForumTopicID": 13797,
+        "Hashes": [
+            "da35693868f2af45c66ed63b11701e83"
+        ]
+    },
+    {
+        "Title": "Godfather, The: Mob Wars",
+        "ID": 19008,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/074948.png",
+        "NumAchievements": 31,
+        "NumLeaderboards": 3,
+        "Points": 356,
+        "DateModified": "2023-10-03 14:09:54",
+        "ForumTopicID": 16128,
+        "Hashes": [
+            "3046308f4aa461a07b2aaefc8794651c"
+        ]
+    },
+    {
+        "Title": "Gran Turismo: The Real Driving Simulator",
+        "ID": 15626,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/086182.png",
+        "NumAchievements": 204,
+        "NumLeaderboards": 1,
+        "Points": 1738,
+        "DateModified": "2024-01-04 20:49:47",
+        "ForumTopicID": 15753,
+        "Hashes": [
+            "cc0203795a287701409131676987c69c"
+        ]
+    },
+    {
+        "Title": "Grand Theft Auto: Liberty City Stories",
+        "ID": 3970,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048626.png",
+        "NumAchievements": 105,
+        "NumLeaderboards": 32,
+        "Points": 1016,
+        "DateModified": "2023-07-19 20:19:39",
+        "ForumTopicID": 14014,
+        "Hashes": [
+            "733f198ef30f5dd215ca59f5de58496e",
+            "0a86c655f890223f36b3993cfe4829fb"
+        ]
+    },
+    {
+        "Title": "Grand Theft Auto: Vice City Stories",
+        "ID": 3971,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/052895.png",
+        "NumAchievements": 190,
+        "NumLeaderboards": 113,
+        "Points": 1532,
+        "DateModified": "2023-09-29 01:16:40",
+        "ForumTopicID": 14430,
+        "Hashes": [
+            "7922f88a166493cf7ab3c268c25893bd",
+            "eee76c91b9abcad5a9d43256898bc4a7"
+        ]
+    },
+    {
+        "Title": "Half-Minute Hero",
+        "ID": 3539,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047362.png",
+        "NumAchievements": 110,
+        "NumLeaderboards": 192,
+        "Points": 795,
+        "DateModified": "2023-02-06 03:28:42",
+        "ForumTopicID": 14029,
+        "Hashes": [
+            "7704a5f8c1dce857566b8481990a8633"
+        ]
+    },
+    {
+        "Title": "Hatsune Miku: Project DIVA",
+        "ID": 3921,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061882.png",
+        "NumAchievements": 95,
+        "NumLeaderboards": 109,
+        "Points": 833,
+        "DateModified": "2021-10-09 18:59:09",
+        "ForumTopicID": 13784,
+        "Hashes": [
+            "77c8b2e896c2c0eee8e1c5ee8217f296",
+            "8ecc08f9aa914eac03aad37744996156",
+            "c35bcac5e9ad2e0165f6c58dd18a217a",
+            "fbe05ba179d0b1fb718fd6ad75012c34"
+        ]
+    },
+    {
+        "Title": "Hatsune Miku: Project DIVA [Subset - Full Combo Songs]",
+        "ID": 18005,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/063299.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 36,
+        "Points": 815,
+        "DateModified": "2022-10-25 05:55:23",
+        "ForumTopicID": 14100,
+        "Hashes": [
+            "07499ec99cef0fa63faf39455bf07c94",
+            "4273b7f60a2e9965197a15a0763033d1"
+        ]
+    },
+    {
+        "Title": "Hatsune Miku: Project DIVA 2nd",
+        "ID": 3923,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061883.png",
+        "NumAchievements": 108,
+        "NumLeaderboards": 184,
+        "Points": 926,
+        "DateModified": "2023-09-18 05:32:58",
+        "ForumTopicID": 13785,
+        "Hashes": [
+            "1908642f4886459ecda04173cb645d65",
+            "770c760630ba0e24a69c8dc2398d65ea",
+            "fb6e1e8bde4618c54eac4de0481cfeed",
+            "fad8e766057175357bb125068cd1c028",
+            "f411e0624c848a4af620698f7d857d8f",
+            "4d5e723cc6cc951637a512df23f75840"
+        ]
+    },
+    {
+        "Title": "Hatsune Miku: Project DIVA 2nd [Subset - Full Combo Songs]",
+        "ID": 21435,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/063141.png",
+        "NumAchievements": 46,
+        "NumLeaderboards": 46,
+        "Points": 1535,
+        "DateModified": "2022-10-24 18:03:38",
+        "ForumTopicID": 18693,
+        "Hashes": [
+            "6a072a1600ad36b2098b836277947237",
+            "c13cbc85241f70b498ff1beb6e1c6f1a"
+        ]
+    },
+    {
+        "Title": "Hatsune Miku: Project DIVA Extend",
+        "ID": 3516,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/061884.png",
+        "NumAchievements": 107,
+        "NumLeaderboards": 152,
+        "Points": 940,
+        "DateModified": "2022-10-28 01:55:46",
+        "ForumTopicID": 13890,
+        "Hashes": [
+            "2173da43bb1b1b1c0e3fe8973d8a6c5a",
+            "4f2debde7465b91ef4701bf290e51fb9",
+            "7e5dfd87dc8a9ea8a585b81238a74fd9",
+            "b29da97070bf75622656567130c6391c",
+            "b5a52416fd7d33b73844b1d64f5d0cf6",
+            "39901ffa4c5004ce798565b8927afea0",
+            "b949e0e8be4a9c54636c68e980e69ceb"
+        ]
+    },
+    {
+        "Title": "Hatsune Miku: Project DIVA Extend [Subset - Full Combo Songs]",
+        "ID": 21443,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/063262.png",
+        "NumAchievements": 38,
+        "NumLeaderboards": 38,
+        "Points": 1530,
+        "DateModified": "2022-10-27 21:34:09",
+        "ForumTopicID": 18715,
+        "Hashes": [
+            "69ebcc3037aa281c868b1937974e1324",
+            "c2ccd8f62ec6dbe8cad2679ce40c2032"
+        ]
+    },
+    {
+        "Title": "Hello Kitty: Puzzle Party",
+        "ID": 17995,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048848.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 0,
+        "Points": 46,
+        "DateModified": "2021-10-07 05:06:45",
+        "ForumTopicID": 14067,
+        "Hashes": [
+            "005c19468e9afd49ceee448e1052eb8a"
+        ]
+    },
+    {
+        "Title": "Hive Sweeper",
+        "ID": 26492,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/083932.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 45,
+        "Points": 104,
+        "DateModified": "2023-10-13 10:27:05",
+        "ForumTopicID": 23839,
+        "Hashes": [
+            "519631fe8682e7d442eb221656931409"
+        ]
+    },
+    {
+        "Title": "Hot Shots Golf: Open Tee | Everybody's Golf",
+        "ID": 3969,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/053615.png",
+        "NumAchievements": 95,
+        "NumLeaderboards": 78,
+        "Points": 939,
+        "DateModified": "2022-06-16 18:38:41",
+        "ForumTopicID": 14147,
+        "Hashes": [
+            "0ad36231c99d1d72857a827a7a2afeb2",
+            "75a79e663f8cd3bdb7fa3360b910e95a"
+        ]
+    },
+    {
+        "Title": "I Must Run!",
+        "ID": 22454,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/068496.png",
+        "NumAchievements": 18,
+        "NumLeaderboards": 3,
+        "Points": 140,
+        "DateModified": "2023-03-25 11:02:47",
+        "ForumTopicID": 20200,
+        "Hashes": [
+            "748d56107da4c90eabee5ef0f5038a18"
+        ]
+    },
+    {
+        "Title": "Impossible Game, The",
+        "ID": 6964,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048430.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 0,
+        "Points": 136,
+        "DateModified": "2021-09-27 14:37:41",
+        "ForumTopicID": 13978,
+        "Hashes": [
+            "6ad823f77f719201b2f7447cdb3cad6d"
+        ]
+    },
+    {
+        "Title": "Initial D: Street Stage",
+        "ID": 3995,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047610.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 0,
+        "Points": 348,
+        "DateModified": "2023-06-23 16:23:30",
+        "ForumTopicID": 13774,
+        "Hashes": [
+            "ce8335cf9d6e7bb442867dd5c33d5e82"
+        ]
+    },
+    {
+        "Title": "Innocent Life: A Futuristic Harvest Moon",
+        "ID": 3033,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/057981.png",
+        "NumAchievements": 65,
+        "NumLeaderboards": 2,
+        "Points": 480,
+        "DateModified": "2023-08-14 16:52:44",
+        "ForumTopicID": 22186,
+        "Hashes": [
+            "fbc0539a33477bf7a1c7b3067a1061bc"
+        ]
+    },
+    {
+        "Title": "Jeanne D'Arc",
+        "ID": 3509,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049641.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 0,
+        "Points": 1060,
+        "DateModified": "2023-02-25 05:32:39",
+        "ForumTopicID": 15223,
+        "Hashes": [
+            "f5b0020aac4ce90c808fefd54f2bd494"
+        ]
+    },
+    {
+        "Title": "Jetpack Joyride",
+        "ID": 6580,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049686.png",
+        "NumAchievements": 38,
+        "NumLeaderboards": 2,
+        "Points": 187,
+        "DateModified": "2021-11-02 21:21:22",
+        "ForumTopicID": 14236,
+        "Hashes": [
+            "d96cbe68ce25650983054fbcc9f00b7a"
+        ]
+    },
+    {
+        "Title": "K-ON! After School Live!! | K-ON! Ho-kago Live!!",
+        "ID": 3519,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047661.png",
+        "NumAchievements": 189,
+        "NumLeaderboards": 190,
+        "Points": 1825,
+        "DateModified": "2023-05-23 06:35:37",
+        "ForumTopicID": 13775,
+        "Hashes": [
+            "6b2469b082aeb691750caa0e7a68051e",
+            "ba20990578d0075cdcfeb104950cac74"
+        ]
+    },
+    {
+        "Title": "Kamen Rider: Climax Heroes OOO",
+        "ID": 18003,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/058008.png",
+        "NumAchievements": 103,
+        "NumLeaderboards": 0,
+        "Points": 1020,
+        "DateModified": "2022-05-10 02:46:01",
+        "ForumTopicID": 14093,
+        "Hashes": [
+            "673f13231fa36eba3b74edb43012e3e0"
+        ]
+    },
+    {
+        "Title": "Kingdom Hearts: Birth by Sleep -Final Mix-",
+        "ID": 3556,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/056477.png",
+        "NumAchievements": 132,
+        "NumLeaderboards": 5,
+        "Points": 1654,
+        "DateModified": "2023-04-03 05:29:20",
+        "ForumTopicID": 13845,
+        "Hashes": [
+            "f8a052826cd181bd1ee95875bc4b77ac"
+        ]
+    },
+    {
+        "Title": "Legend of Heroes II, The: Prophecy of the Moonlight Witch",
+        "ID": 3563,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/052531.png",
+        "NumAchievements": 59,
+        "NumLeaderboards": 0,
+        "Points": 394,
+        "DateModified": "2023-10-17 11:04:25",
+        "ForumTopicID": 15196,
+        "Hashes": [
+            "7d7d382b51dc4758a20c4ecde0b2d70b"
+        ]
+    },
+    {
+        "Title": "Legend of Heroes III, The: Song of the Ocean",
+        "ID": 3567,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/052534.png",
+        "NumAchievements": 180,
+        "NumLeaderboards": 0,
+        "Points": 1178,
+        "DateModified": "2023-10-06 01:02:06",
+        "ForumTopicID": 15195,
+        "Hashes": [
+            "94aac57677c20e65626f2276a1d86cea"
+        ]
+    },
+    {
+        "Title": "Legend of Heroes, The: A Tear of Vermillion",
+        "ID": 3562,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/052528.png",
+        "NumAchievements": 76,
+        "NumLeaderboards": 0,
+        "Points": 436,
+        "DateModified": "2023-07-25 06:05:35",
+        "ForumTopicID": 15194,
+        "Hashes": [
+            "3ff37ebb3e3f433e4b220f8de5dc3785"
+        ]
+    },
+    {
+        "Title": "Legend of Heroes, The: Trails in the Sky FC",
+        "ID": 10479,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/038832.png",
+        "NumAchievements": 150,
+        "NumLeaderboards": 1,
+        "Points": 1400,
+        "DateModified": "2023-10-18 05:02:48",
+        "ForumTopicID": 13769,
+        "Hashes": [
+            "cff66ecd124db9624bfda5cd4cbb40a0"
+        ]
+    },
+    {
+        "Title": "Legend of Heroes, The: Trails in the Sky FC [Subset - NG Nightmare]",
+        "ID": 11115,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048312.png",
+        "NumAchievements": 59,
+        "NumLeaderboards": 0,
+        "Points": 800,
+        "DateModified": "2023-07-28 23:28:08",
+        "ForumTopicID": 13769,
+        "Hashes": [
+            "907730169e7063d031c0934c5b7396a3"
+        ]
+    },
+    {
+        "Title": "Legend of Heroes, The: Trails in the Sky SC",
+        "ID": 10481,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/051354.png",
+        "NumAchievements": 245,
+        "NumLeaderboards": 26,
+        "Points": 2000,
+        "DateModified": "2023-10-24 05:18:48",
+        "ForumTopicID": 13932,
+        "Hashes": [
+            "6c1742f9418650b31758b36bde36e688",
+            "effa694e2515a44ba7a3db09ce995b9f"
+        ]
+    },
+    {
+        "Title": "Legend of Heroes, The: Trails in the Sky the 3rd",
+        "ID": 3568,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050836.png",
+        "NumAchievements": 151,
+        "NumLeaderboards": 7,
+        "Points": 1255,
+        "DateModified": "2023-10-02 13:32:31",
+        "ForumTopicID": 14475,
+        "Hashes": [
+            "d265cd320cb2261bb5ed0218d651b42f"
+        ]
+    },
+    {
+        "Title": "Legend of Heroes, The: Trails in the Sky the 3rd [Subset - NG Nightmare]",
+        "ID": 5932,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/054817.png",
+        "NumAchievements": 55,
+        "NumLeaderboards": 1,
+        "Points": 1075,
+        "DateModified": "2023-03-04 15:32:41",
+        "ForumTopicID": 14475,
+        "Hashes": [
+            "de38aefa3bb84302458b0928b69d18a3"
+        ]
+    },
+    {
+        "Title": "LEGO Batman: The Videogame",
+        "ID": 18010,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/063673.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 0,
+        "Points": 370,
+        "DateModified": "2023-06-03 08:33:32",
+        "ForumTopicID": 14167,
+        "Hashes": [
+            "7d68d1611a3de71e6d018c9505bc9c6b"
+        ]
+    },
+    {
+        "Title": "LEGO Harry Potter: Years 1-4",
+        "ID": 3037,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/074076.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 0,
+        "Points": 299,
+        "DateModified": "2023-06-11 17:10:10",
+        "ForumTopicID": 21786,
+        "Hashes": [
+            "53e67a0114739a395fac8eaf32dd0a18"
+        ]
+    },
+    {
+        "Title": "LEGO Harry Potter: Years 5-7",
+        "ID": 3038,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/074128.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 0,
+        "Points": 231,
+        "DateModified": "2023-07-24 18:07:39",
+        "ForumTopicID": 21798,
+        "Hashes": [
+            "91680e7091a47bc11f1241b81d6985d3"
+        ]
+    },
+    {
+        "Title": "LEGO Indiana Jones 2: The Adventure Continues",
+        "ID": 18063,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/080996.png",
+        "NumAchievements": 63,
+        "NumLeaderboards": 29,
+        "Points": 513,
+        "DateModified": "2023-12-28 17:02:24",
+        "ForumTopicID": 14129,
+        "Hashes": [
+            "79f4811db6ee7dadf453ed33959638c7"
+        ]
+    },
+    {
+        "Title": "LEGO Indiana Jones: The Original Adventures",
+        "ID": 3993,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047389.png",
+        "NumAchievements": 53,
+        "NumLeaderboards": 0,
+        "Points": 295,
+        "DateModified": "2021-10-02 06:23:42",
+        "ForumTopicID": 13781,
+        "Hashes": [
+            "0c91a33a3b9e6e5ed75fbf042f62f1ab"
+        ]
+    },
+    {
+        "Title": "LEGO Pirates of the Caribbean: The Video Game",
+        "ID": 3040,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/081955.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 0,
+        "Points": 245,
+        "DateModified": "2023-09-03 11:07:05",
+        "ForumTopicID": 14020,
+        "Hashes": [
+            "83bf6844438dbfae92d82da33e0f645a"
+        ]
+    },
+    {
+        "Title": "LEGO Star Wars II: The Original Trilogy",
+        "ID": 3187,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/064176.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 0,
+        "Points": 341,
+        "DateModified": "2023-01-13 18:53:18",
+        "ForumTopicID": 14559,
+        "Hashes": [
+            "f6a83b254bcde84a1cda7b7cd15b40e6"
+        ]
+    },
+    {
+        "Title": "LEGO Star Wars III: The Clone Wars",
+        "ID": 18136,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/071274.png",
+        "NumAchievements": 85,
+        "NumLeaderboards": 0,
+        "Points": 540,
+        "DateModified": "2022-04-18 09:36:36",
+        "ForumTopicID": 14618,
+        "Hashes": [
+            "916fab44ba70c1aebce009e347fd38ef"
+        ]
+    },
+    {
+        "Title": "LocoRoco: Midnight Carnival",
+        "ID": 3218,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047050.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 43,
+        "Points": 310,
+        "DateModified": "2022-11-19 10:39:36",
+        "ForumTopicID": 13782,
+        "Hashes": [
+            "dafc6ac87f1e70fb96a38e29af00979e"
+        ]
+    },
+    {
+        "Title": "Marvel Trading Card Game",
+        "ID": 18086,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/066866.png",
+        "NumAchievements": 118,
+        "NumLeaderboards": 0,
+        "Points": 665,
+        "DateModified": "2022-07-19 17:02:23",
+        "ForumTopicID": 14179,
+        "Hashes": [
+            "138502550e7a5ec2473d6767f57dfd71"
+        ]
+    },
+    {
+        "Title": "Me & My Katamari",
+        "ID": 3571,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047357.png",
+        "NumAchievements": 177,
+        "NumLeaderboards": 21,
+        "Points": 1491,
+        "DateModified": "2021-10-12 00:51:34",
+        "ForumTopicID": 13826,
+        "Hashes": [
+            "aee315b940032f77c838d10e055d394e"
+        ]
+    },
+    {
+        "Title": "Medal of Honor: Heroes",
+        "ID": 2973,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048163.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 0,
+        "Points": 300,
+        "DateModified": "2021-11-22 17:56:12",
+        "ForumTopicID": 13904,
+        "Hashes": [
+            "1e8ca42a4d37b36d1b96413850147178",
+            "377613a0c18ee2dfb7050dc5fc9a0c7f",
+            "59b6474ede22641b41a3891baad21bcb",
+            "6c46225644b6aca53e81b44fe7f23c52",
+            "709728568b6d127265ac6c272c092d56",
+            "7b4ef685a5d317590c327a0a9c3bd3b1",
+            "d80c766516fc0f36eeed48bb055e1b87"
+        ]
+    },
+    {
+        "Title": "MediEvil: Resurrection",
+        "ID": 3572,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/075441.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 3,
+        "Points": 410,
+        "DateModified": "2023-11-06 02:34:05",
+        "ForumTopicID": 18955,
+        "Hashes": [
+            "8efa2556fbfc3fe8d82c2d37041959c4"
+        ]
+    },
+    {
+        "Title": "Mega Man: Maverick Hunter X",
+        "ID": 3219,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047042.png",
+        "NumAchievements": 59,
+        "NumLeaderboards": 6,
+        "Points": 660,
+        "DateModified": "2022-08-13 23:27:09",
+        "ForumTopicID": 13787,
+        "Hashes": [
+            "80b7c544eb2ecf7fe06cf440a0a0c2d4"
+        ]
+    },
+    {
+        "Title": "Mega Man: Powered Up",
+        "ID": 3582,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047296.png",
+        "NumAchievements": 143,
+        "NumLeaderboards": 386,
+        "Points": 1840,
+        "DateModified": "2023-07-11 15:00:16",
+        "ForumTopicID": 13771,
+        "Hashes": [
+            "ae507a7581de48891cd379f6cadf2f52"
+        ]
+    },
+    {
+        "Title": "Mega Man: Powered Up [Subset - 468 Stages]",
+        "ID": 19921,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/073205.png",
+        "NumAchievements": 481,
+        "NumLeaderboards": 0,
+        "Points": 3733,
+        "DateModified": "2022-06-15 18:16:38",
+        "ForumTopicID": 16994,
+        "Hashes": [
+            "cc4e686d31215dd74ee27b9369068a46"
+        ]
+    },
+    {
+        "Title": "Mega Man: Powered Up [Subset - Bonus]",
+        "ID": 20229,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/073206.png",
+        "NumAchievements": 480,
+        "NumLeaderboards": 0,
+        "Points": 7782,
+        "DateModified": "2022-10-24 14:22:17",
+        "ForumTopicID": 17400,
+        "Hashes": [
+            "a78991b9fa74ee3be4352deb9ac89ede"
+        ]
+    },
+    {
+        "Title": "Megpoid the Music \u266f",
+        "ID": 22296,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/067115.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 120,
+        "Points": 886,
+        "DateModified": "2023-10-28 16:31:59",
+        "ForumTopicID": 20025,
+        "Hashes": [
+            "656de8f5f7370f0ed9c046be00b08fc7"
+        ]
+    },
+    {
+        "Title": "Megpoid the Music \u266f [Subset - Full Combo Songs]",
+        "ID": 25201,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/077783.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 120,
+        "Points": 625,
+        "DateModified": "2023-07-16 16:05:07",
+        "ForumTopicID": 22600,
+        "Hashes": [
+            "cb3a768963306e0a1893137f82604fad"
+        ]
+    },
+    {
+        "Title": "Metal Gear Acid",
+        "ID": 3585,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047343.png",
+        "NumAchievements": 85,
+        "NumLeaderboards": 3,
+        "Points": 790,
+        "DateModified": "2022-10-03 14:14:01",
+        "ForumTopicID": 13770,
+        "Hashes": [
+            "744ec8690943bfc9b4be10a1410b1cec"
+        ]
+    },
+    {
+        "Title": "Metal Gear Acid [Subset - NG Extreme]",
+        "ID": 19920,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/059260.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 1,
+        "Points": 660,
+        "DateModified": "2022-08-04 15:33:24",
+        "ForumTopicID": 16993,
+        "Hashes": [
+            "f8d08cd40be3bd1fadb592ce0f8997db"
+        ]
+    },
+    {
+        "Title": "Metal Gear Acid 2",
+        "ID": 3940,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/051474.png",
+        "NumAchievements": 80,
+        "NumLeaderboards": 0,
+        "Points": 1500,
+        "DateModified": "2022-07-18 23:47:22",
+        "ForumTopicID": 14878,
+        "Hashes": [
+            "3fd8724cdeb55aec6d8f1ed3c2cec825",
+            "f77715c13b9cf60fc635031a074b55f2"
+        ]
+    },
+    {
+        "Title": "Metal Gear Solid: Peace Walker",
+        "ID": 10533,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/046914.png",
+        "NumAchievements": 106,
+        "NumLeaderboards": 0,
+        "Points": 2000,
+        "DateModified": "2023-11-02 00:04:52",
+        "ForumTopicID": 14002,
+        "Hashes": [
+            "8c98dc9c5c9c8280b5834b46270e28bf",
+            "ca6adfa0cc869239d353de0e2f50a10b"
+        ]
+    },
+    {
+        "Title": "Metal Gear Solid: Portable Ops",
+        "ID": 3589,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047374.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 0,
+        "Points": 900,
+        "DateModified": "2023-09-20 02:57:11",
+        "ForumTopicID": 13792,
+        "Hashes": [
+            "60c130ce44ceae7af20a595f46455aa1"
+        ]
+    },
+    {
+        "Title": "Metal Gear Solid: Portable Ops Plus",
+        "ID": 2355,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/051182.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 0,
+        "Points": 500,
+        "DateModified": "2022-08-10 00:26:57",
+        "ForumTopicID": 14605,
+        "Hashes": [
+            "c286662f4dee34d8040651281925b920"
+        ]
+    },
+    {
+        "Title": "Metal Slug Anthology",
+        "ID": 3471,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048777.png",
+        "NumAchievements": 94,
+        "NumLeaderboards": 14,
+        "Points": 1710,
+        "DateModified": "2023-02-14 20:43:34",
+        "ForumTopicID": 14041,
+        "Hashes": [
+            "8844feda8da3ecbbc3aa2db59bc9beb6"
+        ]
+    },
+    {
+        "Title": "Metal Slug XX",
+        "ID": 4004,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/065558.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 7,
+        "Points": 1110,
+        "DateModified": "2022-03-26 19:44:29",
+        "ForumTopicID": 14040,
+        "Hashes": [
+            "477796bd4d04ac24ba0e53a0c9af4e6a"
+        ]
+    },
+    {
+        "Title": "Michael Jackson: The Experience",
+        "ID": 20095,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/060039.png",
+        "NumAchievements": 91,
+        "NumLeaderboards": 51,
+        "Points": 459,
+        "DateModified": "2022-11-08 02:32:55",
+        "ForumTopicID": 17335,
+        "Hashes": [
+            "1c936b28ddbe7f987b00e89c42855f94"
+        ]
+    },
+    {
+        "Title": "Midnight Club 3: DUB Edition",
+        "ID": 3888,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047360.png",
+        "NumAchievements": 44,
+        "NumLeaderboards": 0,
+        "Points": 426,
+        "DateModified": "2022-04-21 02:14:54",
+        "ForumTopicID": 13790,
+        "Hashes": [
+            "4fd73fe9363dab1194afae78d0f436f8"
+        ]
+    },
+    {
+        "Title": "Monster Hunter Freedom Unite",
+        "ID": 3732,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047405.png",
+        "NumAchievements": 242,
+        "NumLeaderboards": 0,
+        "Points": 5020,
+        "DateModified": "2023-03-20 00:15:50",
+        "ForumTopicID": 13794,
+        "Hashes": [
+            "294a4c5028d20fa3f93b2593626235a8"
+        ]
+    },
+    {
+        "Title": "Monster Hunter Portable 3rd",
+        "ID": 17976,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/077218.png",
+        "NumAchievements": 602,
+        "NumLeaderboards": 35,
+        "Points": 6700,
+        "DateModified": "2023-10-09 13:18:04",
+        "ForumTopicID": 14015,
+        "Hashes": [
+            "8e74b73643e7fbbd8e6e5a816411b91a",
+            "d2e703142f88c0cb5c4bf71fb1e12044"
+        ]
+    },
+    {
+        "Title": "Mortal Kombat: Unchained",
+        "ID": 3951,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/075383.png",
+        "NumAchievements": 74,
+        "NumLeaderboards": 0,
+        "Points": 615,
+        "DateModified": "2023-09-30 02:39:41",
+        "ForumTopicID": 13802,
+        "Hashes": [
+            "fc9b10c5bc85b8cb1e4d21b86d1de870"
+        ]
+    },
+    {
+        "Title": "Mr. Karoshi",
+        "ID": 3928,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/075791.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 1,
+        "Points": 65,
+        "DateModified": "2023-08-27 23:30:36",
+        "ForumTopicID": 22244,
+        "Hashes": [
+            "bcdfdacc877e394dd124eba9c671cb6c"
+        ]
+    },
+    {
+        "Title": "N+",
+        "ID": 3733,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/052253.png",
+        "NumAchievements": 109,
+        "NumLeaderboards": 0,
+        "Points": 1167,
+        "DateModified": "2022-01-23 19:31:05",
+        "ForumTopicID": 14970,
+        "Hashes": [
+            "cfb4a20af67791bcbabcaaba4dc83f11"
+        ]
+    },
+    {
+        "Title": "Naruto Shippuden: Ultimate Ninja Heroes 3",
+        "ID": 20495,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/079893.png",
+        "NumAchievements": 56,
+        "NumLeaderboards": 191,
+        "Points": 468,
+        "DateModified": "2023-08-02 16:25:15",
+        "ForumTopicID": 18204,
+        "Hashes": [
+            "4555f590671357c1f5974ffa1bd11378",
+            "e250c7077c9f7ac8e0388a33f60fc445"
+        ]
+    },
+    {
+        "Title": "Naruto: Ultimate Ninja Heroes",
+        "ID": 18116,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/080234.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 355,
+        "DateModified": "2022-12-15 20:25:02",
+        "ForumTopicID": 14247,
+        "Hashes": [
+            "dca364e7ae64657be4f24fe525e6b381"
+        ]
+    },
+    {
+        "Title": "Naruto: Ultimate Ninja Heroes 2 - The Phantom Fortress",
+        "ID": 20273,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/080233.png",
+        "NumAchievements": 55,
+        "NumLeaderboards": 0,
+        "Points": 431,
+        "DateModified": "2023-08-31 19:18:28",
+        "ForumTopicID": 17594,
+        "Hashes": [
+            "5f21021fc75b12ec12ae23453acf254d"
+        ]
+    },
+    {
+        "Title": "Nayuta no Kiseki",
+        "ID": 3999,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/057745.png",
+        "NumAchievements": 249,
+        "NumLeaderboards": 61,
+        "Points": 1747,
+        "DateModified": "2023-06-14 03:45:59",
+        "ForumTopicID": 16379,
+        "Hashes": [
+            "ca654376f904accee921adc16be2da4c",
+            "d97940c8c8d13c4d6f32cc3368e932ac"
+        ]
+    },
+    {
+        "Title": "Nayuta no Kiseki [Subset - Bonus]",
+        "ID": 19563,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/058258.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 1,
+        "Points": 865,
+        "DateModified": "2022-06-04 03:19:42",
+        "ForumTopicID": 16379,
+        "Hashes": [
+            "322a841cd970842013aad5a6593b5d8e",
+            "798d068d45c19a709aa46cbc2ec25070"
+        ]
+    },
+    {
+        "Title": "One Piece: Romance Dawn - Bouken no Yoake",
+        "ID": 2735,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/063134.png",
+        "NumAchievements": 74,
+        "NumLeaderboards": 0,
+        "Points": 559,
+        "DateModified": "2022-11-12 13:35:28",
+        "ForumTopicID": 14813,
+        "Hashes": [
+            "1a31d85f0b08fece269a5e1ff26519c4"
+        ]
+    },
+    {
+        "Title": "Pac-Man World 3",
+        "ID": 18090,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049835.png",
+        "NumAchievements": 62,
+        "NumLeaderboards": 19,
+        "Points": 620,
+        "DateModified": "2023-07-01 00:10:56",
+        "ForumTopicID": 14192,
+        "Hashes": [
+            "a116eb1305a3ab9a057ef36189944772"
+        ]
+    },
+    {
+        "Title": "Pac-Man World Rally",
+        "ID": 17988,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/070160.png",
+        "NumAchievements": 87,
+        "NumLeaderboards": 0,
+        "Points": 655,
+        "DateModified": "2023-08-08 17:51:32",
+        "ForumTopicID": 14052,
+        "Hashes": [
+            "c731bfc74f11bc56d6c59df52e92e12f"
+        ]
+    },
+    {
+        "Title": "Pac-Man: Championship Edition",
+        "ID": 18066,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/068128.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 7,
+        "Points": 244,
+        "DateModified": "2023-03-11 19:31:49",
+        "ForumTopicID": 20366,
+        "Hashes": [
+            "ed21b463360a64da63520171384810c4"
+        ]
+    },
+    {
+        "Title": "Pangya Fantasy Golf",
+        "ID": 3974,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047346.png",
+        "NumAchievements": 283,
+        "NumLeaderboards": 0,
+        "Points": 1694,
+        "DateModified": "2022-11-17 20:39:14",
+        "ForumTopicID": 13799,
+        "Hashes": [
+            "ef3b412e898e639d2bcd4aa991c3eb35"
+        ]
+    },
+    {
+        "Title": "Patapon",
+        "ID": 10525,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047445.png",
+        "NumAchievements": 75,
+        "NumLeaderboards": 37,
+        "Points": 480,
+        "DateModified": "2023-10-08 13:15:33",
+        "ForumTopicID": 16569,
+        "Hashes": [
+            "c04c20b5c4fe21076e92826dbd9e0942"
+        ]
+    },
+    {
+        "Title": "Peggle",
+        "ID": 2971,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048181.png",
+        "NumAchievements": 47,
+        "NumLeaderboards": 56,
+        "Points": 420,
+        "DateModified": "2023-07-31 12:41:51",
+        "ForumTopicID": 13966,
+        "Hashes": [
+            "9f08e9203c0e149111cf323e63aceb76"
+        ]
+    },
+    {
+        "Title": "Persona 2: Innocent Sin",
+        "ID": 3737,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/075409.png",
+        "NumAchievements": 98,
+        "NumLeaderboards": 0,
+        "Points": 721,
+        "DateModified": "2023-09-13 07:28:22",
+        "ForumTopicID": 22116,
+        "Hashes": [
+            "f7c480a3e154dd6273c72a1ee2943464"
+        ]
+    },
+    {
+        "Title": "Persona 3 Portable",
+        "ID": 3164,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/065205.png",
+        "NumAchievements": 139,
+        "NumLeaderboards": 0,
+        "Points": 1170,
+        "DateModified": "2023-05-15 18:36:40",
+        "ForumTopicID": 13850,
+        "Hashes": [
+            "d752f028b5abada1a305aae9b4cce1f6",
+            "94b9f5e9a60bfc3d2ae634d2a6bfb58f"
+        ]
+    },
+    {
+        "Title": "Phantasy Star Portable",
+        "ID": 3738,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/053525.png",
+        "NumAchievements": 86,
+        "NumLeaderboards": 0,
+        "Points": 1095,
+        "DateModified": "2023-02-15 23:44:38",
+        "ForumTopicID": 15361,
+        "Hashes": [
+            "32cb39aaf29ebac8966e1f43fcd55cd5",
+            "fe6fdf1ff5fcfff1d240cb960705c613"
+        ]
+    },
+    {
+        "Title": "Phantom Brave: The Hermuda Triangle",
+        "ID": 18761,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/060045.png",
+        "NumAchievements": 116,
+        "NumLeaderboards": 1,
+        "Points": 900,
+        "DateModified": "2023-06-16 19:13:24",
+        "ForumTopicID": 17328,
+        "Hashes": [
+            "790f96939e00d970512f68108e202ed1",
+            "fcf3d27cebb5ad40921c771b5dd502ae"
+        ]
+    },
+    {
+        "Title": "Pilot Academy",
+        "ID": 18070,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049245.png",
+        "NumAchievements": 84,
+        "NumLeaderboards": 0,
+        "Points": 325,
+        "DateModified": "2021-10-27 19:39:10",
+        "ForumTopicID": 14143,
+        "Hashes": [
+            "26bc6e5383366623f1f41e18e61411ec"
+        ]
+    },
+    {
+        "Title": "Planetarian: Chiisa na Hoshi no Yume | Planetarian: The Dream of a Little Star",
+        "ID": 24908,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/075587.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 0,
+        "Points": 16,
+        "DateModified": "2023-08-13 02:27:59",
+        "ForumTopicID": 22610,
+        "Hashes": [
+            "aa23457f19030458e78633f4e02f35b9",
+            "a792ecbb973e7de5970a98b766ac05bf",
+            "24bcad3d53364bf6830b218bd29e4cad"
+        ]
+    },
+    {
+        "Title": "Platypus",
+        "ID": 18172,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050747.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 1,
+        "Points": 482,
+        "DateModified": "2022-05-02 19:25:47",
+        "ForumTopicID": 14346,
+        "Hashes": [
+            "72f70f462847b083d3f4a3f0f3027284"
+        ]
+    },
+    {
+        "Title": "Prinny: Can I Really Be the Hero?",
+        "ID": 10846,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047369.png",
+        "NumAchievements": 98,
+        "NumLeaderboards": 110,
+        "Points": 1744,
+        "DateModified": "2023-08-20 02:09:24",
+        "ForumTopicID": 13848,
+        "Hashes": [
+            "bad32c673b69f19125aeeb8c6f81e47b"
+        ]
+    },
+    {
+        "Title": "Puzzle Quest: Challenge of the Warlords",
+        "ID": 3717,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047372.png",
+        "NumAchievements": 56,
+        "NumLeaderboards": 0,
+        "Points": 750,
+        "DateModified": "2023-08-06 04:00:25",
+        "ForumTopicID": 13801,
+        "Hashes": [
+            "1f7d22952294a8ba39ead74c50872181"
+        ]
+    },
+    {
+        "Title": "Ratchet & Clank: Size Matters",
+        "ID": 3162,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/067659.png",
+        "NumAchievements": 158,
+        "NumLeaderboards": 8,
+        "Points": 1332,
+        "DateModified": "2023-10-19 23:18:04",
+        "ForumTopicID": 13798,
+        "Hashes": [
+            "4c8b86106205c61790db365b1876847a"
+        ]
+    },
+    {
+        "Title": "Ridge Racer 2",
+        "ID": 18080,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/086289.png",
+        "NumAchievements": 88,
+        "NumLeaderboards": 0,
+        "Points": 680,
+        "DateModified": "2023-12-24 16:58:22",
+        "ForumTopicID": 16163,
+        "Hashes": [
+            "3ad6c9be3465afdfbcd9bef7d4809144",
+            "f8bbe5bc2aa39288137d23a1eac8032d"
+        ]
+    },
+    {
+        "Title": "Rock Band: Unplugged",
+        "ID": 14202,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048884.png",
+        "NumAchievements": 230,
+        "NumLeaderboards": 98,
+        "Points": 1620,
+        "DateModified": "2023-06-25 15:21:10",
+        "ForumTopicID": 15575,
+        "Hashes": [
+            "91c0b1bc1dfad5c5e0002a10f777238b"
+        ]
+    },
+    {
+        "Title": "Route 66",
+        "ID": 3261,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048536.png",
+        "NumAchievements": 9,
+        "NumLeaderboards": 26,
+        "Points": 48,
+        "DateModified": "2021-09-29 19:07:16",
+        "ForumTopicID": 14003,
+        "Hashes": [
+            "7d2c3430ed14b7e801ae05b07c190aee"
+        ]
+    },
+    {
+        "Title": "Shin Megami Tensei: Persona",
+        "ID": 3891,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/077388.png",
+        "NumAchievements": 118,
+        "NumLeaderboards": 0,
+        "Points": 1088,
+        "DateModified": "2023-10-22 04:06:52",
+        "ForumTopicID": 15421,
+        "Hashes": [
+            "5f98376c526f671fcbb431b38b82b5be",
+            "02e68adfb8346c188cea0836f902472b"
+        ]
+    },
+    {
+        "Title": "Shinseiki Evangelion: Girlfriend of Steel 2nd Portable",
+        "ID": 6415,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047519.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 0,
+        "Points": 80,
+        "DateModified": "2021-12-23 09:34:40",
+        "ForumTopicID": 13831,
+        "Hashes": [
+            "643dbc06fae48bdeea177bf803f0fc6b"
+        ]
+    },
+    {
+        "Title": "Silent Hill: Origins | Silent Hill: Zero",
+        "ID": 3927,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048871.png",
+        "NumAchievements": 66,
+        "NumLeaderboards": 3,
+        "Points": 666,
+        "DateModified": "2023-06-03 04:55:34",
+        "ForumTopicID": 14073,
+        "Hashes": [
+            "1bdc7046e173306342e5ad9821f50300"
+        ]
+    },
+    {
+        "Title": "Simpsons Game, The",
+        "ID": 3914,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/079434.png",
+        "NumAchievements": 53,
+        "NumLeaderboards": 16,
+        "Points": 435,
+        "DateModified": "2022-08-30 05:48:57",
+        "ForumTopicID": 14042,
+        "Hashes": [
+            "8925695515f257c9fd18f8ede70dc30c"
+        ]
+    },
+    {
+        "Title": "Sneezies",
+        "ID": 24483,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/081989.png",
+        "NumAchievements": 27,
+        "NumLeaderboards": 3,
+        "Points": 100,
+        "DateModified": "2023-09-05 06:02:34",
+        "ForumTopicID": 23202,
+        "Hashes": [
+            "bb9b54efb8bc5c2e6f2ee8f0593ed081"
+        ]
+    },
+    {
+        "Title": "Sonic Rivals 2",
+        "ID": 18141,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/062342.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 18,
+        "Points": 324,
+        "DateModified": "2023-04-27 13:01:32",
+        "ForumTopicID": 14321,
+        "Hashes": [
+            "221b8c3938ee9e83d1c5f2d12bdba504"
+        ]
+    },
+    {
+        "Title": "Soul Eater: Battle Resonance",
+        "ID": 21453,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/086816.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 0,
+        "Points": 435,
+        "DateModified": "2023-12-16 12:25:58",
+        "ForumTopicID": 24686,
+        "Hashes": [
+            "95760d72db2c961cd675862e39ac2e67",
+            "73e1370964068fd57fc57a9dd1c02d4c"
+        ]
+    },
+    {
+        "Title": "SoulCalibur: Broken Destiny",
+        "ID": 3476,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/062787.png",
+        "NumAchievements": 47,
+        "NumLeaderboards": 0,
+        "Points": 498,
+        "DateModified": "2022-10-16 06:04:58",
+        "ForumTopicID": 18493,
+        "Hashes": [
+            "891a7d894c4e353f6b8764d577c002e2"
+        ]
+    },
+    {
+        "Title": "Speedball 2: Evolution",
+        "ID": 18692,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/054443.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 1,
+        "Points": 500,
+        "DateModified": "2023-07-20 12:44:35",
+        "ForumTopicID": 15620,
+        "Hashes": [
+            "c37d7f52c8c2463c3bae19cac40ff3ea"
+        ]
+    },
+    {
+        "Title": "Spider-Man: Web of Shadows - Amazing Allies Edition",
+        "ID": 18455,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/067440.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 345,
+        "DateModified": "2022-10-29 20:50:39",
+        "ForumTopicID": 18225,
+        "Hashes": [
+            "f5e6c0628483a902c42b36b9b3e0639f"
+        ]
+    },
+    {
+        "Title": "SpongeBob's Truth or Square",
+        "ID": 18350,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/069963.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 0,
+        "Points": 211,
+        "DateModified": "2023-08-11 01:08:53",
+        "ForumTopicID": 17992,
+        "Hashes": [
+            "8befe0266a3d948158989cbb055ab2db"
+        ]
+    },
+    {
+        "Title": "Steins;Gate",
+        "ID": 3551,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/064263.png",
+        "NumAchievements": 32,
+        "NumLeaderboards": 0,
+        "Points": 305,
+        "DateModified": "2023-06-03 00:21:09",
+        "ForumTopicID": 19110,
+        "Hashes": [
+            "3565d3c3e52b6e1b78a64dc630e9c4ec",
+            "e420af8ce5a6357eae4d83c667fac98b"
+        ]
+    },
+    {
+        "Title": "Street Fighter Alpha 3 Max",
+        "ID": 2970,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/060818.png",
+        "NumAchievements": 83,
+        "NumLeaderboards": 2,
+        "Points": 715,
+        "DateModified": "2023-10-19 13:49:03",
+        "ForumTopicID": 14437,
+        "Hashes": [
+            "7ffc9ddcd6bd7a54ebf3f6adf19df742",
+            "a096b2858bad13a808f7fc1367feeb30"
+        ]
+    },
+    {
+        "Title": "Super Dangan-Ronpa 2: Sayonara Zetsubou Gakuen",
+        "ID": 18072,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049300.png",
+        "NumAchievements": 162,
+        "NumLeaderboards": 0,
+        "Points": 1243,
+        "DateModified": "2022-01-14 00:29:27",
+        "ForumTopicID": 14152,
+        "Hashes": [
+            "0892bd418bc2062aa1a6fc835c96a9c9"
+        ]
+    },
+    {
+        "Title": "Sword Art Online: Infinity Moment",
+        "ID": 22488,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/084566.png",
+        "NumAchievements": 174,
+        "NumLeaderboards": 0,
+        "Points": 1281,
+        "DateModified": "2023-11-05 15:13:13",
+        "ForumTopicID": 23867,
+        "Hashes": [
+            "d9fa7199ac993def39b6fad6a240688a",
+            "13f424cfe9c34936faa9788f536a3afc",
+            "79f2929255dc47e8d133fe1a7f985291"
+        ]
+    },
+    {
+        "Title": "Tactics Ogre: Let Us Cling Together",
+        "ID": 3726,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/085080.png",
+        "NumAchievements": 148,
+        "NumLeaderboards": 0,
+        "Points": 1604,
+        "DateModified": "2023-11-02 16:00:57",
+        "ForumTopicID": 14121,
+        "Hashes": [
+            "00af730ca0fd034a59ee26f55a6b3682"
+        ]
+    },
+    {
+        "Title": "Tactics Ogre: Let Us Cling Together [Subset - Skill Mastery, Best Weapons]",
+        "ID": 22866,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/085081.png",
+        "NumAchievements": 228,
+        "NumLeaderboards": 0,
+        "Points": 1520,
+        "DateModified": "2023-11-02 16:02:53",
+        "ForumTopicID": 20766,
+        "Hashes": [
+            "aa9ad50a9c534ad623dfa8a536ca4996"
+        ]
+    },
+    {
+        "Title": "Tekken 6",
+        "ID": 3186,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/086823.png",
+        "NumAchievements": 65,
+        "NumLeaderboards": 3,
+        "Points": 582,
+        "DateModified": "2023-02-26 04:14:33",
+        "ForumTopicID": 18331,
+        "Hashes": [
+            "4596d65a2fc66cd87f1032d4a83aa40f"
+        ]
+    },
+    {
+        "Title": "Tekken 6 [Subset - Tekken God]",
+        "ID": 27231,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/086824.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 0,
+        "Points": 1000,
+        "DateModified": "2023-11-05 23:18:18",
+        "ForumTopicID": 24364,
+        "Hashes": [
+            "17c9518b210570148309c6f13035a768"
+        ]
+    },
+    {
+        "Title": "Tekken: Dark Resurrection",
+        "ID": 3203,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/086827.png",
+        "NumAchievements": 92,
+        "NumLeaderboards": 0,
+        "Points": 663,
+        "DateModified": "2022-11-16 06:14:39",
+        "ForumTopicID": 13997,
+        "Hashes": [
+            "4b199f6d840b3284ddd7d8c605da1576"
+        ]
+    },
+    {
+        "Title": "Tekken: Dark Resurrection [Subset - Divine Fist]",
+        "ID": 21543,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/086828.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 0,
+        "Points": 850,
+        "DateModified": "2022-11-21 21:14:58",
+        "ForumTopicID": 19077,
+        "Hashes": [
+            "65b0198b1df1655bab4987469fa1429b"
+        ]
+    },
+    {
+        "Title": "Telegraph: Sudoku & Kakuro",
+        "ID": 18610,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/054189.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 0,
+        "Points": 303,
+        "DateModified": "2023-01-27 21:14:26",
+        "ForumTopicID": 15383,
+        "Hashes": [
+            "47e2af47e6ac68be863b30bbb11ce5b1"
+        ]
+    },
+    {
+        "Title": "Tenchu: Shadow Assassins",
+        "ID": 3984,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/046931.png",
+        "NumAchievements": 94,
+        "NumLeaderboards": 0,
+        "Points": 870,
+        "DateModified": "2023-10-04 09:38:41",
+        "ForumTopicID": 13776,
+        "Hashes": [
+            "d3b754cf35f4264f5b7ed6d6f08888fd"
+        ]
+    },
+    {
+        "Title": "Tetraminos",
+        "ID": 5995,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/086157.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 2,
+        "Points": 140,
+        "DateModified": "2023-11-28 22:31:47",
+        "ForumTopicID": 23160,
+        "Hashes": [
+            "9a908b9081e775723638c92ca603c403"
+        ]
+    },
+    {
+        "Title": "Tetris",
+        "ID": 12798,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/069977.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 27,
+        "Points": 300,
+        "DateModified": "2023-03-14 16:20:05",
+        "ForumTopicID": 20715,
+        "Hashes": [
+            "805f45da710a09affb525fa82bedca53"
+        ]
+    },
+    {
+        "Title": "Thrillville: Off the Rails",
+        "ID": 3217,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049644.png",
+        "NumAchievements": 82,
+        "NumLeaderboards": 13,
+        "Points": 610,
+        "DateModified": "2022-05-08 10:46:25",
+        "ForumTopicID": 15529,
+        "Hashes": [
+            "d82c00d170fc60e27de5052009f75c2e"
+        ]
+    },
+    {
+        "Title": "Tomb Raider: Anniversary",
+        "ID": 14494,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049125.png",
+        "NumAchievements": 78,
+        "NumLeaderboards": 15,
+        "Points": 575,
+        "DateModified": "2023-10-29 22:12:27",
+        "ForumTopicID": 14064,
+        "Hashes": [
+            "6e9df72ab1388cadae04af1c5cd76a48"
+        ]
+    },
+    {
+        "Title": "Tony Hawk's Underground 2: Remix",
+        "ID": 3199,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/082839.png",
+        "NumAchievements": 147,
+        "NumLeaderboards": 19,
+        "Points": 1635,
+        "DateModified": "2023-10-19 18:29:20",
+        "ForumTopicID": 22816,
+        "Hashes": [
+            "941c58bad136a9b623f006fe764020a3"
+        ]
+    },
+    {
+        "Title": "Trailblazer",
+        "ID": 18118,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/063373.png",
+        "NumAchievements": 62,
+        "NumLeaderboards": 49,
+        "Points": 800,
+        "DateModified": "2023-04-10 06:34:00",
+        "ForumTopicID": 18786,
+        "Hashes": [
+            "70d336aac508efec21163d213ab5495c"
+        ]
+    },
+    {
+        "Title": "Twisted Metal: Head-On",
+        "ID": 3255,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/059674.png",
+        "NumAchievements": 73,
+        "NumLeaderboards": 0,
+        "Points": 615,
+        "DateModified": "2023-07-04 00:41:10",
+        "ForumTopicID": 14473,
+        "Hashes": [
+            "0e935e8c5bc9bd1030174ef98e9bb4c8"
+        ]
+    },
+    {
+        "Title": "Ultimate Ghosts 'n Goblins",
+        "ID": 3587,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/052631.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 343,
+        "DateModified": "2022-04-04 08:45:15",
+        "ForumTopicID": 13796,
+        "Hashes": [
+            "85ac1bbe29d484ce528cbde7e03e0c18"
+        ]
+    },
+    {
+        "Title": "Valkyria Chronicles 2",
+        "ID": 14662,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047365.png",
+        "NumAchievements": 314,
+        "NumLeaderboards": 3,
+        "Points": 3338,
+        "DateModified": "2023-10-25 09:58:57",
+        "ForumTopicID": 18374,
+        "Hashes": [
+            "4ca027987134d2d1039d1a3960e076e0",
+            "557848f3115bfc0421962f702a0514b0",
+            "c230e6846bd6efa10c211e36a12c20b4",
+            "da703e88c1edf479f04d392117ed97b6"
+        ]
+    },
+    {
+        "Title": "Valkyrie Profile: Lenneth",
+        "ID": 14169,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/059812.png",
+        "NumAchievements": 161,
+        "NumLeaderboards": 4,
+        "Points": 1549,
+        "DateModified": "2023-07-28 00:01:06",
+        "ForumTopicID": 16214,
+        "Hashes": [
+            "6e8d47829a55fee8330fbdbb38cb2a18",
+            "84390e02ed118fdd24225dd4c4ef7caf"
+        ]
+    },
+    {
+        "Title": "Velocity",
+        "ID": 2908,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048763.png",
+        "NumAchievements": 127,
+        "NumLeaderboards": 0,
+        "Points": 1180,
+        "DateModified": "2023-01-19 22:56:52",
+        "ForumTopicID": 14017,
+        "Hashes": [
+            "193b3050aee4227f7ded9aff6161cfac"
+        ]
+    },
+    {
+        "Title": "Widgets Odyssey",
+        "ID": 8998,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/066576.png",
+        "NumAchievements": 9,
+        "NumLeaderboards": 0,
+        "Points": 45,
+        "DateModified": "2023-01-12 23:14:21",
+        "ForumTopicID": 19800,
+        "Hashes": [
+            "0c7ac50df40b2c60ae8c1b7fb42dc3c6"
+        ]
+    },
+    {
+        "Title": "Widgets Odyssey 2",
+        "ID": 6062,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/066582.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 0,
+        "Points": 60,
+        "DateModified": "2023-01-11 21:33:55",
+        "ForumTopicID": 19801,
+        "Hashes": [
+            "484047b123eb1a2d71ecb02f5ea936b7"
+        ]
+    },
+    {
+        "Title": "Wild Arms XF",
+        "ID": 3944,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047002.png",
+        "NumAchievements": 92,
+        "NumLeaderboards": 0,
+        "Points": 704,
+        "DateModified": "2023-07-05 18:02:22",
+        "ForumTopicID": 13803,
+        "Hashes": [
+            "141ec43487d3d984d0581a32c734b1d1"
+        ]
+    },
+    {
+        "Title": "Williams Pinball Classics | Pinball Hall of Fame: The Williams Collection",
+        "ID": 18185,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050312.png",
+        "NumAchievements": 116,
+        "NumLeaderboards": 11,
+        "Points": 500,
+        "DateModified": "2021-12-02 21:19:17",
+        "ForumTopicID": 14400,
+        "Hashes": [
+            "7495b40b9faf2bba24489fad7dbbb217",
+            "acd31dff17a5cb786b199a88d68b8f5c"
+        ]
+    },
+    {
+        "Title": "Wipeout Pure",
+        "ID": 3224,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049610.png",
+        "NumAchievements": 249,
+        "NumLeaderboards": 120,
+        "Points": 1351,
+        "DateModified": "2023-10-20 14:38:36",
+        "ForumTopicID": 18805,
+        "Hashes": [
+            "1f70bf6e6686bfb7c1b4eb223247bcfb",
+            "5a4964c8bf1e24198e891f5abae97ea9"
+        ]
+    },
+    {
+        "Title": "Wizorb",
+        "ID": 18083,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/049721.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 6,
+        "Points": 285,
+        "DateModified": "2022-09-05 06:19:42",
+        "ForumTopicID": 15801,
+        "Hashes": [
+            "ac7943d12fdf6ec1d879d51a902efa84"
+        ]
+    },
+    {
+        "Title": "WTF: Work Time Fun",
+        "ID": 2759,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/053435.png",
+        "NumAchievements": 276,
+        "NumLeaderboards": 38,
+        "Points": 3885,
+        "DateModified": "2023-08-02 06:13:25",
+        "ForumTopicID": 11316,
+        "Hashes": [
+            "9ea4947cd71166c75cda1b565277ea5d"
+        ]
+    },
+    {
+        "Title": "Yeti Sports: Pingu Throw",
+        "ID": 3724,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/087419.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 0,
+        "Points": 100,
+        "DateModified": "2023-12-28 00:32:36",
+        "ForumTopicID": 24879,
+        "Hashes": [
+            "c6a25a630e00b3bc27ad872bc5355917"
+        ]
+    },
+    {
+        "Title": "Ys I & II Chronicles",
+        "ID": 3159,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/057456.png",
+        "NumAchievements": 184,
+        "NumLeaderboards": 25,
+        "Points": 1760,
+        "DateModified": "2023-10-01 21:09:47",
+        "ForumTopicID": 15926,
+        "Hashes": [
+            "20e45ef99bcd2853f06f320507145e1b"
+        ]
+    },
+    {
+        "Title": "Ys Seven",
+        "ID": 3160,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/047359.png",
+        "NumAchievements": 202,
+        "NumLeaderboards": 24,
+        "Points": 1740,
+        "DateModified": "2023-08-19 06:47:16",
+        "ForumTopicID": 13777,
+        "Hashes": [
+            "98d0756705f5b839e85bfd57452d0b9f"
+        ]
+    },
+    {
+        "Title": "Ys vs. Sora no Kiseki: Alternative Saga",
+        "ID": 3725,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/053147.png",
+        "NumAchievements": 133,
+        "NumLeaderboards": 51,
+        "Points": 1025,
+        "DateModified": "2023-06-29 19:39:53",
+        "ForumTopicID": 14184,
+        "Hashes": [
+            "5b5924055b5d3e371f134928cb972f7d",
+            "c13dbec35d52e4bd735b8e91c7233c94"
+        ]
+    },
+    {
+        "Title": "Ys: The Oath in Felghana",
+        "ID": 3132,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/041076.png",
+        "NumAchievements": 95,
+        "NumLeaderboards": 0,
+        "Points": 1255,
+        "DateModified": "2023-01-14 17:56:52",
+        "ForumTopicID": 15351,
+        "Hashes": [
+            "1135601bdee1d51a1abaf065ba5b2cd5",
+            "4cf7bb4ed99adbdc6d21f0b79e53cc88"
+        ]
+    },
+    {
+        "Title": "Yu-Gi-Oh! 5D's Tag Force 5",
+        "ID": 6710,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048258.png",
+        "NumAchievements": 440,
+        "NumLeaderboards": 0,
+        "Points": 2920,
+        "DateModified": "2022-03-03 20:17:56",
+        "ForumTopicID": 14997,
+        "Hashes": [
+            "a4cc5d03893658b5162328e2fba055c8"
+        ]
+    },
+    {
+        "Title": "Yu-Gi-Oh! ARC-V Tag Force Special",
+        "ID": 6427,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048259.png",
+        "NumAchievements": 245,
+        "NumLeaderboards": 0,
+        "Points": 1517,
+        "DateModified": "2023-06-22 13:51:03",
+        "ForumTopicID": 22106,
+        "Hashes": [
+            "36823c1fe4943ef1584ede4469da17a8",
+            "ec013283603a7071e5161614fd755c14"
+        ]
+    },
+    {
+        "Title": "Yu-Gi-Oh! GX Tag Force",
+        "ID": 7532,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/048254.png",
+        "NumAchievements": 203,
+        "NumLeaderboards": 0,
+        "Points": 2399,
+        "DateModified": "2023-07-30 16:43:55",
+        "ForumTopicID": 13843,
+        "Hashes": [
+            "5785f9853976f8ba9fcfac08c8442c2f",
+            "d2d64fee62482715a7e7647a82c8ea64"
+        ]
+    },
+    {
+        "Title": "Zenonia",
+        "ID": 11141,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/050904.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 0,
+        "Points": 541,
+        "DateModified": "2022-01-27 05:38:32",
+        "ForumTopicID": 14483,
+        "Hashes": [
+            "32655afcacde88483836ee582d7e1f85"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ BirdLife",
+        "ID": 25661,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/081960.png",
+        "NumAchievements": 8,
+        "NumLeaderboards": 4,
+        "Points": 40,
+        "DateModified": "2023-09-03 21:34:39",
+        "ForumTopicID": 23190,
+        "Hashes": [
+            "032fae46d58148b68ccac258b64871c9"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Five Nights at Freddy's 2",
+        "ID": 26046,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/083481.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 0,
+        "Points": 205,
+        "DateModified": "2023-10-26 20:49:48",
+        "ForumTopicID": 23699,
+        "Hashes": [
+            "a016889c03564c875d449e86fd13e112"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Five Nights at Freddy's 3",
+        "ID": 26060,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/083475.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 0,
+        "Points": 59,
+        "DateModified": "2023-10-27 04:24:58",
+        "ForumTopicID": 23731,
+        "Hashes": [
+            "77d0411729b017e3c8efacccb8d0a9db"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Five Nights at Freddy's 4",
+        "ID": 26059,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/083469.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 0,
+        "Points": 241,
+        "DateModified": "2023-10-28 12:47:56",
+        "ForumTopicID": 23703,
+        "Hashes": [
+            "90f91e4d6c4c1577ba3a9c098d15ceec"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Geometry Dash",
+        "ID": 27302,
+        "ConsoleID": 41,
+        "ConsoleName": "PlayStation Portable",
+        "ImageIcon": "/Images/085537.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 0,
+        "Points": 102,
+        "DateModified": "2023-11-10 02:49:59",
+        "ForumTopicID": 24406,
+        "Hashes": [
+            "5e2dd906a8fa3035d5d4129a7cc14df3"
+        ]
+    }
+]

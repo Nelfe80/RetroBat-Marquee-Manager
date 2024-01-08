@@ -1,0 +1,591 @@
+[
+    {
+        "Title": "177",
+        "ID": 6978,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/058489.png",
+        "NumAchievements": 20,
+        "NumLeaderboards": 4,
+        "Points": 201,
+        "DateModified": "2023-07-23 14:29:41",
+        "ForumTopicID": 16633,
+        "Hashes": [
+            "6675451bad0928cc3f05aa241a6f067f"
+        ]
+    },
+    {
+        "Title": "Balloon Fight",
+        "ID": 14193,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/083624.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 3,
+        "Points": 206,
+        "DateModified": "2023-09-09 13:15:11",
+        "ForumTopicID": 22874,
+        "Hashes": [
+            "217d98cd080c974f94070a8c759153d3"
+        ]
+    },
+    {
+        "Title": "Battle Skin Panic",
+        "ID": 17483,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/042549.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 0,
+        "Points": 250,
+        "DateModified": "2021-03-10 22:25:50",
+        "ForumTopicID": 12536,
+        "Hashes": [
+            "1f37c90372f768650491d33325a1e396",
+            "27d347480cc6dac3768297b6fd9defff",
+            "5205c480ce8b60ab3200067ae2d8923d",
+            "b89932234465e1bb1aa710bc8759b615"
+        ]
+    },
+    {
+        "Title": "Computer the Golf",
+        "ID": 6752,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/066273.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 1,
+        "Points": 151,
+        "DateModified": "2023-08-23 12:05:19",
+        "ForumTopicID": 17742,
+        "Hashes": [
+            "8801b3fd121300a193df4096a023c68b"
+        ]
+    },
+    {
+        "Title": "Donkey Kong 3: Dai Gyakushu",
+        "ID": 6812,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/041322.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 2,
+        "Points": 325,
+        "DateModified": "2023-03-28 14:31:13",
+        "ForumTopicID": 12225,
+        "Hashes": [
+            "2c371a4e9085410c6b457e0db5e68e88"
+        ]
+    },
+    {
+        "Title": "Dragon Knight",
+        "ID": 21935,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/065749.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 0,
+        "Points": 165,
+        "DateModified": "2023-08-12 04:56:26",
+        "ForumTopicID": 19498,
+        "Hashes": [
+            "345022a2b320faa48e174f1604a08070"
+        ]
+    },
+    {
+        "Title": "Dragon Knight II",
+        "ID": 22063,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/066315.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 0,
+        "Points": 274,
+        "DateModified": "2023-08-12 04:56:29",
+        "ForumTopicID": 19717,
+        "Hashes": [
+            "75793c796b6b8bd88698eec24842d7b5"
+        ]
+    },
+    {
+        "Title": "Dragon Slayer Level 1.1",
+        "ID": 13705,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/049326.png",
+        "NumAchievements": 73,
+        "NumLeaderboards": 0,
+        "Points": 990,
+        "DateModified": "2019-07-15 07:33:09",
+        "ForumTopicID": 7997,
+        "Hashes": [
+            "8086bfe5e0a905e77ffef517aca77da1"
+        ]
+    },
+    {
+        "Title": "Dragon Slayer Level 2.0",
+        "ID": 14152,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/024207.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 0,
+        "Points": 595,
+        "DateModified": "2021-03-09 02:20:20",
+        "ForumTopicID": 8580,
+        "Hashes": [
+            "87417127a5ba7ac8dd9a67bb9f83ef6c"
+        ]
+    },
+    {
+        "Title": "Dynamite Bowl",
+        "ID": 22559,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/069250.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 3,
+        "Points": 105,
+        "DateModified": "2023-03-05 00:36:11",
+        "ForumTopicID": 20475,
+        "Hashes": [
+            "9f587e86e51ec9c0fe6f6d8b71de86df"
+        ]
+    },
+    {
+        "Title": "Emmy",
+        "ID": 14107,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/034993.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 0,
+        "Points": 66,
+        "DateModified": "2021-12-09 02:31:07",
+        "ForumTopicID": 8526,
+        "Hashes": [
+            "c3fd72c922d4f9fd581d41b19b65772c"
+        ]
+    },
+    {
+        "Title": "Fan Fun",
+        "ID": 14665,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/027542.png",
+        "NumAchievements": 19,
+        "NumLeaderboards": 0,
+        "Points": 125,
+        "DateModified": "2020-07-15 11:10:54",
+        "ForumTopicID": 9534,
+        "Hashes": [
+            "a827214e2ce7c82ec619d9d647f1f383",
+            "e058325be20be75f90f40d2c7ed623d1"
+        ]
+    },
+    {
+        "Title": "Fangs: The Saga of Wolf Blood",
+        "ID": 17516,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/042693.png",
+        "NumAchievements": 83,
+        "NumLeaderboards": 0,
+        "Points": 599,
+        "DateModified": "2023-07-20 16:02:45",
+        "ForumTopicID": 12602,
+        "Hashes": [
+            "4f15fcab6830cfc1961c8bfd1f1ee648",
+            "667d7af4874549a0c2dbcaa5b528445d",
+            "896731b1a0579050faf08908e2b11b49",
+            "8f2a53c24e20b753c8c8141c6f01a93b",
+            "947642c1da1ae1e0cd9b744a06b64eec",
+            "9645671a9ae60a2bce89ade8ba8c4f9c"
+        ]
+    },
+    {
+        "Title": "Final Crisis",
+        "ID": 13990,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/049236.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 0,
+        "Points": 400,
+        "DateModified": "2023-08-20 18:20:21",
+        "ForumTopicID": 14133,
+        "Hashes": [
+            "1486b21aaf38c018229d3867c186a2bb",
+            "7dfd1a416f0e1434bbbddb87d19dc4d1",
+            "c7a225228ab2f24535b30d816883645d"
+        ]
+    },
+    {
+        "Title": "Galaxian",
+        "ID": 14196,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/087032.png",
+        "NumAchievements": 8,
+        "NumLeaderboards": 0,
+        "Points": 70,
+        "DateModified": "2023-12-26 22:32:32",
+        "ForumTopicID": 24787,
+        "Hashes": [
+            "082e581be6f2d16b7d734f90ef7bd2c4"
+        ]
+    },
+    {
+        "Title": "Genesis: Beyond the Revelation",
+        "ID": 13754,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/063223.png",
+        "NumAchievements": 67,
+        "NumLeaderboards": 0,
+        "Points": 850,
+        "DateModified": "2022-11-23 13:32:05",
+        "ForumTopicID": 8184,
+        "Hashes": [
+            "3cb80a87a6f236821f1c4fee0a6d83e8",
+            "f968098a13aa41884916e99f081f4a6d"
+        ]
+    },
+    {
+        "Title": "Hard Rank",
+        "ID": 13942,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/023077.png",
+        "NumAchievements": 48,
+        "NumLeaderboards": 0,
+        "Points": 660,
+        "DateModified": "2023-04-07 03:27:37",
+        "ForumTopicID": 8238,
+        "Hashes": [
+            "05c20126e9d4dbdae4c1e8627a8b1d9f",
+            "576349956ad4a706e1b90ddc9c1fbc2a"
+        ]
+    },
+    {
+        "Title": "Hydlide",
+        "ID": 13684,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/024161.png",
+        "NumAchievements": 21,
+        "NumLeaderboards": 0,
+        "Points": 190,
+        "DateModified": "2021-03-15 00:37:19",
+        "ForumTopicID": 8044,
+        "Hashes": [
+            "a62b04973732fed5038989c61b61bbbe"
+        ]
+    },
+    {
+        "Title": "Hydlide II: Shrine of Darkness",
+        "ID": 14243,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/055821.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 375,
+        "DateModified": "2023-08-29 15:49:00",
+        "ForumTopicID": 8700,
+        "Hashes": [
+            "1fed914fd693b14dca4ea00026f72248",
+            "e8f1aa4bcd196a6f7892b9b5e7d354ca"
+        ]
+    },
+    {
+        "Title": "Joshi Daisei Private",
+        "ID": 13743,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/053576.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 0,
+        "Points": 40,
+        "DateModified": "2022-04-01 09:48:56",
+        "ForumTopicID": 12482,
+        "Hashes": [
+            "6c911f359a383ce501533d90200df4a3"
+        ]
+    },
+    {
+        "Title": "Marine Alien",
+        "ID": 14121,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/024065.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 1,
+        "Points": 90,
+        "DateModified": "2021-03-09 18:28:04",
+        "ForumTopicID": 8547,
+        "Hashes": [
+            "64b282b08e51eed92b6cdd386a5d2fd0"
+        ]
+    },
+    {
+        "Title": "Minky Momo no Panic Ball",
+        "ID": 23554,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/084486.png",
+        "NumAchievements": 14,
+        "NumLeaderboards": 1,
+        "Points": 100,
+        "DateModified": "2023-03-23 18:38:33",
+        "ForumTopicID": 20902,
+        "Hashes": [
+            "e7c22b3f0deca65ecdc2124477877452"
+        ]
+    },
+    {
+        "Title": "Mobile Suit Zeta Gundam",
+        "ID": 7314,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/061233.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 1,
+        "Points": 100,
+        "DateModified": "2023-04-12 15:57:15",
+        "ForumTopicID": 17915,
+        "Hashes": [
+            "840c07405084eccf0dcb4a542f73be72"
+        ]
+    },
+    {
+        "Title": "Pac-Man",
+        "ID": 17772,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/045204.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 0,
+        "Points": 76,
+        "DateModified": "2023-07-03 16:05:34",
+        "ForumTopicID": 13294,
+        "Hashes": [
+            "1e7bbbcf38ef36656377cde6a6af7c4a"
+        ]
+    },
+    {
+        "Title": "Punch Ball Mario Bros.",
+        "ID": 13777,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/044450.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 5,
+        "Points": 300,
+        "DateModified": "2022-01-22 19:50:49",
+        "ForumTopicID": 14829,
+        "Hashes": [
+            "52def00692358027f26fb1d596f829cf",
+            "bca101651484195a0d55a71a06108e5a"
+        ]
+    },
+    {
+        "Title": "Red Stack",
+        "ID": 14020,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/077441.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 4,
+        "Points": 120,
+        "DateModified": "2020-06-19 19:23:41",
+        "ForumTopicID": 8390,
+        "Hashes": [
+            "1ae481ca1e2b383d077709949eda169d",
+            "99308a38ca6714a02110b0888932c473"
+        ]
+    },
+    {
+        "Title": "Rogue",
+        "ID": 6977,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/054179.png",
+        "NumAchievements": 47,
+        "NumLeaderboards": 0,
+        "Points": 332,
+        "DateModified": "2022-03-10 02:36:55",
+        "ForumTopicID": 15452,
+        "Hashes": [
+            "ed791512b651b0a787c798dcfa5e22d4"
+        ]
+    },
+    {
+        "Title": "Scheme, The",
+        "ID": 13973,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/057261.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 475,
+        "DateModified": "2022-08-08 05:56:17",
+        "ForumTopicID": 8323,
+        "Hashes": [
+            "6d88a725bf097c4a7ffbc3817936a757",
+            "8dab8eb445c9b7d4dd143b1df75017a6",
+            "b170f9e16671c8c3e14345b75d80b9a5",
+            "ef20128a5f6431115903a5ec455f48ad"
+        ]
+    },
+    {
+        "Title": "Shampoo",
+        "ID": 25816,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/082778.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 1,
+        "Points": 34,
+        "DateModified": "2023-09-22 19:49:35",
+        "ForumTopicID": 23499,
+        "Hashes": [
+            "44f3480628d3203f7acbf0025bc4b336"
+        ]
+    },
+    {
+        "Title": "Super Jack",
+        "ID": 13787,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/022548.png",
+        "NumAchievements": 14,
+        "NumLeaderboards": 0,
+        "Points": 150,
+        "DateModified": "2021-12-09 20:53:26",
+        "ForumTopicID": 8140,
+        "Hashes": [
+            "05f2a5bdc7ab885b5da760276154a6ce",
+            "806ac9c875076375f63de1cb0aad2d34",
+            "d2aff22e02df81eea501e13d75a3da28"
+        ]
+    },
+    {
+        "Title": "Super Mario Bros. Special",
+        "ID": 13685,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/067843.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 0,
+        "Points": 420,
+        "DateModified": "2022-12-10 02:27:26",
+        "ForumTopicID": 7978,
+        "Hashes": [
+            "ae02fab35b9e4374353d927435e64693",
+            "b91d5929e5d62ac34b0f7732236cb492"
+        ]
+    },
+    {
+        "Title": "Telenet Music Box",
+        "ID": 13747,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/054107.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 0,
+        "Points": 20,
+        "DateModified": "2022-03-31 07:26:20",
+        "ForumTopicID": 14852,
+        "Hashes": [
+            "0e03bc5a0ca5d3756d154f1de40f9876",
+            "bbfdb481c69c5f58a227da667adbcd16"
+        ]
+    },
+    {
+        "Title": "Tetris (BPS)",
+        "ID": 14200,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/076062.png",
+        "NumAchievements": 77,
+        "NumLeaderboards": 1,
+        "Points": 679,
+        "DateModified": "2023-07-31 16:38:15",
+        "ForumTopicID": 22258,
+        "Hashes": [
+            "fd6199123cff370e7f2694c350615ee1"
+        ]
+    },
+    {
+        "Title": "Wanderers from Ys",
+        "ID": 13982,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/023549.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 0,
+        "Points": 450,
+        "DateModified": "2020-12-03 18:34:02",
+        "ForumTopicID": 8423,
+        "Hashes": [
+            "28c2e77e4d80b869604d243527d3a9f5",
+            "9624e437532e6ea60f7a55f5aa0c04f3",
+            "a3b7b1f53b7e075cc9ac05a0f5f04c25",
+            "b8a8b191f89bf70e8539843321a69cf1"
+        ]
+    },
+    {
+        "Title": "Wizardry",
+        "ID": 13937,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/022878.png",
+        "NumAchievements": 64,
+        "NumLeaderboards": 0,
+        "Points": 394,
+        "DateModified": "2021-11-24 08:57:47",
+        "ForumTopicID": 8202,
+        "Hashes": [
+            "17c0cc341d1ed3bffeeb718ee82ee44e",
+            "b3096d44da362c99fdcd5c7aafb260bf"
+        ]
+    },
+    {
+        "Title": "Ys",
+        "ID": 13682,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/026346.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 0,
+        "Points": 430,
+        "DateModified": "2021-12-11 03:57:14",
+        "ForumTopicID": 7977,
+        "Hashes": [
+            "734fe755f206208b2de2fdf9a4c60ca4",
+            "8be6d4d610808cc192b53103f72a40f5",
+            "b838e8767516ffaa5b469bb9e319f5a5"
+        ]
+    },
+    {
+        "Title": "Ys II",
+        "ID": 13855,
+        "ConsoleID": 47,
+        "ConsoleName": "PC-8000/8800",
+        "ImageIcon": "/Images/022707.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 1,
+        "Points": 460,
+        "DateModified": "2020-06-19 19:32:46",
+        "ForumTopicID": 8131,
+        "Hashes": [
+            "09a2d928953001f81a16d189e97e45e8",
+            "09af339f48e5f8c70e3967d8eb0645e2",
+            "333568562d78f8e9a849776f02454f27",
+            "91f88b9e8db38509dd6cb0751a0535c9",
+            "c085bdfbb700c0f9e93ee39bc522163e",
+            "d4646d4e1fd57dc998f87b679719bc36"
+        ]
+    }
+]

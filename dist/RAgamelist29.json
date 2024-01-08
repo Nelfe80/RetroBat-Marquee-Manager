@@ -1,0 +1,663 @@
+[
+    {
+        "Title": "Aleste",
+        "ID": 7578,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/041054.png",
+        "NumAchievements": 27,
+        "NumLeaderboards": 0,
+        "Points": 225,
+        "DateModified": "2023-08-18 04:16:50",
+        "ForumTopicID": 12082,
+        "Hashes": [
+            "28427cfe955f65c6ec8ef2bdd35ff6a7",
+            "2ebb5484e112b0c41fa0d392da9a9bf1",
+            "7087b51f3ccfdf314ce60d5d8aaf644a"
+        ]
+    },
+    {
+        "Title": "Aliens: Alien 2",
+        "ID": 22026,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/066009.png",
+        "NumAchievements": 14,
+        "NumLeaderboards": 1,
+        "Points": 160,
+        "DateModified": "2022-12-31 11:37:11",
+        "ForumTopicID": 19592,
+        "Hashes": [
+            "3dbb75d222dc216c72a8a046e400f2e6",
+            "aedf2d925a91dd2823ff07e41099bdb2",
+            "f3e7f81c0228fdcbb6d55623a8af6969",
+            "fec81b03474e475329e887e9f37877a5"
+        ]
+    },
+    {
+        "Title": "Antarctic Adventure",
+        "ID": 18099,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/061550.png",
+        "NumAchievements": 13,
+        "NumLeaderboards": 1,
+        "Points": 115,
+        "DateModified": "2022-09-25 13:22:53",
+        "ForumTopicID": 18087,
+        "Hashes": [
+            "52f1cbeedbf24ebf04aab1ef11098941",
+            "97ee96f00fac07a5d70a3801d8a9805a"
+        ]
+    },
+    {
+        "Title": "Bomber Man",
+        "ID": 17735,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/044650.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 1,
+        "Points": 257,
+        "DateModified": "2022-12-17 07:15:45",
+        "ForumTopicID": 17912,
+        "Hashes": [
+            "7a277f7ac3fcc30b995cbd672c8fc094"
+        ]
+    },
+    {
+        "Title": "Choro Q",
+        "ID": 17726,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/062946.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 1,
+        "Points": 100,
+        "DateModified": "2022-10-19 18:47:46",
+        "ForumTopicID": 18546,
+        "Hashes": [
+            "fb48d5e9cdea7d080dbcf1702f533642"
+        ]
+    },
+    {
+        "Title": "Donkey Kong",
+        "ID": 24187,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/072459.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 1,
+        "Points": 268,
+        "DateModified": "2023-09-13 21:29:31",
+        "ForumTopicID": 21521,
+        "Hashes": [
+            "d1d05ba19f1de3513977a146ee8532a7"
+        ]
+    },
+    {
+        "Title": "Dragon Quest (MSX2 version)",
+        "ID": 16400,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/082859.png",
+        "NumAchievements": 57,
+        "NumLeaderboards": 0,
+        "Points": 495,
+        "DateModified": "2023-10-15 21:25:10",
+        "ForumTopicID": 22305,
+        "Hashes": [
+            "32d02eee52a1bce4f21958d98571140b",
+            "63672a3fdc8a481e3ac38ab1a36b5167",
+            "b6a39a89fb0df0be5dff7d64f5fe8900"
+        ]
+    },
+    {
+        "Title": "Final Fantasy",
+        "ID": 16403,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/071058.png",
+        "NumAchievements": 53,
+        "NumLeaderboards": 3,
+        "Points": 621,
+        "DateModified": "2023-10-19 18:25:43",
+        "ForumTopicID": 20573,
+        "Hashes": [
+            "8d5579c594f69858514f8b8d9fc793fc",
+            "d280e5d6e58ab80430dafd57b515ec81"
+        ]
+    },
+    {
+        "Title": "King's Valley",
+        "ID": 3272,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/060842.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 3,
+        "Points": 200,
+        "DateModified": "2022-08-17 04:22:10",
+        "ForumTopicID": 17685,
+        "Hashes": [
+            "dcd8d9508be4fd38fdb4c8f50b16dbe3"
+        ]
+    },
+    {
+        "Title": "Knightmare",
+        "ID": 10507,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/053892.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 9,
+        "Points": 255,
+        "DateModified": "2023-02-23 15:23:08",
+        "ForumTopicID": 13660,
+        "Hashes": [
+            "ebfcaba358d7ceca95c7385276321f78"
+        ]
+    },
+    {
+        "Title": "Konami's Golf",
+        "ID": 20358,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/061269.png",
+        "NumAchievements": 13,
+        "NumLeaderboards": 2,
+        "Points": 115,
+        "DateModified": "2022-08-27 18:57:42",
+        "ForumTopicID": 17860,
+        "Hashes": [
+            "7d22b53c88fe5b6b352e9af89e1c16d3"
+        ]
+    },
+    {
+        "Title": "Mappy",
+        "ID": 17324,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/040794.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 2,
+        "Points": 103,
+        "DateModified": "2023-05-16 22:37:50",
+        "ForumTopicID": 12058,
+        "Hashes": [
+            "134f8a060bb879a343afcae975e45adf",
+            "1c8f344249b311b13ad4bade12ca49d3",
+            "ac32e186da2c5cedc5abbdcabe7575ff"
+        ]
+    },
+    {
+        "Title": "Metal Gear",
+        "ID": 10501,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/043815.png",
+        "NumAchievements": 56,
+        "NumLeaderboards": 1,
+        "Points": 600,
+        "DateModified": "2023-04-18 00:38:43",
+        "ForumTopicID": 10641,
+        "Hashes": [
+            "12e302954fa9b23c11ce7c8f5770b82a",
+            "191509df8f8abdc824ea396dfdb96271",
+            "384689388dcc00d4e01804664acf5989",
+            "5430986efba9f8ba62d84937e652ece6",
+            "5645ce31982b99ec8ec79f0696e1bd7a",
+            "56a32f310765e54101a10001d28344b6",
+            "5a09109f46817935a1562f425c54c92a",
+            "ba87c854efeba531e1f4a730f617578c",
+            "7cb48e546c65623092bd3f65319117ac"
+        ]
+    },
+    {
+        "Title": "Metal Gear 2: Solid Snake",
+        "ID": 10504,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/034744.png",
+        "NumAchievements": 58,
+        "NumLeaderboards": 1,
+        "Points": 800,
+        "DateModified": "2023-05-31 04:22:24",
+        "ForumTopicID": 10642,
+        "Hashes": [
+            "01ec86d19248514baf263f0b60df4d0c",
+            "614c03a00bfee70c581f759e96cdc099",
+            "668217f475619500c87f136949267b6d",
+            "70e3d3dd66a97aeef6a87db23fadfc32",
+            "72e813494dcacde3029a07db1ecca934",
+            "8fe72857b748852cec910345ce7a2b73",
+            "9f50d92d35e19d5de37d75a36a410588",
+            "a501ffaf9fb30c3a68c0c4c803fba341",
+            "c54d3657e78b1ecc7cfe4f641158fbff",
+            "da8047597419d24897d8a43c0056876e",
+            "ef8ea24cf592cf24eb18c64ef7e2c25a",
+            "30f075748c6274e0e97740f5768b7738",
+            "c5608ca985c415e52bf202e679446330"
+        ]
+    },
+    {
+        "Title": "Oh Shit!",
+        "ID": 17069,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/068549.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 1,
+        "Points": 133,
+        "DateModified": "2021-03-18 03:30:58",
+        "ForumTopicID": 11765,
+        "Hashes": [
+            "1721862f3f033e74607af9e26688403d"
+        ]
+    },
+    {
+        "Title": "OutRun (Pony Canyon)",
+        "ID": 26658,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/084668.png",
+        "NumAchievements": 14,
+        "NumLeaderboards": 5,
+        "Points": 280,
+        "DateModified": "2023-10-22 07:33:11",
+        "ForumTopicID": 24034,
+        "Hashes": [
+            "eff230804098ffe4d342f389b5209eac"
+        ]
+    },
+    {
+        "Title": "Penguin Adventure",
+        "ID": 4025,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/051804.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 29,
+        "Points": 342,
+        "DateModified": "2023-10-18 00:14:56",
+        "ForumTopicID": 12532,
+        "Hashes": [
+            "9c3b9492f2b565cbddf562195f540993"
+        ]
+    },
+    {
+        "Title": "Penguin-kun Wars 2",
+        "ID": 10472,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/047635.png",
+        "NumAchievements": 56,
+        "NumLeaderboards": 0,
+        "Points": 525,
+        "DateModified": "2022-11-28 07:04:06",
+        "ForumTopicID": 13795,
+        "Hashes": [
+            "3db77573e81184156486fe743b828e58",
+            "d4f8d8a7e052a0d6246ac2b5afdc729e"
+        ]
+    },
+    {
+        "Title": "Picture Puzzle (HAL Laboratory)",
+        "ID": 16396,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/054872.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 0,
+        "Points": 15,
+        "DateModified": "2020-12-15 18:21:52",
+        "ForumTopicID": 11976,
+        "Hashes": [
+            "9383ba8643fd1000b5cc099cf9d46822",
+            "ac0bc988775b9c65c92cfb200f9b1beb"
+        ]
+    },
+    {
+        "Title": "SD Snatcher",
+        "ID": 10505,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/047038.png",
+        "NumAchievements": 95,
+        "NumLeaderboards": 1,
+        "Points": 400,
+        "DateModified": "2022-11-27 23:14:08",
+        "ForumTopicID": 13309,
+        "Hashes": [
+            "3bcf74b40f15eef5aab22a49781f9f1a",
+            "6d1990d36783caf8b6e4d73ae22c98b1",
+            "e4d3e483964c62ade5f07afdd81dd64b"
+        ]
+    },
+    {
+        "Title": "Silviana",
+        "ID": 22622,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/069673.png",
+        "NumAchievements": 48,
+        "NumLeaderboards": 0,
+        "Points": 408,
+        "DateModified": "2023-08-21 20:17:45",
+        "ForumTopicID": 20738,
+        "Hashes": [
+            "068d5ca06cf8149daf6bac0cde9f9938"
+        ]
+    },
+    {
+        "Title": "Space Manbow",
+        "ID": 4023,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/046712.png",
+        "NumAchievements": 32,
+        "NumLeaderboards": 9,
+        "Points": 261,
+        "DateModified": "2021-09-15 05:35:37",
+        "ForumTopicID": 13687,
+        "Hashes": [
+            "f78b9f4ea885cf072e5b41dce9f15436"
+        ]
+    },
+    {
+        "Title": "Treasure of Usas, The",
+        "ID": 17872,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/046394.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 20,
+        "Points": 330,
+        "DateModified": "2023-08-13 18:56:13",
+        "ForumTopicID": 13620,
+        "Hashes": [
+            "9aab75984b06c21ed8e6214474d3a68e"
+        ]
+    },
+    {
+        "Title": "Vampire Killer",
+        "ID": 3289,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/079968.png",
+        "NumAchievements": 28,
+        "NumLeaderboards": 2,
+        "Points": 450,
+        "DateModified": "2023-03-27 20:49:41",
+        "ForumTopicID": 11050,
+        "Hashes": [
+            "66da3107684286d1eba45efb8eae9113",
+            "92ba9dab3c7a4ac6c8a130f6ccbac91c"
+        ]
+    },
+    {
+        "Title": "Ys III: Wanderers from Ys",
+        "ID": 17365,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/055348.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 0,
+        "Points": 350,
+        "DateModified": "2023-08-18 02:56:22",
+        "ForumTopicID": 15815,
+        "Hashes": [
+            "0705e4bc427ee6efc95a0d86a2be8113",
+            "230a2be93d991a5a8b899004f22cff4a",
+            "2f34a6b207c333856d82165ef8876f21",
+            "bb13dde11d1a493c6b51d2efecc23093",
+            "ffc6e9f31fd867e1cec2185aada9b7e7"
+        ]
+    },
+    {
+        "Title": "Ys: The Vanished Omens",
+        "ID": 17363,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/041079.png",
+        "NumAchievements": 28,
+        "NumLeaderboards": 0,
+        "Points": 314,
+        "DateModified": "2023-01-06 20:17:31",
+        "ForumTopicID": 19673,
+        "Hashes": [
+            "c4060a8ec561305decef0814581deba2",
+            "c52e2ea87b469952ad4817a0196bd010"
+        ]
+    },
+    {
+        "Title": "Zoom 909",
+        "ID": 16530,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/036511.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 2,
+        "Points": 129,
+        "DateModified": "2022-01-17 08:12:09",
+        "ForumTopicID": 11248,
+        "Hashes": [
+            "d8e09f622af52e07a83f19ca58aee194"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ ~Prototype~ Super Mario World",
+        "ID": 17024,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/039323.png",
+        "NumAchievements": 13,
+        "NumLeaderboards": 0,
+        "Points": 56,
+        "DateModified": "2020-11-01 18:50:28",
+        "ForumTopicID": 11658,
+        "Hashes": [
+            "da28da0bb524bd0072e10b2799a88a75"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Deep Dungeon Adventure",
+        "ID": 25413,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/081855.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 6,
+        "Points": 125,
+        "DateModified": "2023-11-20 03:18:02",
+        "ForumTopicID": 22970,
+        "Hashes": [
+            "7a99efa93c475b1200975f9c36fa22a2"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Flappy Bird for MSX",
+        "ID": 19726,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/059601.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 1,
+        "Points": 55,
+        "DateModified": "2022-06-25 17:06:11",
+        "ForumTopicID": 17127,
+        "Hashes": [
+            "c60cacd6c1a8d390eae9e73e1f4da697"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Los Amores de Brunilda",
+        "ID": 18514,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/053469.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 0,
+        "Points": 75,
+        "DateModified": "2022-02-18 15:12:10",
+        "ForumTopicID": 15234,
+        "Hashes": [
+            "e64516057017949edf78d8517a14028b"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ PAC-01",
+        "ID": 18832,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/055388.png",
+        "NumAchievements": 19,
+        "NumLeaderboards": 6,
+        "Points": 180,
+        "DateModified": "2022-04-26 05:55:15",
+        "ForumTopicID": 15917,
+        "Hashes": [
+            "2f8f2935031e27c753e3d45f77994c3a"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Picture Puzzle (Karoshi Corporation)",
+        "ID": 16395,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/035589.png",
+        "NumAchievements": 9,
+        "NumLeaderboards": 45,
+        "Points": 21,
+        "DateModified": "2021-05-19 23:12:48",
+        "ForumTopicID": 11007,
+        "Hashes": [
+            "6ee570b6fa73fe9a147846078cddc11c"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Pleasure Hearts",
+        "ID": 16503,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/083573.png",
+        "NumAchievements": 20,
+        "NumLeaderboards": 1,
+        "Points": 225,
+        "DateModified": "2023-10-03 20:21:46",
+        "ForumTopicID": 23744,
+        "Hashes": [
+            "25497ff301b04a56b25cddab9150c364",
+            "cc86d3600bf2994a7a65852a225a2893",
+            "928a4aa69681355654d77f0bba9cc07e"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Pornoman",
+        "ID": 20240,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/060378.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 1,
+        "Points": 80,
+        "DateModified": "2022-07-27 08:27:23",
+        "ForumTopicID": 17501,
+        "Hashes": [
+            "9e016a6f8743655eacc8e22e96d95c4e"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Sudoku",
+        "ID": 16506,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/036533.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 4,
+        "Points": 43,
+        "DateModified": "2022-11-04 03:28:54",
+        "ForumTopicID": 11313,
+        "Hashes": [
+            "2df142939c9e1147f814099856fd6361"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Sword of Ianna, The",
+        "ID": 18786,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/056099.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 0,
+        "Points": 150,
+        "DateModified": "2023-05-05 02:05:34",
+        "ForumTopicID": 15737,
+        "Hashes": [
+            "3e900c93a758c417afe6bb3c11434c7a",
+            "a5cbdd2d012cccd49b8bce76db66e55c"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Westen House",
+        "ID": 18595,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/053627.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 1,
+        "Points": 75,
+        "DateModified": "2022-03-04 10:35:10",
+        "ForumTopicID": 15335,
+        "Hashes": [
+            "391911b3d3303431c6eb244dc009d88e",
+            "92dbc61b396804f24f6ac230a81fc57c",
+            "f7c02d92ac0045270f42cdca5c196332"
+        ]
+    },
+    {
+        "Title": "~Unlicensed~ Super Boy I",
+        "ID": 24166,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/077342.png",
+        "NumAchievements": 14,
+        "NumLeaderboards": 0,
+        "Points": 109,
+        "DateModified": "2023-09-01 21:49:50",
+        "ForumTopicID": 22568,
+        "Hashes": [
+            "71ece7df60858964e9d7a5c0c1c1e1ae"
+        ]
+    },
+    {
+        "Title": "~Unlicensed~ Super Boy II",
+        "ID": 24167,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/076383.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 1,
+        "Points": 200,
+        "DateModified": "2023-09-06 03:36:22",
+        "ForumTopicID": 22403,
+        "Hashes": [
+            "487f104fe1779e0d4341b8ed999cc0e3"
+        ]
+    },
+    {
+        "Title": "~Unlicensed~ Super Boy III",
+        "ID": 24169,
+        "ConsoleID": 29,
+        "ConsoleName": "MSX",
+        "ImageIcon": "/Images/081695.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 2,
+        "Points": 148,
+        "DateModified": "2023-09-13 20:43:51",
+        "ForumTopicID": 23129,
+        "Hashes": [
+            "ca1e0e7bdd2a0be70129b1de97746e40"
+        ]
+    }
+]

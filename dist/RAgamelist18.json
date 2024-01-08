@@ -1,0 +1,6134 @@
+[
+    {
+        "Title": "101 in 1 Explosive Megamix",
+        "ID": 20916,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/073517.png",
+        "NumAchievements": 107,
+        "NumLeaderboards": 96,
+        "Points": 416,
+        "DateModified": "2023-09-05 00:54:07",
+        "ForumTopicID": 21605,
+        "Hashes": [
+            "e6d6d2daad4cc49483793ba298067065"
+        ]
+    },
+    {
+        "Title": "42 All-Time Classics | Clubhouse Games",
+        "ID": 17484,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/042422.png",
+        "NumAchievements": 64,
+        "NumLeaderboards": 10,
+        "Points": 446,
+        "DateModified": "2023-03-02 03:41:29",
+        "ForumTopicID": 12537,
+        "Hashes": [
+            "5ffffa59cffeb24245395351f0437a87"
+        ]
+    },
+    {
+        "Title": "Ace Attorney Investigations 2: Prosecutor's Path | Gyakuten Kenji 2",
+        "ID": 16297,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/076922.png",
+        "NumAchievements": 78,
+        "NumLeaderboards": 0,
+        "Points": 319,
+        "DateModified": "2023-06-10 04:30:23",
+        "ForumTopicID": 12756,
+        "Hashes": [
+            "12b5a0b7711f8f37eaf8f17782742250"
+        ]
+    },
+    {
+        "Title": "Ace Attorney Investigations: Miles Edgeworth",
+        "ID": 16298,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086579.png",
+        "NumAchievements": 91,
+        "NumLeaderboards": 0,
+        "Points": 563,
+        "DateModified": "2023-06-03 06:17:36",
+        "ForumTopicID": 11922,
+        "Hashes": [
+            "97e1dd782b500833d354dd340736013e",
+            "ca5905912fd9a6d03c2bc162f852d8ef"
+        ]
+    },
+    {
+        "Title": "Advance Wars: Days of Ruin | Advance Wars: Dark Conflict",
+        "ID": 9105,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/043961.png",
+        "NumAchievements": 119,
+        "NumLeaderboards": 0,
+        "Points": 702,
+        "DateModified": "2021-05-03 09:25:46",
+        "ForumTopicID": 12128,
+        "Hashes": [
+            "da8fa4e5230c75839eebfd7c06fba470"
+        ]
+    },
+    {
+        "Title": "Advance Wars: Dual Strike",
+        "ID": 5626,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/033351.png",
+        "NumAchievements": 126,
+        "NumLeaderboards": 567,
+        "Points": 1200,
+        "DateModified": "2023-09-17 03:27:24",
+        "ForumTopicID": 10367,
+        "Hashes": [
+            "8d54864bf255ab0b2b0513d4213dc76f"
+        ]
+    },
+    {
+        "Title": "Adventures of Pinocchio",
+        "ID": 14906,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/036186.png",
+        "NumAchievements": 19,
+        "NumLeaderboards": 0,
+        "Points": 61,
+        "DateModified": "2020-12-30 03:30:39",
+        "ForumTopicID": 9859,
+        "Hashes": [
+            "19f1c299901dcd89b912b246d85f3d44"
+        ]
+    },
+    {
+        "Title": "All Kamen Rider: Rider Generation",
+        "ID": 17936,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/058009.png",
+        "NumAchievements": 44,
+        "NumLeaderboards": 0,
+        "Points": 590,
+        "DateModified": "2022-04-05 06:33:03",
+        "ForumTopicID": 15643,
+        "Hashes": [
+            "654fb79d03b8d8a5461e40ba7391c084"
+        ]
+    },
+    {
+        "Title": "All Kamen Rider: Rider Generation [Subset - Max Level]",
+        "ID": 18800,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/058007.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 0,
+        "Points": 725,
+        "DateModified": "2022-04-05 06:18:20",
+        "ForumTopicID": 15750,
+        "Hashes": [
+            "9df043d95362792b55767a4c43ee05ad"
+        ]
+    },
+    {
+        "Title": "Animal Crossing: Wild World",
+        "ID": 9594,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/071904.png",
+        "NumAchievements": 157,
+        "NumLeaderboards": 15,
+        "Points": 1375,
+        "DateModified": "2023-09-29 22:43:40",
+        "ForumTopicID": 11632,
+        "Hashes": [
+            "19bfd960234b03f0113f7dc13cf7af10",
+            "1b5e5107fff8d1190222570cf10853a3",
+            "7a549f2183942e0ada15a2e61e6a4bcc"
+        ]
+    },
+    {
+        "Title": "Animal Crossing: Wild World [Subset - Villager Pictures]",
+        "ID": 14836,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/079391.png",
+        "NumAchievements": 144,
+        "NumLeaderboards": 1,
+        "Points": 720,
+        "DateModified": "2022-12-29 09:40:44",
+        "ForumTopicID": 18686,
+        "Hashes": [
+            "8eedc069a50d1ca6a33281230791a3d2"
+        ]
+    },
+    {
+        "Title": "Apollo Justice: Ace Attorney",
+        "ID": 16249,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086577.png",
+        "NumAchievements": 74,
+        "NumLeaderboards": 0,
+        "Points": 540,
+        "DateModified": "2022-11-25 20:30:31",
+        "ForumTopicID": 10618,
+        "Hashes": [
+            "8fed72027fdab469a320acb30ced3426"
+        ]
+    },
+    {
+        "Title": "Arkanoid DS",
+        "ID": 22844,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069512.png",
+        "NumAchievements": 133,
+        "NumLeaderboards": 0,
+        "Points": 1750,
+        "DateModified": "2023-03-15 18:24:44",
+        "ForumTopicID": 20691,
+        "Hashes": [
+            "9193ceb50f490e3b123d3b2d80314a93"
+        ]
+    },
+    {
+        "Title": "Bakugan: Battle Brawlers",
+        "ID": 17580,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/072319.png",
+        "NumAchievements": 68,
+        "NumLeaderboards": 1,
+        "Points": 363,
+        "DateModified": "2023-09-18 22:58:33",
+        "ForumTopicID": 12812,
+        "Hashes": [
+            "5fc7d83a9fc8df243f20dc9181ea45d0",
+            "cf92f4c8bc7d5a7715f32081031af7cc"
+        ]
+    },
+    {
+        "Title": "Beat City",
+        "ID": 19147,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060504.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 60,
+        "Points": 303,
+        "DateModified": "2023-07-17 06:39:29",
+        "ForumTopicID": 17499,
+        "Hashes": [
+            "e5f77bd1a09557f89214ed23f605a63a"
+        ]
+    },
+    {
+        "Title": "Beetle King",
+        "ID": 17858,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045869.png",
+        "NumAchievements": 48,
+        "NumLeaderboards": 402,
+        "Points": 390,
+        "DateModified": "2021-07-27 09:54:04",
+        "ForumTopicID": 13508,
+        "Hashes": [
+            "e3ed3aa9254b7a1bc1ea4dee1fa5f974"
+        ]
+    },
+    {
+        "Title": "Ben 10: Alien Force",
+        "ID": 17066,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/039586.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 1,
+        "Points": 250,
+        "DateModified": "2022-01-06 01:55:33",
+        "ForumTopicID": 11754,
+        "Hashes": [
+            "0fed87589592785966f9fa86dd16f616"
+        ]
+    },
+    {
+        "Title": "Beyblade: Metal Fusion - Cyber Pegasus",
+        "ID": 17822,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045663.png",
+        "NumAchievements": 48,
+        "NumLeaderboards": 7,
+        "Points": 420,
+        "DateModified": "2021-07-08 07:09:10",
+        "ForumTopicID": 13420,
+        "Hashes": [
+            "77cc3286ec0758d55e3af10ac6f0481a"
+        ]
+    },
+    {
+        "Title": "Big Brain Academy",
+        "ID": 18664,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053983.png",
+        "NumAchievements": 96,
+        "NumLeaderboards": 1,
+        "Points": 226,
+        "DateModified": "2022-03-05 13:46:22",
+        "ForumTopicID": 15507,
+        "Hashes": [
+            "e0e7964ba8b9b1e98c6c99e4b2349d51"
+        ]
+    },
+    {
+        "Title": "Big Time Rush: Backstage Pass",
+        "ID": 17794,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045388.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 16,
+        "Points": 175,
+        "DateModified": "2022-07-20 01:37:58",
+        "ForumTopicID": 14816,
+        "Hashes": [
+            "c7f90fa652fc123df50077bb095b95b0"
+        ]
+    },
+    {
+        "Title": "Bleach DS 4th: Flame Bringer",
+        "ID": 15522,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/048818.png",
+        "NumAchievements": 103,
+        "NumLeaderboards": 8,
+        "Points": 825,
+        "DateModified": "2021-10-12 15:41:47",
+        "ForumTopicID": 14056,
+        "Hashes": [
+            "081ad54254a8b978de9b8b663749a4d7"
+        ]
+    },
+    {
+        "Title": "Bleach: Dark Souls",
+        "ID": 15521,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/049469.png",
+        "NumAchievements": 62,
+        "NumLeaderboards": 0,
+        "Points": 719,
+        "DateModified": "2023-04-16 18:02:39",
+        "ForumTopicID": 14193,
+        "Hashes": [
+            "7754908b5cb3e832e0b50f8895b4e67c",
+            "fdf226fa3ebc079d2931973413e0408a"
+        ]
+    },
+    {
+        "Title": "Bleach: The Blade of Fate",
+        "ID": 15520,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/049119.png",
+        "NumAchievements": 91,
+        "NumLeaderboards": 0,
+        "Points": 1050,
+        "DateModified": "2021-11-04 13:36:56",
+        "ForumTopicID": 14120,
+        "Hashes": [
+            "4d2116633923b0227fdd8d34a28036da",
+            "d83d25f179778bbde1bdfad60fb3e759"
+        ]
+    },
+    {
+        "Title": "Blood of Bahamut",
+        "ID": 2167,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070466.png",
+        "NumAchievements": 176,
+        "NumLeaderboards": 307,
+        "Points": 2227,
+        "DateModified": "2021-03-17 16:55:18",
+        "ForumTopicID": 12525,
+        "Hashes": [
+            "4f61232e8bbe47536bee6bfb31e50275"
+        ]
+    },
+    {
+        "Title": "Blue Dragon Plus",
+        "ID": 16634,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063140.png",
+        "NumAchievements": 56,
+        "NumLeaderboards": 0,
+        "Points": 600,
+        "DateModified": "2022-08-02 03:04:22",
+        "ForumTopicID": 13036,
+        "Hashes": [
+            "9dcc9307456c8d583db45cfddede3971"
+        ]
+    },
+    {
+        "Title": "Bomberman",
+        "ID": 14826,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086838.png",
+        "NumAchievements": 55,
+        "NumLeaderboards": 0,
+        "Points": 510,
+        "DateModified": "2023-08-24 14:56:14",
+        "ForumTopicID": 22064,
+        "Hashes": [
+            "c34089aa55770fab34d2e55f5fa00fa3"
+        ]
+    },
+    {
+        "Title": "Brain Boost: Gamma Wave",
+        "ID": 27133,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/087763.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 0,
+        "Points": 95,
+        "DateModified": "2024-01-06 19:15:32",
+        "ForumTopicID": 24961,
+        "Hashes": [
+            "ee8e601cfe0101c006c731f812ea94b5"
+        ]
+    },
+    {
+        "Title": "Bubble Guppies",
+        "ID": 24348,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/073478.png",
+        "NumAchievements": 28,
+        "NumLeaderboards": 3,
+        "Points": 86,
+        "DateModified": "2023-10-11 22:14:51",
+        "ForumTopicID": 21688,
+        "Hashes": [
+            "5cd5dcf39cc6f74b51b2fa7d77a86f24"
+        ]
+    },
+    {
+        "Title": "Build-A-Lot",
+        "ID": 6267,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/037239.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 43,
+        "Points": 306,
+        "DateModified": "2023-12-07 20:13:59",
+        "ForumTopicID": 23801,
+        "Hashes": [
+            "1882746fcaf5df9321e05816d61bd2a3"
+        ]
+    },
+    {
+        "Title": "Carnival Games",
+        "ID": 16342,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/056009.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 17,
+        "Points": 385,
+        "DateModified": "2023-08-12 00:26:04",
+        "ForumTopicID": 16060,
+        "Hashes": [
+            "5afd81dea5581155512e439cc3ba9ae1"
+        ]
+    },
+    {
+        "Title": "Cartoon Network Racing",
+        "ID": 9734,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053630.png",
+        "NumAchievements": 60,
+        "NumLeaderboards": 0,
+        "Points": 350,
+        "DateModified": "2023-09-18 10:54:47",
+        "ForumTopicID": 15382,
+        "Hashes": [
+            "24110b2c67e0452cfce7218c9ac01309"
+        ]
+    },
+    {
+        "Title": "Castlevania: Dawn of Sorrow",
+        "ID": 5522,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067003.png",
+        "NumAchievements": 68,
+        "NumLeaderboards": 0,
+        "Points": 625,
+        "DateModified": "2023-10-05 04:18:16",
+        "ForumTopicID": 9810,
+        "Hashes": [
+            "02b82366dce96b554440fd0b39b491d3",
+            "9538d811c4628fc7df447945fc8f1f28",
+            "1e25eb3683b9ec02ddcf19b5b4f89f6a"
+        ]
+    },
+    {
+        "Title": "Castlevania: Order of Ecclesia",
+        "ID": 7010,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069323.png",
+        "NumAchievements": 94,
+        "NumLeaderboards": 0,
+        "Points": 715,
+        "DateModified": "2023-05-30 11:23:11",
+        "ForumTopicID": 9945,
+        "Hashes": [
+            "deaebf0c01c2a27b3a3f9db7bd2e014b"
+        ]
+    },
+    {
+        "Title": "Castlevania: Portrait of Ruin",
+        "ID": 9407,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069559.png",
+        "NumAchievements": 88,
+        "NumLeaderboards": 3,
+        "Points": 1010,
+        "DateModified": "2023-06-15 03:38:41",
+        "ForumTopicID": 9846,
+        "Hashes": [
+            "9d45cdbb61f211198acce8d2baac379b",
+            "327ffb71104c2290ab661d4556c56a4c"
+        ]
+    },
+    {
+        "Title": "Cate West: The Vanishing Files",
+        "ID": 21890,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/065448.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 131,
+        "Points": 166,
+        "DateModified": "2022-12-27 22:39:13",
+        "ForumTopicID": 19449,
+        "Hashes": [
+            "f7c3cebd98ff02ffd929b2697f2c6474"
+        ]
+    },
+    {
+        "Title": "Chibi-Robo!: Park Patrol",
+        "ID": 1204,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/078930.png",
+        "NumAchievements": 48,
+        "NumLeaderboards": 6,
+        "Points": 559,
+        "DateModified": "2023-11-29 08:35:24",
+        "ForumTopicID": 22696,
+        "Hashes": [
+            "6c6aece4ebcb02727785e2eb342a9663"
+        ]
+    },
+    {
+        "Title": "Chrono Trigger",
+        "ID": 13049,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/051476.png",
+        "NumAchievements": 101,
+        "NumLeaderboards": 1,
+        "Points": 974,
+        "DateModified": "2023-08-29 15:41:14",
+        "ForumTopicID": 10345,
+        "Hashes": [
+            "175134ab272d98cb27e570c528ab8f8a",
+            "465696f8a3c631b00cc7e940f7f8ed2e"
+        ]
+    },
+    {
+        "Title": "Chrono Trigger [Subset - No Level-Up]",
+        "ID": 9966,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/051486.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 0,
+        "Points": 790,
+        "DateModified": "2022-06-15 15:07:01",
+        "ForumTopicID": 14557,
+        "Hashes": [
+            "d9d034ff83de05319e99236efc8a528d"
+        ]
+    },
+    {
+        "Title": "Club Penguin: Elite Penguin Force",
+        "ID": 9260,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/037186.png",
+        "NumAchievements": 37,
+        "NumLeaderboards": 6,
+        "Points": 203,
+        "DateModified": "2023-08-08 04:51:59",
+        "ForumTopicID": 11947,
+        "Hashes": [
+            "7aa8d39c4e43169376dfe4f84a0b3694"
+        ]
+    },
+    {
+        "Title": "Club Penguin: Elite Penguin Force - Herbert's Revenge",
+        "ID": 17376,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/041406.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 7,
+        "Points": 100,
+        "DateModified": "2022-04-22 07:21:00",
+        "ForumTopicID": 12217,
+        "Hashes": [
+            "b4de47730e780cff1f85764efa45f2c6"
+        ]
+    },
+    {
+        "Title": "Contact",
+        "ID": 11734,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070782.png",
+        "NumAchievements": 156,
+        "NumLeaderboards": 0,
+        "Points": 1525,
+        "DateModified": "2023-05-07 23:48:30",
+        "ForumTopicID": 14685,
+        "Hashes": [
+            "a7153ea53771f3b8edf902b0c3f8f7ba"
+        ]
+    },
+    {
+        "Title": "Contra 4",
+        "ID": 12917,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/031080.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 3,
+        "Points": 416,
+        "DateModified": "2023-11-02 04:21:08",
+        "ForumTopicID": 10083,
+        "Hashes": [
+            "4a0bb913060b127b94ea47aff6c6a340"
+        ]
+    },
+    {
+        "Title": "Contra 4 [Subset - Classic Contra]",
+        "ID": 23802,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070474.png",
+        "NumAchievements": 38,
+        "NumLeaderboards": 2,
+        "Points": 476,
+        "DateModified": "2023-07-01 05:02:56",
+        "ForumTopicID": 20991,
+        "Hashes": [
+            "c19ad944ca54402d302902aa448b103a"
+        ]
+    },
+    {
+        "Title": "Cooking Mama",
+        "ID": 9759,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053954.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 0,
+        "Points": 295,
+        "DateModified": "2023-01-23 01:16:13",
+        "ForumTopicID": 11276,
+        "Hashes": [
+            "f428d581271cef743f46c6e3726e2af4"
+        ]
+    },
+    {
+        "Title": "Cooking Mama 2: Dinner with Friends",
+        "ID": 16716,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/071848.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 16,
+        "Points": 355,
+        "DateModified": "2022-09-11 22:07:44",
+        "ForumTopicID": 14641,
+        "Hashes": [
+            "8e81c60655c67bc6fe8a54df7db349ad"
+        ]
+    },
+    {
+        "Title": "Cooking Mama 3: Shop & Chop",
+        "ID": 16717,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086682.png",
+        "NumAchievements": 39,
+        "NumLeaderboards": 0,
+        "Points": 501,
+        "DateModified": "2023-12-12 06:10:26",
+        "ForumTopicID": 14740,
+        "Hashes": [
+            "5bb925f4b51f013806eac20213bb3768"
+        ]
+    },
+    {
+        "Title": "Coraline",
+        "ID": 2091,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063088.png",
+        "NumAchievements": 48,
+        "NumLeaderboards": 7,
+        "Points": 246,
+        "DateModified": "2023-07-03 05:12:24",
+        "ForumTopicID": 18071,
+        "Hashes": [
+            "17b269e486e6e8779a748c088f9de781"
+        ]
+    },
+    {
+        "Title": "Coropata",
+        "ID": 15987,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/032182.png",
+        "NumAchievements": 192,
+        "NumLeaderboards": 0,
+        "Points": 640,
+        "DateModified": "2020-03-25 16:49:14",
+        "ForumTopicID": 10302,
+        "Hashes": [
+            "4181a16ae96d3d503cd24286d5f1b106",
+            "ffa2ea862b658d9d658c1c33ff9a1603"
+        ]
+    },
+    {
+        "Title": "Cory in the House",
+        "ID": 12712,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/083680.png",
+        "NumAchievements": 32,
+        "NumLeaderboards": 30,
+        "Points": 227,
+        "DateModified": "2023-10-21 06:38:47",
+        "ForumTopicID": 6604,
+        "Hashes": [
+            "02d8496f031dc7e93108e98f419f04fe"
+        ]
+    },
+    {
+        "Title": "CSI: Crime Scene Investigation - Dark Motives",
+        "ID": 19918,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/059451.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 0,
+        "Points": 75,
+        "DateModified": "2023-10-26 01:36:04",
+        "ForumTopicID": 16998,
+        "Hashes": [
+            "3a0b49b5d21a1ad4e599f8a8e2173059",
+            "af52dda5a2c281114a0d3515613c38e2"
+        ]
+    },
+    {
+        "Title": "Custom Robo Arena",
+        "ID": 15374,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045353.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 11,
+        "Points": 637,
+        "DateModified": "2023-06-24 16:44:13",
+        "ForumTopicID": 9892,
+        "Hashes": [
+            "e4c32b2d0375ecbc1ab87aae474039d9"
+        ]
+    },
+    {
+        "Title": "Dark Spire, The",
+        "ID": 9489,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/057393.png",
+        "NumAchievements": 74,
+        "NumLeaderboards": 0,
+        "Points": 478,
+        "DateModified": "2023-09-14 22:10:53",
+        "ForumTopicID": 17037,
+        "Hashes": [
+            "2dc6765ade8aa97094e543a9fa9ad793"
+        ]
+    },
+    {
+        "Title": "Dead 'n' Furious | Touch the Dead",
+        "ID": 9701,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070109.png",
+        "NumAchievements": 57,
+        "NumLeaderboards": 32,
+        "Points": 481,
+        "DateModified": "2023-07-13 07:05:28",
+        "ForumTopicID": 20791,
+        "Hashes": [
+            "df49ac44ad6b6ae3ca7ae488b7c977b6"
+        ]
+    },
+    {
+        "Title": "Dementium II",
+        "ID": 4593,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/077965.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 1,
+        "Points": 298,
+        "DateModified": "2023-08-12 04:38:34",
+        "ForumTopicID": 15266,
+        "Hashes": [
+            "b42791cf277cd2e573c8027b81394502"
+        ]
+    },
+    {
+        "Title": "Dementium: The Ward",
+        "ID": 4667,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053418.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 0,
+        "Points": 133,
+        "DateModified": "2022-11-01 14:18:36",
+        "ForumTopicID": 14036,
+        "Hashes": [
+            "46ddaa7e77fd48a7ef475cb8921418ef"
+        ]
+    },
+    {
+        "Title": "Diddy Kong Racing DS",
+        "ID": 9546,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/047184.png",
+        "NumAchievements": 92,
+        "NumLeaderboards": 2,
+        "Points": 779,
+        "DateModified": "2021-09-09 13:58:20",
+        "ForumTopicID": 13735,
+        "Hashes": [
+            "cc22e00538b0d8a027698599da11464d"
+        ]
+    },
+    {
+        "Title": "Digimon Story: Lost Evolution",
+        "ID": 16155,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/073852.png",
+        "NumAchievements": 118,
+        "NumLeaderboards": 4,
+        "Points": 838,
+        "DateModified": "2023-10-09 16:25:26",
+        "ForumTopicID": 13922,
+        "Hashes": [
+            "6dc8a246ca81ea572729b82ffe6a2428",
+            "d625b79189c5faca567071b47d89b6f0",
+            "daf7ddd0703a4cc599914538b7a47b38"
+        ]
+    },
+    {
+        "Title": "Digimon World Dawn",
+        "ID": 9443,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069732.png",
+        "NumAchievements": 74,
+        "NumLeaderboards": 3,
+        "Points": 680,
+        "DateModified": "2023-10-28 17:45:39",
+        "ForumTopicID": 24259,
+        "Hashes": [
+            "695d28eb00d13ed22a4b47a059cac3b9"
+        ]
+    },
+    {
+        "Title": "Digimon World DS",
+        "ID": 16153,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/073614.png",
+        "NumAchievements": 49,
+        "NumLeaderboards": 1,
+        "Points": 604,
+        "DateModified": "2023-07-15 22:50:17",
+        "ForumTopicID": 12130,
+        "Hashes": [
+            "2282f2a94f672c03413fe9288e36d58d"
+        ]
+    },
+    {
+        "Title": "Digimon World Dusk",
+        "ID": 16152,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069733.png",
+        "NumAchievements": 75,
+        "NumLeaderboards": 3,
+        "Points": 667,
+        "DateModified": "2023-10-28 18:14:35",
+        "ForumTopicID": 21875,
+        "Hashes": [
+            "bea76fb98a9073871e48428b4264c257"
+        ]
+    },
+    {
+        "Title": "Diner Dash: Flo on the Go",
+        "ID": 20263,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061085.png",
+        "NumAchievements": 92,
+        "NumLeaderboards": 65,
+        "Points": 616,
+        "DateModified": "2022-08-17 19:54:11",
+        "ForumTopicID": 17563,
+        "Hashes": [
+            "d6ab3258ba0c734efea3f9e9626fbc20"
+        ]
+    },
+    {
+        "Title": "Disgaea DS",
+        "ID": 9501,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061058.png",
+        "NumAchievements": 82,
+        "NumLeaderboards": 0,
+        "Points": 906,
+        "DateModified": "2022-11-07 23:44:36",
+        "ForumTopicID": 12117,
+        "Hashes": [
+            "db5044256bc6b7b903ff4a16d98dde39",
+            "4672bf7be5430e7890d226fae8b3e7cf"
+        ]
+    },
+    {
+        "Title": "DK: Jungle Climber | Donkey Kong: Jungle Climber",
+        "ID": 15740,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/048774.png",
+        "NumAchievements": 71,
+        "NumLeaderboards": 58,
+        "Points": 705,
+        "DateModified": "2023-08-20 16:46:01",
+        "ForumTopicID": 10168,
+        "Hashes": [
+            "35157c4611b18a4fcb3c007115f0804f"
+        ]
+    },
+    {
+        "Title": "Doodle Jump Journey",
+        "ID": 16618,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/043333.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 3,
+        "Points": 50,
+        "DateModified": "2021-04-16 09:33:12",
+        "ForumTopicID": 12792,
+        "Hashes": [
+            "671a72464381d8955c8ed90ad9bb90dd"
+        ]
+    },
+    {
+        "Title": "Draglade",
+        "ID": 17878,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/048329.png",
+        "NumAchievements": 62,
+        "NumLeaderboards": 0,
+        "Points": 620,
+        "DateModified": "2023-07-17 15:45:27",
+        "ForumTopicID": 13681,
+        "Hashes": [
+            "9e5fa521bb4af06bab92966f2e5cde60"
+        ]
+    },
+    {
+        "Title": "Dragon Ball Z: Attack of the Saiyans",
+        "ID": 15432,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045573.png",
+        "NumAchievements": 101,
+        "NumLeaderboards": 0,
+        "Points": 574,
+        "DateModified": "2023-07-13 18:02:03",
+        "ForumTopicID": 11411,
+        "Hashes": [
+            "a974e55ce282c82b6b9bf170d907d140"
+        ]
+    },
+    {
+        "Title": "Dragon Ball Z: Harukanaru Densetsu",
+        "ID": 15430,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/081415.png",
+        "NumAchievements": 127,
+        "NumLeaderboards": 0,
+        "Points": 430,
+        "DateModified": "2023-08-24 10:23:47",
+        "ForumTopicID": 16127,
+        "Hashes": [
+            "c189e7e03c9de029a9743e25b9fa4e1a"
+        ]
+    },
+    {
+        "Title": "Dragon Ball Z: Supersonic Warriors 2",
+        "ID": 15429,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054501.png",
+        "NumAchievements": 155,
+        "NumLeaderboards": 0,
+        "Points": 571,
+        "DateModified": "2023-09-12 10:22:09",
+        "ForumTopicID": 14039,
+        "Hashes": [
+            "7ec61c73c0217e0616978399dac47499"
+        ]
+    },
+    {
+        "Title": "Dragon Ball: Origins",
+        "ID": 15431,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/065789.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 0,
+        "Points": 737,
+        "DateModified": "2023-01-24 18:09:14",
+        "ForumTopicID": 16079,
+        "Hashes": [
+            "17318400410714899a7f5b806ddc8089"
+        ]
+    },
+    {
+        "Title": "Dragon Quest Heroes: Rocket Slime",
+        "ID": 16254,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/055622.png",
+        "NumAchievements": 89,
+        "NumLeaderboards": 1,
+        "Points": 829,
+        "DateModified": "2023-10-26 12:25:51",
+        "ForumTopicID": 10655,
+        "Hashes": [
+            "973e6373b082ab99675d7f32c2022ef1"
+        ]
+    },
+    {
+        "Title": "Dragon Quest IV: Chapters of the Chosen",
+        "ID": 9770,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/073137.png",
+        "NumAchievements": 80,
+        "NumLeaderboards": 0,
+        "Points": 525,
+        "DateModified": "2023-09-03 15:15:53",
+        "ForumTopicID": 10672,
+        "Hashes": [
+            "0bfd0fc908b0e7c8479d53e4cad82b28"
+        ]
+    },
+    {
+        "Title": "Dragon Quest IV: Chapters of the Chosen [Subset - Plentiful Plunder]",
+        "ID": 24941,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/075762.png",
+        "NumAchievements": 202,
+        "NumLeaderboards": 0,
+        "Points": 703,
+        "DateModified": "2023-07-04 00:12:00",
+        "ForumTopicID": 22239,
+        "Hashes": [
+            "dcc79f2d5a712512805272cde7c4b749"
+        ]
+    },
+    {
+        "Title": "Dragon Quest IX: Sentinels of the Starry Skies",
+        "ID": 9093,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038654.png",
+        "NumAchievements": 161,
+        "NumLeaderboards": 0,
+        "Points": 1567,
+        "DateModified": "2023-05-21 18:17:01",
+        "ForumTopicID": 11708,
+        "Hashes": [
+            "ebb3e9ee86d520f624ffc701a912779b"
+        ]
+    },
+    {
+        "Title": "Dragon Quest IX: Sentinels of the Starry Skies [Subset - Accolade Acquirer]",
+        "ID": 25064,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086476.png",
+        "NumAchievements": 430,
+        "NumLeaderboards": 0,
+        "Points": 1461,
+        "DateModified": "2023-11-01 20:29:34",
+        "ForumTopicID": 22492,
+        "Hashes": [
+            "508c729c088dc166f3b188345e845936"
+        ]
+    },
+    {
+        "Title": "Dragon Quest IX: Sentinels of the Starry Skies [Subset - Item Inquisitor]",
+        "ID": 25066,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086477.png",
+        "NumAchievements": 272,
+        "NumLeaderboards": 0,
+        "Points": 891,
+        "DateModified": "2023-11-01 20:46:00",
+        "ForumTopicID": 22491,
+        "Hashes": [
+            "d0d66c8c2cb3340257ad2add7b0f341a"
+        ]
+    },
+    {
+        "Title": "Dragon Quest IX: Sentinels of the Starry Skies [Subset - Level 99 Legacy Lunacy]",
+        "ID": 25065,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086478.png",
+        "NumAchievements": 13,
+        "NumLeaderboards": 0,
+        "Points": 1300,
+        "DateModified": "2023-11-01 20:36:44",
+        "ForumTopicID": 22493,
+        "Hashes": [
+            "198ea990721c0fb42df166e7037fc528"
+        ]
+    },
+    {
+        "Title": "Dragon Quest Monsters: Joker",
+        "ID": 16655,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063344.png",
+        "NumAchievements": 60,
+        "NumLeaderboards": 0,
+        "Points": 710,
+        "DateModified": "2023-09-03 18:46:24",
+        "ForumTopicID": 12213,
+        "Hashes": [
+            "a05bb67702257407799eeb821fca9a5f"
+        ]
+    },
+    {
+        "Title": "Dragon Quest Monsters: Joker 2",
+        "ID": 822,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/082888.png",
+        "NumAchievements": 58,
+        "NumLeaderboards": 0,
+        "Points": 752,
+        "DateModified": "2023-10-22 15:30:12",
+        "ForumTopicID": 12214,
+        "Hashes": [
+            "3653545393f5ef0be6be79e51c44ddb6"
+        ]
+    },
+    {
+        "Title": "Dragon Quest V: Hand of the Heavenly Bride",
+        "ID": 4655,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038655.png",
+        "NumAchievements": 80,
+        "NumLeaderboards": 5,
+        "Points": 665,
+        "DateModified": "2023-06-27 10:07:01",
+        "ForumTopicID": 12942,
+        "Hashes": [
+            "29621f7130b2ceb063c565e1cddb4b3d",
+            "f110efe23e9af4cb59740f8939832a73"
+        ]
+    },
+    {
+        "Title": "Dragon Quest VI: Realms of Revelation | Realms of Reverie",
+        "ID": 9823,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038656.png",
+        "NumAchievements": 138,
+        "NumLeaderboards": 5,
+        "Points": 887,
+        "DateModified": "2023-07-23 10:02:28",
+        "ForumTopicID": 13522,
+        "Hashes": [
+            "2f8bd15c55df627bddd22396a8f646de",
+            "8613f81b394184859bb417b8502a0118"
+        ]
+    },
+    {
+        "Title": "Dragon Quest VI: Realms of Revelation | Realms of Reverie [Subset - Rarity Run]",
+        "ID": 25176,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/077107.png",
+        "NumAchievements": 197,
+        "NumLeaderboards": 0,
+        "Points": 807,
+        "DateModified": "2023-10-19 20:28:19",
+        "ForumTopicID": 22543,
+        "Hashes": [
+            "5f3210ed19304343f15992e58a8b3591"
+        ]
+    },
+    {
+        "Title": "Drawn To Life",
+        "ID": 14782,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/036122.png",
+        "NumAchievements": 39,
+        "NumLeaderboards": 0,
+        "Points": 405,
+        "DateModified": "2020-11-04 02:37:29",
+        "ForumTopicID": 11172,
+        "Hashes": [
+            "52e840515c5001e4af1f80619a3d796a"
+        ]
+    },
+    {
+        "Title": "Dream Chronicles",
+        "ID": 20288,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060964.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 0,
+        "Points": 80,
+        "DateModified": "2022-08-31 22:25:17",
+        "ForumTopicID": 17665,
+        "Hashes": [
+            "1d0bb23b40ebc0b01c6ce2c03b3b7c2d"
+        ]
+    },
+    {
+        "Title": "DS Bungaku Zenshuu",
+        "ID": 14736,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/028410.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 0,
+        "Points": 0,
+        "DateModified": "2022-05-12 03:26:35",
+        "ForumTopicID": 9796,
+        "Hashes": [
+            "d25ee9071406aa6421b8d16b5b7b2d3d"
+        ]
+    },
+    {
+        "Title": "Elf Bowling 1 & 2",
+        "ID": 1983,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/075759.png",
+        "NumAchievements": 13,
+        "NumLeaderboards": 2,
+        "Points": 110,
+        "DateModified": "2023-07-17 02:23:33",
+        "ForumTopicID": 22198,
+        "Hashes": [
+            "e725f80e85088afab9ff2dddaf3ec30b"
+        ]
+    },
+    {
+        "Title": "Elite Beat Agents",
+        "ID": 9232,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038909.png",
+        "NumAchievements": 86,
+        "NumLeaderboards": 57,
+        "Points": 747,
+        "DateModified": "2023-03-29 05:26:02",
+        "ForumTopicID": 11969,
+        "Hashes": [
+            "bbf10cada0dcc72068179c600fe79267"
+        ]
+    },
+    {
+        "Title": "eSMART | eCDP: eCrew Development Program",
+        "ID": 17155,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/048969.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 0,
+        "Points": 95,
+        "DateModified": "2020-11-21 19:10:01",
+        "ForumTopicID": 11901,
+        "Hashes": [
+            "6d0d682c141c6e95973051310c209574",
+            "a32d07b1ebd5c7a276355aacd707ffd0",
+            "e9ba14d5ea3eaaa0ec3846f0c21dbd2b"
+        ]
+    },
+    {
+        "Title": "eSMART 2.0",
+        "ID": 18371,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/052640.png",
+        "NumAchievements": 32,
+        "NumLeaderboards": 0,
+        "Points": 120,
+        "DateModified": "2022-01-31 22:20:49",
+        "ForumTopicID": 15109,
+        "Hashes": [
+            "17d26afb1ddc6be4c8f720bfe8eb9c97"
+        ]
+    },
+    {
+        "Title": "Etrian Odyssey",
+        "ID": 9914,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086308.png",
+        "NumAchievements": 70,
+        "NumLeaderboards": 0,
+        "Points": 750,
+        "DateModified": "2023-08-17 03:46:19",
+        "ForumTopicID": 10055,
+        "Hashes": [
+            "71cbe0d1a0765e01c45b594c6dbe40e6",
+            "f597552b23cf6f19a4af191cc2686eac"
+        ]
+    },
+    {
+        "Title": "Etrian Odyssey II: Heroes of Lagaard",
+        "ID": 10412,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086309.png",
+        "NumAchievements": 78,
+        "NumLeaderboards": 0,
+        "Points": 856,
+        "DateModified": "2023-11-10 07:11:44",
+        "ForumTopicID": 17022,
+        "Hashes": [
+            "ff30e18c02471f1a1f86ac5334ff8d6b"
+        ]
+    },
+    {
+        "Title": "Fall f\u00fcr TKKG, Ein: Detektiv gesucht!",
+        "ID": 21996,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/065911.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 25,
+        "Points": 122,
+        "DateModified": "2022-12-25 14:53:28",
+        "ForumTopicID": 19569,
+        "Hashes": [
+            "2d44783824eb8e8a75cdf1f085b3aa98"
+        ]
+    },
+    {
+        "Title": "Feel the Magic XY/XX | Project Rub",
+        "ID": 9524,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045951.png",
+        "NumAchievements": 46,
+        "NumLeaderboards": 12,
+        "Points": 397,
+        "DateModified": "2023-06-29 21:11:20",
+        "ForumTopicID": 13541,
+        "Hashes": [
+            "7ff1cd87e15b520b99081777fcfee919"
+        ]
+    },
+    {
+        "Title": "Final Fantasy III",
+        "ID": 4663,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070788.png",
+        "NumAchievements": 168,
+        "NumLeaderboards": 38,
+        "Points": 1153,
+        "DateModified": "2023-11-04 01:02:36",
+        "ForumTopicID": 10730,
+        "Hashes": [
+            "435ac50f4dbd02bb4d049228df60418a"
+        ]
+    },
+    {
+        "Title": "Final Fantasy IV",
+        "ID": 9994,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070791.png",
+        "NumAchievements": 110,
+        "NumLeaderboards": 1,
+        "Points": 953,
+        "DateModified": "2023-11-04 01:01:39",
+        "ForumTopicID": 12131,
+        "Hashes": [
+            "ae99069b9830d283fb8eb3f7d3c0bee7"
+        ]
+    },
+    {
+        "Title": "Final Fantasy Tactics A2: Grimoire of the Rift",
+        "ID": 4958,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070806.png",
+        "NumAchievements": 185,
+        "NumLeaderboards": 2,
+        "Points": 1580,
+        "DateModified": "2023-02-24 13:34:21",
+        "ForumTopicID": 11151,
+        "Hashes": [
+            "215d4042c498fc8348e9acabf9f9c302"
+        ]
+    },
+    {
+        "Title": "Final Fantasy: The 4 Heroes of Light",
+        "ID": 14837,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054808.png",
+        "NumAchievements": 92,
+        "NumLeaderboards": 0,
+        "Points": 548,
+        "DateModified": "2022-01-13 01:29:48",
+        "ForumTopicID": 14462,
+        "Hashes": [
+            "82192dc31bcedb9621359f84933a647e"
+        ]
+    },
+    {
+        "Title": "Fire Emblem: Shadow Dragon",
+        "ID": 8572,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/071602.png",
+        "NumAchievements": 152,
+        "NumLeaderboards": 3,
+        "Points": 1020,
+        "DateModified": "2023-10-19 22:32:37",
+        "ForumTopicID": 11196,
+        "Hashes": [
+            "77649c837f98a6e3eee6833e7bfa10be"
+        ]
+    },
+    {
+        "Title": "Fireman Sam",
+        "ID": 20639,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/062650.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 0,
+        "Points": 223,
+        "DateModified": "2023-06-29 02:55:14",
+        "ForumTopicID": 21052,
+        "Hashes": [
+            "7a95a64742d09360d81bc840b9572d6e"
+        ]
+    },
+    {
+        "Title": "Flower, Sun and Rain: Murder and Mystery in Paradise",
+        "ID": 9496,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/051467.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 0,
+        "Points": 300,
+        "DateModified": "2022-01-13 01:57:54",
+        "ForumTopicID": 9842,
+        "Hashes": [
+            "24757b6de971131ebcf174cc91694216"
+        ]
+    },
+    {
+        "Title": "Game & Watch Collection",
+        "ID": 16363,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069525.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 6,
+        "Points": 110,
+        "DateModified": "2023-04-10 23:07:01",
+        "ForumTopicID": 10928,
+        "Hashes": [
+            "420fe9e2451fdce12447527b6daa228e"
+        ]
+    },
+    {
+        "Title": "Game & Watch Collection 2",
+        "ID": 16364,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069524.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 6,
+        "Points": 115,
+        "DateModified": "2023-04-10 23:09:07",
+        "ForumTopicID": 10927,
+        "Hashes": [
+            "fc55fd53102bb4d24fda4b05f094c828"
+        ]
+    },
+    {
+        "Title": "Garfield's Nightmare",
+        "ID": 7916,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/080723.png",
+        "NumAchievements": 35,
+        "NumLeaderboards": 0,
+        "Points": 250,
+        "DateModified": "2021-11-12 03:15:13",
+        "ForumTopicID": 11454,
+        "Hashes": [
+            "59df8218e892d683a6d609b9dbdbf0c1"
+        ]
+    },
+    {
+        "Title": "Ghost Trick: Phantom Detective",
+        "ID": 4911,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060996.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 0,
+        "Points": 200,
+        "DateModified": "2023-05-16 20:18:39",
+        "ForumTopicID": 9805,
+        "Hashes": [
+            "f58b3448add412176e45e7394cbea223"
+        ]
+    },
+    {
+        "Title": "Giana Sisters DS",
+        "ID": 7062,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/039629.png",
+        "NumAchievements": 58,
+        "NumLeaderboards": 0,
+        "Points": 500,
+        "DateModified": "2023-07-14 12:27:30",
+        "ForumTopicID": 11783,
+        "Hashes": [
+            "d9e18922e7c60b90c0111a9111a6d054"
+        ]
+    },
+    {
+        "Title": "Gogo's Crazy Bones: Go Go Crazy!!",
+        "ID": 18565,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053298.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 0,
+        "Points": 70,
+        "DateModified": "2022-02-16 08:07:07",
+        "ForumTopicID": 15298,
+        "Hashes": [
+            "404d4998d7d9a9e2e27610cfea7bc736",
+            "e95036dcfe8fba6eb9805c8583aa28f9"
+        ]
+    },
+    {
+        "Title": "Golden Sun: Dark Dawn",
+        "ID": 11788,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/031539.png",
+        "NumAchievements": 147,
+        "NumLeaderboards": 0,
+        "Points": 915,
+        "DateModified": "2023-06-16 23:57:09",
+        "ForumTopicID": 10173,
+        "Hashes": [
+            "c5df0ca879fe7cd10a553e8b6031db79"
+        ]
+    },
+    {
+        "Title": "Grand Theft Auto: Chinatown Wars",
+        "ID": 9954,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/040554.png",
+        "NumAchievements": 150,
+        "NumLeaderboards": 142,
+        "Points": 1290,
+        "DateModified": "2021-05-10 02:34:29",
+        "ForumTopicID": 12044,
+        "Hashes": [
+            "dd4e23470995a9769b1e580bec2a42ea"
+        ]
+    },
+    {
+        "Title": "Guitar Hero: On Tour",
+        "ID": 16242,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061321.png",
+        "NumAchievements": 44,
+        "NumLeaderboards": 0,
+        "Points": 845,
+        "DateModified": "2022-01-28 06:20:49",
+        "ForumTopicID": 10598,
+        "Hashes": [
+            "f20d6159652c2b37c63103fc706cfcc6"
+        ]
+    },
+    {
+        "Title": "Gummy Bears Minigolf",
+        "ID": 24131,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/071827.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 0,
+        "Points": 147,
+        "DateModified": "2023-06-13 16:24:29",
+        "ForumTopicID": 21392,
+        "Hashes": [
+            "b3718402f7c9feac32f1c7d55b829292"
+        ]
+    },
+    {
+        "Title": "Harvest Moon DS",
+        "ID": 11637,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061248.png",
+        "NumAchievements": 224,
+        "NumLeaderboards": 0,
+        "Points": 1660,
+        "DateModified": "2023-05-11 03:33:57",
+        "ForumTopicID": 12526,
+        "Hashes": [
+            "f2c7b1b97877c0e21429cd54543fa9fc"
+        ]
+    },
+    {
+        "Title": "Harvest Moon DS: Cute",
+        "ID": 12198,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069708.png",
+        "NumAchievements": 268,
+        "NumLeaderboards": 0,
+        "Points": 1766,
+        "DateModified": "2023-06-02 02:25:58",
+        "ForumTopicID": 15068,
+        "Hashes": [
+            "68309221618e6744197586bd9dcd6896",
+            "6acf86ebdf8190ded65ad81836cb524d"
+        ]
+    },
+    {
+        "Title": "Harvest Moon DS: Island of Happiness",
+        "ID": 14941,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/058295.png",
+        "NumAchievements": 190,
+        "NumLeaderboards": 2,
+        "Points": 1500,
+        "DateModified": "2023-02-04 03:07:06",
+        "ForumTopicID": 16838,
+        "Hashes": [
+            "f13f02e1df1cb14ce41c16637fc48473"
+        ]
+    },
+    {
+        "Title": "Harvest Moon DS: Sunshine Islands",
+        "ID": 24964,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/078280.png",
+        "NumAchievements": 186,
+        "NumLeaderboards": 0,
+        "Points": 1414,
+        "DateModified": "2023-11-11 18:13:47",
+        "ForumTopicID": 22319,
+        "Hashes": [
+            "401a6f449c2d11b9f58f1ec5d3846b3c"
+        ]
+    },
+    {
+        "Title": "Hell's Kitchen: The Game",
+        "ID": 17860,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/062172.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 0,
+        "Points": 290,
+        "DateModified": "2022-09-30 16:41:39",
+        "ForumTopicID": 18224,
+        "Hashes": [
+            "1a5a833ad028f7800b63df760b32e745",
+            "e48632e5d3cfe14dfbbb82f90510b5f5"
+        ]
+    },
+    {
+        "Title": "Hidden Objects: Mystery Stories",
+        "ID": 19773,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069120.png",
+        "NumAchievements": 44,
+        "NumLeaderboards": 40,
+        "Points": 275,
+        "DateModified": "2023-04-25 04:59:01",
+        "ForumTopicID": 20559,
+        "Hashes": [
+            "07fd71bd80dbc8d68a224e8ff317a9ba",
+            "70959f143428a380fe8265fee222bb2d"
+        ]
+    },
+    {
+        "Title": "Honda ATV Fever",
+        "ID": 28171,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/087703.png",
+        "NumAchievements": 47,
+        "NumLeaderboards": 14,
+        "Points": 330,
+        "DateModified": "2024-01-06 06:04:01",
+        "ForumTopicID": 24962,
+        "Hashes": [
+            "438dca0917df4464a29b0d85222346ca"
+        ]
+    },
+    {
+        "Title": "iCarly",
+        "ID": 18396,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/071951.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 3,
+        "Points": 121,
+        "DateModified": "2024-01-07 04:36:14",
+        "ForumTopicID": 24732,
+        "Hashes": [
+            "a4d58e6d07df081e7668297cd8091b12"
+        ]
+    },
+    {
+        "Title": "Inazuma Eleven 2: Blizzard",
+        "ID": 16626,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/075417.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 0,
+        "Points": 266,
+        "DateModified": "2022-03-10 16:34:38",
+        "ForumTopicID": 15366,
+        "Hashes": [
+            "cc2f3cbdb35fe163a03a192474c22b93"
+        ]
+    },
+    {
+        "Title": "Ivy The Kiwi?",
+        "ID": 14778,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067822.png",
+        "NumAchievements": 62,
+        "NumLeaderboards": 100,
+        "Points": 615,
+        "DateModified": "2023-07-09 14:38:18",
+        "ForumTopicID": 20094,
+        "Hashes": [
+            "52d676a1f0f62f38d8153063bdca315f"
+        ]
+    },
+    {
+        "Title": "Izuna 2: The Unemployed Ninja Returns",
+        "ID": 3140,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063014.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 0,
+        "Points": 545,
+        "DateModified": "2022-11-02 11:02:50",
+        "ForumTopicID": 18455,
+        "Hashes": [
+            "2dfe9d9d24cff87ecb7aa730b5b04c9e"
+        ]
+    },
+    {
+        "Title": "Izuna 2: The Unemployed Ninja Returns [Subset - Ninja Photographer]",
+        "ID": 21434,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063258.png",
+        "NumAchievements": 66,
+        "NumLeaderboards": 0,
+        "Points": 425,
+        "DateModified": "2022-11-20 22:04:33",
+        "ForumTopicID": 18692,
+        "Hashes": [
+            "793ea5ababa58f2c6475c6d63dadbd24"
+        ]
+    },
+    {
+        "Title": "Izuna: Legend of the Unemployed Ninja",
+        "ID": 2116,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063015.png",
+        "NumAchievements": 39,
+        "NumLeaderboards": 0,
+        "Points": 325,
+        "DateModified": "2022-10-15 09:15:04",
+        "ForumTopicID": 18444,
+        "Hashes": [
+            "2086bac3c59ddf693a2fcc86989ce14e"
+        ]
+    },
+    {
+        "Title": "Johnny Test",
+        "ID": 26193,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/085249.png",
+        "NumAchievements": 35,
+        "NumLeaderboards": 12,
+        "Points": 301,
+        "DateModified": "2023-11-05 23:40:20",
+        "ForumTopicID": 24300,
+        "Hashes": [
+            "5fd3b3992c785e20e26086b61806b6df"
+        ]
+    },
+    {
+        "Title": "Jump Ultimate Stars",
+        "ID": 15428,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/041849.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 0,
+        "Points": 470,
+        "DateModified": "2023-04-26 19:35:27",
+        "ForumTopicID": 12358,
+        "Hashes": [
+            "678da3a077b2ceb562e6b831e1eae0b6"
+        ]
+    },
+    {
+        "Title": "Ketsui Death Label: Kizuna Jigoku Tachi",
+        "ID": 16710,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038001.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 9,
+        "Points": 820,
+        "DateModified": "2023-09-03 00:55:04",
+        "ForumTopicID": 20832,
+        "Hashes": [
+            "24175d7c714b97a06b97a969e1bddb1d",
+            "3a2a1a3cb0a890fab5f26f6d95cdfe2c"
+        ]
+    },
+    {
+        "Title": "Kingdom Hearts Re:coded",
+        "ID": 14828,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/056476.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 16,
+        "Points": 1051,
+        "DateModified": "2022-12-08 03:09:30",
+        "ForumTopicID": 11805,
+        "Hashes": [
+            "6da304ac3be49495188a8943c211e854"
+        ]
+    },
+    {
+        "Title": "Kingdom Hearts: 358/2 Days",
+        "ID": 2642,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/056478.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 1,
+        "Points": 460,
+        "DateModified": "2023-06-10 06:26:52",
+        "ForumTopicID": 9813,
+        "Hashes": [
+            "590e2a2a37642bc79febcfa20c58cc57",
+            "b7a295835066be33396583ef4da64af1"
+        ]
+    },
+    {
+        "Title": "Kirby Mass Attack",
+        "ID": 14788,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/059528.png",
+        "NumAchievements": 96,
+        "NumLeaderboards": 17,
+        "Points": 918,
+        "DateModified": "2022-10-12 16:40:02",
+        "ForumTopicID": 11993,
+        "Hashes": [
+            "e2cb528d34af4843b1f71ec6c19ccee8"
+        ]
+    },
+    {
+        "Title": "Kirby Super Star Ultra",
+        "ID": 14763,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046444.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 0,
+        "Points": 640,
+        "DateModified": "2023-05-22 16:53:04",
+        "ForumTopicID": 9775,
+        "Hashes": [
+            "6d77d9f9b34323e4060206b675620b8d"
+        ]
+    },
+    {
+        "Title": "Kirby: Power Paintbrush | Kirby: Canvas Curse",
+        "ID": 6102,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038247.png",
+        "NumAchievements": 56,
+        "NumLeaderboards": 69,
+        "Points": 438,
+        "DateModified": "2023-06-25 16:56:41",
+        "ForumTopicID": 11024,
+        "Hashes": [
+            "91ea6a181df83c2a2b1b256a6190fb21"
+        ]
+    },
+    {
+        "Title": "Kirby: Squeak Squad | Kirby: Mouse Attack",
+        "ID": 14700,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046735.png",
+        "NumAchievements": 98,
+        "NumLeaderboards": 7,
+        "Points": 1114,
+        "DateModified": "2023-07-07 07:43:46",
+        "ForumTopicID": 9625,
+        "Hashes": [
+            "df6aeb215ba335a9b2199c3b67af8e74"
+        ]
+    },
+    {
+        "Title": "Legacy of Ys: Books I & II",
+        "ID": 9896,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066922.png",
+        "NumAchievements": 128,
+        "NumLeaderboards": 15,
+        "Points": 590,
+        "DateModified": "2023-06-19 16:05:14",
+        "ForumTopicID": 19904,
+        "Hashes": [
+            "aed7a8e0605cd98b24c94f47ad581c38"
+        ]
+    },
+    {
+        "Title": "Legend of Zelda, The: Phantom Hourglass",
+        "ID": 14323,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/043923.png",
+        "NumAchievements": 67,
+        "NumLeaderboards": 6,
+        "Points": 539,
+        "DateModified": "2023-07-15 00:02:41",
+        "ForumTopicID": 9847,
+        "Hashes": [
+            "14e14c7b096f9d1314fedd449c810a16",
+            "e727e333ba706ac1f67352a287c419a3"
+        ]
+    },
+    {
+        "Title": "Legend of Zelda, The: Spirit Tracks",
+        "ID": 9898,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046401.png",
+        "NumAchievements": 70,
+        "NumLeaderboards": 9,
+        "Points": 565,
+        "DateModified": "2023-10-13 18:51:03",
+        "ForumTopicID": 10359,
+        "Hashes": [
+            "7b94041cdde943449d892215873017a9",
+            "d82d035fe29dcc0b558f421dadfa500e"
+        ]
+    },
+    {
+        "Title": "Legendary Starfy, The",
+        "ID": 9119,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/029054.png",
+        "NumAchievements": 58,
+        "NumLeaderboards": 15,
+        "Points": 445,
+        "DateModified": "2023-02-15 02:21:01",
+        "ForumTopicID": 9731,
+        "Hashes": [
+            "1a7fdf14cf7564f8eab930bb28d275d3"
+        ]
+    },
+    {
+        "Title": "LEGO Battles: Ninjago | LEGO Ninjago: The Videogame",
+        "ID": 8882,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/065180.png",
+        "NumAchievements": 95,
+        "NumLeaderboards": 51,
+        "Points": 377,
+        "DateModified": "2023-04-16 21:38:08",
+        "ForumTopicID": 19400,
+        "Hashes": [
+            "17df0ebe61d4a80d25ba7fcc2eac3161",
+            "59060f8e5a9a2f0ef416c4b43bbe163d"
+        ]
+    },
+    {
+        "Title": "LEGO Harry Potter: Years 1-4",
+        "ID": 15357,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053206.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 1,
+        "Points": 301,
+        "DateModified": "2022-10-30 17:18:16",
+        "ForumTopicID": 11066,
+        "Hashes": [
+            "b7c65012ad2563db2cf55ded03d074ff"
+        ]
+    },
+    {
+        "Title": "LEGO Indiana Jones 2: The Adventure Continues",
+        "ID": 15353,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/055623.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 0,
+        "Points": 260,
+        "DateModified": "2022-09-06 22:08:55",
+        "ForumTopicID": 15599,
+        "Hashes": [
+            "6591490377f992bf816834762d0dfbfb"
+        ]
+    },
+    {
+        "Title": "LEGO Indiana Jones: The Original Adventures",
+        "ID": 15352,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/044390.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 0,
+        "Points": 230,
+        "DateModified": "2021-05-18 23:17:29",
+        "ForumTopicID": 12988,
+        "Hashes": [
+            "92a1598c9230a67b7294bcbd5c1e3ad7"
+        ]
+    },
+    {
+        "Title": "LEGO Marvel Super Heroes: Universe in Peril",
+        "ID": 17515,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045409.png",
+        "NumAchievements": 63,
+        "NumLeaderboards": 46,
+        "Points": 515,
+        "DateModified": "2022-09-29 13:13:45",
+        "ForumTopicID": 13216,
+        "Hashes": [
+            "148705c56da05d6e58e74782cc93fd6e",
+            "2f205f3cdad1c1003372c8e02eb2b4f0",
+            "49c1e352baffa215a013c08fa63033c2",
+            "ace0750f95d77b7419eeb09a7d42c747"
+        ]
+    },
+    {
+        "Title": "LEGO Pirates of the Caribbean: The Video Game",
+        "ID": 15356,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/043024.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 0,
+        "Points": 252,
+        "DateModified": "2021-04-19 16:22:47",
+        "ForumTopicID": 12700,
+        "Hashes": [
+            "2a0df7a6ec7f473179f15ac2da054799"
+        ]
+    },
+    {
+        "Title": "LEGO Rock Band",
+        "ID": 15981,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/041002.png",
+        "NumAchievements": 93,
+        "NumLeaderboards": 25,
+        "Points": 1610,
+        "DateModified": "2023-06-26 01:25:17",
+        "ForumTopicID": 11577,
+        "Hashes": [
+            "cd39b46786f48933fc468e8236fe478f"
+        ]
+    },
+    {
+        "Title": "LEGO Star Wars II: The Original Trilogy",
+        "ID": 15350,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069680.png",
+        "NumAchievements": 28,
+        "NumLeaderboards": 0,
+        "Points": 141,
+        "DateModified": "2023-09-01 11:48:47",
+        "ForumTopicID": 20513,
+        "Hashes": [
+            "59f291a67879961384f3815b5f69883b"
+        ]
+    },
+    {
+        "Title": "LEGO Star Wars III: The Clone Wars",
+        "ID": 15355,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/080582.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 0,
+        "Points": 410,
+        "DateModified": "2023-10-07 23:16:43",
+        "ForumTopicID": 22837,
+        "Hashes": [
+            "c430eb04603f067e8b2c1110530a589b"
+        ]
+    },
+    {
+        "Title": "LEGO Star Wars: The Complete Saga",
+        "ID": 15351,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/043871.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 2,
+        "Points": 384,
+        "DateModified": "2022-10-09 21:55:19",
+        "ForumTopicID": 12914,
+        "Hashes": [
+            "6d5586af4c4b2b5dd02d9462089569c2"
+        ]
+    },
+    {
+        "Title": "Looney Tunes: Duck Amuck",
+        "ID": 14824,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/087328.png",
+        "NumAchievements": 67,
+        "NumLeaderboards": 0,
+        "Points": 475,
+        "DateModified": "2023-12-26 15:00:35",
+        "ForumTopicID": 24825,
+        "Hashes": [
+            "f28dcfb2573541f0660322adcc411836"
+        ]
+    },
+    {
+        "Title": "Lost in Blue",
+        "ID": 15915,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/058921.png",
+        "NumAchievements": 65,
+        "NumLeaderboards": 1,
+        "Points": 658,
+        "DateModified": "2023-06-09 20:39:55",
+        "ForumTopicID": 16835,
+        "Hashes": [
+            "022d6bdf1dfee2cf289a94d1fb9f9d15"
+        ]
+    },
+    {
+        "Title": "Lost in Blue 2",
+        "ID": 15916,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061143.png",
+        "NumAchievements": 60,
+        "NumLeaderboards": 0,
+        "Points": 605,
+        "DateModified": "2023-06-04 00:02:57",
+        "ForumTopicID": 17229,
+        "Hashes": [
+            "4cfb36cfb72df1a1dc8a8911d493b75f"
+        ]
+    },
+    {
+        "Title": "LostMagic",
+        "ID": 14799,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066338.png",
+        "NumAchievements": 110,
+        "NumLeaderboards": 2,
+        "Points": 1215,
+        "DateModified": "2023-02-06 22:17:07",
+        "ForumTopicID": 19398,
+        "Hashes": [
+            "9dfdc1366fab41444fa8b63480282f1a"
+        ]
+    },
+    {
+        "Title": "Love Plus",
+        "ID": 20437,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061561.png",
+        "NumAchievements": 205,
+        "NumLeaderboards": 0,
+        "Points": 1339,
+        "DateModified": "2023-11-26 14:40:50",
+        "ForumTopicID": 18056,
+        "Hashes": [
+            "ba13c9a20991d256f898e250eed37c21",
+            "ef1dfa5e9f0c3be5af14ab80dde8fc82"
+        ]
+    },
+    {
+        "Title": "Magician's Quest: Mysterious Times | Enchanted Folk and the School of Wizardry",
+        "ID": 16498,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/079084.png",
+        "NumAchievements": 168,
+        "NumLeaderboards": 0,
+        "Points": 1163,
+        "DateModified": "2023-10-03 03:02:10",
+        "ForumTopicID": 12552,
+        "Hashes": [
+            "17ad29bef8a2cdb6cd0153149e3af443",
+            "dde5f08f6998d16044b2c0cbbe7fce56"
+        ]
+    },
+    {
+        "Title": "Margot's Bepuzzled!",
+        "ID": 16586,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060590.png",
+        "NumAchievements": 100,
+        "NumLeaderboards": 0,
+        "Points": 430,
+        "DateModified": "2022-07-25 04:19:57",
+        "ForumTopicID": 17369,
+        "Hashes": [
+            "bcac5a50a730529f421ccc5ac4bca033"
+        ]
+    },
+    {
+        "Title": "Mario & Luigi: Bowser's Inside Story",
+        "ID": 5323,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/043729.png",
+        "NumAchievements": 109,
+        "NumLeaderboards": 21,
+        "Points": 1055,
+        "DateModified": "2023-11-28 20:22:52",
+        "ForumTopicID": 9991,
+        "Hashes": [
+            "b128e8292f69780efffcdb3da03577e6"
+        ]
+    },
+    {
+        "Title": "Mario & Luigi: Partners in Time",
+        "ID": 3118,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/074988.png",
+        "NumAchievements": 55,
+        "NumLeaderboards": 0,
+        "Points": 580,
+        "DateModified": "2023-08-26 21:57:33",
+        "ForumTopicID": 9781,
+        "Hashes": [
+            "b8a0eb5290c19b5b5603c431f06608c4"
+        ]
+    },
+    {
+        "Title": "Mario & Sonic at the Olympic Winter Games",
+        "ID": 14813,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069064.png",
+        "NumAchievements": 239,
+        "NumLeaderboards": 524,
+        "Points": 1300,
+        "DateModified": "2023-10-19 14:05:06",
+        "ForumTopicID": 10018,
+        "Hashes": [
+            "afff57688b39ed72a6cdcbda7053e814"
+        ]
+    },
+    {
+        "Title": "Mario Hoops 3-on-3 | Mario Slam Basketball",
+        "ID": 15614,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/072680.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 3,
+        "Points": 465,
+        "DateModified": "2023-10-24 17:16:47",
+        "ForumTopicID": 10019,
+        "Hashes": [
+            "ea96254e059c156478cd9e63e02185d6"
+        ]
+    },
+    {
+        "Title": "Mario Kart DS",
+        "ID": 12711,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/072928.png",
+        "NumAchievements": 100,
+        "NumLeaderboards": 65,
+        "Points": 900,
+        "DateModified": "2023-06-08 02:04:12",
+        "ForumTopicID": 7288,
+        "Hashes": [
+            "57afd3c093764002a17a6aa376f1eefe"
+        ]
+    },
+    {
+        "Title": "Mario Party DS",
+        "ID": 11730,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/036354.png",
+        "NumAchievements": 112,
+        "NumLeaderboards": 30,
+        "Points": 831,
+        "DateModified": "2023-09-24 09:15:53",
+        "ForumTopicID": 7525,
+        "Hashes": [
+            "9aad4afbb09bc873ae819bb74f238986"
+        ]
+    },
+    {
+        "Title": "Mario vs. Donkey Kong 2: March of the Minis",
+        "ID": 14814,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070183.png",
+        "NumAchievements": 43,
+        "NumLeaderboards": 8,
+        "Points": 246,
+        "DateModified": "2023-07-08 16:45:31",
+        "ForumTopicID": 20788,
+        "Hashes": [
+            "f58c28f344d42b3be4335be23ceedf4e"
+        ]
+    },
+    {
+        "Title": "Mario vs. Donkey Kong: Mini-Land Mayhem!",
+        "ID": 14815,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045305.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 0,
+        "Points": 625,
+        "DateModified": "2021-06-22 13:02:35",
+        "ForumTopicID": 12237,
+        "Hashes": [
+            "632919065880ea332af4e0a50d1741ae",
+            "9af36cd53fce2d1733dc9996cf32f65c"
+        ]
+    },
+    {
+        "Title": "Marvel Trading Card Game",
+        "ID": 16502,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/035945.png",
+        "NumAchievements": 119,
+        "NumLeaderboards": 0,
+        "Points": 766,
+        "DateModified": "2021-09-14 17:57:15",
+        "ForumTopicID": 11102,
+        "Hashes": [
+            "0676914a01838bee242aa545baf3e778",
+            "65bc567613b4b3b209143d3375c9b9f0"
+        ]
+    },
+    {
+        "Title": "Matchstick Puzzle by DS",
+        "ID": 18479,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/052744.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 1,
+        "Points": 85,
+        "DateModified": "2022-03-14 15:48:48",
+        "ForumTopicID": 15143,
+        "Hashes": [
+            "b640c5bc6f5379a7441a88b58f52565a"
+        ]
+    },
+    {
+        "Title": "Mega Man Star Force 2: Zerker x Ninja",
+        "ID": 15656,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/031312.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 0,
+        "Points": 990,
+        "DateModified": "2023-08-15 06:25:19",
+        "ForumTopicID": 10087,
+        "Hashes": [
+            "2c28461acd2e7bf1722c9e40eee4e732"
+        ]
+    },
+    {
+        "Title": "Mega Man Star Force: Leo",
+        "ID": 15334,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/077805.png",
+        "NumAchievements": 64,
+        "NumLeaderboards": 0,
+        "Points": 755,
+        "DateModified": "2021-05-08 18:27:37",
+        "ForumTopicID": 10013,
+        "Hashes": [
+            "a3da5f6eba3abeb91f489a71c4ed1eaa"
+        ]
+    },
+    {
+        "Title": "Mega Man Zero Collection",
+        "ID": 8376,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053731.png",
+        "NumAchievements": 279,
+        "NumLeaderboards": 31,
+        "Points": 3070,
+        "DateModified": "2023-02-20 14:23:34",
+        "ForumTopicID": 14370,
+        "Hashes": [
+            "5cbdd195886b551e759f7e592317404a"
+        ]
+    },
+    {
+        "Title": "Mega Man ZX",
+        "ID": 9818,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038156.png",
+        "NumAchievements": 69,
+        "NumLeaderboards": 2,
+        "Points": 590,
+        "DateModified": "2023-01-28 19:07:20",
+        "ForumTopicID": 9777,
+        "Hashes": [
+            "5810117d6f144b9324a20ef84faa0c66",
+            "d9ed91562bd7576eb8098a5e9f32e96e"
+        ]
+    },
+    {
+        "Title": "Mega Man ZX Advent",
+        "ID": 8306,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/079538.png",
+        "NumAchievements": 62,
+        "NumLeaderboards": 0,
+        "Points": 635,
+        "DateModified": "2023-08-27 00:54:05",
+        "ForumTopicID": 9778,
+        "Hashes": [
+            "98ceea8d544f2395e11f6722220d4108",
+            "ba8769d38c5d59a58b9fc011c5ae23f6"
+        ]
+    },
+    {
+        "Title": "Metal Max 3",
+        "ID": 21459,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/064043.png",
+        "NumAchievements": 185,
+        "NumLeaderboards": 0,
+        "Points": 1274,
+        "DateModified": "2023-06-28 11:55:55",
+        "ForumTopicID": 18808,
+        "Hashes": [
+            "5236f137de56eb65474c8e82d652312a",
+            "919a70b5dccd5bbbdfa275030fc77787"
+        ]
+    },
+    {
+        "Title": "Metal Slug 7",
+        "ID": 14787,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054730.png",
+        "NumAchievements": 62,
+        "NumLeaderboards": 2,
+        "Points": 1090,
+        "DateModified": "2022-08-08 17:50:25",
+        "ForumTopicID": 11537,
+        "Hashes": [
+            "3d0dc70dd9c7d0250669c4b8eb30d9b8"
+        ]
+    },
+    {
+        "Title": "Meteos",
+        "ID": 9462,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061688.png",
+        "NumAchievements": 80,
+        "NumLeaderboards": 4,
+        "Points": 770,
+        "DateModified": "2022-09-27 06:04:39",
+        "ForumTopicID": 18030,
+        "Hashes": [
+            "fa402dd4855a17247544169be73be595"
+        ]
+    },
+    {
+        "Title": "Metroid Prime Pinball",
+        "ID": 15542,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061655.png",
+        "NumAchievements": 88,
+        "NumLeaderboards": 9,
+        "Points": 750,
+        "DateModified": "2022-11-21 03:34:14",
+        "ForumTopicID": 18102,
+        "Hashes": [
+            "caed5f7e93886fa445c03975edc19298"
+        ]
+    },
+    {
+        "Title": "Metroid Prime: Hunters",
+        "ID": 1378,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/078852.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 8,
+        "Points": 289,
+        "DateModified": "2023-08-12 04:41:47",
+        "ForumTopicID": 14292,
+        "Hashes": [
+            "b6947e630bcf9e68aa3cf998d89357ac"
+        ]
+    },
+    {
+        "Title": "Moero! Nekketsu Rhythm Damashii: Osu! Tatakae! Ouendan 2",
+        "ID": 17353,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/041989.png",
+        "NumAchievements": 94,
+        "NumLeaderboards": 57,
+        "Points": 754,
+        "DateModified": "2021-10-07 04:00:59",
+        "ForumTopicID": 12395,
+        "Hashes": [
+            "899b9c8dd0128097aebb009b49b2a2d5"
+        ]
+    },
+    {
+        "Title": "Monster Tale",
+        "ID": 5708,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/032077.png",
+        "NumAchievements": 55,
+        "NumLeaderboards": 0,
+        "Points": 543,
+        "DateModified": "2023-03-08 16:05:20",
+        "ForumTopicID": 10237,
+        "Hashes": [
+            "c28c2bd017631a063908bb933b12ef5f"
+        ]
+    },
+    {
+        "Title": "My Health Coach: Stop Smoking With Allen Carr",
+        "ID": 17790,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046303.png",
+        "NumAchievements": 18,
+        "NumLeaderboards": 8,
+        "Points": 158,
+        "DateModified": "2022-05-20 23:30:25",
+        "ForumTopicID": 13431,
+        "Hashes": [
+            "4d215c45efc3df0d4e40ff7db283bee5"
+        ]
+    },
+    {
+        "Title": "My Japanese Coach: Learn to Speak Japanese",
+        "ID": 14961,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061394.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 340,
+        "DateModified": "2022-09-03 12:00:05",
+        "ForumTopicID": 17985,
+        "Hashes": [
+            "5b9d6f229d6b8de906fb505b9a0e5322"
+        ]
+    },
+    {
+        "Title": "My Little Pony: Pinkie Pie's Party",
+        "ID": 18334,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/051690.png",
+        "NumAchievements": 19,
+        "NumLeaderboards": 0,
+        "Points": 50,
+        "DateModified": "2023-08-20 18:17:18",
+        "ForumTopicID": 14756,
+        "Hashes": [
+            "95ecf773dee1f353e227dc7d7fd69ebd"
+        ]
+    },
+    {
+        "Title": "My Spanish Coach: Level 1 - Learn to Speak Spanish",
+        "ID": 14963,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061377.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 0,
+        "Points": 275,
+        "DateModified": "2023-07-05 17:33:47",
+        "ForumTopicID": 17676,
+        "Hashes": [
+            "3f139488f3f6f8feb4727e23a9bb5322"
+        ]
+    },
+    {
+        "Title": "MySims: Party",
+        "ID": 17318,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/059638.png",
+        "NumAchievements": 123,
+        "NumLeaderboards": 31,
+        "Points": 784,
+        "DateModified": "2023-08-30 03:53:33",
+        "ForumTopicID": 16833,
+        "Hashes": [
+            "6343755738d1d8a49aefe9d80d48670b"
+        ]
+    },
+    {
+        "Title": "Mystery Dungeon: Shiren The Wanderer",
+        "ID": 9817,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/071733.png",
+        "NumAchievements": 65,
+        "NumLeaderboards": 1,
+        "Points": 381,
+        "DateModified": "2023-07-06 16:06:11",
+        "ForumTopicID": 13322,
+        "Hashes": [
+            "03bb331c0cc2185d73ee94bf2ba8c0e4"
+        ]
+    },
+    {
+        "Title": "N+",
+        "ID": 17216,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/084364.png",
+        "NumAchievements": 255,
+        "NumLeaderboards": 104,
+        "Points": 2530,
+        "DateModified": "2023-10-27 21:09:18",
+        "ForumTopicID": 23151,
+        "Hashes": [
+            "0956ae74d21242245a71e644b39a16b8"
+        ]
+    },
+    {
+        "Title": "Nanashi no Geemu | The Nameless Game",
+        "ID": 3529,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/036071.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 0,
+        "Points": 157,
+        "DateModified": "2020-08-01 20:43:58",
+        "ForumTopicID": 11080,
+        "Hashes": [
+            "9ea74998bf715925ea743193ec39fb81",
+            "f4b27b6a76f54df9c804ff635b57ce95"
+        ]
+    },
+    {
+        "Title": "Naruto: Path of the Ninja",
+        "ID": 15480,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/064664.png",
+        "NumAchievements": 61,
+        "NumLeaderboards": 3,
+        "Points": 230,
+        "DateModified": "2023-10-02 03:08:14",
+        "ForumTopicID": 19228,
+        "Hashes": [
+            "c45fbe0bba8ecd26a0d74b6f993c73ce"
+        ]
+    },
+    {
+        "Title": "Naruto: Path of the Ninja 2",
+        "ID": 15482,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/050242.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 0,
+        "Points": 291,
+        "DateModified": "2021-12-09 17:16:18",
+        "ForumTopicID": 14327,
+        "Hashes": [
+            "ac74a75313264e2abc022061460c584e"
+        ]
+    },
+    {
+        "Title": "Need for Speed: Carbon - Own the City",
+        "ID": 17674,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069477.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 49,
+        "Points": 335,
+        "DateModified": "2023-04-07 08:56:08",
+        "ForumTopicID": 16539,
+        "Hashes": [
+            "21262503de91c4b74a4c7779bac9edd1",
+            "6879cc7733fe5c83307896c6dfd9933d"
+        ]
+    },
+    {
+        "Title": "Need for Speed: Most Wanted",
+        "ID": 17671,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054182.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 20,
+        "Points": 255,
+        "DateModified": "2022-06-18 22:23:05",
+        "ForumTopicID": 15545,
+        "Hashes": [
+            "619223c2a946602953943443cc0c1895",
+            "e4e983832c904ded3a0f398eddfc0ce8"
+        ]
+    },
+    {
+        "Title": "New Super Mario Bros.",
+        "ID": 11729,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046594.png",
+        "NumAchievements": 58,
+        "NumLeaderboards": 2,
+        "Points": 428,
+        "DateModified": "2023-08-17 09:17:46",
+        "ForumTopicID": 6245,
+        "Hashes": [
+            "157223a8b0b6df3c0d0ca85980d3a443"
+        ]
+    },
+    {
+        "Title": "Ni no Kuni: The Jet-Black Mage",
+        "ID": 3871,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066031.png",
+        "NumAchievements": 69,
+        "NumLeaderboards": 0,
+        "Points": 907,
+        "DateModified": "2023-08-23 05:11:33",
+        "ForumTopicID": 12009,
+        "Hashes": [
+            "6c989727488e33b6ef4c9f5e7a24fda1",
+            "9ee668c963762c942c5c94fe2ac73ed6",
+            "17ce8270dd7b147ba3bbe9ae85523d90"
+        ]
+    },
+    {
+        "Title": "Nicktoons: Attack of the Toybots",
+        "ID": 16750,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/076915.png",
+        "NumAchievements": 31,
+        "NumLeaderboards": 0,
+        "Points": 187,
+        "DateModified": "2023-09-21 01:12:36",
+        "ForumTopicID": 22504,
+        "Hashes": [
+            "5ce3c40de1a0615b4791950c3db7e141"
+        ]
+    },
+    {
+        "Title": "Ninjatown",
+        "ID": 16310,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063455.png",
+        "NumAchievements": 47,
+        "NumLeaderboards": 72,
+        "Points": 200,
+        "DateModified": "2023-07-13 22:07:27",
+        "ForumTopicID": 18838,
+        "Hashes": [
+            "2f3d7dea053edc8d58bfcffb9d652f98",
+            "2f5b78852c89699750a0eae7943e2edd"
+        ]
+    },
+    {
+        "Title": "Nintendogs: Labrador & Friends",
+        "ID": 17434,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/041959.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 15,
+        "Points": 470,
+        "DateModified": "2023-08-01 00:17:54",
+        "ForumTopicID": 12355,
+        "Hashes": [
+            "2e9426fc6b9e23b2e662dcb28d064344"
+        ]
+    },
+    {
+        "Title": "One Piece: Gigant Battle!",
+        "ID": 15453,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/068220.png",
+        "NumAchievements": 67,
+        "NumLeaderboards": 0,
+        "Points": 660,
+        "DateModified": "2023-01-26 21:16:53",
+        "ForumTopicID": 16014,
+        "Hashes": [
+            "62c2e5e62168206d334ffc5e210b88ac"
+        ]
+    },
+    {
+        "Title": "One Piece: Gigant Battle! 2 - Shinsekai",
+        "ID": 15454,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086115.png",
+        "NumAchievements": 94,
+        "NumLeaderboards": 0,
+        "Points": 827,
+        "DateModified": "2023-09-02 09:26:54",
+        "ForumTopicID": 19753,
+        "Hashes": [
+            "2a4b93fd05fbfb243a0552dee1823504"
+        ]
+    },
+    {
+        "Title": "Orcs and Elves",
+        "ID": 16755,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/056285.png",
+        "NumAchievements": 66,
+        "NumLeaderboards": 0,
+        "Points": 407,
+        "DateModified": "2023-08-12 04:44:39",
+        "ForumTopicID": 16176,
+        "Hashes": [
+            "1571df908134eac3f37101ce0bf1df11"
+        ]
+    },
+    {
+        "Title": "Ore ga Omae o Mamoru | I Will Protect You",
+        "ID": 21514,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063789.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 1,
+        "Points": 610,
+        "DateModified": "2023-05-04 09:51:54",
+        "ForumTopicID": 19022,
+        "Hashes": [
+            "d6e5e572ea293b5dfa313c1d08b01739",
+            "df28d3f7b11bd32734b03815fc032dd6"
+        ]
+    },
+    {
+        "Title": "Osu! Tatakae! Ouendan",
+        "ID": 1226,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/028617.png",
+        "NumAchievements": 70,
+        "NumLeaderboards": 45,
+        "Points": 620,
+        "DateModified": "2020-10-10 19:02:00",
+        "ForumTopicID": 9798,
+        "Hashes": [
+            "999654092d72821ef56a7c8de260cc64"
+        ]
+    },
+    {
+        "Title": "Pac'n Roll",
+        "ID": 14804,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038915.png",
+        "NumAchievements": 79,
+        "NumLeaderboards": 22,
+        "Points": 719,
+        "DateModified": "2022-11-12 16:45:47",
+        "ForumTopicID": 17849,
+        "Hashes": [
+            "b8ce771368c86090d4775716eff1369c"
+        ]
+    },
+    {
+        "Title": "Peggle: Dual Shot",
+        "ID": 17633,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/076970.png",
+        "NumAchievements": 49,
+        "NumLeaderboards": 120,
+        "Points": 529,
+        "DateModified": "2023-10-21 22:03:30",
+        "ForumTopicID": 15582,
+        "Hashes": [
+            "ad62c1722d395d04316ea64a124d6a5a"
+        ]
+    },
+    {
+        "Title": "Peppa Pig: Fun and Games",
+        "ID": 22036,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066119.png",
+        "NumAchievements": 13,
+        "NumLeaderboards": 1,
+        "Points": 46,
+        "DateModified": "2023-08-08 20:46:36",
+        "ForumTopicID": 19636,
+        "Hashes": [
+            "5d88763330201dff59f07f7f4f07ff53"
+        ]
+    },
+    {
+        "Title": "Peppa Pig: The Game",
+        "ID": 22037,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066113.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 1,
+        "Points": 55,
+        "DateModified": "2022-12-29 19:55:44",
+        "ForumTopicID": 19637,
+        "Hashes": [
+            "19aec7c8814085cf06c604adba1d7a37"
+        ]
+    },
+    {
+        "Title": "Peppa Pig: Theme Park Fun",
+        "ID": 22038,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066123.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 0,
+        "Points": 124,
+        "DateModified": "2023-02-07 20:58:27",
+        "ForumTopicID": 19638,
+        "Hashes": [
+            "316a6523810b257dd44b241b0361df12"
+        ]
+    },
+    {
+        "Title": "Peter Pan's Playground",
+        "ID": 14907,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/029367.png",
+        "NumAchievements": 9,
+        "NumLeaderboards": 0,
+        "Points": 33,
+        "DateModified": "2021-02-28 06:19:30",
+        "ForumTopicID": 10007,
+        "Hashes": [
+            "ff8f8297d9e03095285fcbc6fad65eb6"
+        ]
+    },
+    {
+        "Title": "Phoenix Wright: Ace Attorney",
+        "ID": 12747,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060426.png",
+        "NumAchievements": 88,
+        "NumLeaderboards": 0,
+        "Points": 344,
+        "DateModified": "2023-10-23 22:48:15",
+        "ForumTopicID": 10062,
+        "Hashes": [
+            "8ce06f66ab81444511bef20b3fe9c632"
+        ]
+    },
+    {
+        "Title": "Phoenix Wright: Ace Attorney - Justice for All",
+        "ID": 9537,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086532.png",
+        "NumAchievements": 70,
+        "NumLeaderboards": 0,
+        "Points": 400,
+        "DateModified": "2022-11-30 17:20:16",
+        "ForumTopicID": 10450,
+        "Hashes": [
+            "305d9643dd405800b56a4bc0ebcd7081"
+        ]
+    },
+    {
+        "Title": "Phoenix Wright: Ace Attorney - Trials and Tribulations",
+        "ID": 3103,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060428.png",
+        "NumAchievements": 80,
+        "NumLeaderboards": 0,
+        "Points": 438,
+        "DateModified": "2022-10-17 18:11:02",
+        "ForumTopicID": 10562,
+        "Hashes": [
+            "b1731c9ae7cb1ff05ef9a8ebc361f75c"
+        ]
+    },
+    {
+        "Title": "Pic Pic",
+        "ID": 14934,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/078069.png",
+        "NumAchievements": 121,
+        "NumLeaderboards": 0,
+        "Points": 529,
+        "DateModified": "2023-12-04 06:12:37",
+        "ForumTopicID": 24565,
+        "Hashes": [
+            "70f7e4f17f4438d4c1697471d3370f18"
+        ]
+    },
+    {
+        "Title": "Picross 3D",
+        "ID": 9617,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/039370.png",
+        "NumAchievements": 44,
+        "NumLeaderboards": 0,
+        "Points": 560,
+        "DateModified": "2021-09-28 03:40:33",
+        "ForumTopicID": 9814,
+        "Hashes": [
+            "76434a8ed6fa436cd9f214390577fc98"
+        ]
+    },
+    {
+        "Title": "Picross DS",
+        "ID": 14937,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066484.png",
+        "NumAchievements": 49,
+        "NumLeaderboards": 0,
+        "Points": 224,
+        "DateModified": "2023-07-18 21:13:34",
+        "ForumTopicID": 14619,
+        "Hashes": [
+            "d043d8dfd723a4bf07dfc203c337ba7a"
+        ]
+    },
+    {
+        "Title": "Plants vs. Zombies",
+        "ID": 12718,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/074637.png",
+        "NumAchievements": 64,
+        "NumLeaderboards": 3,
+        "Points": 625,
+        "DateModified": "2023-10-12 16:58:27",
+        "ForumTopicID": 8246,
+        "Hashes": [
+            "76cf05a94a00998e28878ffe3e82a3ba"
+        ]
+    },
+    {
+        "Title": "Plants vs. Zombies [Subset - Zen Garden]",
+        "ID": 20310,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/074638.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 0,
+        "Points": 140,
+        "DateModified": "2022-08-08 17:20:16",
+        "ForumTopicID": 17712,
+        "Hashes": [
+            "c28cdfda5f396be550b950c7bb27da38"
+        ]
+    },
+    {
+        "Title": "Point Blank DS",
+        "ID": 8705,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/084348.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 154,
+        "Points": 400,
+        "DateModified": "2023-10-27 06:47:41",
+        "ForumTopicID": 23335,
+        "Hashes": [
+            "0090b0fcb15c05daba0235908ad61860"
+        ]
+    },
+    {
+        "Title": "Pokemon Black Version",
+        "ID": 3887,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046274.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 0,
+        "Points": 850,
+        "DateModified": "2023-08-29 22:39:56",
+        "ForumTopicID": 10333,
+        "Hashes": [
+            "bd562276c75b98cbd185231c1b1d016e"
+        ]
+    },
+    {
+        "Title": "Pokemon Black Version [Subset - Professor Oak Challenge]",
+        "ID": 18166,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067449.png",
+        "NumAchievements": 139,
+        "NumLeaderboards": 0,
+        "Points": 299,
+        "DateModified": "2021-11-24 20:42:24",
+        "ForumTopicID": 14338,
+        "Hashes": [
+            "85c0765bc1074305655d750d4f83ccf9"
+        ]
+    },
+    {
+        "Title": "Pokemon Card Game: Asobikata DS",
+        "ID": 17725,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045404.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 0,
+        "Points": 65,
+        "DateModified": "2021-06-26 20:20:33",
+        "ForumTopicID": 13360,
+        "Hashes": [
+            "0ecb4ac3a82fcd84a61329ee339b594c"
+        ]
+    },
+    {
+        "Title": "Pokemon Conquest",
+        "ID": 14860,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/035990.png",
+        "NumAchievements": 61,
+        "NumLeaderboards": 0,
+        "Points": 910,
+        "DateModified": "2020-09-20 17:22:26",
+        "ForumTopicID": 9835,
+        "Hashes": [
+            "22d1e61f6bc137b752f8728e31fa3485",
+            "af30a7e5e52586957e4d9112ea5b8b48"
+        ]
+    },
+    {
+        "Title": "Pokemon Dash",
+        "ID": 15335,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066131.png",
+        "NumAchievements": 66,
+        "NumLeaderboards": 50,
+        "Points": 510,
+        "DateModified": "2023-10-24 17:14:28",
+        "ForumTopicID": 19647,
+        "Hashes": [
+            "0a652fc7d9fe48cd32259bf8152a9229"
+        ]
+    },
+    {
+        "Title": "Pokemon Diamond Version",
+        "ID": 9852,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/030624.png",
+        "NumAchievements": 122,
+        "NumLeaderboards": 0,
+        "Points": 986,
+        "DateModified": "2023-10-18 19:31:30",
+        "ForumTopicID": 24494,
+        "Hashes": [
+            "0ba44bc848844e045f7b037660415076",
+            "1525918e7318bed0dffcc4b8c1550d37",
+            "5a0689ca659124856b07dd66df1ddcf0",
+            "68195a75aac6e271b0b98654d286b310",
+            "7a07da9e059739c85da7f021e8949b8c"
+        ]
+    },
+    {
+        "Title": "Pokemon Diamond Version [Subset - Bonus]",
+        "ID": 9872,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/078861.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 0,
+        "Points": 194,
+        "DateModified": "2023-11-19 21:25:21",
+        "ForumTopicID": 24494,
+        "Hashes": [
+            "8d35c9ebd82db12aec85fe6e113546b2",
+            "184f73f50b699b8557493fcb8f61ef83",
+            "59065a322864a1ee53663fed68b4de18",
+            "0c5c92c0ac109e11fd56befe68a28ba0",
+            "58fd7d19a259b119ee6581b68ea3fda9"
+        ]
+    },
+    {
+        "Title": "Pokemon Diamond Version [Subset - Professor Oak Challenge]",
+        "ID": 18112,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067450.png",
+        "NumAchievements": 366,
+        "NumLeaderboards": 0,
+        "Points": 629,
+        "DateModified": "2022-02-01 15:29:14",
+        "ForumTopicID": 14329,
+        "Hashes": [
+            "19b737ef011c2cc3cbce0e0c3b45b5ab",
+            "7b3d7c197887857c646cb7a9d1e5778f",
+            "b9ab1f8fcbb724daf78e6548e5832d79",
+            "e11ce29483c5598ee1a2867b14df47df",
+            "f87d7a0d85173d27ff7a61058b35e004"
+        ]
+    },
+    {
+        "Title": "Pokemon HeartGold Version [Subset - Professor Oak Challenge]",
+        "ID": 22862,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069769.png",
+        "NumAchievements": 391,
+        "NumLeaderboards": 0,
+        "Points": 825,
+        "DateModified": "2023-04-29 06:45:09",
+        "ForumTopicID": 20755,
+        "Hashes": [
+            "016dc43b77c62833f82f55a35afd1551",
+            "343a8079b4c705c3bfb2ea51ea428d32",
+            "3f1a1e43f92885622da94962d4a73c19",
+            "712240d06706dee684aa593936245e25",
+            "aa07fa8184c5ce3ffdc4ce41a34aca0d",
+            "be7cd34905e43fa1163ddfe5128b3a1f"
+        ]
+    },
+    {
+        "Title": "Pokemon HeartGold Version | Pokemon SoulSilver Version",
+        "ID": 7212,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063592.png",
+        "NumAchievements": 137,
+        "NumLeaderboards": 30,
+        "Points": 1655,
+        "DateModified": "2023-03-05 10:23:10",
+        "ForumTopicID": 9967,
+        "Hashes": [
+            "1051ea6f1d599812a8a382b2fa4b02b2",
+            "13816087674da5a8a9323aad3c304772",
+            "560f12c326c221fbbec8a395d4a62d91",
+            "65fd53a63254efeaa50e7f2c40b46192",
+            "73b5a0fbcffeb7719af184170e057d34",
+            "7a78d767cbcfce6262434d25aacd39bf",
+            "858ae67fc5047ed4a8f4b820c40a8266",
+            "89ee643f6cd30e5da9eea8b23476dd73",
+            "90b23a8fd1970afd923132bd485c3b92",
+            "c06cdec12d9aeb9a38fe9578638e5d55",
+            "dfce09d0d107abfd669156f6e867578f",
+            "e2c6eda71504be7e8ca6f5c77f0d253a",
+            "e89a1c0c22f57a75a326f94c74044724",
+            "eaffc2eaf15f9c6705cea3036bb7a3fa"
+        ]
+    },
+    {
+        "Title": "Pokemon Mystery Dungeon: Blue Rescue Team",
+        "ID": 17492,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/044315.png",
+        "NumAchievements": 139,
+        "NumLeaderboards": 0,
+        "Points": 1450,
+        "DateModified": "2023-08-25 17:33:45",
+        "ForumTopicID": 12999,
+        "Hashes": [
+            "89f431748ac9c1328106c676adc6d085"
+        ]
+    },
+    {
+        "Title": "Pokemon Mystery Dungeon: Explorers of Sky",
+        "ID": 14853,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/042484.png",
+        "NumAchievements": 130,
+        "NumLeaderboards": 1,
+        "Points": 1145,
+        "DateModified": "2023-07-11 21:53:06",
+        "ForumTopicID": 9828,
+        "Hashes": [
+            "55f8c2296cc23bf0aa4615bea1e1181e"
+        ]
+    },
+    {
+        "Title": "Pokemon Mystery Dungeon: Explorers of Sky [Subset - Zero Isle South Runs]",
+        "ID": 24911,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/075396.png",
+        "NumAchievements": 499,
+        "NumLeaderboards": 0,
+        "Points": 10770,
+        "DateModified": "2023-07-10 18:07:13",
+        "ForumTopicID": 22129,
+        "Hashes": [
+            "54b1d7e69387ca7b92e7a9e2dd3e1a8e"
+        ]
+    },
+    {
+        "Title": "Pokemon Platinum Version",
+        "ID": 11732,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/030622.png",
+        "NumAchievements": 102,
+        "NumLeaderboards": 14,
+        "Points": 1281,
+        "DateModified": "2023-12-19 05:54:36",
+        "ForumTopicID": 6600,
+        "Hashes": [
+            "361e825aa24fc471a317c510130bf4c3",
+            "4432098e35a63d0f2ff7bdbc7a848e3c",
+            "4aedcacb9789b4835b220d1c71a56c06",
+            "d26082d93e5d0a5b9bd12c7dd11f4ab2",
+            "f28d4434fe27cdf9b17acc8d016d8672"
+        ]
+    },
+    {
+        "Title": "Pokemon Platinum Version [Subset - Professor Oak Challenge]",
+        "ID": 17897,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067447.png",
+        "NumAchievements": 188,
+        "NumLeaderboards": 1,
+        "Points": 405,
+        "DateModified": "2022-03-04 03:51:09",
+        "ForumTopicID": 13715,
+        "Hashes": [
+            "3e6460dfc782f2677a8164c50efede7c"
+        ]
+    },
+    {
+        "Title": "Pokemon Platinum Version [Subset - Shiny Pokemon]",
+        "ID": 18698,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/073146.png",
+        "NumAchievements": 279,
+        "NumLeaderboards": 0,
+        "Points": 3435,
+        "DateModified": "2023-09-30 09:52:15",
+        "ForumTopicID": 21642,
+        "Hashes": [
+            "df8bea54b8fe5796dcf729b364a1fdab"
+        ]
+    },
+    {
+        "Title": "Pokemon Ranger",
+        "ID": 16295,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/077490.png",
+        "NumAchievements": 58,
+        "NumLeaderboards": 3,
+        "Points": 711,
+        "DateModified": "2023-07-01 07:02:37",
+        "ForumTopicID": 12015,
+        "Hashes": [
+            "a3d61a457ce077c4c5c16806349aae1b"
+        ]
+    },
+    {
+        "Title": "Pokemon Ranger: Shadows of Almia",
+        "ID": 16296,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/044836.png",
+        "NumAchievements": 127,
+        "NumLeaderboards": 1,
+        "Points": 1202,
+        "DateModified": "2023-07-19 18:35:20",
+        "ForumTopicID": 11250,
+        "Hashes": [
+            "26ca96f719ec88e9ea90191e386df889"
+        ]
+    },
+    {
+        "Title": "Pokemon SoulSilver Version [Subset - Professor Oak Challenge]",
+        "ID": 22693,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069683.png",
+        "NumAchievements": 389,
+        "NumLeaderboards": 0,
+        "Points": 815,
+        "DateModified": "2023-03-19 16:31:07",
+        "ForumTopicID": 20740,
+        "Hashes": [
+            "20c27f49fc308721cd22c66a96abb3b2",
+            "3f2a2fd7612c0ae15f19448890ecff4b",
+            "47c4d95a7db0dd6d9c651d1f5f27d17a",
+            "9d687f3b51c69fed62c5d56e4156f3c5",
+            "b8d2f18999bb0aa16b617717106b7500",
+            "ceda2e8fd9288ca2184a613b9da236c4"
+        ]
+    },
+    {
+        "Title": "Pokemon Trozei! | Pokemon Link!",
+        "ID": 16294,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/052376.png",
+        "NumAchievements": 93,
+        "NumLeaderboards": 0,
+        "Points": 580,
+        "DateModified": "2023-02-25 19:14:27",
+        "ForumTopicID": 14984,
+        "Hashes": [
+            "e3895bf951551389593258203bc054b8"
+        ]
+    },
+    {
+        "Title": "Pokemon White Version",
+        "ID": 16211,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046275.png",
+        "NumAchievements": 73,
+        "NumLeaderboards": 5,
+        "Points": 699,
+        "DateModified": "2023-09-15 03:32:18",
+        "ForumTopicID": 10492,
+        "Hashes": [
+            "5f0f5a0d59f52da2ae03c50736a1dc5d"
+        ]
+    },
+    {
+        "Title": "Pokemon White Version [Subset - Professor Oak Challenge]",
+        "ID": 25050,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/076701.png",
+        "NumAchievements": 339,
+        "NumLeaderboards": 0,
+        "Points": 400,
+        "DateModified": "2023-07-19 02:25:06",
+        "ForumTopicID": 22480,
+        "Hashes": [
+            "2b9077dad20233d9067e1b7598cc9c8a"
+        ]
+    },
+    {
+        "Title": "Pokemon White Version 2",
+        "ID": 16197,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066716.png",
+        "NumAchievements": 152,
+        "NumLeaderboards": 2,
+        "Points": 1133,
+        "DateModified": "2023-11-03 01:18:02",
+        "ForumTopicID": 22805,
+        "Hashes": [
+            "b24b5463d801b87fac81381238667315",
+            "85f54f655e1b82f79984c4df3b35fcc9"
+        ]
+    },
+    {
+        "Title": "Pokemon White Version 2 [Subset - Professor Oak Challenge]",
+        "ID": 18178,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067441.png",
+        "NumAchievements": 437,
+        "NumLeaderboards": 0,
+        "Points": 820,
+        "DateModified": "2023-05-15 19:31:47",
+        "ForumTopicID": 14358,
+        "Hashes": [
+            "03acaa361ab06a6c997f56a8e8319888"
+        ]
+    },
+    {
+        "Title": "Polar Bowler",
+        "ID": 17409,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/041549.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 7,
+        "Points": 95,
+        "DateModified": "2022-10-23 20:22:40",
+        "ForumTopicID": 12280,
+        "Hashes": [
+            "3aaab1bb85e33f98ff847112e3a62b30"
+        ]
+    },
+    {
+        "Title": "Polarium",
+        "ID": 17476,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/042320.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 2,
+        "Points": 343,
+        "DateModified": "2023-01-08 17:01:25",
+        "ForumTopicID": 12510,
+        "Hashes": [
+            "1da74c2164d079b0b073e91b59cd0773",
+            "4bb5a2b7350c0b64ddc2825b42bf5edc"
+        ]
+    },
+    {
+        "Title": "Pony Friends",
+        "ID": 15058,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/029422.png",
+        "NumAchievements": 66,
+        "NumLeaderboards": 0,
+        "Points": 455,
+        "DateModified": "2023-06-28 22:17:20",
+        "ForumTopicID": 9861,
+        "Hashes": [
+            "36143c4b7b36a0220b5dcdf9415f63bd"
+        ]
+    },
+    {
+        "Title": "Poptropica Adventures",
+        "ID": 19467,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/079089.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 6,
+        "Points": 75,
+        "DateModified": "2023-07-28 04:47:54",
+        "ForumTopicID": 22736,
+        "Hashes": [
+            "d32dffdd8650e745cfd3cc0a024df4bb"
+        ]
+    },
+    {
+        "Title": "Postman Pat",
+        "ID": 15380,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/085718.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 9,
+        "Points": 100,
+        "DateModified": "2023-11-24 22:57:33",
+        "ForumTopicID": 24411,
+        "Hashes": [
+            "42d7f3b9c8f989d30906f9cee114e538"
+        ]
+    },
+    {
+        "Title": "Professor Layton and the Curious Village",
+        "ID": 9518,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/068336.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 373,
+        "DateModified": "2022-11-15 14:44:00",
+        "ForumTopicID": 9638,
+        "Hashes": [
+            "e8f6f07eb7138aec4d75492b3511dc03",
+            "fc519507f2e6f07c1f212ea00744e21a"
+        ]
+    },
+    {
+        "Title": "Professor Layton and the Diabolical Box | Pandora's Box",
+        "ID": 9564,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/068337.png",
+        "NumAchievements": 43,
+        "NumLeaderboards": 1,
+        "Points": 407,
+        "DateModified": "2020-07-09 10:35:54",
+        "ForumTopicID": 10020,
+        "Hashes": [
+            "269687b48107a669825c3762f917c301",
+            "32e35509e692dff1e3e44c1a1d1c1bb7",
+            "39978b9ba19dbe405ebebd60fa1d3f10",
+            "a0834625548daa8fda9fec64fd220361"
+        ]
+    },
+    {
+        "Title": "Professor Layton and the Last Specter | Spectre's Call",
+        "ID": 7601,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/040979.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 10,
+        "Points": 335,
+        "DateModified": "2023-04-02 19:26:41",
+        "ForumTopicID": 12083,
+        "Hashes": [
+            "1a6a90642a569ba2c28665d28d258d8b",
+            "2f11499caf8dcb5bb2f1d666fc54d8c6",
+            "422029001d1d0a2b9af6dd1176da9542",
+            "8db8815b3cf6f36d5d72be0209e2b8e4",
+            "95e908922aa5699a9a18be3921e10f1c",
+            "ad507fe8c4ca5c64a0e0e751bdf547c3"
+        ]
+    },
+    {
+        "Title": "Professor Layton and the Last Specter | Spectre's Call [Subset - Mouse Alley]",
+        "ID": 25709,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/082374.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 2,
+        "Points": 560,
+        "DateModified": "2023-09-12 11:44:51",
+        "ForumTopicID": 23344,
+        "Hashes": [
+            "a80f08075580b286d0a9c4bc74374229",
+            "e6f72d9c753395bcb7049e2240ea6713",
+            "103bd20f858b8396f98341801cc2624b",
+            "e8657f46befd818f2d5a821c3f645594",
+            "26fb2b950cc65db3ad363fdc00a5e08f",
+            "1423372e23a603361e528150a6e41313"
+        ]
+    },
+    {
+        "Title": "Professor Layton and the Unwound Future | Lost Future",
+        "ID": 9831,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/068338.png",
+        "NumAchievements": 28,
+        "NumLeaderboards": 0,
+        "Points": 253,
+        "DateModified": "2022-03-01 06:38:28",
+        "ForumTopicID": 10582,
+        "Hashes": [
+            "05468925e9cd2423a05fcc0d3891105e",
+            "44ea6af95d182b0ebcb7db8e4587d4fb",
+            "a927df1d6fd962d8e115de982486f955",
+            "ca816da2afd8c1c885a8c3c373f1f761",
+            "f28bde56e92db8e033febeda8508819d"
+        ]
+    },
+    {
+        "Title": "Puzzle - Echter Puzzlespass f\u00fcr Unterwegs: Tierbabys",
+        "ID": 18635,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/085726.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 75,
+        "Points": 125,
+        "DateModified": "2022-02-28 10:49:33",
+        "ForumTopicID": 15450,
+        "Hashes": [
+            "cd9c3de9aa1a8064f493f98c1e5f38f1"
+        ]
+    },
+    {
+        "Title": "Puzzle - Echter Puzzlespass f\u00fcr Unterwegs: Underwater",
+        "ID": 18634,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/085727.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 75,
+        "Points": 125,
+        "DateModified": "2022-02-24 21:47:09",
+        "ForumTopicID": 15417,
+        "Hashes": [
+            "bb27c9010cd7c66052577d11c7afde6e"
+        ]
+    },
+    {
+        "Title": "Puzzle Series Vol. 3: Sudoku | Sudoku Gridmaster",
+        "ID": 14909,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060152.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 0,
+        "Points": 137,
+        "DateModified": "2021-12-15 17:26:09",
+        "ForumTopicID": 14526,
+        "Hashes": [
+            "6abc79fc352978d412fcb2c81dad6e3d"
+        ]
+    },
+    {
+        "Title": "Puzzle Series Vol. 5 - Slither Link",
+        "ID": 15921,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/031876.png",
+        "NumAchievements": 20,
+        "NumLeaderboards": 0,
+        "Points": 195,
+        "DateModified": "2023-07-03 00:46:20",
+        "ForumTopicID": 22318,
+        "Hashes": [
+            "7298cfc6544a82b22e45621da38a47b1"
+        ]
+    },
+    {
+        "Title": "Puzzle Series Vol. 6: Illust Logic",
+        "ID": 14936,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/059922.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 304,
+        "Points": 120,
+        "DateModified": "2022-07-09 19:04:03",
+        "ForumTopicID": 17264,
+        "Hashes": [
+            "3d07fafa2a33a04da153872e7dc5929e"
+        ]
+    },
+    {
+        "Title": "Puzzler World",
+        "ID": 16581,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/080235.png",
+        "NumAchievements": 70,
+        "NumLeaderboards": 0,
+        "Points": 525,
+        "DateModified": "2023-08-08 02:11:17",
+        "ForumTopicID": 17263,
+        "Hashes": [
+            "9905ac581d6589859666908d8a82ca13"
+        ]
+    },
+    {
+        "Title": "Puzzler World 2011 | Puzzler World 2",
+        "ID": 20077,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060150.png",
+        "NumAchievements": 82,
+        "NumLeaderboards": 0,
+        "Points": 680,
+        "DateModified": "2023-04-19 00:11:06",
+        "ForumTopicID": 17265,
+        "Hashes": [
+            "79d9bd821b39d261afad793778de2981"
+        ]
+    },
+    {
+        "Title": "Puzzler World 2012",
+        "ID": 20204,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/080330.png",
+        "NumAchievements": 100,
+        "NumLeaderboards": 0,
+        "Points": 665,
+        "DateModified": "2023-08-11 06:11:36",
+        "ForumTopicID": 22824,
+        "Hashes": [
+            "7c70a7667908e14c6396ab292f3cae00"
+        ]
+    },
+    {
+        "Title": "Radiant Historia",
+        "ID": 9424,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/034477.png",
+        "NumAchievements": 120,
+        "NumLeaderboards": 0,
+        "Points": 500,
+        "DateModified": "2020-12-14 21:02:44",
+        "ForumTopicID": 10456,
+        "Hashes": [
+            "0e22a9f70a23f3b5661eb052f657b557",
+            "be435c50ad90c6e365b8bcbc18bfdf42"
+        ]
+    },
+    {
+        "Title": "Ragnarok DS",
+        "ID": 9931,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/040295.png",
+        "NumAchievements": 43,
+        "NumLeaderboards": 0,
+        "Points": 399,
+        "DateModified": "2022-04-06 20:10:47",
+        "ForumTopicID": 11938,
+        "Hashes": [
+            "b3faced79f99ad1a2b579f6a255b7c29"
+        ]
+    },
+    {
+        "Title": "Resident Evil: Deadly Silence",
+        "ID": 16274,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/047094.png",
+        "NumAchievements": 115,
+        "NumLeaderboards": 2,
+        "Points": 1100,
+        "DateModified": "2023-04-17 01:11:31",
+        "ForumTopicID": 11106,
+        "Hashes": [
+            "4cbbf76efc85b7fb97c1bd95bfca9386",
+            "aabe32cc33b3e445268889b9f3eef2ca"
+        ]
+    },
+    {
+        "Title": "Retro Game Challenge",
+        "ID": 1172,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/031767.png",
+        "NumAchievements": 76,
+        "NumLeaderboards": 14,
+        "Points": 520,
+        "DateModified": "2022-11-25 14:52:52",
+        "ForumTopicID": 10208,
+        "Hashes": [
+            "e8946b706009b04120c16453c14f77e6"
+        ]
+    },
+    {
+        "Title": "Rhythm Heaven | Rhythm Paradise",
+        "ID": 9985,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060997.png",
+        "NumAchievements": 46,
+        "NumLeaderboards": 7,
+        "Points": 460,
+        "DateModified": "2022-10-29 00:17:13",
+        "ForumTopicID": 10342,
+        "Hashes": [
+            "02c0ea90b4ff3e475ec311e2b1da52ba",
+            "7d37fbb2cb80729889f2e4459bfcc566",
+            "92d27bc2848d5cdf0750c9cbd6a6592a",
+            "ac1462c2f0516f53776d81c69f3263c4",
+            "e370f0a12961dd4a5ee30c168bb9ba09"
+        ]
+    },
+    {
+        "Title": "Ridge Racer DS",
+        "ID": 8430,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053007.png",
+        "NumAchievements": 21,
+        "NumLeaderboards": 0,
+        "Points": 253,
+        "DateModified": "2022-02-08 16:54:55",
+        "ForumTopicID": 15181,
+        "Hashes": [
+            "2472a2291024d4de81750ac22306d3ea"
+        ]
+    },
+    {
+        "Title": "Roary the Racing Car",
+        "ID": 21188,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/062802.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 0,
+        "Points": 220,
+        "DateModified": "2023-04-05 11:26:18",
+        "ForumTopicID": 18498,
+        "Hashes": [
+            "5e7390f5f0d520db7f1221479078c91a"
+        ]
+    },
+    {
+        "Title": "Rock Band 3",
+        "ID": 17140,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/041006.png",
+        "NumAchievements": 122,
+        "NumLeaderboards": 25,
+        "Points": 1250,
+        "DateModified": "2022-11-08 19:26:13",
+        "ForumTopicID": 12071,
+        "Hashes": [
+            "4529401e23e29029351dd17928399404",
+            "a82dbc99c36c6d27048b02e12bfb4249"
+        ]
+    },
+    {
+        "Title": "Rockman.EXE: Operate Shooting Star | Mega Man Battle Network: Operate Starforce",
+        "ID": 17889,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/080967.png",
+        "NumAchievements": 63,
+        "NumLeaderboards": 1,
+        "Points": 488,
+        "DateModified": "2023-10-22 22:09:37",
+        "ForumTopicID": 22726,
+        "Hashes": [
+            "c72b9401c6724fc98ee6c34cd77f537b",
+            "c3da9fc7a013548124ea546961a93424"
+        ]
+    },
+    {
+        "Title": "Rune Factory: A Fantasy Harvest Moon",
+        "ID": 12704,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/071246.png",
+        "NumAchievements": 140,
+        "NumLeaderboards": 0,
+        "Points": 1350,
+        "DateModified": "2023-01-09 01:40:59",
+        "ForumTopicID": 12647,
+        "Hashes": [
+            "1be064fafbc9765e6697ea9317548a63"
+        ]
+    },
+    {
+        "Title": "Scribblenauts",
+        "ID": 6616,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/077561.png",
+        "NumAchievements": 311,
+        "NumLeaderboards": 0,
+        "Points": 529,
+        "DateModified": "2022-08-27 09:40:04",
+        "ForumTopicID": 15903,
+        "Hashes": [
+            "c1cc02f11a34834c388200470abb05ee"
+        ]
+    },
+    {
+        "Title": "Shaberu! DS Oryouri Navi",
+        "ID": 14705,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/028110.png",
+        "NumAchievements": 18,
+        "NumLeaderboards": 0,
+        "Points": 420,
+        "DateModified": "2022-11-16 18:37:16",
+        "ForumTopicID": 9699,
+        "Hashes": [
+            "a14581bb366934d0ee79d9f56014fcae",
+            "f218173c055cdf9d798de9d60c295e3a"
+        ]
+    },
+    {
+        "Title": "Shin Megami Tensei: Strange Journey",
+        "ID": 11644,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067523.png",
+        "NumAchievements": 243,
+        "NumLeaderboards": 0,
+        "Points": 2220,
+        "DateModified": "2023-10-25 01:12:14",
+        "ForumTopicID": 11249,
+        "Hashes": [
+            "604eb91adb9c58ef3f12804838bbd232"
+        ]
+    },
+    {
+        "Title": "Sid Meier's Civilization Revolution",
+        "ID": 17947,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061955.png",
+        "NumAchievements": 70,
+        "NumLeaderboards": 0,
+        "Points": 879,
+        "DateModified": "2023-03-29 22:02:03",
+        "ForumTopicID": 17918,
+        "Hashes": [
+            "a7df537fb9c194d5e979e0a76deb8520"
+        ]
+    },
+    {
+        "Title": "Sims 2, The",
+        "ID": 16236,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/047391.png",
+        "NumAchievements": 57,
+        "NumLeaderboards": 4,
+        "Points": 513,
+        "DateModified": "2021-09-27 16:13:40",
+        "ForumTopicID": 12451,
+        "Hashes": [
+            "7b9a70093947acb04a2e1eb6458bfb3e"
+        ]
+    },
+    {
+        "Title": "Sokoban DS",
+        "ID": 20100,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061981.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 0,
+        "Points": 305,
+        "DateModified": "2022-09-25 03:40:58",
+        "ForumTopicID": 18143,
+        "Hashes": [
+            "ef8c0a3703934ddc4b61aace20603e44"
+        ]
+    },
+    {
+        "Title": "Solatorobo: Red the Hunter",
+        "ID": 9404,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/028654.png",
+        "NumAchievements": 133,
+        "NumLeaderboards": 7,
+        "Points": 935,
+        "DateModified": "2023-08-18 06:01:04",
+        "ForumTopicID": 21569,
+        "Hashes": [
+            "1ca7cd467a7da09d860e3921c595c0d5"
+        ]
+    },
+    {
+        "Title": "Sonic & Sega All-Stars Racing",
+        "ID": 14811,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038912.png",
+        "NumAchievements": 99,
+        "NumLeaderboards": 24,
+        "Points": 500,
+        "DateModified": "2021-03-21 16:41:01",
+        "ForumTopicID": 10311,
+        "Hashes": [
+            "57f307c3bc4903783f28ad237fed9630"
+        ]
+    },
+    {
+        "Title": "Sonic Chronicles: The Dark Brotherhood",
+        "ID": 14809,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038176.png",
+        "NumAchievements": 68,
+        "NumLeaderboards": 0,
+        "Points": 495,
+        "DateModified": "2023-12-27 20:19:15",
+        "ForumTopicID": 24854,
+        "Hashes": [
+            "acc15a1e74de316771ee2c5fa2042dd4"
+        ]
+    },
+    {
+        "Title": "Sonic Classic Collection",
+        "ID": 14810,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/076393.png",
+        "NumAchievements": 134,
+        "NumLeaderboards": 151,
+        "Points": 1032,
+        "DateModified": "2023-10-31 21:18:10",
+        "ForumTopicID": 17351,
+        "Hashes": [
+            "43c843529dc6fae3853bc8e6489c62c3"
+        ]
+    },
+    {
+        "Title": "Sonic Colors",
+        "ID": 14808,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/038913.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 18,
+        "Points": 575,
+        "DateModified": "2021-06-14 22:37:49",
+        "ForumTopicID": 13034,
+        "Hashes": [
+            "a7e1c4de56014e8e48e0f976f39f1a44"
+        ]
+    },
+    {
+        "Title": "Sonic Rush",
+        "ID": 14806,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/034807.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 18,
+        "Points": 265,
+        "DateModified": "2023-08-28 15:37:48",
+        "ForumTopicID": 11528,
+        "Hashes": [
+            "3cd035c8692ec203a85b52d9e0c1938c"
+        ]
+    },
+    {
+        "Title": "Sonic Rush Adventure",
+        "ID": 14807,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063480.png",
+        "NumAchievements": 48,
+        "NumLeaderboards": 0,
+        "Points": 360,
+        "DateModified": "2023-09-27 00:56:55",
+        "ForumTopicID": 11699,
+        "Hashes": [
+            "0e2af67715835703fa53a657e3030931"
+        ]
+    },
+    {
+        "Title": "Sonny with a Chance",
+        "ID": 22045,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066203.png",
+        "NumAchievements": 28,
+        "NumLeaderboards": 5,
+        "Points": 210,
+        "DateModified": "2023-03-24 15:16:43",
+        "ForumTopicID": 19681,
+        "Hashes": [
+            "6f77fffd61284467b6378c6fb0799628"
+        ]
+    },
+    {
+        "Title": "Space Invaders Revolution",
+        "ID": 14864,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/029370.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 3,
+        "Points": 665,
+        "DateModified": "2023-01-26 13:57:45",
+        "ForumTopicID": 19494,
+        "Hashes": [
+            "6a0d3597fb9e089717078cedc2e95a45"
+        ]
+    },
+    {
+        "Title": "Spectrobes: Beyond the Portals",
+        "ID": 16575,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070508.png",
+        "NumAchievements": 94,
+        "NumLeaderboards": 15,
+        "Points": 649,
+        "DateModified": "2023-07-05 20:29:58",
+        "ForumTopicID": 11521,
+        "Hashes": [
+            "dcc5807510fa8964e5dd55da693a5dcc"
+        ]
+    },
+    {
+        "Title": "Spice & Wolf: My Year with Holo",
+        "ID": 17490,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/079082.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 0,
+        "Points": 270,
+        "DateModified": "2023-08-09 15:47:24",
+        "ForumTopicID": 22643,
+        "Hashes": [
+            "a2ffad7d0c08efcebe042f3214ba7461",
+            "b8ed5b1d0e2577a10ebb6c50ff8be317"
+        ]
+    },
+    {
+        "Title": "Spider-Man: Shattered Dimensions",
+        "ID": 1409,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/051178.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 0,
+        "Points": 580,
+        "DateModified": "2021-12-17 04:05:57",
+        "ForumTopicID": 14492,
+        "Hashes": [
+            "8803a3e61affccb37931fbed06805ec5"
+        ]
+    },
+    {
+        "Title": "Spider-Man: Web of Shadows",
+        "ID": 1334,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067775.png",
+        "NumAchievements": 37,
+        "NumLeaderboards": 0,
+        "Points": 425,
+        "DateModified": "2023-06-27 20:02:24",
+        "ForumTopicID": 11198,
+        "Hashes": [
+            "04d42edb4ee6bf6353c46e603aef2118",
+            "201632255b763351846aa0a277e1b467",
+            "6e2cd89c5a40e4eb6e981ed2cda847e0"
+        ]
+    },
+    {
+        "Title": "SpongeBob's Atlantis SquarePantis",
+        "ID": 16577,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/051375.png",
+        "NumAchievements": 43,
+        "NumLeaderboards": 18,
+        "Points": 201,
+        "DateModified": "2024-01-06 23:22:29",
+        "ForumTopicID": 14550,
+        "Hashes": [
+            "e95db18c2903316e2832ce9143468a53"
+        ]
+    },
+    {
+        "Title": "SpongeBob's Truth or Square",
+        "ID": 17568,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046984.png",
+        "NumAchievements": 38,
+        "NumLeaderboards": 0,
+        "Points": 238,
+        "DateModified": "2023-03-08 03:24:24",
+        "ForumTopicID": 13693,
+        "Hashes": [
+            "df9026166db47d95688a216524fca8f0"
+        ]
+    },
+    {
+        "Title": "Spore Creatures",
+        "ID": 15401,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/059677.png",
+        "NumAchievements": 93,
+        "NumLeaderboards": 0,
+        "Points": 570,
+        "DateModified": "2023-09-08 19:32:49",
+        "ForumTopicID": 17067,
+        "Hashes": [
+            "bbc8100a045196bf6e65c25e52e88326"
+        ]
+    },
+    {
+        "Title": "Squishy Tank",
+        "ID": 28123,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/087323.png",
+        "NumAchievements": 28,
+        "NumLeaderboards": 0,
+        "Points": 337,
+        "DateModified": "2023-12-26 19:11:09",
+        "ForumTopicID": 24870,
+        "Hashes": [
+            "fb2fbd01954aec01df9561e27d4ce036"
+        ]
+    },
+    {
+        "Title": "Star Fox Command",
+        "ID": 17573,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/085267.png",
+        "NumAchievements": 57,
+        "NumLeaderboards": 33,
+        "Points": 406,
+        "DateModified": "2023-11-19 20:29:10",
+        "ForumTopicID": 12753,
+        "Hashes": [
+            "b409163d18d54e676868b200c6ce6701"
+        ]
+    },
+    {
+        "Title": "Star Wars - Episode III: Revenge of the Sith",
+        "ID": 17447,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/044087.png",
+        "NumAchievements": 73,
+        "NumLeaderboards": 0,
+        "Points": 500,
+        "DateModified": "2022-08-22 21:10:01",
+        "ForumTopicID": 12961,
+        "Hashes": [
+            "c32f34e697f117e1d79fc196748763c0"
+        ]
+    },
+    {
+        "Title": "Steal Princess",
+        "ID": 18681,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061130.png",
+        "NumAchievements": 221,
+        "NumLeaderboards": 168,
+        "Points": 731,
+        "DateModified": "2023-03-26 08:26:45",
+        "ForumTopicID": 17846,
+        "Hashes": [
+            "1607140fc42c51db76773e2dc8796411"
+        ]
+    },
+    {
+        "Title": "Suikoden Tierkreis",
+        "ID": 9077,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060181.png",
+        "NumAchievements": 177,
+        "NumLeaderboards": 0,
+        "Points": 833,
+        "DateModified": "2023-06-15 11:40:52",
+        "ForumTopicID": 17390,
+        "Hashes": [
+            "7f8c6b3d126a71530d6432c7bf9dd214"
+        ]
+    },
+    {
+        "Title": "Suikoden Tierkreis [Subset - Master Trader]",
+        "ID": 24080,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/075496.png",
+        "NumAchievements": 38,
+        "NumLeaderboards": 0,
+        "Points": 210,
+        "DateModified": "2023-09-10 05:35:36",
+        "ForumTopicID": 21262,
+        "Hashes": [
+            "359a721d0db2ac303c60e75b52c45017"
+        ]
+    },
+    {
+        "Title": "Super Collapse! 3",
+        "ID": 17482,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/042610.png",
+        "NumAchievements": 72,
+        "NumLeaderboards": 0,
+        "Points": 477,
+        "DateModified": "2021-06-02 05:55:25",
+        "ForumTopicID": 12535,
+        "Hashes": [
+            "ce9a4f21310f663bf8b7918b2f5bde2a"
+        ]
+    },
+    {
+        "Title": "Super Mario 64 DS",
+        "ID": 9983,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070042.png",
+        "NumAchievements": 191,
+        "NumLeaderboards": 39,
+        "Points": 1080,
+        "DateModified": "2023-09-02 23:51:45",
+        "ForumTopicID": 9624,
+        "Hashes": [
+            "ba3c4052e00c5cc31df5d5534c39de1b"
+        ]
+    },
+    {
+        "Title": "Super Mario 64 DS [Subset - Bonus]",
+        "ID": 14856,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070044.png",
+        "NumAchievements": 37,
+        "NumLeaderboards": 40,
+        "Points": 606,
+        "DateModified": "2023-10-08 07:26:14",
+        "ForumTopicID": 9832,
+        "Hashes": [
+            "c3b1916756737f2c4117cc95c1d51ac7"
+        ]
+    },
+    {
+        "Title": "Super Monkey Ball: Touch & Roll",
+        "ID": 14823,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/048493.png",
+        "NumAchievements": 65,
+        "NumLeaderboards": 18,
+        "Points": 520,
+        "DateModified": "2021-12-02 14:28:55",
+        "ForumTopicID": 9890,
+        "Hashes": [
+            "0c130bbb232d33f96db02f4974f6d591"
+        ]
+    },
+    {
+        "Title": "Super Princess Peach",
+        "ID": 9252,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/087666.png",
+        "NumAchievements": 61,
+        "NumLeaderboards": 9,
+        "Points": 445,
+        "DateModified": "2021-11-26 11:09:47",
+        "ForumTopicID": 9801,
+        "Hashes": [
+            "d68d66fa38112e6ab59518caf2aca179"
+        ]
+    },
+    {
+        "Title": "Super Robot Taisen OG Saga: Endless Frontier",
+        "ID": 9751,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/031614.png",
+        "NumAchievements": 62,
+        "NumLeaderboards": 0,
+        "Points": 450,
+        "DateModified": "2021-09-05 18:36:29",
+        "ForumTopicID": 10171,
+        "Hashes": [
+            "caa30b4682c46779e7239fdc480ea6a6"
+        ]
+    },
+    {
+        "Title": "Super Robot Taisen OG Saga: Endless Frontier Exceed",
+        "ID": 15541,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/037744.png",
+        "NumAchievements": 142,
+        "NumLeaderboards": 0,
+        "Points": 950,
+        "DateModified": "2021-01-26 00:43:10",
+        "ForumTopicID": 11848,
+        "Hashes": [
+            "9d43e6b67bacfab9fd3ead1be115c5be"
+        ]
+    },
+    {
+        "Title": "Super Scribblenauts",
+        "ID": 16383,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/043180.png",
+        "NumAchievements": 213,
+        "NumLeaderboards": 0,
+        "Points": 462,
+        "DateModified": "2023-11-23 01:30:24",
+        "ForumTopicID": 10975,
+        "Hashes": [
+            "8f933e7029442b0cf6f8ff291f06a06b"
+        ]
+    },
+    {
+        "Title": "Taiko no Tatsujin DS: Touch de Dokodon!",
+        "ID": 17513,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/056370.png",
+        "NumAchievements": 182,
+        "NumLeaderboards": 140,
+        "Points": 1931,
+        "DateModified": "2022-12-12 03:11:51",
+        "ForumTopicID": 16204,
+        "Hashes": [
+            "db5a25378f23e47377002f149e6e5b31"
+        ]
+    },
+    {
+        "Title": "Tangram Mania",
+        "ID": 15715,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/051584.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 185,
+        "DateModified": "2022-01-24 18:01:46",
+        "ForumTopicID": 14706,
+        "Hashes": [
+            "1ba35c9d6b49123b42ae9a89e22c7c99"
+        ]
+    },
+    {
+        "Title": "Team Umizoomi",
+        "ID": 24351,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/083983.png",
+        "NumAchievements": 35,
+        "NumLeaderboards": 1,
+        "Points": 97,
+        "DateModified": "2023-10-15 00:09:46",
+        "ForumTopicID": 23498,
+        "Hashes": [
+            "7dac6ee7983f4972f7ee73491d4cda47"
+        ]
+    },
+    {
+        "Title": "Team Umizoomi and Dora's Fantastic Flight | Dora & Friends' Fantastic Flight",
+        "ID": 26467,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/083802.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 0,
+        "Points": 64,
+        "DateModified": "2023-10-10 12:15:37",
+        "ForumTopicID": 23831,
+        "Hashes": [
+            "52c94abec0af3f88e10f5adc9ac8664b"
+        ]
+    },
+    {
+        "Title": "Tetris DS",
+        "ID": 9878,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/059744.png",
+        "NumAchievements": 102,
+        "NumLeaderboards": 19,
+        "Points": 752,
+        "DateModified": "2023-09-01 04:14:28",
+        "ForumTopicID": 10388,
+        "Hashes": [
+            "9dbd0337235cd8acf032c0fbfd649d70"
+        ]
+    },
+    {
+        "Title": "Thomas & Friends: Hero of the Rails",
+        "ID": 18612,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054405.png",
+        "NumAchievements": 20,
+        "NumLeaderboards": 0,
+        "Points": 55,
+        "DateModified": "2023-01-01 05:52:32",
+        "ForumTopicID": 15387,
+        "Hashes": [
+            "0a89f54b4f4670666da57d6356e6d5dd"
+        ]
+    },
+    {
+        "Title": "Thor: God of Thunder",
+        "ID": 16609,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/077497.png",
+        "NumAchievements": 49,
+        "NumLeaderboards": 1,
+        "Points": 355,
+        "DateModified": "2022-10-18 20:16:39",
+        "ForumTopicID": 12379,
+        "Hashes": [
+            "a83c60e3d080ca5689d175b7e63db4c3"
+        ]
+    },
+    {
+        "Title": "Timmy Time",
+        "ID": 20640,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/062644.png",
+        "NumAchievements": 49,
+        "NumLeaderboards": 0,
+        "Points": 182,
+        "DateModified": "2023-01-31 03:01:05",
+        "ForumTopicID": 18478,
+        "Hashes": [
+            "4819a28ca8c5c18df5eab68a821845ab"
+        ]
+    },
+    {
+        "Title": "Tingle's Balloon Fight DS",
+        "ID": 14789,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061273.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 4,
+        "Points": 187,
+        "DateModified": "2023-07-05 16:15:29",
+        "ForumTopicID": 12385,
+        "Hashes": [
+            "553795c0ad7b1eb8d81a8690fd350fc9"
+        ]
+    },
+    {
+        "Title": "To Love-Ru Trouble: Waku Waku! Rinkangakkou-Hen",
+        "ID": 25663,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/083726.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 0,
+        "Points": 276,
+        "DateModified": "2023-10-09 11:51:04",
+        "ForumTopicID": 23200,
+        "Hashes": [
+            "370d48ac0dc6d07857ff635a8310249d"
+        ]
+    },
+    {
+        "Title": "Tom and Jerry Tales",
+        "ID": 18609,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/055672.png",
+        "NumAchievements": 31,
+        "NumLeaderboards": 0,
+        "Points": 165,
+        "DateModified": "2022-04-12 01:29:00",
+        "ForumTopicID": 15572,
+        "Hashes": [
+            "c9b861c89e3e5955355f3a377746cc1b"
+        ]
+    },
+    {
+        "Title": "Tomodachi Collection",
+        "ID": 5291,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/047122.png",
+        "NumAchievements": 49,
+        "NumLeaderboards": 0,
+        "Points": 449,
+        "DateModified": "2023-07-11 12:53:37",
+        "ForumTopicID": 10604,
+        "Hashes": [
+            "369e839793cf8bd5211fc916d957fa70",
+            "8b5692269f005fb96a79eabebb91ff32"
+        ]
+    },
+    {
+        "Title": "Trace Memory | Another Code: Two Memories",
+        "ID": 17232,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/057826.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 1,
+        "Points": 148,
+        "DateModified": "2022-10-23 01:25:49",
+        "ForumTopicID": 16580,
+        "Hashes": [
+            "ed43bed7a9ee790da68defdc4b31c343"
+        ]
+    },
+    {
+        "Title": "TrackMania DS",
+        "ID": 18333,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060845.png",
+        "NumAchievements": 230,
+        "NumLeaderboards": 135,
+        "Points": 1754,
+        "DateModified": "2023-02-16 11:20:17",
+        "ForumTopicID": 16431,
+        "Hashes": [
+            "c491db5b0a14e1b846d10712535fe8cb"
+        ]
+    },
+    {
+        "Title": "Trauma Center: Under the Knife",
+        "ID": 6907,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054381.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 0,
+        "Points": 504,
+        "DateModified": "2023-08-12 04:45:52",
+        "ForumTopicID": 9725,
+        "Hashes": [
+            "9fdce55a596c460adb0b9174948b0235"
+        ]
+    },
+    {
+        "Title": "Trauma Center: Under the Knife [Subset - S-Ranks]",
+        "ID": 18716,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054437.png",
+        "NumAchievements": 39,
+        "NumLeaderboards": 0,
+        "Points": 356,
+        "DateModified": "2023-05-17 15:13:01",
+        "ForumTopicID": 15628,
+        "Hashes": [
+            "0f406569005cccd9dbb17421a7054896"
+        ]
+    },
+    {
+        "Title": "Trauma Center: Under the Knife 2",
+        "ID": 1271,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054382.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 0,
+        "Points": 488,
+        "DateModified": "2023-08-12 04:47:08",
+        "ForumTopicID": 15583,
+        "Hashes": [
+            "537af33ba04149e096bc5875ec838ef2"
+        ]
+    },
+    {
+        "Title": "Trauma Center: Under the Knife 2 [Subset - XS-Ranks]",
+        "ID": 18719,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054496.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 0,
+        "Points": 226,
+        "DateModified": "2022-03-14 12:24:11",
+        "ForumTopicID": 15647,
+        "Hashes": [
+            "a8ac9c0c779197ae3ee3413ecb5619f0"
+        ]
+    },
+    {
+        "Title": "Umihara Kawase Shun:  Second Edition Kanzenban",
+        "ID": 18215,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/068472.png",
+        "NumAchievements": 195,
+        "NumLeaderboards": 171,
+        "Points": 1900,
+        "DateModified": "2023-08-22 02:16:08",
+        "ForumTopicID": 20502,
+        "Hashes": [
+            "8063acbe54b646528f2bcdc605c64fef"
+        ]
+    },
+    {
+        "Title": "Urbz, The: Sims in the City",
+        "ID": 16240,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066195.png",
+        "NumAchievements": 89,
+        "NumLeaderboards": 5,
+        "Points": 568,
+        "DateModified": "2022-07-02 16:00:46",
+        "ForumTopicID": 14061,
+        "Hashes": [
+            "8a35c028c257c5d50eadd4e5a66a9b73"
+        ]
+    },
+    {
+        "Title": "Victorious: Taking The Lead",
+        "ID": 18370,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/052010.png",
+        "NumAchievements": 62,
+        "NumLeaderboards": 64,
+        "Points": 393,
+        "DateModified": "2022-01-29 21:31:56",
+        "ForumTopicID": 14879,
+        "Hashes": [
+            "daf4779d405c052e1e253817d247e0e9"
+        ]
+    },
+    {
+        "Title": "Viva Pi\u00f1ata: Pocket Paradise",
+        "ID": 7370,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046859.png",
+        "NumAchievements": 87,
+        "NumLeaderboards": 0,
+        "Points": 725,
+        "DateModified": "2021-09-29 05:01:04",
+        "ForumTopicID": 13647,
+        "Hashes": [
+            "0a19cc93abdc0fdbb00b4e20194731e7"
+        ]
+    },
+    {
+        "Title": "Wappy Dog",
+        "ID": 15057,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/050489.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 30,
+        "Points": 165,
+        "DateModified": "2022-10-23 10:07:22",
+        "ForumTopicID": 14424,
+        "Hashes": [
+            "346d6ec41050e2175938e1dfb3c17586",
+            "472a853a7ac478572cd18d40e65ac6ed"
+        ]
+    },
+    {
+        "Title": "Wario: Master of Disguise",
+        "ID": 1200,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061026.png",
+        "NumAchievements": 70,
+        "NumLeaderboards": 15,
+        "Points": 490,
+        "DateModified": "2023-10-09 22:54:01",
+        "ForumTopicID": 9780,
+        "Hashes": [
+            "18dfe6193d761ba84c9dd14390597753"
+        ]
+    },
+    {
+        "Title": "WarioWare: D.I.Y.",
+        "ID": 14816,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/059844.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 7,
+        "Points": 487,
+        "DateModified": "2023-09-02 23:05:01",
+        "ForumTopicID": 13170,
+        "Hashes": [
+            "29b17a4fdbd87274a60057e4342d80c8"
+        ]
+    },
+    {
+        "Title": "WarioWare: Touched!",
+        "ID": 1199,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/039657.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 20,
+        "Points": 516,
+        "DateModified": "2023-10-21 04:35:21",
+        "ForumTopicID": 9866,
+        "Hashes": [
+            "e08a2e48488c7370f0dfce6ac7dddc1e"
+        ]
+    },
+    {
+        "Title": "World Ends with You, The",
+        "ID": 4887,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/077187.png",
+        "NumAchievements": 98,
+        "NumLeaderboards": 1,
+        "Points": 888,
+        "DateModified": "2022-01-25 06:18:22",
+        "ForumTopicID": 10283,
+        "Hashes": [
+            "e08ab843fe9609f0873c84a8a7678dc6",
+            "ee94aa18ce94534f8b30a50e0930cf02"
+        ]
+    },
+    {
+        "Title": "Yoshi Touch & Go",
+        "ID": 14785,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/074451.png",
+        "NumAchievements": 14,
+        "NumLeaderboards": 5,
+        "Points": 110,
+        "DateModified": "2023-06-08 09:33:50",
+        "ForumTopicID": 10894,
+        "Hashes": [
+            "b8e34ec550c2e62934b75bdeee8b8656"
+        ]
+    },
+    {
+        "Title": "Yoshi's Island DS",
+        "ID": 14786,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/035024.png",
+        "NumAchievements": 72,
+        "NumLeaderboards": 5,
+        "Points": 690,
+        "DateModified": "2023-02-12 11:22:49",
+        "ForumTopicID": 10887,
+        "Hashes": [
+            "c7bbf6af9d6876098272e84ceee2029e"
+        ]
+    },
+    {
+        "Title": "Yu-Gi-Oh! 5D's Stardust Accelerator: World Championship 2009",
+        "ID": 1284,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069152.png",
+        "NumAchievements": 163,
+        "NumLeaderboards": 0,
+        "Points": 1054,
+        "DateModified": "2023-11-26 23:22:42",
+        "ForumTopicID": 20506,
+        "Hashes": [
+            "e98328ce7dddef310138b7eade48fa4b"
+        ]
+    },
+    {
+        "Title": "Yu-Gi-Oh! GX Spirit Caller",
+        "ID": 17744,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/084156.png",
+        "NumAchievements": 149,
+        "NumLeaderboards": 2,
+        "Points": 1589,
+        "DateModified": "2023-09-22 07:26:49",
+        "ForumTopicID": 20033,
+        "Hashes": [
+            "4395885bae84737a5aa33ce38c048e7a"
+        ]
+    },
+    {
+        "Title": "Yu-Gi-Oh! Nightmare Troubadour",
+        "ID": 15736,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060125.png",
+        "NumAchievements": 48,
+        "NumLeaderboards": 1,
+        "Points": 578,
+        "DateModified": "2021-06-23 09:22:24",
+        "ForumTopicID": 10247,
+        "Hashes": [
+            "2da47dd9b3eb8372d1080fd93cf32228"
+        ]
+    },
+    {
+        "Title": "Yu-Gi-Oh! World Championship 2007",
+        "ID": 15737,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/058712.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 0,
+        "Points": 475,
+        "DateModified": "2022-09-03 22:54:20",
+        "ForumTopicID": 10185,
+        "Hashes": [
+            "6fc6d6937ead444ed1667c209719472d"
+        ]
+    },
+    {
+        "Title": "Zero Escape: Nine Hours, Nine Persons, Nine Doors",
+        "ID": 999,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/048945.png",
+        "NumAchievements": 23,
+        "NumLeaderboards": 0,
+        "Points": 156,
+        "DateModified": "2020-02-24 05:05:52",
+        "ForumTopicID": 9724,
+        "Hashes": [
+            "31498d5450bb386f388e450ad1fe8f5a",
+            "7ade38ca60377a283d9f99884bc03bdc",
+            "b3a8515440c1da4b8ff04647a71aaabe"
+        ]
+    },
+    {
+        "Title": "Zubo",
+        "ID": 21438,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063441.png",
+        "NumAchievements": 96,
+        "NumLeaderboards": 0,
+        "Points": 327,
+        "DateModified": "2023-10-07 15:39:05",
+        "ForumTopicID": 18704,
+        "Hashes": [
+            "81a2f16f97a16950e4c14a0f71c12a13"
+        ]
+    },
+    {
+        "Title": "~Demo~ Metroid Prime: Hunters - First Hunt",
+        "ID": 17239,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/079408.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 12,
+        "Points": 100,
+        "DateModified": "2021-07-17 14:37:57",
+        "ForumTopicID": 12075,
+        "Hashes": [
+            "efc4c41019d65f4cbea17187704ba712",
+            "fb0b7b8a81983425e4bd76200bdfaeb7"
+        ]
+    },
+    {
+        "Title": "~Hack~ ~Demo~ Excerpt from Super Mario 256",
+        "ID": 15578,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/068699.png",
+        "NumAchievements": 37,
+        "NumLeaderboards": 2,
+        "Points": 236,
+        "DateModified": "2023-09-03 09:50:25",
+        "ForumTopicID": 9998,
+        "Hashes": [
+            "4d3701f733b2de3ac28aa98eb9ac1fa8"
+        ]
+    },
+    {
+        "Title": "~Hack~ ~Demo~ Mario's Holiday",
+        "ID": 17080,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/073648.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 0,
+        "Points": 84,
+        "DateModified": "2023-05-31 20:54:44",
+        "ForumTopicID": 11807,
+        "Hashes": [
+            "fe2aaa946da6755b49b88d681b7782bf"
+        ]
+    },
+    {
+        "Title": "~Hack~ ~Demo~ Super Among Us 64 DS",
+        "ID": 18603,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/068702.png",
+        "NumAchievements": 8,
+        "NumLeaderboards": 1,
+        "Points": 20,
+        "DateModified": "2023-02-27 20:56:53",
+        "ForumTopicID": 15359,
+        "Hashes": [
+            "4146855b0630bdfda94a579ba21fea96"
+        ]
+    },
+    {
+        "Title": "~Hack~ ~Demo~ Super Mario Bros. Movie 64 DS, The",
+        "ID": 22591,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069526.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 1,
+        "Points": 34,
+        "DateModified": "2023-09-21 14:43:53",
+        "ForumTopicID": 20526,
+        "Hashes": [
+            "f758cb9568edf09389267536555ce6b4"
+        ]
+    },
+    {
+        "Title": "~Hack~ ~Demo~ Super Minecraft 64 DS",
+        "ID": 24389,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/079402.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 1,
+        "Points": 48,
+        "DateModified": "2023-05-26 18:39:13",
+        "ForumTopicID": 21700,
+        "Hashes": [
+            "a47e5cd9ad59c7b1aeb426089b7b01ea"
+        ]
+    },
+    {
+        "Title": "~Hack~ Another Super Mario 3D",
+        "ID": 15375,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/029572.png",
+        "NumAchievements": 65,
+        "NumLeaderboards": 1,
+        "Points": 302,
+        "DateModified": "2023-09-03 00:58:19",
+        "ForumTopicID": 9901,
+        "Hashes": [
+            "3f39c39315c8d23e6d55841e3143d320"
+        ]
+    },
+    {
+        "Title": "~Hack~ Bowser's Flood",
+        "ID": 18607,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/055042.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 1,
+        "Points": 58,
+        "DateModified": "2023-02-26 10:15:02",
+        "ForumTopicID": 15372,
+        "Hashes": [
+            "a6128686c940e744097fad61874f0bd7"
+        ]
+    },
+    {
+        "Title": "~Hack~ Box Adventure",
+        "ID": 18541,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053419.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 0,
+        "Points": 11,
+        "DateModified": "2022-02-13 13:38:17",
+        "ForumTopicID": 15273,
+        "Hashes": [
+            "c89a151405fcc0ad163a1eda1dffaaa7"
+        ]
+    },
+    {
+        "Title": "~Hack~ Castlevania: Dawn of Dissonance - A Juste Story Mode Hack",
+        "ID": 17554,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045746.png",
+        "NumAchievements": 72,
+        "NumLeaderboards": 3,
+        "Points": 675,
+        "DateModified": "2022-04-01 10:02:56",
+        "ForumTopicID": 12719,
+        "Hashes": [
+            "59ab0afda7fb3e3aa957eda79be68493",
+            "7aa464d3382bb688410487f772ad3467"
+        ]
+    },
+    {
+        "Title": "~Hack~ Castlevania: Dawn of Shovel",
+        "ID": 22847,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069566.png",
+        "NumAchievements": 31,
+        "NumLeaderboards": 0,
+        "Points": 290,
+        "DateModified": "2023-04-15 20:20:01",
+        "ForumTopicID": 20703,
+        "Hashes": [
+            "e3fbfde4f7ab921ed0210ff01c30fdfd"
+        ]
+    },
+    {
+        "Title": "~Hack~ Castlevania: Rondo of Ruin",
+        "ID": 17866,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046694.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 6,
+        "Points": 1165,
+        "DateModified": "2023-06-15 04:00:06",
+        "ForumTopicID": 13591,
+        "Hashes": [
+            "309c5f62616c261542b246658454410c",
+            "988399d97bca60c9684ed8b7be9c8820"
+        ]
+    },
+    {
+        "Title": "~Hack~ Castlevania: Sora, Donald & Neku in Dawn of Sorrow",
+        "ID": 23792,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070419.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 0,
+        "Points": 310,
+        "DateModified": "2023-03-29 18:05:11",
+        "ForumTopicID": 20969,
+        "Hashes": [
+            "8a3b8079095478e1eaeca2a3c08afeca"
+        ]
+    },
+    {
+        "Title": "~Hack~ Castlevania: Specter of Sorrow",
+        "ID": 22850,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/070594.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 16,
+        "Points": 315,
+        "DateModified": "2023-04-04 08:25:58",
+        "ForumTopicID": 20950,
+        "Hashes": [
+            "b2f9acb7ccdba152bcfc93819d1a3009"
+        ]
+    },
+    {
+        "Title": "~Hack~ CTGP: Nitro",
+        "ID": 17844,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/065335.png",
+        "NumAchievements": 126,
+        "NumLeaderboards": 112,
+        "Points": 658,
+        "DateModified": "2023-01-15 05:33:14",
+        "ForumTopicID": 17543,
+        "Hashes": [
+            "448ffa3a4c127b7fb19365bfcf27b444"
+        ]
+    },
+    {
+        "Title": "~Hack~ Ermii Kart DS: Legacy Edition",
+        "ID": 16193,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067826.png",
+        "NumAchievements": 83,
+        "NumLeaderboards": 64,
+        "Points": 476,
+        "DateModified": "2023-02-14 22:55:19",
+        "ForumTopicID": 10444,
+        "Hashes": [
+            "3602123cb39806a732589a2b699bb445"
+        ]
+    },
+    {
+        "Title": "~Hack~ Gengar",
+        "ID": 18122,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/050084.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 0,
+        "Points": 27,
+        "DateModified": "2022-01-01 20:50:27",
+        "ForumTopicID": 14333,
+        "Hashes": [
+            "019504a0cbde18d9113a5c204d3fc6d5"
+        ]
+    },
+    {
+        "Title": "~Hack~ Lighthouse Island",
+        "ID": 25311,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/079464.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 1,
+        "Points": 33,
+        "DateModified": "2023-08-28 02:33:45",
+        "ForumTopicID": 22763,
+        "Hashes": [
+            "056c448dafb55235a029c295f482e8e0"
+        ]
+    },
+    {
+        "Title": "~Hack~ Mario Kart Zero",
+        "ID": 17841,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063271.png",
+        "NumAchievements": 72,
+        "NumLeaderboards": 32,
+        "Points": 480,
+        "DateModified": "2022-10-27 22:01:47",
+        "ForumTopicID": 18720,
+        "Hashes": [
+            "2003edb09825cad9102b00e17713d3eb"
+        ]
+    },
+    {
+        "Title": "~Hack~ Mario's Red Curtain",
+        "ID": 25312,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/079328.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 0,
+        "Points": 43,
+        "DateModified": "2023-11-07 18:29:29",
+        "ForumTopicID": 22764,
+        "Hashes": [
+            "3f7bf41dcdb0496ee8d217a2f87966ba"
+        ]
+    },
+    {
+        "Title": "~Hack~ Mario's Star Quest",
+        "ID": 17067,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/055041.png",
+        "NumAchievements": 9,
+        "NumLeaderboards": 0,
+        "Points": 28,
+        "DateModified": "2022-02-27 10:33:48",
+        "ForumTopicID": 11755,
+        "Hashes": [
+            "cdd4adff2642a440463a562693a2a8df"
+        ]
+    },
+    {
+        "Title": "~Hack~ Mario's Trip",
+        "ID": 22528,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/068162.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 1,
+        "Points": 34,
+        "DateModified": "2023-02-22 17:32:40",
+        "ForumTopicID": 20404,
+        "Hashes": [
+            "48a429dc5fed59ed49f2d2b759329623"
+        ]
+    },
+    {
+        "Title": "~Hack~ Monolith: The Horror Comp",
+        "ID": 26979,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/085085.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 1,
+        "Points": 22,
+        "DateModified": "2023-11-09 21:11:30",
+        "ForumTopicID": 24282,
+        "Hashes": [
+            "d88a647c0a5da5d48948225105db8f63"
+        ]
+    },
+    {
+        "Title": "~Hack~ New Super Mario Bros. Deluxe!",
+        "ID": 17374,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/062997.png",
+        "NumAchievements": 72,
+        "NumLeaderboards": 0,
+        "Points": 545,
+        "DateModified": "2023-01-26 18:56:01",
+        "ForumTopicID": 18251,
+        "Hashes": [
+            "079a90b7763cc7e5d61687cbdd21790e"
+        ]
+    },
+    {
+        "Title": "~Hack~ Newer Super Mario Bros. DS",
+        "ID": 14829,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/041247.png",
+        "NumAchievements": 49,
+        "NumLeaderboards": 3,
+        "Points": 383,
+        "DateModified": "2023-05-01 20:47:04",
+        "ForumTopicID": 9819,
+        "Hashes": [
+            "e9bbb39abf88029b04f4d5b5351c956b"
+        ]
+    },
+    {
+        "Title": "~Hack~ Pokemon Mystery Dungeon: Divided Spirits",
+        "ID": 24939,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/075730.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 0,
+        "Points": 63,
+        "DateModified": "2023-08-28 14:36:42",
+        "ForumTopicID": 22230,
+        "Hashes": [
+            "6630d61ac94fb03e381a613c8fe9d1f1"
+        ]
+    },
+    {
+        "Title": "~Hack~ Pokemon Mystery Dungeon: Future of Hope",
+        "ID": 24938,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/075576.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 0,
+        "Points": 101,
+        "DateModified": "2023-06-22 15:42:49",
+        "ForumTopicID": 22196,
+        "Hashes": [
+            "caaa080c616ae0da3091063f69f838d0"
+        ]
+    },
+    {
+        "Title": "~Hack~ Pokemon Renegade Platinum",
+        "ID": 16196,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/066999.png",
+        "NumAchievements": 110,
+        "NumLeaderboards": 12,
+        "Points": 1802,
+        "DateModified": "2023-05-31 19:48:12",
+        "ForumTopicID": 10448,
+        "Hashes": [
+            "60000586a8e1b1e6ae88f9ce6a2f287b",
+            "97ac7f51107aff3251f5430c65b0f1e6",
+            "dac891923bf85938b422758dd3159a25"
+        ]
+    },
+    {
+        "Title": "~Hack~ Pumpkin Hill DS",
+        "ID": 26978,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/084958.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 0,
+        "Points": 42,
+        "DateModified": "2024-01-06 10:15:03",
+        "ForumTopicID": 24281,
+        "Hashes": [
+            "d8856da490c4c1f8fe99976d12050779"
+        ]
+    },
+    {
+        "Title": "~Hack~ Shmucker Casino 2: Purple Boog's Revenge",
+        "ID": 18583,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/055043.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 0,
+        "Points": 143,
+        "DateModified": "2023-03-05 22:37:44",
+        "ForumTopicID": 15318,
+        "Hashes": [
+            "a6863bbd01a524f1d3730cde9a6ecd39"
+        ]
+    },
+    {
+        "Title": "~Hack~ The Koopa Who Stole Christmas",
+        "ID": 27852,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/087261.png",
+        "NumAchievements": 39,
+        "NumLeaderboards": 2,
+        "Points": 260,
+        "DateModified": "2023-12-26 16:00:41",
+        "ForumTopicID": 24848,
+        "Hashes": [
+            "0873f4092126f21584202fd8e91773f1",
+            "1f6415b0d56e274a1433139700ac9394",
+            "1df021f0a9f9ab4ae331d6afad18c64e"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS",
+        "ID": 17951,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/048371.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 0,
+        "Points": 43,
+        "DateModified": "2022-02-27 10:34:35",
+        "ForumTopicID": 13959,
+        "Hashes": [
+            "b63884acc50348fd01dbea859a295d9c"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS 2",
+        "ID": 18524,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053179.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 1,
+        "Points": 40,
+        "DateModified": "2023-01-29 18:47:33",
+        "ForumTopicID": 15252,
+        "Hashes": [
+            "58d013111b9a6e541d88707b195f1a02"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS 3: Travel in Time",
+        "ID": 15345,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053825.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 0,
+        "Points": 43,
+        "DateModified": "2023-09-11 17:04:03",
+        "ForumTopicID": 15446,
+        "Hashes": [
+            "3951615ddae186f6506bc895e5492323"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS 4: The IceFire War",
+        "ID": 18797,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/055757.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 0,
+        "Points": 30,
+        "DateModified": "2022-04-27 19:30:05",
+        "ForumTopicID": 16069,
+        "Hashes": [
+            "bcd30ce82a0c73c57ea1a22d5b0eaa72"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS 5: Eternal Night",
+        "ID": 20089,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060006.png",
+        "NumAchievements": 9,
+        "NumLeaderboards": 0,
+        "Points": 32,
+        "DateModified": "2022-07-25 20:33:34",
+        "ForumTopicID": 17318,
+        "Hashes": [
+            "76c41f9de7948940cfea59040cf406e4"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS 6: Wrath of the Blood Eye",
+        "ID": 20252,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/060472.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 0,
+        "Points": 30,
+        "DateModified": "2022-07-27 17:27:25",
+        "ForumTopicID": 17542,
+        "Hashes": [
+            "98d48832f4836a872d5f5715240addbc"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS 7: The Rise of a God!",
+        "ID": 21404,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/063000.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 1,
+        "Points": 27,
+        "DateModified": "2023-01-29 18:48:17",
+        "ForumTopicID": 18593,
+        "Hashes": [
+            "095daf70fd5b7764469be4f6aaf36893"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS 8: The End is Near...",
+        "ID": 22365,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/067212.png",
+        "NumAchievements": 9,
+        "NumLeaderboards": 0,
+        "Points": 22,
+        "DateModified": "2023-01-26 22:55:18",
+        "ForumTopicID": 20064,
+        "Hashes": [
+            "9e9f173471bf7c750a394a091fbd82f7"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS 9: The Purple Comet",
+        "ID": 22917,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/069942.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 0,
+        "Points": 31,
+        "DateModified": "2023-05-21 21:23:51",
+        "ForumTopicID": 20816,
+        "Hashes": [
+            "ad5de7ce3265e0ba27ed655433cea5f2"
+        ]
+    },
+    {
+        "Title": "~Hack~ Umokay 64 DS X: To Infinity And Beyond!",
+        "ID": 24698,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/074394.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 1,
+        "Points": 137,
+        "DateModified": "2023-09-06 15:56:18",
+        "ForumTopicID": 21883,
+        "Hashes": [
+            "9a3bc75aacf3e9bd873c09c32749655b"
+        ]
+    },
+    {
+        "Title": "~Hack~ Yoshi Deja Vu DS",
+        "ID": 17941,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/048322.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 0,
+        "Points": 107,
+        "DateModified": "2023-09-03 09:47:02",
+        "ForumTopicID": 13943,
+        "Hashes": [
+            "0d570a5a33eadf519cb3fad342c3d5c8"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ 10",
+        "ID": 26630,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/084153.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 0,
+        "Points": 50,
+        "DateModified": "2023-10-16 02:42:23",
+        "ForumTopicID": 23892,
+        "Hashes": [
+            "af561458b08c41ccb8ad7c6fa6544cf1"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Alice & Marisa",
+        "ID": 25030,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/082323.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 1,
+        "Points": 48,
+        "DateModified": "2023-09-03 02:34:28",
+        "ForumTopicID": 22432,
+        "Hashes": [
+            "90f2d2df9d2394b359711b3c6cc6f762"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Anguna: Warriors of Virtue",
+        "ID": 16356,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/065896.png",
+        "NumAchievements": 19,
+        "NumLeaderboards": 0,
+        "Points": 253,
+        "DateModified": "2021-10-05 15:37:52",
+        "ForumTopicID": 10904,
+        "Hashes": [
+            "12c91594baff50328ec5503c0e4508ae"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Aperture Science DS | Portal DS",
+        "ID": 16532,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/061425.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 0,
+        "Points": 37,
+        "DateModified": "2022-09-02 16:09:55",
+        "ForumTopicID": 17999,
+        "Hashes": [
+            "a8f8e22097e2cd193e91eb0ebae2da37"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Bubble Wrap DS",
+        "ID": 16279,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/034527.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 2,
+        "Points": 20,
+        "DateModified": "2023-05-16 19:39:41",
+        "ForumTopicID": 10795,
+        "Hashes": [
+            "318cf0621b0204b5daae3052177778c3"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Christmas Rush",
+        "ID": 27778,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086773.png",
+        "NumAchievements": 14,
+        "NumLeaderboards": 0,
+        "Points": 60,
+        "DateModified": "2023-12-14 06:31:40",
+        "ForumTopicID": 24723,
+        "Hashes": [
+            "d42c5eb7e08311d53e8d8537df36532e"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Claw Express",
+        "ID": 25022,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/076415.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 1,
+        "Points": 15,
+        "DateModified": "2023-07-05 04:03:50",
+        "ForumTopicID": 22409,
+        "Hashes": [
+            "002edaa30e61b53735ac1d71dc4d0cb4"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Crocodingus in Cube Island",
+        "ID": 14770,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/034911.png",
+        "NumAchievements": 13,
+        "NumLeaderboards": 0,
+        "Points": 82,
+        "DateModified": "2023-09-06 19:43:55",
+        "ForumTopicID": 10878,
+        "Hashes": [
+            "84eee7609ac2b8bf7abd5ff763f7a7df"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Dicewars DS",
+        "ID": 17821,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/045478.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 0,
+        "Points": 68,
+        "DateModified": "2021-07-21 13:00:29",
+        "ForumTopicID": 13392,
+        "Hashes": [
+            "3c2971c01fc953a7822434b2cd7d9251"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ EunHye DS",
+        "ID": 14835,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/028844.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 6,
+        "Points": 12,
+        "DateModified": "2021-02-01 20:07:06",
+        "ForumTopicID": 9821,
+        "Hashes": [
+            "e19b7b3ade640ac4b96b529f860f2f0a"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Eurotunnel",
+        "ID": 28004,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/087238.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 0,
+        "Points": 100,
+        "DateModified": "2023-12-22 08:23:05",
+        "ForumTopicID": 24800,
+        "Hashes": [
+            "4c590baa892de430b1982075c98ed58e"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Fishing the Deep",
+        "ID": 25801,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/082612.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 1,
+        "Points": 15,
+        "DateModified": "2023-09-21 10:39:33",
+        "ForumTopicID": 23438,
+        "Hashes": [
+            "c72c9b93c5fd833201e6cb24414e98f9"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ New Zelda",
+        "ID": 14974,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/076694.png",
+        "NumAchievements": 8,
+        "NumLeaderboards": 0,
+        "Points": 30,
+        "DateModified": "2023-07-08 14:51:40",
+        "ForumTopicID": 10925,
+        "Hashes": [
+            "20a3dcfce80bcb7ed9c67ed8104fb985"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Nintendo Adventure Books 3: Monster Mix-Up",
+        "ID": 18822,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/056169.png",
+        "NumAchievements": 19,
+        "NumLeaderboards": 1,
+        "Points": 93,
+        "DateModified": "2022-05-17 21:38:07",
+        "ForumTopicID": 16160,
+        "Hashes": [
+            "066e5b8c19cc7dc8f40736b5a157ab22"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ No Place to Hide",
+        "ID": 26971,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/084916.png",
+        "NumAchievements": 11,
+        "NumLeaderboards": 10,
+        "Points": 117,
+        "DateModified": "2023-10-29 03:02:43",
+        "ForumTopicID": 24278,
+        "Hashes": [
+            "22cc400e508171132102dcb6ae9b7802"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Sliding Puzzles",
+        "ID": 14845,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/031653.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 0,
+        "Points": 35,
+        "DateModified": "2020-03-02 12:57:59",
+        "ForumTopicID": 10222,
+        "Hashes": [
+            "44401d4fca6646cdbcb02b9c29258ff5",
+            "6aa053cb058816af3808a78b2172c0c7",
+            "b989fee12f208a84c0bc788fe9aa7bbb"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Still Alive DS",
+        "ID": 24312,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/078137.png",
+        "NumAchievements": 67,
+        "NumLeaderboards": 0,
+        "Points": 313,
+        "DateModified": "2023-05-12 18:43:58",
+        "ForumTopicID": 21604,
+        "Hashes": [
+            "b063ca31c55f8ac1532cf78bfb0012eb"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Super Smash Bros. Clash",
+        "ID": 27597,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/086325.png",
+        "NumAchievements": 18,
+        "NumLeaderboards": 0,
+        "Points": 65,
+        "DateModified": "2023-12-03 05:54:20",
+        "ForumTopicID": 24618,
+        "Hashes": [
+            "fecaf270c6507b361792805fce4e39f0"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ The Search Master: Metal Gear Solid Edition",
+        "ID": 25351,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/080987.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 1,
+        "Points": 38,
+        "DateModified": "2023-08-10 16:24:49",
+        "ForumTopicID": 22841,
+        "Hashes": [
+            "3fdf12c6f6e23c96ddbee50bd9c9951e"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Ultimate Sliding Puzzle: Arcade Pack",
+        "ID": 15343,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053821.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 0,
+        "Points": 50,
+        "DateModified": "2022-02-27 13:15:12",
+        "ForumTopicID": null,
+        "Hashes": [
+            "64a8f664c93bcef5f5487d8e7f59682a"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Ultimate Sliding Puzzle: Ecchi Pack",
+        "ID": 15344,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053820.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 0,
+        "Points": 50,
+        "DateModified": "2022-02-27 13:39:02",
+        "ForumTopicID": null,
+        "Hashes": [
+            "483d2cde5544dd146afa0077356b384f"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Ultimate Sliding Puzzle: Sci-Fi Pack",
+        "ID": 14842,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/053815.png",
+        "NumAchievements": 6,
+        "NumLeaderboards": 0,
+        "Points": 50,
+        "DateModified": "2022-02-27 12:48:14",
+        "ForumTopicID": 10793,
+        "Hashes": [
+            "48f25e6aa3d44ce9cc718462fdffaf0b"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Without Escape",
+        "ID": 18311,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/054706.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 0,
+        "Points": 45,
+        "DateModified": "2022-03-31 00:28:03",
+        "ForumTopicID": 15708,
+        "Hashes": [
+            "e97c66a915f42f51fde402afa7179cfa"
+        ]
+    },
+    {
+        "Title": "~Prototype~ Clueless: Fashion!",
+        "ID": 17819,
+        "ConsoleID": 18,
+        "ConsoleName": "Nintendo DS",
+        "ImageIcon": "/Images/046245.png",
+        "NumAchievements": 31,
+        "NumLeaderboards": 0,
+        "Points": 209,
+        "DateModified": "2021-08-04 19:49:02",
+        "ForumTopicID": 13587,
+        "Hashes": [
+            "91dfd503b08a6360be69e6dc3f515c2a"
+        ]
+    }
+]

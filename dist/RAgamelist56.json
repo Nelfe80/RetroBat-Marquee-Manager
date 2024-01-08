@@ -1,0 +1,393 @@
+[
+    {
+        "Title": "ADK World",
+        "ID": 23824,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083068.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 0,
+        "Points": 285,
+        "DateModified": "2023-10-23 06:58:24",
+        "ForumTopicID": 23583,
+        "Hashes": [
+            "0fd821fdb242210f87e33f8ff921ef6d"
+        ]
+    },
+    {
+        "Title": "Crossed Swords",
+        "ID": 9149,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/080179.png",
+        "NumAchievements": 31,
+        "NumLeaderboards": 0,
+        "Points": 193,
+        "DateModified": "2023-09-29 03:48:41",
+        "ForumTopicID": 23568,
+        "Hashes": [
+            "0258c9e246d4a11743fe05069b14c929"
+        ]
+    },
+    {
+        "Title": "Crossed Swords II",
+        "ID": 9186,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/085569.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 3,
+        "Points": 315,
+        "DateModified": "2023-11-11 03:54:33",
+        "ForumTopicID": 23639,
+        "Hashes": [
+            "6bf57922ef3e8b35a69e10379b0d9862"
+        ]
+    },
+    {
+        "Title": "Double Dragon",
+        "ID": 23834,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/080153.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 0,
+        "Points": 283,
+        "DateModified": "2023-10-30 15:19:03",
+        "ForumTopicID": 23600,
+        "Hashes": [
+            "d94a0a87aa7b26032d49e94bd3837fd8"
+        ]
+    },
+    {
+        "Title": "Far East of Eden: Tengai Makyou Shinden | Far East of Eden: Kabuki Klash",
+        "ID": 9156,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083764.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 6,
+        "Points": 271,
+        "DateModified": "2023-10-24 10:37:54",
+        "ForumTopicID": 23591,
+        "Hashes": [
+            "ead8565baa2255f3273e1996a0666c13"
+        ]
+    },
+    {
+        "Title": "Ironclad: Tesshou Rusha | Choutetsu Brikin'ger",
+        "ID": 9189,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083254.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 4,
+        "Points": 283,
+        "DateModified": "2023-11-07 00:08:37",
+        "ForumTopicID": 23563,
+        "Hashes": [
+            "da499334bc3673fdcad7b2337653088a"
+        ]
+    },
+    {
+        "Title": "King of Fighters '97, The",
+        "ID": 23873,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/085661.png",
+        "NumAchievements": 56,
+        "NumLeaderboards": 16,
+        "Points": 459,
+        "DateModified": "2023-10-06 23:24:55",
+        "ForumTopicID": 23582,
+        "Hashes": [
+            "7d92140289b4fb7be1b8924ed53f8504"
+        ]
+    },
+    {
+        "Title": "King of the Monsters 2 | Next Thing, The",
+        "ID": 23891,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083054.png",
+        "NumAchievements": 20,
+        "NumLeaderboards": 1,
+        "Points": 200,
+        "DateModified": "2023-11-28 19:52:35",
+        "ForumTopicID": 23576,
+        "Hashes": [
+            "cb4d84873734317306f930a638536529"
+        ]
+    },
+    {
+        "Title": "Magician Lord",
+        "ID": 9176,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/082979.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 400,
+        "DateModified": "2023-11-29 05:34:06",
+        "ForumTopicID": 23565,
+        "Hashes": [
+            "a617e93e3693660c8d986a2eee6904cb"
+        ]
+    },
+    {
+        "Title": "Mutation Nation",
+        "ID": 9122,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/082963.png",
+        "NumAchievements": 39,
+        "NumLeaderboards": 8,
+        "Points": 380,
+        "DateModified": "2023-12-14 13:09:08",
+        "ForumTopicID": 23562,
+        "Hashes": [
+            "0ec42cc0f6f6041699fa0456d72295c4"
+        ]
+    },
+    {
+        "Title": "Mutation Nation [Subset - Multi]",
+        "ID": 26990,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/085073.png",
+        "NumAchievements": 38,
+        "NumLeaderboards": 8,
+        "Points": 445,
+        "DateModified": "2023-11-02 19:14:07",
+        "ForumTopicID": 24315,
+        "Hashes": [
+            "293fc12273f61e9681ccaece7d56a814"
+        ]
+    },
+    {
+        "Title": "Neo Drift Out: New Technology",
+        "ID": 23848,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/084197.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 8,
+        "Points": 176,
+        "DateModified": "2023-10-19 01:33:54",
+        "ForumTopicID": 23567,
+        "Hashes": [
+            "a47063094fdb29d6de7d0f414254a089"
+        ]
+    },
+    {
+        "Title": "Pleasure Goal: 5 on 5 Mini Soccer | Futsal: 5 on 5 Mini Soccer",
+        "ID": 23857,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083303.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 1,
+        "Points": 215,
+        "DateModified": "2023-10-04 05:59:52",
+        "ForumTopicID": 23579,
+        "Hashes": [
+            "66ec949bde009681484d2cd7158873d8"
+        ]
+    },
+    {
+        "Title": "Pulstar",
+        "ID": 9164,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/080169.png",
+        "NumAchievements": 20,
+        "NumLeaderboards": 2,
+        "Points": 184,
+        "DateModified": "2023-10-16 02:40:59",
+        "ForumTopicID": 23631,
+        "Hashes": [
+            "cd9c3d37408c31eaaf72a1e10f69fbc4"
+        ]
+    },
+    {
+        "Title": "Puzzle Bobble ~ Bust-A-Move",
+        "ID": 23803,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/082990.png",
+        "NumAchievements": 16,
+        "NumLeaderboards": 0,
+        "Points": 230,
+        "DateModified": "2023-10-09 00:00:36",
+        "ForumTopicID": 23584,
+        "Hashes": [
+            "282ffc9411808cd514c092d2772b5163"
+        ]
+    },
+    {
+        "Title": "Rally Chase | Thrash Rally",
+        "ID": 23849,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083037.png",
+        "NumAchievements": 46,
+        "NumLeaderboards": 7,
+        "Points": 143,
+        "DateModified": "2023-11-04 01:18:58",
+        "ForumTopicID": 23592,
+        "Hashes": [
+            "8dc5545bde96a4debfc6deae3f20aa86"
+        ]
+    },
+    {
+        "Title": "Savage Reign | Fu'un Mokushiroku: Kakutou Sousei",
+        "ID": 23866,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083437.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 4,
+        "Points": 295,
+        "DateModified": "2023-10-25 20:22:48",
+        "ForumTopicID": 23580,
+        "Hashes": [
+            "3df0fc10d4fac02904487e58588b5737",
+            "4f84cf59f190dc881c1916ef5d9ab600"
+        ]
+    },
+    {
+        "Title": "Shougi no Tatsujin: Master of Syougi",
+        "ID": 23868,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/085952.png",
+        "NumAchievements": 189,
+        "NumLeaderboards": 0,
+        "Points": 1769,
+        "DateModified": "2023-11-27 00:12:48",
+        "ForumTopicID": 23571,
+        "Hashes": [
+            "26e2b6677508159f29b408f143ae5b03"
+        ]
+    },
+    {
+        "Title": "Super Sidekicks 3: The Next Glory [Subset - Post '98 Champions]",
+        "ID": 26691,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/084389.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 0,
+        "Points": 350,
+        "DateModified": "2023-10-20 16:55:40",
+        "ForumTopicID": 24075,
+        "Hashes": [
+            "1d357cec975d46eacaff931520ad8fc5"
+        ]
+    },
+    {
+        "Title": "Super Sidekicks 3: The Next Glory | Tokuten-ou 3: Eikou e no Chousen",
+        "ID": 23879,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083067.png",
+        "NumAchievements": 69,
+        "NumLeaderboards": 8,
+        "Points": 525,
+        "DateModified": "2023-10-18 16:57:42",
+        "ForumTopicID": 23603,
+        "Hashes": [
+            "4c8fe6d79fb876a41e5c1609267366d4"
+        ]
+    },
+    {
+        "Title": "Top Hunter: Roddy & Cathy",
+        "ID": 9146,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083834.png",
+        "NumAchievements": 32,
+        "NumLeaderboards": 12,
+        "Points": 325,
+        "DateModified": "2023-10-26 04:39:38",
+        "ForumTopicID": 23581,
+        "Hashes": [
+            "ec04ad9093243f662b7d3dde8005a165"
+        ]
+    },
+    {
+        "Title": "Twinkle Star Sprites",
+        "ID": 23882,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083207.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 57,
+        "Points": 400,
+        "DateModified": "2023-11-12 02:43:04",
+        "ForumTopicID": 23574,
+        "Hashes": [
+            "7c03d6fc2f2c3c121d3ae6cd37905455"
+        ]
+    },
+    {
+        "Title": "WindJammers | Flying Power Disc",
+        "ID": 9162,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/086967.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 0,
+        "Points": 247,
+        "DateModified": "2023-12-18 17:51:28",
+        "ForumTopicID": 24760,
+        "Hashes": [
+            "27d27af1ca0945dfac6e8cb9c75c6d62"
+        ]
+    },
+    {
+        "Title": "World Heroes Perfect",
+        "ID": 23887,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/082984.png",
+        "NumAchievements": 57,
+        "NumLeaderboards": 5,
+        "Points": 333,
+        "DateModified": "2023-10-04 06:00:45",
+        "ForumTopicID": 23564,
+        "Hashes": [
+            "c132d10f1f95f6d22b30e537130667a4"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Xeno Crisis",
+        "ID": 23888,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/085168.png",
+        "NumAchievements": 39,
+        "NumLeaderboards": 3,
+        "Points": 506,
+        "DateModified": "2023-11-07 20:20:58",
+        "ForumTopicID": 23573,
+        "Hashes": [
+            "1d232e073b335d96cfef64bad118065c"
+        ]
+    },
+    {
+        "Title": "~Unlicensed~ Bang\u00b2 Busters",
+        "ID": 23829,
+        "ConsoleID": 56,
+        "ConsoleName": "Neo Geo CD",
+        "ImageIcon": "/Images/083334.png",
+        "NumAchievements": 25,
+        "NumLeaderboards": 2,
+        "Points": 260,
+        "DateModified": "2023-09-29 19:02:25",
+        "ForumTopicID": 23587,
+        "Hashes": [
+            "5577aa46a71bede62cda49284e903b22"
+        ]
+    }
+]

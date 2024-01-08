@@ -1,0 +1,574 @@
+[
+    {
+        "Title": "Ai Chou Aniki",
+        "ID": 16978,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/051833.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 0,
+        "Points": 420,
+        "DateModified": "2023-04-24 13:12:42",
+        "ForumTopicID": 14810,
+        "Hashes": [
+            "e4245d36bee00016808bf295996aa3ef"
+        ]
+    },
+    {
+        "Title": "Akumajou Dracula X: Chi no Rondo",
+        "ID": 4855,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/059447.png",
+        "NumAchievements": 78,
+        "NumLeaderboards": 1,
+        "Points": 655,
+        "DateModified": "2023-09-24 19:30:34",
+        "ForumTopicID": 1045,
+        "Hashes": [
+            "dc5a0e432c9e8a9ab9f514b729b574f3"
+        ]
+    },
+    {
+        "Title": "Bazaru de Gozaru no Game de Gozaru",
+        "ID": 17137,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/057771.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 0,
+        "Points": 132,
+        "DateModified": "2022-05-13 06:41:58",
+        "ForumTopicID": 16473,
+        "Hashes": [
+            "141d90fa244e3d90c03bb2d735afdaaf"
+        ]
+    },
+    {
+        "Title": "Beyond Shadowgate",
+        "ID": 12782,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/053908.png",
+        "NumAchievements": 44,
+        "NumLeaderboards": 0,
+        "Points": 250,
+        "DateModified": "2023-05-31 03:02:40",
+        "ForumTopicID": 6815,
+        "Hashes": [
+            "a9bb49d6cbb338e2195d8735097ccf87"
+        ]
+    },
+    {
+        "Title": "Bishoujo Senshi Sailor Moon",
+        "ID": 18279,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/068525.png",
+        "NumAchievements": 53,
+        "NumLeaderboards": 1,
+        "Points": 85,
+        "DateModified": "2022-08-02 12:08:04",
+        "ForumTopicID": 14490,
+        "Hashes": [
+            "4e578af4d6439c42c4f59ff25b7997d4",
+            "fe14d7bb1b96753954cc7cdab3577d00"
+        ]
+    },
+    {
+        "Title": "Buster Bros.",
+        "ID": 13184,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/024228.png",
+        "NumAchievements": 42,
+        "NumLeaderboards": 3,
+        "Points": 685,
+        "DateModified": "2022-03-30 09:57:13",
+        "ForumTopicID": 8585,
+        "Hashes": [
+            "1cb4520e76f34ede3dd46833183a139f"
+        ]
+    },
+    {
+        "Title": "Cho Aniki",
+        "ID": 14636,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/027810.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 1,
+        "Points": 600,
+        "DateModified": "2023-07-11 17:31:14",
+        "ForumTopicID": 9616,
+        "Hashes": [
+            "45fd2a4d3922dd40d3852d42a0140e84"
+        ]
+    },
+    {
+        "Title": "Cotton: Fantastic Night Dreams",
+        "ID": 9174,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/023286.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 0,
+        "Points": 470,
+        "DateModified": "2023-09-23 13:48:25",
+        "ForumTopicID": 3858,
+        "Hashes": [
+            "1e17a1196f3ba16a35c4dbce71071306"
+        ]
+    },
+    {
+        "Title": "Double Dragon II: The Revenge",
+        "ID": 15590,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/048750.png",
+        "NumAchievements": 18,
+        "NumLeaderboards": 0,
+        "Points": 215,
+        "DateModified": "2023-07-10 22:29:17",
+        "ForumTopicID": 10966,
+        "Hashes": [
+            "c1ab1e21cd2db6c241235196ab2908e5"
+        ]
+    },
+    {
+        "Title": "Dragon Knight & Graffiti",
+        "ID": 22065,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/066293.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 0,
+        "Points": 181,
+        "DateModified": "2023-08-12 04:53:26",
+        "ForumTopicID": 19705,
+        "Hashes": [
+            "f59130faf3ba7ee26aff9ec7214aed1a"
+        ]
+    },
+    {
+        "Title": "Dragon Knight II",
+        "ID": 22081,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/066635.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 0,
+        "Points": 274,
+        "DateModified": "2023-08-12 04:53:49",
+        "ForumTopicID": 19812,
+        "Hashes": [
+            "14a0319e0b87b67cb97523dd1a87b9be"
+        ]
+    },
+    {
+        "Title": "Dynastic Hero, The",
+        "ID": 2603,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/060215.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 0,
+        "Points": 325,
+        "DateModified": "2023-01-09 20:13:54",
+        "ForumTopicID": 19485,
+        "Hashes": [
+            "d120a2d1099b1101a1897b8cb3996f83"
+        ]
+    },
+    {
+        "Title": "Fighting Street",
+        "ID": 9165,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/025446.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 0,
+        "Points": 200,
+        "DateModified": "2023-07-16 18:25:54",
+        "ForumTopicID": 3850,
+        "Hashes": [
+            "1f674638e2aa39c45a955a608b90181a"
+        ]
+    },
+    {
+        "Title": "Final Zone II",
+        "ID": 14104,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/059968.png",
+        "NumAchievements": 14,
+        "NumLeaderboards": 0,
+        "Points": 110,
+        "DateModified": "2022-07-18 08:20:34",
+        "ForumTopicID": 17303,
+        "Hashes": [
+            "8eee6c4f0210aec421fbb1b0fc767b78"
+        ]
+    },
+    {
+        "Title": "Gate of Thunder",
+        "ID": 8866,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/048376.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 0,
+        "Points": 670,
+        "DateModified": "2021-09-01 17:10:24",
+        "ForumTopicID": 3615,
+        "Hashes": [
+            "2fa9f811db92264e29d00135d265e431"
+        ]
+    },
+    {
+        "Title": "G\u00f6tzendiener",
+        "ID": 13414,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/019999.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 0,
+        "Points": 40,
+        "DateModified": "2022-03-22 10:13:18",
+        "ForumTopicID": 15695,
+        "Hashes": [
+            "ac3500d1a4cd9efc7fe97a3bbb120ad0"
+        ]
+    },
+    {
+        "Title": "Gradius II: Gofer no Yabou",
+        "ID": 8865,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/063181.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 1,
+        "Points": 435,
+        "DateModified": "2022-12-11 06:35:51",
+        "ForumTopicID": 3617,
+        "Hashes": [
+            "190ac11eb121e8a47b26dc09502cc0f3"
+        ]
+    },
+    {
+        "Title": "Loom",
+        "ID": 9531,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/052033.png",
+        "NumAchievements": 9,
+        "NumLeaderboards": 0,
+        "Points": 66,
+        "DateModified": "2022-01-15 07:06:20",
+        "ForumTopicID": 14902,
+        "Hashes": [
+            "c2d6798a81893b3003b5e96a343789be"
+        ]
+    },
+    {
+        "Title": "Lords of Thunder",
+        "ID": 8867,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/084150.png",
+        "NumAchievements": 59,
+        "NumLeaderboards": 0,
+        "Points": 620,
+        "DateModified": "2023-08-10 20:23:22",
+        "ForumTopicID": 12871,
+        "Hashes": [
+            "e89383d69ad11d101a6897e11d1754b4"
+        ]
+    },
+    {
+        "Title": "Might and Magic III: Isles of Terra",
+        "ID": 14096,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/050298.png",
+        "NumAchievements": 180,
+        "NumLeaderboards": 0,
+        "Points": 955,
+        "DateModified": "2022-05-02 08:55:22",
+        "ForumTopicID": 14182,
+        "Hashes": [
+            "9a5a705b23f4a9ab99a3d372eec24b83"
+        ]
+    },
+    {
+        "Title": "Motteke Tamago",
+        "ID": 13188,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/074476.png",
+        "NumAchievements": 18,
+        "NumLeaderboards": 0,
+        "Points": 225,
+        "DateModified": "2023-06-04 01:55:51",
+        "ForumTopicID": 21832,
+        "Hashes": [
+            "caecf273fe97d88aeb6d0c8c9fd43cb9"
+        ]
+    },
+    {
+        "Title": "Popful Mail",
+        "ID": 9882,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/060808.png",
+        "NumAchievements": 113,
+        "NumLeaderboards": 53,
+        "Points": 979,
+        "DateModified": "2022-08-29 03:43:44",
+        "ForumTopicID": 17649,
+        "Hashes": [
+            "a0fef3e9b4f74bf51c4cc6dd6b7f9ff7"
+        ]
+    },
+    {
+        "Title": "Puyo Puyo CD",
+        "ID": 13185,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/050432.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 4,
+        "Points": 234,
+        "DateModified": "2023-07-28 03:41:47",
+        "ForumTopicID": 14419,
+        "Hashes": [
+            "c9d0afcd0f73b7d718de90aeac84fa68"
+        ]
+    },
+    {
+        "Title": "Seirei Senshi Spriggan",
+        "ID": 14637,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/064986.png",
+        "NumAchievements": 70,
+        "NumLeaderboards": 2,
+        "Points": 1190,
+        "DateModified": "2023-01-14 19:43:01",
+        "ForumTopicID": 18067,
+        "Hashes": [
+            "fd49772941ca4e58b06b9bea02f588df"
+        ]
+    },
+    {
+        "Title": "Shanghai II",
+        "ID": 13187,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/083880.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 1,
+        "Points": 213,
+        "DateModified": "2023-10-15 12:59:04",
+        "ForumTopicID": 23852,
+        "Hashes": [
+            "1062a9cbaebf758318892535432d9525"
+        ]
+    },
+    {
+        "Title": "Splash Lake",
+        "ID": 7961,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/052596.png",
+        "NumAchievements": 29,
+        "NumLeaderboards": 6,
+        "Points": 316,
+        "DateModified": "2023-08-12 04:54:37",
+        "ForumTopicID": 15086,
+        "Hashes": [
+            "e6910e893ba3028336254113113850a9"
+        ]
+    },
+    {
+        "Title": "Star Parodier",
+        "ID": 14028,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/052569.png",
+        "NumAchievements": 47,
+        "NumLeaderboards": 2,
+        "Points": 351,
+        "DateModified": "2023-08-24 04:09:34",
+        "ForumTopicID": 12378,
+        "Hashes": [
+            "a99711ee026979c45612fc3918509e30"
+        ]
+    },
+    {
+        "Title": "Steam Heart's",
+        "ID": 8560,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/064519.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 0,
+        "Points": 395,
+        "DateModified": "2023-08-18 04:14:32",
+        "ForumTopicID": 7689,
+        "Hashes": [
+            "8c6b0f93db82c2de485e8c63cd65570f"
+        ]
+    },
+    {
+        "Title": "Summer Carnival '92: Alzadick",
+        "ID": 16986,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/069044.png",
+        "NumAchievements": 9,
+        "NumLeaderboards": 5,
+        "Points": 70,
+        "DateModified": "2023-03-06 01:53:22",
+        "ForumTopicID": 20578,
+        "Hashes": [
+            "c279f880841ca158769beb6de6098959"
+        ]
+    },
+    {
+        "Title": "Summer Carnival '93: Nexzr Special",
+        "ID": 9871,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/060213.png",
+        "NumAchievements": 21,
+        "NumLeaderboards": 4,
+        "Points": 230,
+        "DateModified": "2023-10-18 05:02:33",
+        "ForumTopicID": 15653,
+        "Hashes": [
+            "471054c4638ecd62b358ca1e1d4e1773"
+        ]
+    },
+    {
+        "Title": "Sylphia",
+        "ID": 13134,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/018945.png",
+        "NumAchievements": 60,
+        "NumLeaderboards": 0,
+        "Points": 700,
+        "DateModified": "2023-08-18 04:33:27",
+        "ForumTopicID": 7403,
+        "Hashes": [
+            "979c98d2ab744520ba3a8a8d93c0571b"
+        ]
+    },
+    {
+        "Title": "Valis II",
+        "ID": 12892,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/053852.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 0,
+        "Points": 375,
+        "DateModified": "2023-08-12 04:55:45",
+        "ForumTopicID": 15440,
+        "Hashes": [
+            "8c5932e35676429dcf9ed7331b941f58"
+        ]
+    },
+    {
+        "Title": "Valis III",
+        "ID": 12893,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/069418.png",
+        "NumAchievements": 37,
+        "NumLeaderboards": 1,
+        "Points": 375,
+        "DateModified": "2023-08-18 03:04:54",
+        "ForumTopicID": 20634,
+        "Hashes": [
+            "4dcba80f9d31634d90447c66e033d062"
+        ]
+    },
+    {
+        "Title": "Ys IV: The Dawn of Ys",
+        "ID": 8839,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/009025.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 0,
+        "Points": 666,
+        "DateModified": "2022-12-30 14:21:05",
+        "ForumTopicID": 3612,
+        "Hashes": [
+            "b77ae59195812ed30d1d5dd29cee1510",
+            "f17f1c4108d55ca132515fa0bab27088"
+        ]
+    },
+    {
+        "Title": "Ys: Book I & II",
+        "ID": 6700,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/041026.png",
+        "NumAchievements": 142,
+        "NumLeaderboards": 0,
+        "Points": 1200,
+        "DateModified": "2023-07-28 16:43:00",
+        "ForumTopicID": 3587,
+        "Hashes": [
+            "e9f07a66e2e793bdbf8538ac110bfb7c"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Ultimate Rally Club",
+        "ID": 20417,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/061467.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 5,
+        "Points": 125,
+        "DateModified": "2022-09-10 17:44:28",
+        "ForumTopicID": 18014,
+        "Hashes": [
+            "f33ed08d643f41b4ec2764d095b61a06"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Xump 2: Back to Space",
+        "ID": 25578,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/081304.png",
+        "NumAchievements": 63,
+        "NumLeaderboards": 1,
+        "Points": 481,
+        "DateModified": "2023-09-04 05:21:46",
+        "ForumTopicID": 23017,
+        "Hashes": [
+            "42f5fb0c0af9a5f590286850028de9e8"
+        ]
+    },
+    {
+        "Title": "~Unlicensed~ Hi-Leg Fantasy",
+        "ID": 18644,
+        "ConsoleID": 76,
+        "ConsoleName": "PC Engine CD",
+        "ImageIcon": "/Images/083201.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 0,
+        "Points": 150,
+        "DateModified": "2023-12-04 01:45:04",
+        "ForumTopicID": 24003,
+        "Hashes": [
+            "ed4c95b232098f09ed58c0182fd84f2d"
+        ]
+    }
+]

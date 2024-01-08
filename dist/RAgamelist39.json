@@ -1,0 +1,1079 @@
+[
+    {
+        "Title": "Akumajou Dracula X: Gekka no Yasoukyoku",
+        "ID": 14514,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/085765.png",
+        "NumAchievements": 90,
+        "NumLeaderboards": 5,
+        "Points": 675,
+        "DateModified": "2022-08-20 07:38:42",
+        "ForumTopicID": 10871,
+        "Hashes": [
+            "b38060f45ab282ea629c91d630f81422",
+            "19410380dcda0b770bd766836ce9f032",
+            "eb35b47de3ddc35bd94ac196daea689a"
+        ]
+    },
+    {
+        "Title": "Albert Odyssey: Legend of Eldean",
+        "ID": 14519,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/048895.png",
+        "NumAchievements": 64,
+        "NumLeaderboards": 0,
+        "Points": 481,
+        "DateModified": "2023-09-27 07:44:54",
+        "ForumTopicID": 23254,
+        "Hashes": [
+            "4dcb5872499a6a9286a9b1b15f867f74"
+        ]
+    },
+    {
+        "Title": "Astal",
+        "ID": 14511,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/046535.png",
+        "NumAchievements": 32,
+        "NumLeaderboards": 17,
+        "Points": 420,
+        "DateModified": "2022-08-12 18:14:42",
+        "ForumTopicID": 16583,
+        "Hashes": [
+            "ee97ecb29151e4304b6bcbdbf75e47ef"
+        ]
+    },
+    {
+        "Title": "Astra Superstars",
+        "ID": 3762,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/043384.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 0,
+        "Points": 245,
+        "DateModified": "2022-08-23 14:24:54",
+        "ForumTopicID": 12811,
+        "Hashes": [
+            "1b70272950bc84cc3ccbb2b6a55c61ca"
+        ]
+    },
+    {
+        "Title": "Baroque",
+        "ID": 14534,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/081404.png",
+        "NumAchievements": 54,
+        "NumLeaderboards": 0,
+        "Points": 321,
+        "DateModified": "2023-08-31 00:30:24",
+        "ForumTopicID": 23045,
+        "Hashes": [
+            "9a61a47419b731e3d867da69be3b33e2"
+        ]
+    },
+    {
+        "Title": "Bug!",
+        "ID": 14520,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/041169.png",
+        "NumAchievements": 30,
+        "NumLeaderboards": 7,
+        "Points": 420,
+        "DateModified": "2022-11-25 18:33:39",
+        "ForumTopicID": 12055,
+        "Hashes": [
+            "106b9e4b6abdf1f465be33eb055f17ea"
+        ]
+    },
+    {
+        "Title": "Bulk Slash",
+        "ID": 14572,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/052110.png",
+        "NumAchievements": 33,
+        "NumLeaderboards": 2,
+        "Points": 426,
+        "DateModified": "2023-05-01 08:15:29",
+        "ForumTopicID": 14870,
+        "Hashes": [
+            "173eb41e4c5416c59d823c8d30fb7e99",
+            "fc0c515563030d8183b2337297198ca7"
+        ]
+    },
+    {
+        "Title": "Burning Rangers",
+        "ID": 14530,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/033180.png",
+        "NumAchievements": 52,
+        "NumLeaderboards": 6,
+        "Points": 575,
+        "DateModified": "2023-06-19 19:13:53",
+        "ForumTopicID": 14467,
+        "Hashes": [
+            "d03df4f7cb76753fd6160b6c564a519a"
+        ]
+    },
+    {
+        "Title": "Clockwork Knight",
+        "ID": 14516,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/044274.png",
+        "NumAchievements": 63,
+        "NumLeaderboards": 5,
+        "Points": 420,
+        "DateModified": "2023-10-10 10:14:21",
+        "ForumTopicID": 10918,
+        "Hashes": [
+            "80dccad3059a876ffe698c06f57f6c2e"
+        ]
+    },
+    {
+        "Title": "Croc: Legend of the Gobbos",
+        "ID": 8849,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/060149.png",
+        "NumAchievements": 83,
+        "NumLeaderboards": 0,
+        "Points": 776,
+        "DateModified": "2023-05-16 10:20:42",
+        "ForumTopicID": 17380,
+        "Hashes": [
+            "068946371d4a8944c86260fcbed2a7b8"
+        ]
+    },
+    {
+        "Title": "D | D no Shokutaku",
+        "ID": 19524,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/067974.png",
+        "NumAchievements": 24,
+        "NumLeaderboards": 1,
+        "Points": 66,
+        "DateModified": "2023-03-07 22:56:09",
+        "ForumTopicID": 20323,
+        "Hashes": [
+            "303519c55cbd74fd2dfa64f976d2183d",
+            "a3a553c7655e0cfe3026e487b2e50c7d"
+        ]
+    },
+    {
+        "Title": "Daytona USA",
+        "ID": 14555,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/049443.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 18,
+        "Points": 367,
+        "DateModified": "2023-06-29 16:26:46",
+        "ForumTopicID": 14069,
+        "Hashes": [
+            "fd304d329f53fd9ee0009869daab43da"
+        ]
+    },
+    {
+        "Title": "Daytona USA [Subset - Maniac Mode]",
+        "ID": 22864,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/069720.png",
+        "NumAchievements": 10,
+        "NumLeaderboards": 18,
+        "Points": 300,
+        "DateModified": "2023-03-13 02:22:46",
+        "ForumTopicID": 20764,
+        "Hashes": [
+            "4a5d93bcaf737b0b58f9cb9438907c37"
+        ]
+    },
+    {
+        "Title": "Dead or Alive",
+        "ID": 7786,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/062550.png",
+        "NumAchievements": 50,
+        "NumLeaderboards": 4,
+        "Points": 790,
+        "DateModified": "2022-11-22 04:05:06",
+        "ForumTopicID": 18423,
+        "Hashes": [
+            "10a10eda585e8c1d483f89dfd5bc3fcc",
+            "f7b95a01fb1e635b0bfec4665930303c"
+        ]
+    },
+    {
+        "Title": "DeJig: Aqua World",
+        "ID": 14734,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/028266.png",
+        "NumAchievements": 20,
+        "NumLeaderboards": 0,
+        "Points": 50,
+        "DateModified": "2019-12-04 21:13:15",
+        "ForumTopicID": 9700,
+        "Hashes": [
+            "eb2f9a20fb7fd30fae00ba9fe1592fd2"
+        ]
+    },
+    {
+        "Title": "DeJig: Lassen - Art Collection",
+        "ID": 14858,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/028889.png",
+        "NumAchievements": 21,
+        "NumLeaderboards": 0,
+        "Points": 40,
+        "DateModified": "2019-12-30 06:27:44",
+        "ForumTopicID": 9830,
+        "Hashes": [
+            "f7ddb753673e55b6b952da7f729e8e8c"
+        ]
+    },
+    {
+        "Title": "DeJig: McKnight - Art Collection",
+        "ID": 14859,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/028890.png",
+        "NumAchievements": 21,
+        "NumLeaderboards": 0,
+        "Points": 50,
+        "DateModified": "2023-09-09 14:44:43",
+        "ForumTopicID": 9864,
+        "Hashes": [
+            "d8ad98ff399147de3e62ffff20a2bb13"
+        ]
+    },
+    {
+        "Title": "DeJig: Tin Toy",
+        "ID": 14737,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/028270.png",
+        "NumAchievements": 20,
+        "NumLeaderboards": 0,
+        "Points": 50,
+        "DateModified": "2023-09-09 14:48:05",
+        "ForumTopicID": 9717,
+        "Hashes": [
+            "3ce75a6ce82eab3c26f856a978be7896"
+        ]
+    },
+    {
+        "Title": "Die Hard Arcade | Dynamite Deka",
+        "ID": 14570,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/034327.png",
+        "NumAchievements": 21,
+        "NumLeaderboards": 5,
+        "Points": 231,
+        "DateModified": "2022-11-29 17:50:14",
+        "ForumTopicID": 19103,
+        "Hashes": [
+            "4de2151a6ce927a4a021a354d698df07"
+        ]
+    },
+    {
+        "Title": "Digimon | Digital Monster Ver. S: Digimon Tamers",
+        "ID": 16131,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/060261.png",
+        "NumAchievements": 40,
+        "NumLeaderboards": 1,
+        "Points": 450,
+        "DateModified": "2022-08-12 13:15:58",
+        "ForumTopicID": 11711,
+        "Hashes": [
+            "9da94aed874023e1a749c4adbff29a96"
+        ]
+    },
+    {
+        "Title": "Dragon Ball Z: Shin Butoden",
+        "ID": 5998,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/078950.png",
+        "NumAchievements": 46,
+        "NumLeaderboards": 0,
+        "Points": 300,
+        "DateModified": "2023-10-15 22:30:06",
+        "ForumTopicID": 22719,
+        "Hashes": [
+            "d2277fef213d910a199fc3fa2d098d19"
+        ]
+    },
+    {
+        "Title": "Dragon Force",
+        "ID": 14512,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/041203.png",
+        "NumAchievements": 223,
+        "NumLeaderboards": 18,
+        "Points": 1712,
+        "DateModified": "2023-10-28 01:17:40",
+        "ForumTopicID": 24813,
+        "Hashes": [
+            "acb9d7194d31fb2ea6967fce3558efe1"
+        ]
+    },
+    {
+        "Title": "Duke Nukem 3D",
+        "ID": 4273,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/043347.png",
+        "NumAchievements": 71,
+        "NumLeaderboards": 0,
+        "Points": 480,
+        "DateModified": "2022-05-21 23:06:24",
+        "ForumTopicID": 12789,
+        "Hashes": [
+            "34f591b72e8e97ef76ba0645027af01f"
+        ]
+    },
+    {
+        "Title": "Earthworm Jim 2",
+        "ID": 20429,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/081442.png",
+        "NumAchievements": 47,
+        "NumLeaderboards": 5,
+        "Points": 429,
+        "DateModified": "2023-10-26 08:23:54",
+        "ForumTopicID": 22849,
+        "Hashes": [
+            "bb974f1d382d3432870265dad752a883",
+            "c50356d8b9ed7b90d537d426ed191290"
+        ]
+    },
+    {
+        "Title": "Fighters Megamix",
+        "ID": 10234,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/033151.png",
+        "NumAchievements": 87,
+        "NumLeaderboards": 3,
+        "Points": 700,
+        "DateModified": "2023-06-05 09:17:08",
+        "ForumTopicID": 10622,
+        "Hashes": [
+            "dad4e684cd0c37efd0929e42f505415d"
+        ]
+    },
+    {
+        "Title": "Fighting Vipers",
+        "ID": 6122,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/033140.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 0,
+        "Points": 385,
+        "DateModified": "2021-10-04 08:29:53",
+        "ForumTopicID": 10621,
+        "Hashes": [
+            "c571e8b0d34cc86e24fb819e9908c95c"
+        ]
+    },
+    {
+        "Title": "Golden Axe: The Duel",
+        "ID": 14536,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/049193.png",
+        "NumAchievements": 36,
+        "NumLeaderboards": 0,
+        "Points": 291,
+        "DateModified": "2023-03-25 07:36:09",
+        "ForumTopicID": 12817,
+        "Hashes": [
+            "cf6306084a34becc419063beac36c169"
+        ]
+    },
+    {
+        "Title": "Guardian Heroes",
+        "ID": 14513,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/033154.png",
+        "NumAchievements": 43,
+        "NumLeaderboards": 0,
+        "Points": 420,
+        "DateModified": "2021-08-09 12:20:06",
+        "ForumTopicID": 13583,
+        "Hashes": [
+            "a237d6119f2a6f99122abc497e48e28e"
+        ]
+    },
+    {
+        "Title": "Jung Rhythm",
+        "ID": 25340,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/082357.png",
+        "NumAchievements": 21,
+        "NumLeaderboards": 6,
+        "Points": 341,
+        "DateModified": "2023-10-09 22:10:28",
+        "ForumTopicID": 23305,
+        "Hashes": [
+            "04452f6dcccfcfc6ccdf3be31109454a"
+        ]
+    },
+    {
+        "Title": "Kyuutenkai: Fantastic Pinball",
+        "ID": 18531,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/053157.png",
+        "NumAchievements": 45,
+        "NumLeaderboards": 3,
+        "Points": 375,
+        "DateModified": "2022-04-12 15:47:02",
+        "ForumTopicID": 15254,
+        "Hashes": [
+            "f6843d9de6ec670e9ab4ee64b44874ce"
+        ]
+    },
+    {
+        "Title": "Last Bronx",
+        "ID": 8638,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/066395.png",
+        "NumAchievements": 41,
+        "NumLeaderboards": 1,
+        "Points": 451,
+        "DateModified": "2021-10-31 00:44:09",
+        "ForumTopicID": 11136,
+        "Hashes": [
+            "3ad8be8d780647aedd17c61125474920"
+        ]
+    },
+    {
+        "Title": "Linkle Liver Story",
+        "ID": 14643,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/027441.png",
+        "NumAchievements": 65,
+        "NumLeaderboards": 0,
+        "Points": 375,
+        "DateModified": "2023-02-15 00:41:33",
+        "ForumTopicID": 9491,
+        "Hashes": [
+            "2f64a277f265ab19a1d0ba51f326337c"
+        ]
+    },
+    {
+        "Title": "Lunacy | Torico",
+        "ID": 17864,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/047177.png",
+        "NumAchievements": 26,
+        "NumLeaderboards": 0,
+        "Points": 74,
+        "DateModified": "2021-10-14 22:55:45",
+        "ForumTopicID": 14044,
+        "Hashes": [
+            "2e09cf0ead17dbf58df873054116c6e3",
+            "3daa388d813cc69f9ae359d1f5bc3b4b"
+        ]
+    },
+    {
+        "Title": "Lupin III: Pyramid no Kenja",
+        "ID": 20465,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/061713.png",
+        "NumAchievements": 55,
+        "NumLeaderboards": 4,
+        "Points": 380,
+        "DateModified": "2023-11-03 23:02:59",
+        "ForumTopicID": 22908,
+        "Hashes": [
+            "742e8eaa9328b8b34b3ed87ac99b210e"
+        ]
+    },
+    {
+        "Title": "Mansion of Hidden Souls, The",
+        "ID": 17212,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/063956.png",
+        "NumAchievements": 15,
+        "NumLeaderboards": 0,
+        "Points": 40,
+        "DateModified": "2023-04-26 05:14:03",
+        "ForumTopicID": 19034,
+        "Hashes": [
+            "54d133fe827411aee4e6ed576dbfa701"
+        ]
+    },
+    {
+        "Title": "Mega Man 8: Anniversary Collector's Edition",
+        "ID": 14509,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/054971.png",
+        "NumAchievements": 53,
+        "NumLeaderboards": 1,
+        "Points": 490,
+        "DateModified": "2023-05-25 18:14:49",
+        "ForumTopicID": 9412,
+        "Hashes": [
+            "96fb18cbfed4447c30fb1ff3ff64557b"
+        ]
+    },
+    {
+        "Title": "Mega Man 8: Anniversary Collector's Edition [Subset - Mega Ball Only]",
+        "ID": 26656,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/084222.png",
+        "NumAchievements": 38,
+        "NumLeaderboards": 0,
+        "Points": 449,
+        "DateModified": "2023-10-21 18:35:12",
+        "ForumTopicID": 24005,
+        "Hashes": [
+            "6da464e225d43d3430d5237bcc92ec68"
+        ]
+    },
+    {
+        "Title": "Mega Man X4",
+        "ID": 4304,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/056203.png",
+        "NumAchievements": 74,
+        "NumLeaderboards": 0,
+        "Points": 710,
+        "DateModified": "2022-03-12 01:51:01",
+        "ForumTopicID": 12592,
+        "Hashes": [
+            "7e508c16f0f84b46c43f5f3d19262223"
+        ]
+    },
+    {
+        "Title": "Metal Slug: Super Vehicle - 001",
+        "ID": 9431,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/062138.png",
+        "NumAchievements": 46,
+        "NumLeaderboards": 0,
+        "Points": 565,
+        "DateModified": "2022-04-03 07:24:25",
+        "ForumTopicID": 11712,
+        "Hashes": [
+            "689ee8912dab4bd1e74069ef22007363"
+        ]
+    },
+    {
+        "Title": "Mr. Bones",
+        "ID": 14539,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/060948.png",
+        "NumAchievements": 51,
+        "NumLeaderboards": 0,
+        "Points": 510,
+        "DateModified": "2023-03-29 00:18:29",
+        "ForumTopicID": 17751,
+        "Hashes": [
+            "09f7aa2e40a0e9b9a36874ad097b5dc1",
+            "d07a5f41d500f8fab75f822f09afdc78"
+        ]
+    },
+    {
+        "Title": "NiGHTS into Dreams...",
+        "ID": 14527,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/059142.png",
+        "NumAchievements": 22,
+        "NumLeaderboards": 7,
+        "Points": 215,
+        "DateModified": "2021-01-11 12:16:06",
+        "ForumTopicID": 11998,
+        "Hashes": [
+            "6a6b248da16d37053a6e24e100d2a42b"
+        ]
+    },
+    {
+        "Title": "Panzer Dragoon",
+        "ID": 14504,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/054781.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 0,
+        "Points": 475,
+        "DateModified": "2023-08-18 04:28:13",
+        "ForumTopicID": 9409,
+        "Hashes": [
+            "cb922187592d676e4905af171b6598f2"
+        ]
+    },
+    {
+        "Title": "Panzer Dragoon II Zwei",
+        "ID": 14505,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/035287.png",
+        "NumAchievements": 31,
+        "NumLeaderboards": 0,
+        "Points": 485,
+        "DateModified": "2023-08-18 04:27:02",
+        "ForumTopicID": 9410,
+        "Hashes": [
+            "e1a69311509e6afaace2575eb2fe0fe9"
+        ]
+    },
+    {
+        "Title": "Panzer Dragoon Saga",
+        "ID": 14506,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/074724.png",
+        "NumAchievements": 107,
+        "NumLeaderboards": 2,
+        "Points": 950,
+        "DateModified": "2023-10-02 09:27:49",
+        "ForumTopicID": 9411,
+        "Hashes": [
+            "666d189c39e1a2ebc3f7261b330e67d3",
+            "669e1e85e6c8d8fb7f6b0529dede4192",
+            "b88d6fbea9087b57afa77502ed03a1bf",
+            "ce8b703005d83989e9e4db2c2508411f"
+        ]
+    },
+    {
+        "Title": "Powerslave | Exhumed",
+        "ID": 9989,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/077491.png",
+        "NumAchievements": 98,
+        "NumLeaderboards": 0,
+        "Points": 521,
+        "DateModified": "2021-12-07 07:45:47",
+        "ForumTopicID": 13526,
+        "Hashes": [
+            "5fdb09b1a449a7cfbc150c417034c43b"
+        ]
+    },
+    {
+        "Title": "Quake",
+        "ID": 3718,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/055087.png",
+        "NumAchievements": 72,
+        "NumLeaderboards": 0,
+        "Points": 377,
+        "DateModified": "2023-08-21 23:41:25",
+        "ForumTopicID": 15872,
+        "Hashes": [
+            "b8c0b16255e49618354cf8af27ffe9f8",
+            "dbba361555140eb51b80ed82d5223530"
+        ]
+    },
+    {
+        "Title": "Rabbit",
+        "ID": 8031,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/070041.png",
+        "NumAchievements": 21,
+        "NumLeaderboards": 0,
+        "Points": 175,
+        "DateModified": "2021-04-27 17:39:47",
+        "ForumTopicID": 11713,
+        "Hashes": [
+            "1ef4318232c4a1b6b23baf805c1f4f94"
+        ]
+    },
+    {
+        "Title": "Radiant Silvergun",
+        "ID": 14571,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/067810.png",
+        "NumAchievements": 61,
+        "NumLeaderboards": 8,
+        "Points": 562,
+        "DateModified": "2023-04-27 20:44:35",
+        "ForumTopicID": 9577,
+        "Hashes": [
+            "528573764eab41c4c3c8b3befdbfdf6e"
+        ]
+    },
+    {
+        "Title": "Resident Evil",
+        "ID": 7140,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/084885.png",
+        "NumAchievements": 94,
+        "NumLeaderboards": 0,
+        "Points": 743,
+        "DateModified": "2023-10-30 15:24:18",
+        "ForumTopicID": 12227,
+        "Hashes": [
+            "458ca29356b89893a582b073567cd36f",
+            "034a539d49e42a560d5af611c5364415"
+        ]
+    },
+    {
+        "Title": "Rockman X3",
+        "ID": 18273,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/056202.png",
+        "NumAchievements": 60,
+        "NumLeaderboards": 0,
+        "Points": 519,
+        "DateModified": "2023-08-28 14:44:55",
+        "ForumTopicID": 14506,
+        "Hashes": [
+            "1b1029dbc188b8d47cdb3827be0aff28"
+        ]
+    },
+    {
+        "Title": "Saturn Bomberman",
+        "ID": 14510,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/049619.png",
+        "NumAchievements": 55,
+        "NumLeaderboards": 0,
+        "Points": 300,
+        "DateModified": "2022-09-07 13:10:25",
+        "ForumTopicID": 9418,
+        "Hashes": [
+            "f0f679839738044dcaebc3bde3e28925"
+        ]
+    },
+    {
+        "Title": "Segata Sanshirou: Shinken Yuugi",
+        "ID": 18281,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/050998.png",
+        "NumAchievements": 20,
+        "NumLeaderboards": 0,
+        "Points": 212,
+        "DateModified": "2023-09-20 08:24:07",
+        "ForumTopicID": 14499,
+        "Hashes": [
+            "3e64a495a6034cad43c3fb7a5f962364"
+        ]
+    },
+    {
+        "Title": "Shanghai: Triple-Threat",
+        "ID": 14561,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/043907.png",
+        "NumAchievements": 146,
+        "NumLeaderboards": 0,
+        "Points": 715,
+        "DateModified": "2023-07-22 17:06:06",
+        "ForumTopicID": 12936,
+        "Hashes": [
+            "b4d6a5dd218520a93e5b7598a4a32e8a"
+        ]
+    },
+    {
+        "Title": "Shining Force III",
+        "ID": 14541,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/067486.png",
+        "NumAchievements": 178,
+        "NumLeaderboards": 0,
+        "Points": 1295,
+        "DateModified": "2023-05-26 21:45:18",
+        "ForumTopicID": 11367,
+        "Hashes": [
+            "0f6020f7e892e62164a4eaab926db893",
+            "124c3472536ac3992eae135810c41f83",
+            "2fcbcffd54e64f9eeeb5b9cfbf3a332e",
+            "5e1491983cdc6d79dbea7d7022e0b862",
+            "5eab3f56859038663a3b4a49d0fe1363",
+            "b4d3f8bc672827c63bb1d8ade52b26f3",
+            "bbd7eab9a04a9a3534e8eb87d5ff55a6",
+            "c26514068bb3eb9f0cd11d1444bad004",
+            "9d952fefd30181061f394d2376197a47"
+        ]
+    },
+    {
+        "Title": "Shining the Holy Ark",
+        "ID": 14545,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/067625.png",
+        "NumAchievements": 86,
+        "NumLeaderboards": 0,
+        "Points": 654,
+        "DateModified": "2024-01-07 17:19:53",
+        "ForumTopicID": 11293,
+        "Hashes": [
+            "07c3e8ef54fb3279b52945c9888e7444",
+            "909e18d343d9564da0318c4fb66695ed",
+            "91616ea99bd661ef9a785694de2f7d68"
+        ]
+    },
+    {
+        "Title": "Shining Wisdom",
+        "ID": 14544,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/079407.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 0,
+        "Points": 380,
+        "DateModified": "2023-08-13 17:21:27",
+        "ForumTopicID": 9943,
+        "Hashes": [
+            "5a522978f5d362e7e51a55c0981d5f01",
+            "afc8caec31ce643c35b938135746f9d7",
+            "c0d0efd675b0e77731b38a66f5425a66"
+        ]
+    },
+    {
+        "Title": "Shinobi Legions | Shinobi X",
+        "ID": 14546,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/042724.png",
+        "NumAchievements": 37,
+        "NumLeaderboards": 0,
+        "Points": 600,
+        "DateModified": "2022-07-19 17:56:07",
+        "ForumTopicID": 12089,
+        "Hashes": [
+            "1523141ab715aa194dda97c20f34c7e5",
+            "6373056ccba924f3c1bb3c34aa8a15dc"
+        ]
+    },
+    {
+        "Title": "SimCity 2000",
+        "ID": 1243,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/072534.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 0,
+        "Points": 120,
+        "DateModified": "2022-11-10 14:26:08",
+        "ForumTopicID": 13674,
+        "Hashes": [
+            "9e3610e0781a59e908283024c20f9c87"
+        ]
+    },
+    {
+        "Title": "Sonic 3D Blast",
+        "ID": 14547,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/062926.png",
+        "NumAchievements": 77,
+        "NumLeaderboards": 23,
+        "Points": 570,
+        "DateModified": "2023-04-24 16:35:42",
+        "ForumTopicID": 16260,
+        "Hashes": [
+            "f17f893fa4dbb83e7999aee71fd2bb2e"
+        ]
+    },
+    {
+        "Title": "Sonic Jam",
+        "ID": 14548,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/072252.png",
+        "NumAchievements": 331,
+        "NumLeaderboards": 165,
+        "Points": 2842,
+        "DateModified": "2023-10-07 12:30:54",
+        "ForumTopicID": 11213,
+        "Hashes": [
+            "4cc79d222e326fe2ba906930673c7466",
+            "9b4fffb94f0b07db06ab778b41506a8a"
+        ]
+    },
+    {
+        "Title": "Sonic R",
+        "ID": 14549,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/031272.png",
+        "NumAchievements": 60,
+        "NumLeaderboards": 20,
+        "Points": 500,
+        "DateModified": "2023-09-07 22:27:53",
+        "ForumTopicID": 9479,
+        "Hashes": [
+            "1ce911e19fedb4565fe29d1ea2005a26"
+        ]
+    },
+    {
+        "Title": "Steep Slope Sliders",
+        "ID": 6565,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/082311.png",
+        "NumAchievements": 27,
+        "NumLeaderboards": 0,
+        "Points": 280,
+        "DateModified": "2023-09-12 11:52:31",
+        "ForumTopicID": 23249,
+        "Hashes": [
+            "a9fe1cc3159d653f9f7b1800e4e84890"
+        ]
+    },
+    {
+        "Title": "Virtua Fighter 2",
+        "ID": 14565,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/045216.png",
+        "NumAchievements": 77,
+        "NumLeaderboards": 0,
+        "Points": 825,
+        "DateModified": "2022-04-14 06:34:11",
+        "ForumTopicID": 13284,
+        "Hashes": [
+            "6de9f3854cbb39503f429ba93a4c0ee4"
+        ]
+    },
+    {
+        "Title": "Virtua Fighter Remix",
+        "ID": 22577,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/068647.png",
+        "NumAchievements": 34,
+        "NumLeaderboards": 0,
+        "Points": 415,
+        "DateModified": "2023-03-01 22:48:09",
+        "ForumTopicID": 20570,
+        "Hashes": [
+            "6fc3d526f2480ae335a0aba97a6159a2"
+        ]
+    },
+    {
+        "Title": "Virtual-On: Cyber Troopers",
+        "ID": 14568,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/048899.png",
+        "NumAchievements": 19,
+        "NumLeaderboards": 2,
+        "Points": 190,
+        "DateModified": "2023-05-01 03:35:25",
+        "ForumTopicID": 14960,
+        "Hashes": [
+            "a7dc126a2f782f48105d76f7feda9ebd"
+        ]
+    },
+    {
+        "Title": "Yakyuuken Special, The: Kon'ya wa 12-kaisen!!",
+        "ID": 20266,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/060805.png",
+        "NumAchievements": 13,
+        "NumLeaderboards": 0,
+        "Points": 85,
+        "DateModified": "2022-09-01 02:33:30",
+        "ForumTopicID": 17662,
+        "Hashes": [
+            "ab23e4d8d4af873a7ae224a24acc26fa"
+        ]
+    },
+    {
+        "Title": "Zoop",
+        "ID": 17157,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/061605.png",
+        "NumAchievements": 17,
+        "NumLeaderboards": 0,
+        "Points": 320,
+        "DateModified": "2022-09-12 03:49:00",
+        "ForumTopicID": 17982,
+        "Hashes": [
+            "7b14583698bb6892a6d12bb805740982"
+        ]
+    },
+    {
+        "Title": "~Demo~ Christmas NiGHTS into Dreams...",
+        "ID": 14531,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/049758.png",
+        "NumAchievements": 14,
+        "NumLeaderboards": 3,
+        "Points": 92,
+        "DateModified": "2022-02-11 22:50:51",
+        "ForumTopicID": 14216,
+        "Hashes": [
+            "f3349305b47dec32eb9b6b2416f5382e"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ ~Demo~ Sonic Z-Treme",
+        "ID": 10017,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/039460.png",
+        "NumAchievements": 7,
+        "NumLeaderboards": 0,
+        "Points": 24,
+        "DateModified": "2023-03-01 04:04:01",
+        "ForumTopicID": 20548,
+        "Hashes": [
+            "b267f589e0c91f23bed9ddbcbb26889f"
+        ]
+    },
+    {
+        "Title": "~Homebrew~ Cubecat",
+        "ID": 25008,
+        "ConsoleID": 39,
+        "ConsoleName": "Saturn",
+        "ImageIcon": "/Images/076206.png",
+        "NumAchievements": 12,
+        "NumLeaderboards": 3,
+        "Points": 60,
+        "DateModified": "2023-07-01 21:49:59",
+        "ForumTopicID": 22346,
+        "Hashes": [
+            "2765caa431734aa758c9dac773341f6f"
+        ]
+    }
+]
