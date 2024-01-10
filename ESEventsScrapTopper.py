@@ -11,7 +11,7 @@ import subprocess
 
 class ScreenScraperAPI:
     def __init__(self, api_params, systems_dict):
-        self.base_url = "https://www.screenscraper.fr/api2"
+        self.base_url = "https://api.screenscraper.fr/api2"
         self.api_params = api_params
         self.systems_dict = systems_dict
 
@@ -35,7 +35,9 @@ class ScreenScraperAPI:
             jeu = response["response"].get("jeu")
             if jeu and "medias" in jeu:
                 for media in jeu["medias"]:
-                    if media["type"] == "marquee":
+                    if media["type"] == "screenmarquee":
+                        return media, ''
+                    elif media["type"] == "marquee":
                         return media, ''
         return None, error_message
 
@@ -159,9 +161,9 @@ def scrape_marquee(game_system, game_title, game_name, marquee_path, full_marque
 
     # Préparation des paramètres pour l'appel API
     api_params = {
-        'devid': 'Nelfe',
+        'devid': '',
         'devpassword': '',
-        'softname': '',
+        'softname': 'ESEventsScrapTopper',
         'output': 'json',
         'ssid': es_settings['ScreenScraperUser'],
         'sspassword': es_settings['ScreenScraperPass'],

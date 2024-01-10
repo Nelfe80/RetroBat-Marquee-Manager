@@ -5,7 +5,7 @@ import json
 import logging
 
 def get_systems_from_api(es_settings):
-    api_url = "https://www.screenscraper.fr/api2/systemesListe.php"
+    api_url = "https://api.screenscraper.fr/api2/systemesListe.php"
     params = {
         'devid': '',
         'devpassword': '',
