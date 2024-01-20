@@ -72,7 +72,7 @@ function move_rectangle_step(x, y, w, h, opacity, end_x, end_y, end_opacity, ste
     local next_y = y + step_y
     local next_opacity = opacity + step_opacity
 
-    draw_rectangle(next_x, next_y, w, h, next_opacity)
+    gfx_draw_rectangle(next_x, next_y, w, h, next_opacity)
     mp.add_timeout(0.02, function()
         move_rectangle_step(next_x, next_y, w, h, next_opacity, end_x, end_y, end_opacity, step_x, step_y, step_opacity, current_step + 1, total_steps, callback)
     end)
@@ -96,6 +96,19 @@ function draw_rectangle(x, y, w, h, opacity_decimal)
     local screen_width = mp.get_property_number("osd-width", 1920)
     local screen_height = mp.get_property_number("osd-height", 1080)
 
+    mp.set_osd_ass(screen_width, screen_height, ass_draw)
+end
+
+
+function gfx_draw_rectangle(x, y, w, h, opacity_decimal)
+    local opacity_hex = math.floor(opacity_decimal * 255)
+    opacity_hex = string.format("%02X", 255 - opacity_hex) -- Inversion pour le format ASS (0xFF est transparent, 0x00 est opaque)
+    -- Dessin du rectangle en utilisant la syntaxe ASS
+    local ass_draw = string.format("{\\an7\\bord0\\shad0\\1c&H000000&\\1a&H%s&\\p1}m %d %d l %d %d %d %d %d %d{\\p0}",opacity_hex, x, y, x + w, y, x + w, y + h, x, y + h)
+    -- Définition de la largeur et de la hauteur de l'écran pour l'OSD
+    local screen_width = mp.get_property_number("osd-width", 1920)
+    local screen_height = mp.get_property_number("osd-height", 1080)
+    -- Affichage du rectangle sur l'OSD
     mp.set_osd_ass(screen_width, screen_height, ass_draw)
 end
 
@@ -143,38 +156,6 @@ function display_text(name, texte, police, taille, couleur, x, y, callback)
     if callback then callback() end
 end
 
-function move_text_step(name, texte, police, taille, couleur, x, y, end_x, end_y, step_x, step_y, current_step, total_steps, callback)
-    if current_step > total_steps then
-        if callback then callback() end
-        return
-    end
-
-    local next_x = x + step_x
-    local next_y = y + step_y
-    display_text(name, texte, police, taille, couleur, next_x, next_y)
-
-    mp.add_timeout(0.02, function()
-        move_text_step(name, texte, police, taille, couleur, next_x, next_y, end_x, end_y, step_x, step_y, current_step + 1, total_steps, callback)
-    end)
-end
-
-function move_text(name, texte, police, taille, couleur, start_x, start_y, end_x, end_y, steps, callback)
-    local step_x = (end_x - start_x) / steps
-    local step_y = (end_y - start_y) / steps
-    move_text_step(name, texte, police, taille, couleur, start_x, start_y, end_x, end_y, step_x, step_y, 1, steps, callback)
-end
-
-function display_text_customized(name, texte, x, y, callback)
-    -- Récupérer les paramètres OSD de l'utilisateur
-    local police = mp.get_property("osd-font", "sans-serif")
-    local taille = mp.get_property("osd-font-size", "55")
-    local couleur = mp.get_property_osd("osd-color", "FFFFFF")
-
-    -- Formatage du texte avec les paramètres OSD
-    local ass_style = string.format("{\\fn%s\\fs%s\\1c&H%s&\\pos(%d,%d)}", police, taille, couleur, x, y)
-    mp.osd_message(ass_style .. texte)
-    if callback then callback() end
-end
 
 function process_user_info(data_split)
 	-- Traitement des informations utilisateur
