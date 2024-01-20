@@ -7,6 +7,7 @@ import logging
 import re
 import json
 import subprocess
+import base64
 
 # Activer le logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +18,9 @@ config_file_path = 'events.ini'
 # Charger la configuration globale
 config = configparser.ConfigParser()
 config.read(config_file_path)
+
+# Déclaration de la variable globale
+es_settings = None
 
 # Chemins des dossiers de cache
 RA_BASE_CACHE = 'RA'
@@ -283,6 +287,7 @@ def handle_user_info(user_profile):
     pushRAdatasToMPV("user_info", user_data)
 
 def handle_game_info(game_info, user_progress):
+    global es_settings
     # Extraction des informations du jeu
     game_title = game_info.get('Title', 'Unknown Game')
     game_icon_name = game_info.get('GameIcon', '')
@@ -296,46 +301,56 @@ def handle_game_info(game_info, user_progress):
     num_awarded_to_user = user_progress.get('NumAwardedToUser', 0)
     user_completion = user_progress.get('UserCompletion', '0%')
     total_achievements = len(user_progress.get('Achievements', {}))
-
-    # Créer un tableau pour les succès débloqués
-    achievements_unlocked = []
-
-    # Parcourir les succès et ajouter les débloqués au tableau
+    total_points = 0
+    hardcore_mode = es_settings['global.retroachievements.hardcore'] if 'global.retroachievements.hardcore' in es_settings else False
+    logging.info(f"Hardcore Mode : {hardcore_mode}")
+    # Création et tri des données des succès
+    achievements_data = []
     for ach_id, ach_info in user_progress.get('Achievements', {}).items():
-        if 'DateEarned' in ach_info:
-            achievements_unlocked.append({
-                'ID': ach_info.get('ID'),
-                'Title': ach_info.get('Title'),
-                'Description': ach_info.get('Description'),
-                'Points': ach_info.get('Points'),
-                'BadgeName': ach_info.get('BadgeName'),
-                'BadgeURL': f"{ach_info.get('BadgeName')}"
-            })
+        unlock = 'DateEarnedHardcore' in ach_info if hardcore_mode else 'DateEarned' in ach_info
+        points = ach_info.get('Points', 0)
+        total_points += points if unlock else 0
 
-    # Affichage des informations
+        achievement_data = {
+            'ID': ach_info.get('ID'),
+            'NumAwarded': ach_info.get('NumAwarded'),
+            'NumAwardedHardcore': ach_info.get('NumAwardedHardcore'),
+            'Title': ach_info.get('Title'),
+            'Description': ach_info.get('Description'),
+            'Points': points,
+            'TrueRatio': ach_info.get('TrueRatio'),
+            'BadgeURL': ach_info.get('BadgeName').replace("\\", "\\\\"),
+            'DisplayOrder': ach_info.get('DisplayOrder'),
+            'Type': ach_info.get('type'),
+            'Unlock': unlock
+        }
+        achievements_data.append(achievement_data)
+
+    # Trier les succès par DisplayOrder
+    achievements_data.sort(key=lambda x: x['DisplayOrder'])
+
+
+    # Affichage des informations générales
     logging.info(f"Game Title: {game_title}")
     logging.info(f"Game Icon: {game_icon_url}")
     logging.info(f"Number of Achievements Unlocked by User: {num_awarded_to_user} out of {total_achievements}")
     logging.info(f"User Completion Percentage: {user_completion}")
+    logging.info(f"Total Points from Unlocked Achievements: {total_points}")
 
-    # Afficher les succès débloqués
-    for ach in achievements_unlocked:
-        pass
-        #logging.info(f"Achievement Unlocked: {ach['Title']} (ID: {ach['ID']})")
-        #logging.info(f"   Description: {ach['Description']}")
-        #logging.info(f"   Points: {ach['Points']}")
-        #logging.info(f"   Badge URL: {ach['BadgeURL']}")
-
-    # Préparation des données pour l'envoi à MPV
+    # Préparation des données générales du jeu pour l'envoi à MPV
     game_data = {
         'game_title': game_title,
         'game_icon': game_icon_url,
         'num_awarded_to_user': num_awarded_to_user,
         'user_completion': user_completion,
-        'total_achievements': total_achievements
+        'total_achievements': total_achievements,
+        'total_points': total_points
     }
 
-    # Appel de la fonction pushRAdatasToMPV
+    # Envoi des informations de chaque succès à MPV
+    for achievement_data in achievements_data:
+        pushRAdatasToMPV("achievement_info", achievement_data)
+    # Appel de la fonction pushRAdatasToMPV pour les données générales du jeu, en dernier pour être sûr d'avoir en amont les achievements
     pushRAdatasToMPV("game_info", game_data)
 
 
@@ -402,6 +417,7 @@ def pushRAdatasToMPV(type, datas):
 # Fonction principale
 def main():
     clear_retroarch_log(config)
+    global es_settings
     es_settings_path = os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_settings.cfg')
     es_settings = load_es_settings(es_settings_path)
     player_username = es_settings['global.retroachievements.username']
