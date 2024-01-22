@@ -32,7 +32,7 @@
 
 -- Variables globales
 local gfx_objects = {}
-local refresh_interval = 0.1  -- Par exemple, 0.1 seconde
+local refresh_interval = 0.02  -- Par exemple, 0.1 seconde
 local achievements_data = {}
 local screen_width = 1920
 local screen_height = 1080
@@ -753,7 +753,7 @@ function process_achievement(data_split)
 							opacity_decimal = 1
 						}, 27)
 						create(textAchievement, "text", {
-							text = title .. " unlock !",
+							text = title .. "!",
 							color = "FFFFFF",
 							size = 70,
 							font = "VT323",						
@@ -768,23 +768,33 @@ function process_achievement(data_split)
 							set_object_properties(cupName, {show = true})
 							set_object_properties(badgeName, {show = true})						
 							fade_opacity(textAchievement, 1, 1, function()
-								mp.add_timeout(2, function()  
+								mp.add_timeout(1, function()  
 									fade_opacity(textAchievement, 0, 1, function()
-										set_object_properties(textAchievement, {size = 100})
-										set_object_properties(textAchievement, {text = "+" .. points .. "pts"})
+										set_object_properties(textAchievement, {size = 80})
+										set_object_properties(textAchievement, {text = "(" .. description .. ")"})
 										mp.add_timeout(1, function()  
 											fade_opacity(textAchievement, 1, 1, function()												
-												mp.add_timeout(2, function()  														
+												mp.add_timeout(1, function()  														
 													fade_opacity(textAchievement, 0, 1, function()
-														fade_opacity(backgroundShape,  1, 0, function()
-															remove_object(textAchievement)		
-															remove_object(badgeName)
-															remove_object(cupName)            
-															remove_object(backgroundName)													
-															fade_opacity(backgroundShape,  0, 1, function()
-																remove_object(backgroundShape)
-																show_achievements()
-																show_score()
+														set_object_properties(textAchievement, {size = 140})
+														set_object_properties(textAchievement, {text = "+" .. points .. "pts"})
+														mp.add_timeout(1, function()  
+															fade_opacity(textAchievement, 1, 1, function()												
+																mp.add_timeout(1, function()  														
+																	fade_opacity(textAchievement, 0, 1, function()
+																		fade_opacity(backgroundShape,  1, 0, function()
+																			remove_object(textAchievement)		
+																			remove_object(badgeName)
+																			remove_object(cupName)            
+																			remove_object(backgroundName)													
+																			fade_opacity(backgroundShape,  2, 1, function()
+																				remove_object(backgroundShape)
+																				show_achievements()
+																				show_score()
+																			end)
+																		end)
+																	end)
+																end)
 															end)
 														end)
 													end)
@@ -858,7 +868,7 @@ function show_achievements()
     -- screen_height = mp.get_property_number("osd-height", 1080)
 	create("BottomBar", "shape", {x = 0, y = screen_height, w = screen_width, h = 50, color_hex = "000000", opacity_decimal = 0.5}, 1)
 	--animate_properties(name, targets, duration, on_complete)
-	animate_properties("BottomBar", {y = screen_height-20, opacity_decimal = 0.8}, 1, nil)
+	animate_properties("BottomBar", {y = screen_height-16, opacity_decimal = 0.6}, 1, nil)
 
 	-- Calcul du nombre maximum d'achievements par ligne
 	local maxAchievementsPerLine = math.floor((screen_width - xPos) / (imageWidth + imageSpacing))
@@ -946,9 +956,9 @@ function show_score()
 			align = 9,
             text = "Score : " .. points .. " pts",
             color = "FFFFFF",
-            size = 70,
+            size = 50,
             font = "Bebas Neue",
-			border_size = 8
+			border_size = 4
         }
 
         if gfx_objects[scoreTextName] then
