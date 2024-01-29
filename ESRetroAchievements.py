@@ -10,7 +10,7 @@ import subprocess
 import base64
 
 # Activer le logging
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 # Chemin vers le fichier de configuration
 config_file_path = 'events.ini'
@@ -27,7 +27,6 @@ current_player = None
 current_lbname = None
 user_hardcore_mode = False
 login_attempt_start_time = None
-ra_offline_mode = False
 
 # Chemins des dossiers de cache
 RA_BASE_CACHE = 'RA'
@@ -35,12 +34,14 @@ RA_BADGES_CACHE = os.path.join(RA_BASE_CACHE, 'Badge')
 RA_IMAGES_CACHE = os.path.join(RA_BASE_CACHE, 'Images')
 RA_API_CACHE = os.path.join(RA_BASE_CACHE, 'API')
 RA_USERPICS_CACHE = os.path.join(RA_BASE_CACHE, 'UserPic')
+RA_CACHE = os.path.join(RA_BASE_CACHE, 'Cache')
 
 # Créer les dossiers de cache si nécessaire
 os.makedirs(RA_BADGES_CACHE, exist_ok=True)
 os.makedirs(RA_IMAGES_CACHE, exist_ok=True)
 os.makedirs(RA_API_CACHE, exist_ok=True)
 os.makedirs(RA_USERPICS_CACHE, exist_ok=True)
+os.makedirs(RA_CACHE, exist_ok=True)
 
 # Fonction pour sauvegarder une image
 def save_image(url, path):
@@ -211,7 +212,9 @@ def get_user_progress(game_id, player_username):
     # Pour API_GetGameInfoAndUserProgress.php, toujours faire un appel API frais
     params = {'g': game_id, 'u': player_username}
     response = call_retroachievements_api("API_GetGameInfoAndUserProgress.php", params)
-    if response:
+
+    # Vérifier si la réponse est valide et sans erreur
+    if response and not response.get('Error'):
         logging.info(f"API response received for user progress in game ID {game_id}.")
         for image_key in ['ImageIcon', 'ImageTitle', 'ImageIngame', 'ImageBoxArt']:
             image_name = response.get(image_key)
@@ -221,7 +224,7 @@ def get_user_progress(game_id, player_username):
                 save_image(image_url, image_path)
                 local_image_path = os.path.join('RA', 'Images', os.path.basename(image_name))
                 response[image_key] = local_image_path  # Enregistrez le chemin local de l'image
-                #logging.info(f"Image : {image_key} -> {image_path}")
+
         for ach_id, ach_info in response.get('Achievements', {}).items():
             badge_name = ach_info.get('BadgeName')
             if badge_name:
@@ -230,11 +233,15 @@ def get_user_progress(game_id, player_username):
                 save_image(badge_url, badge_path)
                 local_badge_path = os.path.join('RA', 'Badge', badge_name + '.png')
                 ach_info['BadgeName'] = local_badge_path  # Enregistrez le chemin local du badge
+
+        # Sauvegarder la réponse formatée dans le cache
         filename = f"API_GetGameInfoAndUserProgress.php_game{game_id}.json"
         save_api_response(filename, response)
     else:
-        response = load_api_response("API_GetGameInfoAndUserProgress.php_game{game_id}.json")
-        logging.info(f"Loaded cached API response for user progress in game ID {game_id}.")
+        # Si l'API échoue, charger les données à partir du cache
+        logging.info(f"API call failed or returned error, loading cached data for game ID {game_id}.")
+        response = load_api_response(f"API_GetGameInfoAndUserProgress.php_game{game_id}.json")
+
     return response
 
 def convert_time_to_seconds(time_str):
@@ -280,6 +287,7 @@ def watch_retroarch_log(config, last_line_num, player_username):
             last_line_num = new_line_num
 
         return last_line_num
+
 
     # [INFO] [RCHEEVOS]: Load started, hardcore active
     # [INFO] [RCHEEVOS]: Using host: https://retroachievements.org
@@ -621,7 +629,7 @@ def pushRAdatasToMPV(type, datas):
     data_str = "|".join([type] + [str(value) for value in datas.values()])
 
     # Récupération de la commande depuis le fichier de configuration
-    command_template = config['Settings'].get('MPVPushRetroAchievementsDatas')
+    command_template = config['Settings']['MPVPushRetroAchievementsDatas']
     if command_template:
         # Remplacement du placeholder {data} par la chaîne
         command = command_template.replace("{data}", data_str)
@@ -644,7 +652,7 @@ def main():
 
     player_username = es_settings['global.retroachievements.username']
 
-    if config['Settings'].getboolean('MarqueeRetroAchievements'):
+    if config['Settings']['MarqueeRetroAchievements']:
         modify_retroarch_config(config)
         last_line_num = 0
         while True:
