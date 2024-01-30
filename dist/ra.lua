@@ -26,8 +26,12 @@
 local gfx_objects = {}
 local refresh_interval = 0.02  -- Par exemple, 0.1 seconde
 local achievements_data = {}
-local screen_width = 1920
-local screen_height = 1080
+-- dimensions de l'écran
+local screen_width = 0
+local screen_height = 0
+-- dimensions de l'image
+local image_width = 0
+local image_height = 0
 local sorted_objects = {}
 local is_sorted_objects_dirty = true
 local is_update_display_running = false
@@ -55,16 +59,10 @@ end
 mp.register_event("key-binding", display_key_binding)
 
 function init()	
-	-- mp.osd_message("function init() Initialisation", 1)
 	clear_osd(function()
-		update_screen_dimensions()
+		update_screen_dimensions(nil)
 		update_display_periodically()
 	end)	
-end
-
-function update_screen_dimensions()
-    screen_width = mp.get_property_number("osd-width", 1920)
-    screen_height = mp.get_property_number("osd-height", 1080)
 end
 
 function mark_sorted_objects_dirty()
@@ -176,7 +174,7 @@ function process_data(data)
 	elseif data_split[1] == "leaderboard_event_submitted" then
         --process_leaderboard_submitted(data_split)
     else
-        -- mp.osd_message("Type de données inconnu: " .. data, 2)
+        mp.osd_message("Type de données inconnu: " .. data, 2)
 	end
 end
 
@@ -194,6 +192,28 @@ function update_display_periodically()
             update_display_periodically()
         end)
     end
+end
+
+function update_screen_dimensions(callback)
+    local function check_dimensions()
+        screen_width = mp.get_property_number("osd-width")
+        screen_height = mp.get_property_number("osd-height")
+		image_width = mp.get_property_number("dwidth")
+        image_height = mp.get_property_number("dheight")
+
+        -- Si les dimensions sont mises à jour, exécutez la callback
+        if screen_width ~= 0 and screen_height ~= 0 then
+            if callback then
+				-- mp.osd_message("screen_width" .. screen_width .. " screen_height" .. screen_height .. "image_width" .. image_width .. " image_height" .. image_height, 10)
+                callback()
+            end
+        else
+            -- Sinon, planifiez une nouvelle vérification après un court délai
+            mp.add_timeout(0.01, check_dimensions)
+        end
+    end
+    -- Démarrez la première vérification
+    check_dimensions()
 end
 
 local last_refresh_time = 0
@@ -229,7 +249,7 @@ function gfx_refresh()
         if not obj.overlay then
             obj.overlay = mp.create_osd_overlay("ass-events")
         end
-
+		-- Ici ptet quelque chose à voir
         local ass_data = ""
         if obj.type == "shape" then
             ass_data = generate_ass_shape(obj.properties)
@@ -244,19 +264,14 @@ function gfx_refresh()
         end
 
         -- Mise à jour des données de l'overlay
-        if obj.updated then
-            -- Obtenir les dimensions actuelles de l'OSD
-			local osd_width = mp.get_property_number("osd-width", 1920)
-			local osd_height = mp.get_property_number("osd-height", 1080)
-
+        if obj.updated then			
+			-- mp.osd_message("osd_width" .. osd_width .. "osd_height" .. osd_height .. " | dwidth" .. ovimage_width .. "dheight" .. ovimage_height, 10)
 			-- Mettre à jour les propriétés de l'overlay
-			obj.overlay.res_x = osd_width
-			obj.overlay.res_y = osd_height
+			obj.overlay.res_x = image_width
+			obj.overlay.res_y = image_height
 			obj.overlay.data = ass_data
-
 			-- Appliquer les modifications
 			obj.overlay:update()
-
 			-- Marquer l'objet comme non mis à jour
 			obj.updated = false
         end
@@ -269,7 +284,6 @@ local cache_screen_referer
 function cache_screen(name, hide, referer, callback)
     local temp_hidden_objects = {}
 	local path = "RA/Cache/" .. name .. ".png"
-	-- mp.osd_message("cache_screen" .. path, 2)
     -- Désactiver temporairement les objets de type "shape" et "text"
     for obj_name, obj in pairs(gfx_objects) do
         if obj.type == "shape" or obj.type == "text" then
@@ -433,7 +447,6 @@ function move(name, target_x, target_y, target_opacity, duration, on_complete)
     local start_time = mp.get_time()
     local start_x = obj.properties.x
     local start_y = obj.properties.y
-	-- mp.osd_message("Objet: " .. name .. " start_y: " .. start_y, 2)
     local start_opacity = obj.properties.opacity_decimal
     local delta_x = target_x - start_x
     local delta_y = target_y - start_y
@@ -564,8 +577,12 @@ end
 -- #####################################
 
 function generate_ass_shape(properties)
-	local decx = -15  -- Décalage en X
+	local decx = -10  -- Décalage en X
 	local decy = -10  -- Décalage en Y
+	
+	-- local decx = 0  -- Décalage en X
+	-- local decy = 0  -- Décalage en Y
+
     local opacity_hex = math.floor(properties.opacity_decimal * 255)
     opacity_hex = string.format("%X", 255 - opacity_hex)
 
@@ -656,13 +673,10 @@ function generate_ass_text(properties)
 	end
     -- Construire la chaîne de texte finale
     local text_string = string.format("{\\r%s}%s", style, properties.text)
-	-- mp.osd_message("text_string: " .. text_string)
-	-- print(text_string)
     return text_string
 end
 
 function gfx_draw_image(name, properties, callback)
-	-- mp.osd_message("gfx_draw_image name: " .. name)
     if properties.show then
         -- Afficher l'image
         local transformed_path = properties.image_path:gsub(".*\\(RA\\)", "%1"):gsub("\\", "/")
@@ -727,10 +741,8 @@ function toggle_chrono_pause()
         chrono_paused = not chrono_paused
         if chrono_paused then
             paused_time = mp.get_time() - chrono_start_time
-            -- mp.osd_message("Pause")
         else
             chrono_start_time = mp.get_time() - paused_time
-            -- mp.osd_message("Chronomètre repris")
             update_chrono_display()
         end
     end
@@ -774,12 +786,11 @@ end
 
 function process_leaderboard_started(data_split)
 	show_score()
-    -- mp.osd_message("process_leaderboard_started", 3)
     chrono_mode = true
 	set_object_properties("BottomBar", {show = false})
 	create("BackgroundBar", "shape", {
         x = 0, y = 0,
-        w = screen_width+5, h = screen_height,
+        w = screen_width, h = screen_height,
         color_hex = "000000",
         opacity_decimal = 0.6
     }, 1)
@@ -835,15 +846,12 @@ function process_leaderboard_started(data_split)
 end
 
 function process_leaderboard_canceled(data_split)
-    -- mp.osd_message("process_leaderboard_canceled", 3)
-
     -- Arrêter le chronomètre
     chrono_active = false
 end
 
 function process_leaderboard_submitting(data_split)
 	show_score()
-    -- mp.osd_message("process_leaderboard_submitting", 3)
 	animate_properties("BottomBar", {y = screen_height-13, opacity_decimal = 0.7}, 3, nil)
     -- Arrêter le chronomètre
     local final_time_str = data_split[3]
@@ -882,7 +890,6 @@ end
 
 function process_leaderboardtimes(data_split)
 	-- leaderboardtimes|2|0:44.66
-	-- mp.osd_message("process_leaderboardtimes", 3)
 end
 
 local hardcoreMode = "False"
@@ -892,7 +899,6 @@ function process_user_info(data_split)
 	local userPicPath = data_split[3]
 	local userLanguage = data_split[4]
 	hardcoreMode = data_split[5]
-	-- mp.osd_message(" hardcoreMode:" .. hardcoreMode, 3)
 	local textColor
     if hardcoreMode == "True" then
         textColor = "FFFFFF" -- White si hardcore
@@ -903,7 +909,6 @@ function process_user_info(data_split)
 	create("BlackRectangle", "shape", {x = -128, y = 10, w = 128, h = 128, color_hex = "000000", show = true, opacity_decimal = 0} , 1)
 	create("UserText", "text", {text = username .. " connected", color = textColor, font = "VT323", x = 0, y = 90, border = 3, size = 40, show = true, opacity_decimal = 0}, 2)
 	create("UserImage", "image", {image_path = userPicPath, x = 10, y = 10, w = 128, h = 128, show = false, opacity_decimal = 1}, 3)
-	-- mp.osd_message(username .. " connected!", 3)
 	move("BlackRectangle", 10, 10, 0.2, 0.5, function ()	
 		-- set_object_properties('BlackRectangle', {x = 30, y = 30, show = false})		
 		-- set_object_properties('UserText', {show = true})	
@@ -919,9 +924,8 @@ function process_user_info(data_split)
 			move("UserText", -50, 90, 0, 0, nil)
 			move("BlackRectangle", -128, 10, 0, 0.5, function ()	
 				remove_object("BlackRectangle", function ()	
-				--remove_object("UserText", nil)
-				remove_object("UserImage", nil)
-					-- move("ProgressBar", 0, screen_height-50, 0.7, 0.5, nil)
+					--remove_object("UserText", nil)
+					remove_object("UserImage", nil)
 				end)
 			end)
 		end)
@@ -929,7 +933,7 @@ function process_user_info(data_split)
 end
 
 function process_game_info(data_split)
-	update_screen_dimensions()
+	update_screen_dimensions(nil)
 	
     -- Traitement des informations du jeu
     local gameTitle = data_split[2]
@@ -983,6 +987,7 @@ function process_achievement_info(data_split)
 end
 
 function process_achievement(data_split)
+	update_screen_dimensions(nil)
     -- Traitement des informations de succès
 	-- "achievement|2|C:\\RetroBat\\marquees\\RA\\Badge\\250352.png|Amateur Collector|Collect 20 rings|2|8.33%"
     local achievementId = data_split[2] 
@@ -1008,7 +1013,7 @@ function process_achievement(data_split)
 	local totalPoints = 0
     for id, ach in pairs(achievements_data) do		
 		local achievementName = "AchievementImage" .. id
-		set_object_properties(achievementName, {y = screen_height+74})
+		set_object_properties(achievementName, {y = image_height+74})
         if ach.Unlock == "True" then
             totalPoints = totalPoints + (tonumber(ach.Points) or 0)
         end
@@ -1029,10 +1034,10 @@ function process_achievement(data_split)
 		local textAchievement = "AchievementTxt"
 
 		-- clear_visible_objects(function()
-			create(backgroundShape, "shape", {x = 0, y = 0, w = screen_width+10, h = screen_height+5, color_hex = "000000", opacity_decimal = 0}, 1)		
+			create(backgroundShape, "shape", {x = 0, y = 0, w = screen_width, h = screen_height, color_hex = "000000", opacity_decimal = 0}, 1)		
 			mp.add_timeout(1, function()
 				-- move(name, target_x, target_y, target_opacity, duration, on_complete)
-				create(backgroundName, "image", {image_path = 'RA/System/background.png', x = 0, y = 0, w = screen_width+15, h = screen_height+5, show = false, opacity_decimal = 1}, 2)
+				create(backgroundName, "image", {image_path = 'RA/System/background.png', x = 0, y = 0, w = image_width, h = image_height, show = false, opacity_decimal = 1}, 2)
 				fade_opacity(backgroundShape,  0.9, 0.4, function()						
 					mp.add_timeout(0.6, function()
 						-- Positionnement de l'image du badge	
@@ -1041,8 +1046,8 @@ function process_achievement(data_split)
 							fade_opacity(backgroundShape,  0, 0, function()
 								create(cupName, "image", {
 									image_path = 'RA/System/biggoldencup.png',
-									x = (screen_width - 238) / 2,
-									y = (screen_height - 235) / 2,
+									x = (image_width - 238) / 2,
+									y = (image_height - 235) / 2,
 									w = 238,
 									h = 235,
 									show = false,
@@ -1050,8 +1055,8 @@ function process_achievement(data_split)
 								}, 26)
 								create(badgeName, "image", {
 									image_path = badgePath,
-									x = (screen_width - 64) / 2,
-									y = (screen_height - 235) / 2 + 41,
+									x = (image_width - 64) / 2,
+									y = (image_height - 235) / 2 + 41,
 									w = 64,
 									h = 64,
 									show = false,
@@ -1069,7 +1074,7 @@ function process_achievement(data_split)
 								}, 25)
 								-- move(name, target_x, target_y, target_opacity, duration, on_complete)	
 								-- fade_opacity(name, target_opacity, duration, on_complete)						
-								mp.add_timeout(0.2, function()		
+								mp.add_timeout(5, function()		
 									set_object_properties(cupName, {show = true})
 									set_object_properties(badgeName, {show = true})
 									mp.add_timeout(0.6, function()
@@ -1136,19 +1141,13 @@ end
 -- ############# SHOW FUNCTIONS
 -- #####################################
 
-function show_userCompletionProgressBar()
-	move_rectangle(-1, screen_height, screen_width, 20, 0, '000000', 0, screen_height - 20, 0.5, 50, nil)
-end
-
-function show_achievementsProgressBar()
-	move_rectangle(-1, screen_height, screen_width, 50, 0, '000000', 0, screen_height - 50, 0.8, 50, nil)
-end
-
 function show_achievements(callback)
-	update_screen_dimensions()
+	update_screen_dimensions(function()
+		-- mp.osd_message(" screen_height:" .. screen_height .. " image_height:" .. image_height, 15)
+	end)
+	
 	if next(achievements_data) == nil then
 		print("Aucun achievement à afficher.")
-		-- mp.osd_message("Aucun achievement à afficher.", 2)
 		if callback then callback() end
 		return
 	end
@@ -1180,19 +1179,14 @@ function show_achievements(callback)
 	local xPos = 4
 	local yPos = 14
 	local imageWidth = 64
+	local imageHeight = 64
 	local imageSpacing = 4
-	local order = 10
-
-	create("BottomBar", "shape", {x = 0, y = screen_height-16, w = screen_width+5, h = screen_height, color_hex = "000000", opacity_decimal = 0.7}, 1)
-	--animate_properties("BottomBar", {y = screen_height-16, opacity_decimal = 0.6}, 1, nil)
-
+	local order = 10	
 	-- Calcul du nombre maximum d'achievements par ligne
-	local maxAchievementsPerLine = math.floor((screen_width - xPos) / (imageWidth + imageSpacing))
-
+	local maxAchievementsPerLine = math.floor((image_width - xPos) / (imageWidth + imageSpacing))
 	-- Déterminer l'index de départ pour l'affichage
 	local startIndex = math.max(1, numAchievementsUnlocked - 5)
 	local endIndex = math.min(startIndex + maxAchievementsPerLine - 1, #sorted_achievements)
-	-- mp.osd_message("Affichage des achievements", 2)
 	-- Affichage des achievements
 	for i = startIndex, endIndex do
 		local achievement = sorted_achievements[i]
@@ -1202,9 +1196,9 @@ function show_achievements(callback)
 		create(achievementName, "image", {
 			image_path = achievement.data.BadgeURL,
 			x = xPos,
-			y = screen_height - yPos,
+			y = image_height - yPos,
 			w = imageWidth,
-			h = imageWidth,
+			h = imageHeight,
 			show = true,
 			opacity_decimal = 1
 		}, order)
@@ -1237,7 +1231,7 @@ function show_achievements(callback)
 				return
 			end
 
-			local currentY = screen_height - yPos - yPosAdjustment
+			local currentY = image_height - yPos - yPosAdjustment
 			set_object_properties(achievementName, {y = currentY})	
 			index = index + 1
 			animate_next_achievement()
@@ -1298,45 +1292,6 @@ function show_score()
     end
     
     show_score_text(scoreText)
-end
-
-
-
-function show_random_goldencups(callback)
-    local cupImagePath = "RA/System/goldencup.png"
-    local cupSize = 64
-    local numCups = 10  -- Nombre de coupes à afficher
-    local cupLifetime = 0.1  -- Durée de vie d'une coupe en secondes
-    local sequenceDuration = 5  -- Durée totale de la séquence en secondes
-    local cupInterval = sequenceDuration / numCups  -- Intervalle de création des coupes
-
-    for i = 1, numCups do
-        -- Créer une coupe après un certain délai
-        mp.add_timeout((i - 1) * cupInterval, function()
-            local randomX = math.random(screen_width * 0.25, screen_width * 0.75 - cupSize)
-            local randomY = math.random(screen_height * 0.25, screen_height * 0.75 - cupSize)
-            local cupName = "Goldencup" .. i
-
-            create(cupName, "image", {
-                image_path = cupImagePath,
-                x = randomX,
-                y = randomY,
-                w = cupSize,
-                h = cupSize,
-                show = true,
-                opacity_decimal = 1
-            })
-
-            -- Supprimer la coupe après 0.2 seconde
-            mp.add_timeout(cupLifetime, function()
-                remove_object(cupName)
-            end)
-        end)
-    end
-
-    if callback then
-        callback()
-    end
 end
 
 -- Register the 'push-ra' message for processing
