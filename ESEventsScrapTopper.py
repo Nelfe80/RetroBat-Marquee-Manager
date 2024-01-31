@@ -163,7 +163,7 @@ def scrape_marquee(game_system, game_title, game_name, marquee_path, full_marque
     api_params = {
         'devid': '',
         'devpassword': '',
-        'softname': 'ESEventsScrapTopper',
+        'softname': 'Retrobat-Marquee-Manager-v.2.0',
         'output': 'json',
         'ssid': es_settings['ScreenScraperUser'],
         'sspassword': es_settings['ScreenScraperPass'],
@@ -228,6 +228,11 @@ def read_scrap_pool(pool_file):
         lines = file.readlines()
     return [line.strip().split('|') for line in lines]
 
+def ensure_file_exists(file_path):
+    if not os.path.exists(file_path):
+        with open(file_path, 'w') as file:
+            pass
+
 # Fonction principale
 def main():
     logging.basicConfig(level=logging.INFO)
@@ -237,6 +242,9 @@ def main():
     systems_dict = load_systems_scrap(os.path.join(config['Settings']['RetroBatPath'], 'marquees', 'systems.scrap'))
     scrap_pool_file = os.path.join(config['Settings']['RetroBatPath'], 'marquees', 'scrap.pool')
     scrap_failed_file = os.path.join(config['Settings']['RetroBatPath'], 'marquees', 'scrapfailed.pool')
+
+    ensure_file_exists(scrap_pool_file)
+    ensure_file_exists(scrap_failed_file)
 
     while True:
         scrap_requests = read_scrap_pool(scrap_pool_file)
