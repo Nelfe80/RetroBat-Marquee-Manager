@@ -65,10 +65,6 @@ function init()
 	end)	
 end
 
-function mark_sorted_objects_dirty()
-    is_sorted_objects_dirty = true
-end
-
 -- #####################################
 -- ############# CLEAR FUNCTIONS
 -- #####################################
@@ -219,6 +215,7 @@ end
 local last_refresh_time = 0
 local framerate_threshold = 10  -- Seuil de framerate
 
+
 function gfx_refresh()
     local current_time = mp.get_time()
     local delta_time = current_time - last_refresh_time
@@ -230,26 +227,14 @@ function gfx_refresh()
     end
 
     if framerate < framerate_threshold then
-		 -- mp.osd_message(string.format("Low Framerate : %.2f FPS", framerate), 1)
-	end
-	
-    if is_sorted_objects_dirty then
-        sorted_objects = {}
-        for name, obj in pairs(gfx_objects) do
-            table.insert(sorted_objects, {name = name, object = obj})
-        end
-        table.sort(sorted_objects, function(a, b) return a.object.z_index < b.object.z_index end)
-        is_sorted_objects_dirty = false
+        -- mp.osd_message(string.format("Low Framerate : %.2f FPS", framerate), 1)
     end
 
-    for _, entry in ipairs(sorted_objects) do
-        local obj = entry.object
-        local obj_name = entry.name
-		
+    for obj_name, obj in pairs(gfx_objects) do
         if not obj.overlay then
             obj.overlay = mp.create_osd_overlay("ass-events")
         end
-		-- Ici ptet quelque chose à voir
+
         local ass_data = ""
         if obj.type == "shape" then
             ass_data = generate_ass_shape(obj.properties)
@@ -264,21 +249,20 @@ function gfx_refresh()
         end
 
         -- Mise à jour des données de l'overlay
-        if obj.updated then			
-			-- mp.osd_message("osd_width" .. osd_width .. "osd_height" .. osd_height .. " | dwidth" .. ovimage_width .. "dheight" .. ovimage_height, 10)
-			-- Mettre à jour les propriétés de l'overlay
-			obj.overlay.res_x = image_width
-			obj.overlay.res_y = image_height
-			obj.overlay.data = ass_data
-			-- Appliquer les modifications
-			obj.overlay:update()
-			-- Marquer l'objet comme non mis à jour
-			obj.updated = false
+        if obj.updated then
+            obj.overlay.res_x = image_width
+            obj.overlay.res_y = image_height
+            obj.overlay.data = ass_data
+            obj.overlay.z = obj.z
+            -- mp.osd_message("obj_name" .. obj_name .. "z" .. obj.overlay.z, 10)
+            obj.overlay:update()
+            obj.updated = false
         end
 
         ::continue::
     end
 end
+
 
 local cache_screen_referer
 function cache_screen(name, hide, referer, callback)
@@ -339,25 +323,24 @@ end
 -- ############# OBJECTS FUNCTIONS
 -- #####################################
 
-function create(name, type, properties, z_index)
+function create(name, type, properties, z)
     if gfx_objects[name] then
         -- Mettre à jour les propriétés de l'objet existant
         gfx_objects[name].type = type
         for key, value in pairs(properties) do
             gfx_objects[name].properties[key] = value
         end
-        gfx_objects[name].z_index = z_index or gfx_objects[name].z_index
+        gfx_objects[name].overlay.z = z or gfx_objects[name].z
         gfx_objects[name].updated = true
     else
         -- Créer un nouvel objet si aucun objet avec ce nom n'existe
         gfx_objects[name] = {
             type = type,
             properties = properties,
-            z_index = z_index or 0,
+            z = z or 0,
             updated = true
         }
     end
-    mark_sorted_objects_dirty()
 end
 
 function set_object_properties(name, properties)
@@ -368,11 +351,11 @@ function set_object_properties(name, properties)
     end
     -- Parcourir chaque propriété fournie et la mettre à jour
     for key, value in pairs(properties) do
-        -- Gérer les cas spéciaux pour 'type' et 'z_index'
+        -- Gérer les cas spéciaux pour 'type' et 'z'
         if key == "type" then
             obj.type = value
-        elseif key == "z_index" then
-            obj.z_index = value
+        elseif key == "z" then
+			obj.z = value
         elseif obj.properties and obj.properties[key] ~= nil then
             -- Mise à jour des autres propriétés standard
             obj.properties[key] = value
@@ -382,7 +365,6 @@ function set_object_properties(name, properties)
         end
     end
     -- Mettre à jour l'affichage pour refléter les changements
-	mark_sorted_objects_dirty()
     -- gfx_refresh()
 end
 
@@ -392,11 +374,11 @@ function get_object_property(name, property_key)
         print("Avertissement: L'objet nommé '" .. name .. "' n'existe pas.")
         return nil
     end
-    -- Gérer les cas spéciaux pour 'type' et 'z_index'
+    -- Gérer les cas spéciaux pour 'type' et 'z'
     if property_key == "type" then
         return obj.type
-    elseif property_key == "z_index" then
-        return obj.z_index
+    elseif property_key == "z" then
+        return obj.z
     end
     -- Vérifier si la propriété existe dans les propriétés standard
     if obj.properties and obj.properties[property_key] ~= nil then
@@ -425,7 +407,6 @@ function remove_object(name, on_complete)
 
         -- Supprimer l'objet de la table
         gfx_objects[name] = nil
-        mark_sorted_objects_dirty()
         -- gfx_refresh()
         wasRemoved = true
     else
@@ -727,7 +708,7 @@ function update_chrono_display()
     end
     local color_hex = calculate_progression_color(progression)
     set_object_properties("ProgressionBar", {
-        w = screen_width * progression,
+        w = (screen_width+10) * progression,
         color_hex = color_hex
     })
 
@@ -847,6 +828,9 @@ end
 
 function process_leaderboard_canceled(data_split)
     -- Arrêter le chronomètre
+	clear_osd(function()
+		restore_cache_screen(initscreen)
+	end)
     chrono_active = false
 end
 
@@ -910,22 +894,15 @@ function process_user_info(data_split)
 	create("UserText", "text", {text = username .. " connected", color = textColor, font = "VT323", x = 0, y = 90, border = 3, size = 40, show = true, opacity_decimal = 0}, 2)
 	create("UserImage", "image", {image_path = userPicPath, x = 10, y = 10, w = 128, h = 128, show = false, opacity_decimal = 1}, 3)
 	move("BlackRectangle", 10, 10, 0.2, 0.5, function ()	
-		-- set_object_properties('BlackRectangle', {x = 30, y = 30, show = false})		
-		-- set_object_properties('UserText', {show = true})	
-		-- move(name, target_x, target_y, target_opacity, duration, on_complete)
 		move("UserText", 30, 90, 1, 1, nil)
 		set_object_properties('UserImage', {show = true})
-		-- set_object_properties('UserText', {show = true})	
 		mp.add_timeout(3, function()	
-			-- move("UserText", 0, -50, 0, 0.5, nil)
-			-- move("UserText", 10, 10, 1, 0.4, nil)
 			set_object_properties('UserImage', {show = false})
-			--set_object_properties('UserText', {show = false})	
 			move("UserText", -50, 90, 0, 0, nil)
 			move("BlackRectangle", -128, 10, 0, 0.5, function ()	
 				remove_object("BlackRectangle", function ()	
-					--remove_object("UserText", nil)
 					remove_object("UserImage", nil)
+					remove_object("UserText", nil)
 				end)
 			end)
 		end)
@@ -947,7 +924,7 @@ function process_game_info(data_split)
 		cache_screen("_initscreen", false, false)
 		show_achievements(function()
 			print("Animation des achievements terminée")
-			mp.add_timeout(1, function()
+			mp.add_timeout(2, function()
 				cache_screen("_cacheAchv", true, true, function()
 					print("Image cache des achievements")
 					show_score()
@@ -1034,7 +1011,25 @@ function process_achievement(data_split)
 		local textAchievement = "AchievementTxt"
 
 		-- clear_visible_objects(function()
-			create(backgroundShape, "shape", {x = 0, y = 0, w = screen_width, h = screen_height, color_hex = "000000", opacity_decimal = 0}, 1)		
+			create(backgroundShape, "shape", {x = 0, y = 0, w = screen_width, h = screen_height, color_hex = "000000", opacity_decimal = 0}, 1)
+			create(badgeName, "image", {
+				image_path = badgePath,
+				x = (image_width - 64) / 2,
+				y = (image_height - 235) / 2 + 41,
+				w = 64,
+				h = 64,
+				show = false,
+				opacity_decimal = 1
+				}, 30)
+			create(cupName, "image", {
+				image_path = 'RA/System/biggoldencup.png',
+				x = (image_width - 238) / 2,
+				y = (image_height - 235) / 2,
+				w = 238,
+				h = 235,
+				show = false,
+				opacity_decimal = 1
+				}, 20)			
 			mp.add_timeout(1, function()
 				-- move(name, target_x, target_y, target_opacity, duration, on_complete)
 				create(backgroundName, "image", {image_path = 'RA/System/background.png', x = 0, y = 0, w = image_width, h = image_height, show = false, opacity_decimal = 1}, 2)
@@ -1043,25 +1038,7 @@ function process_achievement(data_split)
 						-- Positionnement de l'image du badge	
 						set_object_properties(backgroundName, {show = true})
 						mp.add_timeout(0.2, function()
-							fade_opacity(backgroundShape,  0, 0, function()
-								create(cupName, "image", {
-									image_path = 'RA/System/biggoldencup.png',
-									x = (image_width - 238) / 2,
-									y = (image_height - 235) / 2,
-									w = 238,
-									h = 235,
-									show = false,
-									opacity_decimal = 1
-								}, 26)
-								create(badgeName, "image", {
-									image_path = badgePath,
-									x = (image_width - 64) / 2,
-									y = (image_height - 235) / 2 + 41,
-									w = 64,
-									h = 64,
-									show = false,
-									opacity_decimal = 1
-								}, 27)
+							fade_opacity(backgroundShape,  0, 0, function()								
 								create(textAchievement, "text", {
 									text = title .. "!",
 									color = "FFFFFF",
@@ -1074,7 +1051,7 @@ function process_achievement(data_split)
 								}, 25)
 								-- move(name, target_x, target_y, target_opacity, duration, on_complete)	
 								-- fade_opacity(name, target_opacity, duration, on_complete)						
-								mp.add_timeout(5, function()		
+								--mp.add_timeout(1, function()		
 									set_object_properties(cupName, {show = true})
 									set_object_properties(badgeName, {show = true})
 									mp.add_timeout(0.6, function()
@@ -1091,23 +1068,28 @@ function process_achievement(data_split)
 																		set_object_properties(textAchievement, {size = 140})
 																		set_object_properties(textAchievement, {text = "+" .. points .. "pts"})
 																		mp.add_timeout(1, function()  
-																			fade_opacity(textAchievement, 1, 0.6, function()												
+																			fade_opacity(textAchievement, 1, 0.6, function()
+																			
 																				mp.add_timeout(2, function()  														
 																					fade_opacity(textAchievement, 0, 0.6, function()	
 																						remove_object(textAchievement)	
-																						fade_opacity(backgroundShape,  1, 0, function()
-																							restore_cache_screen(initscreen)
-																							fade_opacity(backgroundShape,  2, 0.6, function()									
-																								remove_object(backgroundShape)
-																								remove_object(badgeName)
-																								remove_object(cupName)            
-																								remove_object(backgroundName)
-																								show_achievements(function()
+																						fade_opacity(backgroundShape,  1, 0, function()	
+																							restore_cache_screen(initscreen)											
+																							fade_opacity(backgroundShape,  0, 1, function()					
+																								set_object_properties(backgroundShape, {show = false})
+																								set_object_properties(badgeName, {show = false})
+																								set_object_properties(cupName, {show = false})
+																								set_object_properties(backgroundName, {show = false})																								
+																								show_achievements(function()																									
 																									print("Animation des achievements terminée")
 																									mp.add_timeout(1, function()
 																										cache_screen("_cacheAchv", true, true, function()
 																											print("Image cache des achievements")
 																											show_score()
+																											remove_object(backgroundShape)
+																											remove_object(badgeName)
+																											remove_object(cupName)            
+																											remove_object(backgroundName)
 																										end)
 																									end)	
 																								end)
@@ -1126,7 +1108,7 @@ function process_achievement(data_split)
 											end)
 										end)
 									end)
-								end)
+								--end)
 							end)
 						end)
 					end)
@@ -1206,7 +1188,7 @@ function show_achievements(callback)
 		xPos = xPos + imageWidth + imageSpacing
 		order = order + 1
 	end
-
+	
 	-- Fonction pour animer les achievements débloqués
 	local index = 1
 	local yPosAdjustment = 54
@@ -1264,14 +1246,16 @@ function show_score()
         end
     end
 
-    -- Appliquer une couleur spécifique au score actuel
-	local currentPointsColor
+    -- Définir la couleur de bordure pour currentPoints
+    local currentPointsBorderColor
     if hardcoreMode == "True" then
-        currentPointsColor = "FF0000" -- Bleu si hardcore
+        currentPointsBorderColor = "FF0000"  -- Bleu si hardcore
     else
-        currentPointsColor = "808080" -- Gris sinon
+        currentPointsBorderColor = "808080"  -- Gris sinon
     end
-    local scoreText = string.format("PTS {\\1c&H%s&}%d{\\1c&HFFFFFF&}/%d", currentPointsColor, currentPoints, potentialPoints)
+
+    -- Construire le texte avec des styles différents pour chaque partie
+    local scoreText = string.format("PTS {\\3c&H%s&}%d{\\3c&H000000&}/%d", currentPointsBorderColor, currentPoints, potentialPoints)
 
     -- Fonction pour mettre à jour le texte du score
     local function show_score_text(scoreText)
@@ -1293,6 +1277,8 @@ function show_score()
     
     show_score_text(scoreText)
 end
+
+
 
 -- Register the 'push-ra' message for processing
 mp.register_script_message("push-ra", process_data)
