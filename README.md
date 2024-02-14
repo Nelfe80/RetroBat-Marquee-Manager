@@ -1,11 +1,11 @@
 <img src="https://github.com/Nelfe80/RetroBat-Marquee-Manager/blob/master/dist/images/logo.png" style="width:100%;">
-<h1>RetroBat Marquee Manager (V2)</h1>
-<h2>A Dynamic Marquees for RetroBat with Svg support / Auto-resizing / Dynamic Scraping</h2>
+<h1>RetroBat Marquee Manager (V3)</h1>
+<h2>A Dynamic Marquees for RetroBat with Svg support / Auto-resizing / Dynamic Scraping / RetroAchievements (WIP)</h2>
 <p>This project enables <b>dynamic display of marquees</b> on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
 </p>
 <p>Thanks to Aynshe and Retrobat's community testers. </p>
-<p><a href="https://www.youtube.com/watch?v=hIZQ-0b998A" target="_blank">
-    <img src="https://img.youtube.com/vi/hIZQ-0b998A/0.jpg" alt="Lien vers la vidéo YouTube">
+<p><a href="https://www.youtube.com/watch?v=AFS7f5RKJZo" target="_blank">
+    <img src="https://img.youtube.com/vi/AFS7f5RKJZo/0.jpg" alt="Lien vers la vidéo YouTube">
 </a></p>
 <h2>Install</h2>
 <p>
@@ -15,9 +15,11 @@ Download the project and go to the /dist folder and copy all files in "C:\RetroB
 In the "C:\RetroBat\marquees" folder :
 - events.ini (settings file)<br>
 - ESEvents.exe (events listener like game-selected/game-start/system-selected...)<br>
-- StartRetrobatMarquees.bat (to launch without dynamic scraping) or StartRetrobatMarqueesAS.bat (to launche with Auto dynamic Scraping)<br>
+- StartRetrobatMarquees.bat (to launch without dynamic scraping) or StartRetrobatMarqueesAS.bat (to launche with Auto dynamic Scraping) or StartRetrobatMarqueesASRA.bat (with Auto-Scraping & RetroAchievements)<br>
 - ESEventsScrapTopper.exe (dynamic scraping listener, download image on screenscraper then rename and push scraped image in MarqueeImagePath\MarqueeFilePath)<br>
+- ESRetroAchievements.exe (retro-achievements)<br>
 - screenscraper.ini (dynamic scraping dictionnary)<br>
+- retroachievements.ini (RA dictionnary)<br>
 - systems.scrap (screenscraper systems ids) [use ESEventsScrapSystems.exe to update this file if needed]<br>
 <br><br>
 Copy ESEventPush.exe in folders such as <br>
@@ -34,7 +36,7 @@ By following these instructions, you'll ensure that ESEvents.exe and ESEventPush
 </p>
 <h2>Configuring events.ini File</h2>
 <p>
-Configure events.ini to specify paths for marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly.
+Configure events.ini to specify paths for marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly. (MarqueeRetroAchievements = true in events.ini file to activate RetroAchievements or MarqueeAutoScraping = true to scrap banners...)
 </p>
 <h2>Download and install marquees</h2>
 You can download marquees here then install in the default folder "C:\RetroBat\marquees\images" :<br>
@@ -62,7 +64,7 @@ After scraping, you might encounter the situation where both marquees and logos 
 <p>
 It is important to note that SVG files may require additional processing time during their first use. However, once they are converted to PNG format, you will experience smoother navigation and quicker access to these images within the system.
 </p>
-<h3>StartRetroBat with StartRetrobatMarqueesAS.bat (with dynamic scraping) or with StartRetrobatMarquees.bat (without dynamic scraping) to activate the dynamic marquee system and launch RetroBat.</h3> 
+<h3>StartRetroBat with StartRetrobatMarqueesASRA.bat (with dynamic scraping and retroachievements) or StartRetrobatMarqueesAS.bat (with dynamic scraping) or with StartRetrobatMarquees.bat (without dynamic scraping) to activate the dynamic marquee system and launch RetroBat.</h3> 
 <h2>Notes</h2>
 <p>
 Ensure MPV and IMAGEMAGICK are installed in /RetroBat/marquees directory.
