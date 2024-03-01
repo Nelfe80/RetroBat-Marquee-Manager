@@ -163,7 +163,7 @@ def scrape_marquee(game_system, game_title, game_name, marquee_path, full_marque
     api_params = {
         'devid': '',
         'devpassword': '',
-        'softname': 'Retrobat-Marquee-Manager-v.2.0',
+        'softname': 'Retrobat-Marquee-Manager-v.3.0',
         'output': 'json',
         'ssid': es_settings['ScreenScraperUser'],
         'sspassword': es_settings['ScreenScraperPass'],
@@ -196,7 +196,7 @@ def scrape_marquee(game_system, game_title, game_name, marquee_path, full_marque
         if scraper.downloadAndSaveImage(marquee_media['url'], full_marquee_path, marquee_media['format']):
             logging.debug(f"URL du marquee trouvé: {marquee_media['url']}.{marquee_media['format']}")
             command = config['Settings']['MPVShowText'].format(
-                                    message=(f"{game_title.replace('+', ' ')} topper successfully scrapped!"),
+                                    message=(f"{game_title.replace('+', ' ')} topper successfully scraped!"),
                                     IPCChannel=config['Settings']['IPCChannel']
                                 )
             subprocess.run(command, shell=True)
