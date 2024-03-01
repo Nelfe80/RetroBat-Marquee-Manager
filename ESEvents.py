@@ -8,14 +8,34 @@ import shlex
 import xml.etree.ElementTree as ET
 import logging
 
+logging.basicConfig(level=logging.INFO)
+
 app = Flask(__name__)
-config = configparser.ConfigParser()
 creation_flags = 0
 if sys.platform == "win32":  # Uniquement pour Windows
     creation_flags = subprocess.CREATE_NO_WINDOW
 
+config = configparser.ConfigParser()
 def load_config():
-    config.read('events.ini')
+    global config
+    config.read('config.ini')
+    current_working_dir = os.getcwd()  # C:\RetroBat\plugins\MarqueeManager\
+    logging.info(f"{current_working_dir}")
+    def update_path(setting, default_path):
+        logging.info(f"update_path {setting} {default_path}")
+        # Vérifier si la variable n'existe pas ou n'est pas un lien absolu
+        if setting not in config['Settings'] or not os.path.isabs(config['Settings'].get(setting, '')):
+            config['Settings'][setting] = default_path
+
+    update_path('RetroBatPath', os.path.dirname(os.path.dirname(current_working_dir)))
+    update_path('RomsPath', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
+    update_path('DefaultImagePath', os.path.join(current_working_dir, 'images', 'default.png'))
+    update_path('MarqueeImagePath', os.path.join(current_working_dir, 'images'))
+    update_path('MarqueeImagePathDefault', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
+    update_path('SystemMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'themes', 'es-theme-carbon-master', 'art', 'logos'))
+    update_path('CollectionMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'themes', 'es-theme-carbon-master', 'art', 'logos'))
+    update_path('MPVPath', os.path.join(current_working_dir, 'mpv', 'mpv.exe'))
+    update_path('IMPath', os.path.join(current_working_dir, 'imagemagick', 'convert.exe'))
 
 def setup_logging(log_file_path):
     log = logging.getLogger('werkzeug')
@@ -363,7 +383,7 @@ def handle_request():
 
 if __name__ == '__main__':
     load_config()
-    setup_logging(os.path.join(config['Settings']['RetroBatPath'], 'marquees', 'ESEvents.log'))
+    setup_logging(os.path.join(config['Settings']['RetroBatPath'], 'plugins','MarqueeManager', 'ESEvents.log'))
     launch_media_player()
     systems_config = load_systems_config(os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_systems.cfg'))
     app.run(host=config['Settings']['Host'], port=int(config['Settings']['Port']), debug=False)

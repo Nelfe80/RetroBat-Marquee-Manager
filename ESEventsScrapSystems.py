@@ -7,8 +7,8 @@ import logging
 def get_systems_from_api(es_settings):
     api_url = "https://api.screenscraper.fr/api2/systemesListe.php"
     params = {
-        'devid': '',
-        'devpassword': '',
+        'devid': 'Nelfe',
+        'devpassword': 'y8dI5PyYsyM',
         'softname': 'ESEventsScrapTopper',
         'output': 'json',
         'ssid': es_settings['ScreenScraperUser'],

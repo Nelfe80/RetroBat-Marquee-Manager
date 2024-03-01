@@ -9,15 +9,30 @@ import json
 import subprocess
 import base64
 
-# Activer le logging
-# logging.basicConfig(level=logging.INFO)
-
-# Chemin vers le fichier de configuration
-config_file_path = 'events.ini'
+logging.basicConfig(level=logging.INFO)
 
 # Charger la configuration globale
 config = configparser.ConfigParser()
-config.read(config_file_path)
+def load_config():
+    global config
+    config.read('config.ini')
+    current_working_dir = os.getcwd()  # C:\RetroBat\plugins\MarqueeManager\
+    logging.info(f"{current_working_dir}")
+    def update_path(setting, default_path):
+        logging.info(f"update_path {setting} {default_path}")
+        # Vérifier si la variable n'existe pas ou n'est pas un lien absolu
+        if setting not in config['Settings'] or not os.path.isabs(config['Settings'].get(setting, '')):
+            config['Settings'][setting] = default_path
+
+    update_path('RetroBatPath', os.path.dirname(os.path.dirname(current_working_dir)))
+    update_path('RomsPath', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
+    update_path('DefaultImagePath', os.path.join(current_working_dir, 'images', 'default.png'))
+    update_path('MarqueeImagePath', os.path.join(current_working_dir, 'images'))
+    update_path('MarqueeImagePathDefault', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
+    update_path('SystemMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'themes', 'es-theme-carbon-master', 'art', 'logos'))
+    update_path('CollectionMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'themes', 'es-theme-carbon-master', 'art', 'logos'))
+    update_path('MPVPath', os.path.join(current_working_dir, 'mpv', 'mpv.exe'))
+    update_path('IMPath', os.path.join(current_working_dir, 'imagemagick', 'convert.exe'))
 
 # Déclaration de la variable globale
 es_settings = None
@@ -271,6 +286,9 @@ def get_user_leaderboard(lbid, lbname=None, lbtime=None):
 # Surveiller retroarch.log pour les succès
 def watch_retroarch_log(config, last_line_num, player_username):
     log_path = os.path.join(config['Settings']['RetroBatPath'], 'emulators', 'retroarch', 'logs', 'retroarch.log')
+    with open(log_path, 'a+') as file:
+            pass
+
     with open(log_path, 'r') as file:
         lines = file.readlines()
         new_line_num = len(lines)
@@ -383,7 +401,7 @@ def handle_user_info(user_profile):
     # Extraction des informations de l'utilisateur
     user_name = user_profile.get('User', 'Unknown User')
     user_pic_name = user_profile.get('UserPic', '')
-    user_pic_url = os.path.join(config['Settings']['RetroBatPath'], 'marquees', user_pic_name).replace("\\", "\\\\")
+    user_pic_url = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', user_pic_name).replace("\\", "\\\\")
     es_settings_path = os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_settings.cfg')
     es_settings = load_es_settings(es_settings_path)
     user_hardcore_mode = es_settings.get('global.retroachievements.hardcore', False)
@@ -416,7 +434,7 @@ def handle_game_info(game_info, user_progress):
     # Extraction des informations du jeu
     game_title = game_info.get('Title', 'Unknown Game')
     game_icon_name = game_info.get('GameIcon', '')
-    game_icon_url = os.path.join(config['Settings']['RetroBatPath'], 'marquees', game_icon_name).replace("\\", "\\\\")
+    game_icon_url = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', game_icon_name).replace("\\", "\\\\")
 
     logging.info(f"#config['Settings']['RetroBatPath']: {config['Settings']['RetroBatPath']}")
     logging.info(f"#game_icon_name: {game_icon_name}")
@@ -496,7 +514,7 @@ def handle_achievement_info(user_progress, achievement_id, game_info):
         badge_name = achievement.get('BadgeName', '')
 
         # Construction du chemin de l'image
-        badge_url = os.path.join(config['Settings']['RetroBatPath'], 'marquees', badge_name).replace("\\", "\\\\")
+        badge_url = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', badge_name).replace("\\", "\\\\")
 
         logging.info(f"Achievement ID: {achievement_id}")
         logging.info(f"Title: {title}")
@@ -632,7 +650,8 @@ def pushRAdatasToMPV(type, datas):
     command_template = config['Settings']['MPVPushRetroAchievementsDatas']
     if command_template:
         # Remplacement du placeholder {data} par la chaîne
-        command = command_template.replace("{data}", data_str)
+        command = command_template.replace("{IPCChannel}", config['Settings']['IPCChannel'])
+        command = command.replace("{data}", data_str)
 
         # Exécution de la commande
         try:
@@ -660,4 +679,5 @@ def main():
             time.sleep(1)
 
 if __name__ == "__main__":
+    load_config()
     main()

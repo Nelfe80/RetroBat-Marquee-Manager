@@ -48,7 +48,7 @@ tasklist | find /I "ESRetroAchievements.exe" > NUL
 timeout /t 1 /nobreak >NUL
 
 :: Démarrer retrobat.exe
-start ..\retrobat.exe
+start ..\..\retrobat.exe
 timeout /t 2 /nobreak >NUL
 
 :: Création d'un fichier VBScript temporaire pour changer le focus sur la fenêtre EmulationStation.

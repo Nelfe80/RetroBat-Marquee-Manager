@@ -35,9 +35,9 @@ class ScreenScraperAPI:
             jeu = response["response"].get("jeu")
             if jeu and "medias" in jeu:
                 for media in jeu["medias"]:
-                    if media["type"] == "screenmarquee":
+                    if media["type"] == "marquee":
                         return media, ''
-                    elif media["type"] == "marquee":
+                    elif media["type"] == "screenmarquee":
                         return media, ''
         return None, error_message
 
@@ -218,10 +218,27 @@ def write_scrap_failed(failed_pool_file, failed_line):
     with open(failed_pool_file, "a") as file:
         file.write(failed_line + '\n')
 
+config = configparser.ConfigParser()
 def load_config():
-    config = configparser.ConfigParser()  # Initialiser config
-    config.read('events.ini')
-    return config
+    global config
+    config.read('config.ini')
+    current_working_dir = os.getcwd()  # C:\RetroBat\plugins\MarqueeManager\
+    logging.info(f"{current_working_dir}")
+    def update_path(setting, default_path):
+        logging.info(f"update_path {setting} {default_path}")
+        # Vérifier si la variable n'existe pas ou n'est pas un lien absolu
+        if setting not in config['Settings'] or not os.path.isabs(config['Settings'].get(setting, '')):
+            config['Settings'][setting] = default_path
+
+    update_path('RetroBatPath', os.path.dirname(os.path.dirname(current_working_dir)))
+    update_path('RomsPath', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
+    update_path('DefaultImagePath', os.path.join(current_working_dir, 'images', 'default.png'))
+    update_path('MarqueeImagePath', os.path.join(current_working_dir, 'images'))
+    update_path('MarqueeImagePathDefault', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
+    update_path('SystemMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'themes', 'es-theme-carbon-master', 'art', 'logos'))
+    update_path('CollectionMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'themes', 'es-theme-carbon-master', 'art', 'logos'))
+    update_path('MPVPath', os.path.join(current_working_dir, 'mpv', 'mpv.exe'))
+    update_path('IMPath', os.path.join(current_working_dir, 'imagemagick', 'convert.exe'))
 
 def read_scrap_pool(pool_file):
     with open(pool_file, 'r') as file:
@@ -236,12 +253,12 @@ def ensure_file_exists(file_path):
 # Fonction principale
 def main():
     logging.basicConfig(level=logging.INFO)
-    config = load_config()
+    load_config()
     es_settings = load_es_settings(os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_settings.cfg'))
     logging.debug(f"es_settings: {es_settings}")
-    systems_dict = load_systems_scrap(os.path.join(config['Settings']['RetroBatPath'], 'marquees', 'systems.scrap'))
-    scrap_pool_file = os.path.join(config['Settings']['RetroBatPath'], 'marquees', 'scrap.pool')
-    scrap_failed_file = os.path.join(config['Settings']['RetroBatPath'], 'marquees', 'scrapfailed.pool')
+    systems_dict = load_systems_scrap(os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'systems.scrap'))
+    scrap_pool_file = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'scrap.pool')
+    scrap_failed_file = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'scrapfailed.pool')
 
     ensure_file_exists(scrap_pool_file)
     ensure_file_exists(scrap_failed_file)

@@ -5,21 +5,29 @@ import urllib.parse
 import configparser
 import subprocess
 import shlex
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def find_ini_file(start_path):
     current_path = start_path
     while current_path != os.path.dirname(current_path):
-        ini_path = os.path.join(current_path, 'marquees', 'events.ini')
+        ini_path = os.path.join(current_path, 'plugins', 'MarqueeManager', 'config.ini')
+        logging.info(f"Recherche config.ini sur : {ini_path}")
         if os.path.exists(ini_path):
+            logging.info(f"Fichier config.ini trouvé : {ini_path}")
             return ini_path
         current_path = os.path.dirname(current_path)
-    raise FileNotFoundError("Le fichier events.ini n'a pas été trouvé.")
+    raise FileNotFoundError("Le fichier config.ini n'a pas été trouvé.")
 
 def load_config():
-    current_working_dir = os.getcwd()
-    config_path = find_ini_file(current_working_dir)
+    config_ini_file_path = find_ini_file(os.getcwd())
     config = configparser.ConfigParser()
-    config.read(config_path)
+    config.read(config_ini_file_path)
+
+    base_path = os.path.dirname(os.path.dirname(os.path.dirname(config_ini_file_path)))
+    logging.info(f"base_path: {base_path}")
+    logging.info(f"config_ini_file_path: {config_ini_file_path}")
     return config
 
 def send_event(event, params, server_url):
