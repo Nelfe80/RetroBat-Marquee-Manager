@@ -18,7 +18,8 @@ def load_config():
     global config
     config.read('config.ini')
     if config['Settings']['logFile'] == "true":
-        logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
+        logging.basicConfig(level=logging.INFO)
+        #logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
         logging.getLogger('werkzeug').setLevel(logging.INFO)
         logging.info("Start logging")
 
@@ -63,7 +64,7 @@ def load_systems_config(xml_relative_path):
             folder_rom_name = os.path.basename(os.path.normpath(path.strip('~\\..')))
             system_folders[name] = folder_rom_name
             system_folders[name+".theme"] = theme
-            logging.info(f"System {name} loading folder_rom_name - {folder_rom_name} path {path} - theme : {system_folders[name+'.theme']}")
+            #logging.info(f"System {name} loading folder_rom_name - {folder_rom_name} path {path} - theme : {system_folders[name+'.theme']}")
 
         else:
             logging.info(f"Missing name and/or path in es_systems.cfg for the system {system.tag}")
@@ -153,11 +154,11 @@ def find_system_marquee(system_name, folder_rom_name, systems_config, config):
         if not system_name and not folder_rom_name and not marquee_path:
             marquee_path = 'retrobat'
         full_marquee_path = os.path.join(config['Settings']['SystemMarqueePath'], marquee_path)
-        logging.info(f"FMF System topper path (full_marquee_path) : {full_marquee_path}")
+        #logging.info(f"FMF System topper path (full_marquee_path) : {full_marquee_path}")
 
         marquee_file = find_file(full_marquee_path)
         if marquee_file:
-            logging.info(f"FMF System Topper : {marquee_file}")
+            #logging.info(f"FMF System Topper : {marquee_file}")
             return marquee_file
 
     return None
@@ -169,29 +170,29 @@ def find_marquee_file(system_name, game_name, systems_config, game_title, rom_pa
     if system_name == 'collection':
         marquee_file = find_marquee_for_collection(game_name)
         if marquee_file:
-            logging.info(f"FMF Found collection topper : {marquee_file}")
+            #logging.info(f"FMF Found collection topper : {marquee_file}")
             return marquee_file
     # Si le marquee est un jeu
     # Test marquee custom
     marquee_structure = config['Settings']['MarqueeFilePath']
     marquee_path = marquee_structure.format(system_name=folder_rom_name, game_name=game_name)
-    logging.info(f"FMF GAME marquee_structure : {marquee_structure} system_name : {system_name} - game_name : {game_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
+    #logging.info(f"FMF GAME marquee_structure : {marquee_structure} system_name : {system_name} - game_name : {game_name} - folder_rom_name : {folder_rom_name} - marquee_path : {marquee_path}")
     full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
-    logging.info(f"FMF Full_marquee_path : {full_marquee_path}")
+    #logging.info(f"FMF Full_marquee_path : {full_marquee_path}")
     marquee_file = find_file(full_marquee_path)
     # Test marquee default
     if marquee_file is None:
         marquee_structure_default = config['Settings']['MarqueeFilePathDefault']
         marquee_path_default = marquee_structure_default.format(system_name=folder_rom_name, game_name=game_name)
         full_marquee_path_default = os.path.join(config['Settings']['MarqueeImagePathDefault'], marquee_path_default)
-        logging.info(f"FMF Full_marquee_path_default : {full_marquee_path_default}")
+        #logging.info(f"FMF Full_marquee_path_default : {full_marquee_path_default}")
         marquee_file = find_file(full_marquee_path_default)
         # Lancer le scraping si MarqueeAutoScraping est activé et si le marquee est trouvé avec le chemin par défaut
         if marquee_file and game_title is not None and game_title != '' and config['Settings']['MarqueeAutoScraping'] == "true":
             add_to_scrap_pool(system_name, game_title, game_name, marquee_path, full_marquee_path, rom_path)
 
     if marquee_file:
-        logging.info(f"FMF Found game topper : {marquee_file}")
+        #logging.info(f"FMF Found game topper : {marquee_file}")
         return marquee_file
     else:
         if game_title is not None and game_title != '' and config['Settings']['MarqueeAutoScraping'] == "true":
@@ -199,10 +200,10 @@ def find_marquee_file(system_name, game_name, systems_config, game_title, rom_pa
     # Si le marquee est un système
     marquee_file = find_system_marquee(system_name, folder_rom_name, systems_config, config)
     if marquee_file:
-        logging.info(f"FMF Found system topper : {marquee_file}")
+        #logging.info(f"FMF Found system topper : {marquee_file}")
         return marquee_file
 
-    logging.info(f"FMF Using the default image : {config['Settings']['DefaultImagePath']}")
+    #logging.info(f"FMF Using the default image : {config['Settings']['DefaultImagePath']}")
     return config['Settings']['DefaultImagePath']
 
 def convert_image(img_path, target_img_path):
@@ -253,7 +254,7 @@ def find_file(base_path):
         # Test fichier si marquee scrappé
         logging.info(f"###FF TEST full_path_scrapped : {full_path_scrapped}")
         if os.path.isfile(full_path_scrapped):
-            logging.info(f"###FF Scraped topper file found : {full_path_scrapped} >> Convert to marquee size PNG")
+            #logging.info(f"###FF Scraped topper file found : {full_path_scrapped} >> Convert to marquee size PNG")
             return convert_image(full_path_scrapped, full_path_topper)
 
     # Aucun fichier trouvé >> test SVG
@@ -262,15 +263,15 @@ def find_file(base_path):
     # Test si fond noir, recherche svg texte blanc
     if config['Settings']['MarqueeBackgroundColor'] == "Black":
         full_path_backgroundBoWcolor_svg = f"{base_path}{full_path_suffixe}.svg"
-        logging.info(f"###FF TEST : {full_path_backgroundBoWcolor_svg}")
+        #logging.info(f"###FF TEST : {full_path_backgroundBoWcolor_svg}")
         if os.path.isfile(full_path_backgroundBoWcolor_svg):
-            logging.info(f"###FF SVG File White Text found : {full_path_backgroundBoWcolor_svg}")
+            #logging.info(f"###FF SVG File White Text found : {full_path_backgroundBoWcolor_svg}")
             return convert_image(full_path_backgroundBoWcolor_svg, full_path_convert_svg)
     full_path_svg = f"{base_path}.svg"
     # Test standard
-    logging.info(f"###FF TEST : {full_path_svg}")
+    #logging.info(f"###FF TEST : {full_path_svg}")
     if os.path.isfile(full_path_svg):
-        logging.info(f"###FF SVG File found : {full_path_svg}")
+        #logging.info(f"###FF SVG File found : {full_path_svg}")
         return convert_image(full_path_svg, full_path_convert_svg)
     logging.info(f"FF No File found : {base_path} - {full_path} - {full_path_svg} - {full_path_convert_svg}")
     return None
@@ -279,13 +280,13 @@ def add_to_scrap_pool(system_name, game_title, game_name, marquee_path, full_mar
     scrap_pool_file = 'scrap.pool'
     # Vérifier si scrap.pool n'existe pas, le créer
     if not os.path.exists(scrap_pool_file):
-        logging.info(f"ATSP Create scrap.pool file")
+        #logging.info(f"ATSP Create scrap.pool file")
         open(scrap_pool_file, 'w').close()
 
     # Ajouter la demande dans le fichier scrap.pool
     with open(scrap_pool_file, 'a') as file:
         file.write(f"{system_name}|{game_title}|{game_name}|{marquee_path}|{full_marquee_path}|{rom_path}\n")
-        logging.info(f"Add {system_name}, {game_title} ,{game_name} to scrap.pool file")
+        #logging.info(f"Add {system_name}, {game_title} ,{game_name} to scrap.pool file")
 
 def parse_path(params, systems_config):
     system_detected = False
@@ -296,9 +297,9 @@ def parse_path(params, systems_config):
     game_title = params.get('param3', '')
     for param in params.values():
         decoded_param = urllib.parse.unquote_plus(param)
-        logging.info(f"PP Decoded parameter {param} : {decoded_param}")
+        #logging.info(f"PP Decoded parameter {param} : {decoded_param}")
         formatted_path = os.path.normpath(decoded_param)
-        logging.info(f"PP Formatted path : {formatted_path}")
+        #logging.info(f"PP Formatted path : {formatted_path}")
 
         # Récupération du nom du système en récuperant le dossier juste derrieres roms/
         folder_rom_name = systems_config.get(decoded_param, '')
@@ -311,24 +312,24 @@ def parse_path(params, systems_config):
             else:
                 folder_rom_name = os.path.basename(os.path.normpath(formatted_path))
 
-        logging.info(f"PP folder_rom_name : {folder_rom_name}")
+        #logging.info(f"PP folder_rom_name : {folder_rom_name}")
         folder_rom_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name)
-        logging.info(f"PP folder_rom_path : {folder_rom_path}")
+        #logging.info(f"PP folder_rom_path : {folder_rom_path}")
         folder_rom_images_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name, 'images')
-        logging.info(f"PP folder_rom_images_path : {folder_rom_images_path}")
+        #logging.info(f"PP folder_rom_images_path : {folder_rom_images_path}")
 
         # Test si la chaine est simplement le nom du dossier contenant les roms (avec la table de correspondance folder_rom_name)
         if folder_rom_name and os.path.isdir(folder_rom_path):
-            logging.info(f"PP System roms detected : {decoded_param}")
+            #logging.info(f"PP System roms detected : {decoded_param}")
             system_detected = True
             if system_name == '' :
                 system_name = decoded_param
 
         # Test si le chemin vers la rom est un simple dossier, sans connaitre le lien exacte ver la rom derrière
         if os.path.isdir(formatted_path):
-            logging.info(f"PP >>> formatted_path : {formatted_path}")
-            logging.info(f"PP >>> os.path.basename(formatted_path) : {os.path.basename(formatted_path)}")
-            logging.info(f"PP >>> os.path.splitext(os.path.basename(formatted_path))[0] : {os.path.splitext(os.path.basename(formatted_path))[0]}")
+            #logging.info(f"PP >>> formatted_path : {formatted_path}")
+            #logging.info(f"PP >>> os.path.basename(formatted_path) : {os.path.basename(formatted_path)}")
+            #logging.info(f"PP >>> os.path.splitext(os.path.basename(formatted_path))[0] : {os.path.splitext(os.path.basename(formatted_path))[0]}")
             game_detected = True
             game_name = os.path.splitext(os.path.basename(formatted_path))[0]
             logging.info(f"PP Path System Roms Folder: {system_name}, Game name : {game_name}, Game title : {game_title}")
@@ -356,10 +357,12 @@ def parse_path(params, systems_config):
         logging.info(f"PP Simple parameter detected : {first_param}")
         return 'collection', first_param, '', ''
 
-    logging.info(f"PP No valid file path found in parameters.")
+    #logging.info(f"PP No valid file path found in parameters.")
     return '', '', '', ''
 
+
 def execute_command(action, params, systems_config):
+    global last_execution_time
     if action in config['Commands']:
         system_name, game_name, game_title, rom_path = parse_path(params, systems_config)
         marquee_file = find_marquee_file(system_name, game_name, systems_config, game_title, rom_path)
@@ -370,20 +373,129 @@ def execute_command(action, params, systems_config):
         )
         logging.info(f"Executing the command : {command}")
         subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+        last_execution_time = time.time()
         return json.dumps({"status": "success", "action": action, "command": command})
     return json.dumps({"status": "error", "message": "No command configured for this action"})
 
+# EVENT RECEPTIONNE CLASSIQUE (PAR EXE ou PS1)
+# Variable globale pour stocker le timestamp de la dernière requête
+last_execution_time = 0  # Timestamp de la dernière exécution
+request_list = []        # Liste pour stocker les requêtes
+import time
+import threading
+def monitor_and_execute_requests():
+    global request_list
+    while True:
+        current_time = time.time()
+        with lock:
+            # S'assurer que la liste est triée correctement par timestamp en ordre croissant
+            request_list.sort(key=lambda x: x[0])
+
+            if request_list and current_time - last_execution_time >= 1:
+                # Exécuter la commande pour la requête avec le plus grand timestamp
+                latest_request = max(request_list, key=lambda x: x[0])
+                _, action, params = latest_request
+                execute_command(action, params, systems_config)
+
+                # Conserver uniquement les requêtes arrivées après l'exécution de la commande
+                latest_timestamp = latest_request[0]
+                request_list = [req for req in request_list if req[0] > latest_timestamp]
+        time.sleep(0.2)
+
 @app.route('/', methods=['GET'])
 def handle_request():
+    global request_list
     ensure_mpv_running()
     action = request.args.get('event', '')
     params = dict(request.args)
-    logging.info(f"Action received : {action}, Parameters : {params}")
     params.pop('event', None)
-    return execute_command(action, params, systems_config)
+    logging.info(f"Action received : {action}, Parameters : {params} -+")
+
+    if 'timestamp' in params:
+        with lock:
+            request_list.append((float(params['timestamp']), action, params))
+
+    return "Request received"
+
+#@app.route('/', methods=['GET'])
+#def handle_request():
+    #subprocess.run(f"taskkill /IM ESEventPush.exe /F", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#    ensure_mpv_running()
+#    action = request.args.get('event', '')
+#    params = dict(request.args)
+#    logging.info(f"Action received : {action}, Parameters : {params}")
+#    params.pop('event', None)
+#    return execute_command(action, params, systems_config)
+
+# EVENT SURVEILLE PAR LECTURE FICHIER ARG
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+
+class FileWatcher(FileSystemEventHandler):
+    def __init__(self, file_path, callback):
+        self.file_path = file_path
+        self.callback = callback
+
+    def on_modified(self, event):
+        if event.src_path == self.file_path:
+            self.callback()
+
+def on_file_modified():
+    ensure_mpv_running()
+    file_path = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'game-selected.arg')
+    logging.info(f"on_file_modified : {file_path}")
+    # Lire et analyser le contenu du fichier
+    try:
+        with open(file_path, 'r') as file:
+            content = file.read()
+        content = content.replace('|', '!')
+        logging.info(f"on_file_modified content : {content}")
+        params = urllib.parse.parse_qs(content)
+        action = params.get('event', [''])[0]  # Prend le premier élément ou une chaîne vide
+
+        # Nettoyer les paramètres
+        params.pop('event', None)
+        for key, value in params.items():
+            params[key] = value[0].strip('"')
+
+        logging.info(f"Action received : {action}, Parameters : {params} --")
+
+        # Ici, appeler votre fonction execute_command
+        return execute_command(action, params, systems_config)
+
+    except Exception as e:
+        logging.error(f"Error processing file: {e}")
+
+def start_watching():
+    logging.info(f"start_watching")
+    file_path = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'game-selected.arg')
+    observer = Observer()
+    event_handler = FileWatcher(file_path, on_file_modified)
+    logging.info(f"file_path {file_path}")
+    observer.schedule(event_handler, os.path.dirname(file_path), recursive=False)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
 
 if __name__ == '__main__':
     load_config()
+    lock = threading.Lock()
+
+    # Démarrer la surveillance du fichier
+    file_thread = threading.Thread(target=start_watching)
+    file_thread.start()
+    #logging.info(f"File watching thread started: {file_thread.is_alive()}")
+
+    # Démarrer le thread de surveillance de requete http
+    #monitor_thread = threading.Thread(target=monitor_and_execute_requests, daemon=True)
+    #monitor_thread.start()
+
     launch_media_player()
     systems_config = load_systems_config(os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_systems.cfg'))
     app.run(host=config['Settings']['Host'], port=int(config['Settings']['Port']), debug=False)
+
