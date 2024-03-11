@@ -18,8 +18,8 @@ def load_config():
     global config
     config.read('config.ini')
     if config['Settings']['logFile'] == "true":
-        logging.basicConfig(level=logging.INFO)
-        #logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
+        #logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
         logging.getLogger('werkzeug').setLevel(logging.INFO)
         logging.info("Start logging")
 
@@ -164,6 +164,7 @@ def find_system_marquee(system_name, folder_rom_name, systems_config, config):
     return None
 
 def find_marquee_file(system_name, game_name, systems_config, game_title, rom_path):
+    logging.info(f"FMF find_marquee_file : system_name : {system_name} - game_name : {game_name} - game_title : {game_title} - rom_path : {rom_path}")
     lng=config['Settings']['Language']
     folder_rom_name = systems_config.get(system_name, system_name)
     # Si le marquee est une collection
@@ -237,11 +238,11 @@ def find_file(base_path):
         full_path_topper = f"{base_path}-topper.png"
         full_path_scrapped = f"{base_path}scrapped.{fmt.strip()}"
         # Test fichier si marquee standard
-        logging.info(f"###FF TEST full_path : {full_path}")
+        #logging.info(f"###FF TEST full_path : {full_path}")
         if os.path.isfile(full_path):
             if config['Settings']['MarqueeAutoConvert'] == "true":
                 # Optimisation
-                logging.info(f"###FF File found : {full_path} >> Convert to marquee size PNG")
+                #logging.info(f"###FF File found : {full_path} >> Convert to marquee size PNG")
                 return convert_image(full_path, full_path_topper)
             else:
                 # Conservation du fichier d'origine
@@ -250,9 +251,10 @@ def find_file(base_path):
         # Test si topper optimisé déja existant
         logging.info(f"###FF TEST full_path_topper : {full_path_topper}")
         if os.path.isfile(full_path_topper):
+            logging.info(f"###FF Full_path_topper Detected : {full_path_topper}")
             return full_path_topper
         # Test fichier si marquee scrappé
-        logging.info(f"###FF TEST full_path_scrapped : {full_path_scrapped}")
+        #logging.info(f"###FF TEST full_path_scrapped : {full_path_scrapped}")
         if os.path.isfile(full_path_scrapped):
             #logging.info(f"###FF Scraped topper file found : {full_path_scrapped} >> Convert to marquee size PNG")
             return convert_image(full_path_scrapped, full_path_topper)
@@ -288,21 +290,23 @@ def add_to_scrap_pool(system_name, game_title, game_name, marquee_path, full_mar
         file.write(f"{system_name}|{game_title}|{game_name}|{marquee_path}|{full_marquee_path}|{rom_path}\n")
         #logging.info(f"Add {system_name}, {game_title} ,{game_name} to scrap.pool file")
 
-def parse_path(params, systems_config):
-    system_detected = False
-    game_detected = False
+#action=game-selected&param1="amstradcpc"&param2="C:/RetroBatV6/roms/amstradcpc/007 - Live and Let Die (1988)(Domark).zip"&param3="Live and Let Die" // game
+#action=system-selected&param1="amstradcpc" // systems
+#action=system-selected&param1="all"  event=system-selected&param1="favorites" // collections
+def parse_path(action, params, systems_config):
     system_name = ''
     game_name = ''
+    game_title = ''
     rom_path = ''
-    game_title = params.get('param3', '')
-    for param in params.values():
-        decoded_param = urllib.parse.unquote_plus(param)
-        #logging.info(f"PP Decoded parameter {param} : {decoded_param}")
-        formatted_path = os.path.normpath(decoded_param)
-        #logging.info(f"PP Formatted path : {formatted_path}")
 
-        # Récupération du nom du système en récuperant le dossier juste derrieres roms/
+    if action == 'game-selected' :
+        system_name = params.get('param1', '')
+        decoded_param = urllib.parse.unquote_plus(params.get('param1', ''))
+        formatted_path = os.path.normpath(urllib.parse.unquote_plus(params.get('param2', '')))
         folder_rom_name = systems_config.get(decoded_param, '')
+        folder_rom_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name)
+        game_title = params.get('param3', '')
+        #  Recupération system si pas dans es_systems
         if folder_rom_name == '' :
             roms_path = config['Settings']['RomsPath']
             if formatted_path.startswith(roms_path):
@@ -312,34 +316,20 @@ def parse_path(params, systems_config):
             else:
                 folder_rom_name = os.path.basename(os.path.normpath(formatted_path))
 
-        #logging.info(f"PP folder_rom_name : {folder_rom_name}")
-        folder_rom_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name)
-        #logging.info(f"PP folder_rom_path : {folder_rom_path}")
-        folder_rom_images_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name, 'images')
-        #logging.info(f"PP folder_rom_images_path : {folder_rom_images_path}")
-
         # Test si la chaine est simplement le nom du dossier contenant les roms (avec la table de correspondance folder_rom_name)
         if folder_rom_name and os.path.isdir(folder_rom_path):
-            #logging.info(f"PP System roms detected : {decoded_param}")
-            system_detected = True
-            if system_name == '' :
-                system_name = decoded_param
+            system_name = decoded_param
 
-        # Test si le chemin vers la rom est un simple dossier, sans connaitre le lien exacte ver la rom derrière
+        # Recuperation game_name
+        rom_path = formatted_path
         if os.path.isdir(formatted_path):
-            #logging.info(f"PP >>> formatted_path : {formatted_path}")
-            #logging.info(f"PP >>> os.path.basename(formatted_path) : {os.path.basename(formatted_path)}")
-            #logging.info(f"PP >>> os.path.splitext(os.path.basename(formatted_path))[0] : {os.path.splitext(os.path.basename(formatted_path))[0]}")
-            game_detected = True
             game_name = os.path.splitext(os.path.basename(formatted_path))[0]
             logging.info(f"PP Path System Roms Folder: {system_name}, Game name : {game_name}, Game title : {game_title}")
-            rom_path = formatted_path
             if system_name != game_name:
                 return system_name, game_name, game_title, rom_path
 
         # Test si le chemin correspond bien à une rom d'un dossier système
         if os.path.isfile(formatted_path):
-            game_detected = True
             path_parts = formatted_path.split(os.sep)
             game_name = os.path.splitext(os.path.basename(formatted_path))[0]
             if system_name == '' :
@@ -349,22 +339,25 @@ def parse_path(params, systems_config):
             if system_name != game_name:
                 return system_name, game_name, game_title, rom_path
 
-    if system_detected:
-        return system_name, '', '', ''
+        return system_name, game_name, game_title, rom_path
 
-    if not game_detected and not system_detected and params:
-        first_param = next(iter(params.values()))
-        logging.info(f"PP Simple parameter detected : {first_param}")
-        return 'collection', first_param, '', ''
+    elif action == 'system-selected' :
+        folder_rom_name = params.get('param1', '')
+        folder_rom_path = os.path.join(config['Settings']['RomsPath'], folder_rom_name)
+        # Test si la chaine est simplement le nom du dossier contenant les roms (avec la table de correspondance folder_rom_name)
+        if folder_rom_name and os.path.isdir(folder_rom_path):
+            system_name = folder_rom_name
+            return system_name, '', '', ''
+        else:
+            return 'collection', params.get('param1', ''), '', ''
 
-    #logging.info(f"PP No valid file path found in parameters.")
     return '', '', '', ''
-
 
 def execute_command(action, params, systems_config):
     global last_execution_time
     if action in config['Commands']:
-        system_name, game_name, game_title, rom_path = parse_path(params, systems_config)
+        system_name, game_name, game_title, rom_path = parse_path(action, params, systems_config)
+        logging.info(f"execute_command system_name {system_name}, game_name {game_name} ,game_title {game_title}, rom_path {rom_path}")
         marquee_file = find_marquee_file(system_name, game_name, systems_config, game_title, rom_path)
         #escaped_marquee_file = escape_file_path(marquee_file)
         command = config['Commands'][action].format(
@@ -443,12 +436,12 @@ class FileWatcher(FileSystemEventHandler):
 
 def on_file_modified():
     ensure_mpv_running()
-    file_path = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'game-selected.arg')
+    file_path = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'ESEvent.arg')
     logging.info(f"on_file_modified : {file_path}")
     # Lire et analyser le contenu du fichier
     try:
         with open(file_path, 'r') as file:
-            content = file.read()
+            content = file.read().strip()
         content = content.replace('|', '!')
         logging.info(f"on_file_modified content : {content}")
         params = urllib.parse.parse_qs(content)
@@ -457,7 +450,7 @@ def on_file_modified():
         # Nettoyer les paramètres
         params.pop('event', None)
         for key, value in params.items():
-            params[key] = value[0].strip('"')
+            params[key] = value[0].strip(' "')
 
         logging.info(f"Action received : {action}, Parameters : {params} --")
 
@@ -469,7 +462,7 @@ def on_file_modified():
 
 def start_watching():
     logging.info(f"start_watching")
-    file_path = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'game-selected.arg')
+    file_path = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'ESEvent.arg')
     observer = Observer()
     event_handler = FileWatcher(file_path, on_file_modified)
     logging.info(f"file_path {file_path}")

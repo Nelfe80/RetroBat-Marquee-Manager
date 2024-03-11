@@ -23,6 +23,6 @@ for %%a in (%args0%) do (
     set /a counter+=1
 )
 
-set "outputFile=..\..\..\..\plugins\MarqueeManager\game-selected.arg"
+set "outputFile=..\..\..\..\plugins\MarqueeManager\ESEvent.arg"
 :: Écrire dans le fichier game-selected.arg
 echo !params! > !outputFile!

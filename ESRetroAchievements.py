@@ -671,7 +671,7 @@ def main():
 
     player_username = es_settings['global.retroachievements.username']
 
-    if config['Settings']['MarqueeRetroAchievements']:
+    if config['Settings']['MarqueeRetroAchievements'] == "true":
         modify_retroarch_config(config)
         last_line_num = 0
         while True:
