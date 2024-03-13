@@ -22,11 +22,10 @@ In the "\RetroBat\plugins\MarqueeManager\" folder :<br>
 - retroachievements.ini (RA dictionnary)<br>
 - systems.scrap (screenscraper systems ids)<br>
 <br><br>
-Click to install.bat to copy ESEventPush.exe in folders such as <br>
+Click to install.bat to copy ESEventPush.bat in folders such as <br>
 - "C:\RetroBat\emulationstation\.emulationstation\scripts\game-selected" >> update marquee when a game is selected<br>
 - "C:\RetroBat\emulationstation\.emulationstation\scripts\system-selected" >> update marquee when a system is selected<br>
 - "C:\RetroBat\emulationstation\.emulationstation\scripts\game-start" >> update marquee when a game start<br>
-- "C:\RetroBat\emulationstation\.emulationstation\scripts\game-end" >> update marquee when a game stop<br><br>
 <b>Configuration File Setup</b>:<br>
 Ensure that the ini file is correctly configured for proper operation of the executables.<br><br>
 <b>Updating and installing dependencies if needed</b>:<br>
