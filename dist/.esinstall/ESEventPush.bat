@@ -4,6 +4,7 @@ for %%i in ("%~dp0.") do set "currentDir=%%~nxi"
 :: Capture tous les arguments dans args0
 set args0=%*
 echo %args0%
+set args0=%args0:""="%
 set args0=%args0:!=|%
 echo %args0%
 setlocal enabledelayedexpansion
