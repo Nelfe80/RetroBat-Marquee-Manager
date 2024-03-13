@@ -137,6 +137,8 @@ def convert_image(img_path, target_img_path):
     return target_img_path
 
 def find_marquee_for_collection(game_name):
+    logging.info(f"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+    logging.info(f"FMF find_marquee_for_collection")
     collection_correlation = parse_collection_correlation()
     collection_marquee_path = config['Settings']['CollectionMarqueePath']
     alternative_names = config['Settings']['CollectionAlternativNames'].split(',')
@@ -171,12 +173,14 @@ def find_marquee_for_collection(game_name):
     return None
 
 def find_system_marquee(system_name, folder_rom_name, systems_config):
+    logging.info(f"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    logging.info(f"FMF find_system_marquee")
     marquee_structure = config['Settings']['SystemFilePath']
     marquee_paths = [
         marquee_structure.format(system_name=folder_rom_name),
         marquee_structure.format(system_name=systems_config.get(system_name + ".theme"))
     ]
-
+    logging.info(f"FMF marquee_paths : {marquee_paths}")
     # Tester les chemins
     for marquee_path in marquee_paths:
         if not system_name and not folder_rom_name and not marquee_path:
@@ -206,6 +210,9 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
     #rom_path = os.path.normpath(urllib.parse.unquote_plus(param3, ''))) #C:\RetroBat\roms\<system>\<rom.ext>
     if type == 'collection':
         marquee_file = find_marquee_for_collection(param1)
+        if not marquee_file:
+            folder_rom_name = systems_config.get(param1, param1)
+            marquee_file = find_system_marquee(param1, folder_rom_name, systems_config)
         if marquee_file:
             logging.info(f"FMF Found collection : {marquee_file}")
             return marquee_file
