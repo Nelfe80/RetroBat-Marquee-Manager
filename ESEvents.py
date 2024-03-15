@@ -6,6 +6,7 @@ import json
 import urllib.parse
 import shlex
 import xml.etree.ElementTree as ET
+import glob
 import logging
 
 app = Flask(__name__)
@@ -70,6 +71,17 @@ def load_systems_config(xml_relative_path):
             logging.info(f"Missing name and/or path in es_systems.cfg for the system {system.tag}")
 
     return system_folders
+
+def load_all_systems_configs(config_directory):
+    all_system_folders = {}
+
+    # Liste tous les fichiers es_systems*.cfg
+    cfg_files = glob.glob(os.path.join(config_directory, 'es_systems*.cfg'))
+    for cfg_file in cfg_files:
+        system_folders = load_systems_config(cfg_file)
+        all_system_folders.update(system_folders)
+
+    return all_system_folders
 
 def launch_media_player():
     kill_command = config['Settings']['MPVKillCommand']
@@ -624,7 +636,9 @@ def start_watching():
 
 if __name__ == '__main__':
     load_config()
-    systems_config = load_systems_config(os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_systems.cfg'))
+    #systems_config = load_systems_config(os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_systems.cfg'))
+    systems_config_directory = os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation')
+    systems_config = load_all_systems_configs(systems_config_directory)
     lock = threading.Lock()
 
     # Démarrer la surveillance du fichier
