@@ -207,7 +207,7 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
     lng = config['Settings']['Language']
     marquee_structure = config['Settings']['MarqueeFilePath']
     marquee_structure_default = config['Settings']['MarqueeFilePathDefault']
-    #rom_path = os.path.normpath(urllib.parse.unquote_plus(param3, ''))) #C:\RetroBat\roms\<system>\<rom.ext>
+    #rom_path = os.path.normpath(urllib.parse.unquote(param3, ''))) #C:\RetroBat\roms\<system>\<rom.ext>
     if type == 'collection':
         marquee_file = find_marquee_for_collection(param1)
         if not marquee_file:
@@ -344,11 +344,29 @@ def parse_path(action, params, systems_config):
     folder_rom_name_extract = ''
     system_rom_name_extract = ''
 
+    equivalences = {
+        '|A': '&',
+        '|g': '"',
+        '|v': ',',
+        '|p': '+',
+        '|': '!'
+    }
+    def replace_special_characters(value):
+        for original, replacement in equivalences.items():
+            value = value.replace(original, replacement)
+        return value
+
+    param1 = replace_special_characters(params.get('param1', ''))
+    param2 = replace_special_characters(params.get('param2', ''))
+    param3 = replace_special_characters(params.get('param3', ''))
+    param4 = replace_special_characters(params.get('param4', ''))
+
+    logging.info(f"PP clean params - param1 {param1} param2 {param2} param3 {param3} param4 {param4}")
+
     if action == 'game-selected' or action == 'system-selected' :
-        system_name = params.get('param1', '')
-        system_rom_path = os.path.join(roms_path, params.get('param1', '')) # C:\RetroBat\roms\<system>
-        #folder_rom_name = urllib.parse.unquote_plus(params.get('param1', ''))
-        formatted_rom_path = os.path.normpath(urllib.parse.unquote_plus(params.get('param2', ''))) #C:\RetroBat\roms\<system>\<rom.ext>
+        system_name = param1
+        system_rom_path = os.path.join(roms_path, param1) # C:\RetroBat\roms\<system>
+        formatted_rom_path = os.path.normpath(urllib.parse.unquote(param2)) #C:\RetroBat\roms\<system>\<rom.ext>
         # Extraction du chemin de la rom , du dossier system du jeu et du jeu
         folder_rom_name_extract = folder_rom_path[len(formatted_rom_path):].strip('\\/')
         #system_rom_name_extract = folder_rom_name.split('\\')[0] if '\\' in formatted_rom_path
@@ -376,9 +394,9 @@ def parse_path(action, params, systems_config):
 
     # GAME START
     if action == 'game-start' :
-        game_name = params.get('param2', '')
-        game_title = params.get('param3', '')
-        formatted_rom_path = os.path.normpath(urllib.parse.unquote_plus(params.get('param1', '')))
+        game_name = param2
+        game_title = param3
+        formatted_rom_path = os.path.normpath(urllib.parse.unquote(param1))
         logging.info(f"PP GAME START formatted_rom_path - {formatted_rom_path}")
         remaining_path = formatted_rom_path.replace(roms_path, "")
         if remaining_path.startswith("\\"):
@@ -390,8 +408,8 @@ def parse_path(action, params, systems_config):
 
     # GAME SELECTED
     if action == 'game-selected' :
-        game_title = params.get('param3', '')
-        formatted_rom_path = os.path.normpath(urllib.parse.unquote_plus(params.get('param2', '')))
+        game_title = param3
+        formatted_rom_path = os.path.normpath(urllib.parse.unquote(param2))
         logging.info(f"PP GAME SELECTED formatted_rom_path : {formatted_rom_path}")
         #if os.path.isdir(formatted_rom_path):
         #    game_name = os.path.splitext(os.path.basename(formatted_path))[0]
@@ -425,11 +443,11 @@ def parse_path(action, params, systems_config):
     # SYSTEM / COLLECTION
     elif action == 'system-selected' :
         if system_folder == True and system_essystems == True:
-            system_name = params.get('param1', '')
+            system_name = param1
             logging.info(f"PP system : {system_name}, system_folder : {system_folder}, system_essystems {system_essystems}")
             return 'system', system_name, system_folder, system_essystems, ''
         else:
-            collection = params.get('param1', '')
+            collection = param1
             logging.info(f"PP collection : {system_name}, system_folder : {system_folder}, system_essystems {system_essystems}")
             return 'collection', collection, system_folder, system_essystems, ''
 
@@ -439,13 +457,48 @@ def execute_command(action, params, systems_config):
     global last_execution_time
     if action in config['Commands']:
         type, param1, param2, param3, param4 = parse_path(action, params, systems_config)
-        logging.info(f"execute_command type {type}, param1 {param1} ,param2 {param2}, param3 {param3} ,param4 {param4}")
+
+        # On remplace les caracteres speciaux par les bons pour chercher l'image
+        equivalencesParam = {'!p' : '+'}
+        def replace_special_characters_params(value):
+            # S'assurer que value est une chaîne de caractères
+            if not isinstance(value, str):
+                return value  # Retourne la valeur telle quelle si ce n'est pas une chaîne
+
+            for original, replacement in equivalencesParam.items():
+                value = value.replace(original, replacement)
+            return value
+
+        param1=replace_special_characters_params(param1)
+        param2=replace_special_characters_params(param2)
+        param3=replace_special_characters_params(param3)
+        param4=replace_special_characters_params(param4)
+
+        logging.info(f"find_marquee_file type {type}, param1 {param1} ,param2 {param2}, param3 {param3} ,param4 {param4}")
         marquee_file = find_marquee_file(type, param1, param2, param3, param4, systems_config)
         #escaped_marquee_file = escape_file_path(marquee_file)
+
+         # On remplace les caracteres speciaux par les bons pour execturer la commande
+        equivalences = {#'^' : '^^',
+                        #'&' : '^&',
+                        #',' : '^,',
+                        #'<' : '^<',
+                        #'>' : '^>',
+                        #"'" : "^'",
+                        '\\': '\\\\'
+        }
+        def replace_special_characters(value):
+            for original, replacement in equivalences.items():
+                value = value.replace(original, replacement)
+            return value
+
+        marquee_file=replace_special_characters(marquee_file)
+
         command = config['Commands'][action].format(
             marquee_file=marquee_file,
             IPCChannel=config['Settings']['IPCChannel']
         )
+
         logging.info(f"Executing the command : {command}")
         subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
         last_execution_time = time.time()
@@ -524,15 +577,27 @@ def on_file_modified():
     try:
         with open(file_path, 'r') as file:
             content = file.read().strip()
-        content = content.replace('|', '!')
+        # probleme avec  ' , & +
+        #content = content.replace('|', '!')
+        #content = content.replace('^&', '|')
+
         logging.info(f"on_file_modified content : {content}")
         params = urllib.parse.parse_qs(content)
         action = params.get('event', [''])[0]  # Prend le premier élément ou une chaîne vide
 
         # Nettoyer les paramètres
         params.pop('event', None)
+
+        #cleanvalue = cleanvalue.replace("'", "^'")
+        #cleanvalue = cleanvalue.replace(",", "^,")
+        #cleanvalue = cleanvalue.replace("&", "^&")
+        #cleanvalue = cleanvalue.replace("+", "^+")
+
         for key, value in params.items():
-            params[key] = value[0].strip(' "')
+            cleanvalue = value[0].strip(' "')
+            #cleanvalue = cleanvalue.replace("|A", "&")
+            logging.info(f"#>>> params.items key : {key}, value : {value}, value[0] : {value[0]}, cleanvalue : {cleanvalue}")
+            params[key] = cleanvalue
 
         logging.info(f"Action received : {action}, Parameters : {params} --")
 
