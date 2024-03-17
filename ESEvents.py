@@ -8,6 +8,7 @@ import shlex
 import xml.etree.ElementTree as ET
 import glob
 import logging
+import re
 
 app = Flask(__name__)
 creation_flags = 0
@@ -83,6 +84,26 @@ def load_all_systems_configs(config_directory):
 
     return all_system_folders
 
+def push_datas_to_MPV(type, datas):
+    # Joindre les données en une chaîne séparée par des barres verticales
+    data_str = "|".join([type] + [str(value) for value in datas.values()])
+
+    # Récupération de la commande depuis le fichier de configuration (RA historiquement)
+    command_template = config['Settings']['MPVPushRetroAchievementsDatas']
+    if command_template:
+        # Remplacement du placeholder {data} par la chaîne
+        command = command_template.replace("{IPCChannel}", config['Settings']['IPCChannel'])
+        command = command.replace("{data}", data_str)
+
+        # Exécution de la commande
+        try:
+            subprocess.run(command, shell=True, check=True)
+            logging.info(f"Commande push_datas_to_MPV exécutée avec succès : {command}")
+        except Exception as e:
+            logging.error(f"Erreur lors de l'exécution de la commande push_datas_to_MPV : {e}")
+    else:
+        logging.error("La commande MPVPushRetroAchievementsDatas n'est pas définie dans le fichier de configuration.")
+
 def launch_media_player():
     kill_command = config['Settings']['MPVKillCommand']
     subprocess.run(kill_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
@@ -124,6 +145,11 @@ def parse_collection_correlation():
     return correlation_dict
 
 def convert_image(img_path, target_img_path):
+    # Création du dossier parent s'il n'existe pas
+    parent_dir = os.path.dirname(target_img_path)
+    if not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
+
     marquee_width = int(config['Settings']['MarqueeWidth'])
     marquee_height = int(config['Settings']['MarqueeHeight'])
     marquee_border = int(config['Settings']['MarqueeBorder'])
@@ -221,6 +247,7 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
     marquee_structure_default = config['Settings']['MarqueeFilePathDefault']
     #rom_path = os.path.normpath(urllib.parse.unquote(param3, ''))) #C:\RetroBat\roms\<system>\<rom.ext>
     if type == 'collection':
+        logging.info(f"############# COLLECTION ###############")
         marquee_file = find_marquee_for_collection(param1)
         if not marquee_file:
             folder_rom_name = systems_config.get(param1, param1)
@@ -229,7 +256,8 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
             logging.info(f"FMF Found collection : {marquee_file}")
             return marquee_file
 
-    if type == 'system':
+    elif type == 'system':
+        logging.info(f"############# SYSTEM ###############")
         folder_rom_name = systems_config.get(param1, param1)
         marquee_file = find_system_marquee(param1, folder_rom_name, systems_config)
         if marquee_file:
@@ -237,7 +265,8 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
             logging.info(f"FMF Found system : {marquee_file}")
             return marquee_file
 
-    if type == 'game':
+    elif type == 'game':
+        logging.info(f"############# GAME ###############")
         system_name = param1
         game_name = param2
         game_title = param3
@@ -246,14 +275,33 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
 
         logging.info(f"FMF GAME marquee_structure : {marquee_structure} system_name : {system_name} - game_name : {game_name} - folder_rom_name : {folder_rom_name} - rom_path : {rom_path}")
 
-        # Priorité sur le pattern name basic
         marquee_path = marquee_structure.format(system_name=folder_rom_name, game_name=game_name)
-        full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
-        marquee_file = find_file(full_marquee_path)
-        logging.info(f"FMF Full_marquee_path : {full_marquee_path} > marquee_file : {marquee_file}")
+
+        # Priorité sur le pattern name -topper
+        marquee_path_topper = f"{marquee_path}-topper"
+        full_marquee_path_topper = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path_topper)
+        logging.info(f"############# SUB GAME PATTERN TOPPER ###############")
+        marquee_file = find_file(full_marquee_path_topper)
+        logging.info(f"FMF TOPPER Full_marquee_path : {full_marquee_path_topper} > marquee_file : {marquee_file}")
+
+        # Lancer la génération automatique du marquee si on dispose d'un fanart et d'un logo et si MarqueeAutoGeneration est à true
+        if marquee_file is None and config['Settings']['MarqueeAutoGeneration'] == "true":
+            logging.info(f"FMF MarqueeAutoGeneration active")
+            marquee_path = marquee_structure.format(system_name=folder_rom_name, game_name=game_name)
+            compose_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
+            full_compose_marquee_path_topper = f"{compose_marquee_path}-topper.png"
+            marquee_file = autogen_marquee(system_name, game_name, rom_path, full_compose_marquee_path_topper)
+
+        # Recherche pattern basic
+        if marquee_file is None:
+            full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
+            logging.info(f"############# SUB GAME PATTERN BASIC ###############")
+            marquee_file = find_file(full_marquee_path)
+            logging.info(f"FMF BASIC Full_marquee_path : {full_marquee_path} > marquee_file : {marquee_file}")
 
         # Pattern default
         if marquee_file is None:
+            logging.info(f"############# SUB GAME NONE ###############")
             logging.info(f"FMF marquee_file is None")
             marquee_path_default = marquee_structure_default.format(system_name=folder_rom_name, game_name=game_name)
             full_marquee_path_default = os.path.join(config['Settings']['MarqueeImagePathDefault'], marquee_path_default)
@@ -273,19 +321,35 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
     logging.info(f"FMF Using the default image : {config['Settings']['DefaultImagePath']}")
     return config['Settings']['DefaultImagePath']
 
+def clean_rom_name(rom_name):
+    # Supprime tout texte entre parenthèses ou crochets à la fin de la chaîne
+    cleaned_name = re.sub(r'\s*(\[[^\]]*\]|\([^\)]*\))\s*$', '', rom_name)
+    # Supprime les occurrences spécifiques de motifs comme "??-in-1"
+    cleaned_name = re.sub(r'\s*\d+-in-\d+', '', cleaned_name)
+    return cleaned_name
+
 def find_file(base_path):
-    logging.info(f"##################################################")
-    logging.info(f"###FF FIND FILE TEST : {base_path}")
+    logging.info(f"#########################################>>>>>")
+    logging.info(f"#####>>>> FF FIND FILE TEST : {base_path}")
+    logging.info(f"#########################################>>>>>")
     for fmt in config['Settings']['AcceptedFormats'].split(','):
         logging.info(f"###FF FORMAT TESTED : {fmt.strip()}")
         full_path = f"{base_path}.{fmt.strip()}"
-        full_path_topper = f"{base_path}-topper.png"
-        full_path_scrapped = f"{base_path}scrapped.{fmt.strip()}"
+        full_clean_path = f"{clean_rom_name(base_path)}.{fmt.strip()}"
+
+        # Test fichier si marquee standard sans specification lng / code...
+        logging.info(f"###FF TEST full_clean_path : {full_clean_path}")
+        if os.path.isfile(full_clean_path):
+            # Conservation du fichier d'origine clean
+            logging.info(f"###FF Clean file found : {full_clean_path} >> Using the found file")
+            return full_clean_path
+
         # Test fichier si marquee standard
         logging.info(f"###FF TEST full_path : {full_path}")
         if os.path.isfile(full_path):
             if config['Settings']['MarqueeAutoConvert'] == "true":
                 # Optimisation
+                full_path_topper = f"{base_path}-topper.png"
                 logging.info(f"###FF File found : {full_path} >> Convert to marquee size PNG")
                 return convert_image(full_path, full_path_topper)
             else:
@@ -294,14 +358,9 @@ def find_file(base_path):
                 return full_path
         else:
             logging.info(f"###FF full_path NOT Detected")
-        # Test si topper optimisé déja existant
-        logging.info(f"###FF TEST full_path_topper : {full_path_topper}")
-        if os.path.isfile(full_path_topper):
-            logging.info(f"###FF Full_path_topper Detected : {full_path_topper}")
-            return full_path_topper
-        else:
-            logging.info(f"###FF Full_path_topper NOT Detected")
+
         # Test fichier si marquee scrappé
+        full_path_scrapped = f"{base_path}scrapped.{fmt.strip()}"
         logging.info(f"###FF TEST full_path_scrapped : {full_path_scrapped}")
         if os.path.isfile(full_path_scrapped):
             #logging.info(f"###FF Scraped topper file found : {full_path_scrapped} >> Convert to marquee size PNG")
@@ -338,6 +397,120 @@ def add_to_scrap_pool(system_name, game_title, game_name, marquee_path, full_mar
     with open(scrap_pool_file, 'a') as file:
         file.write(f"{system_name}|{game_title}|{game_name}|{marquee_path}|{full_marquee_path}|{rom_path}\n")
         #logging.info(f"Add {system_name}, {game_title} ,{game_name} to scrap.pool file")
+
+from PIL import Image
+import numpy as np
+def analyze_image(image_path):
+    marquee_width = int(config['Settings']['MarqueeWidth'])
+    marquee_height = int(config['Settings']['MarqueeHeight'])
+    marquee_border = int(config['Settings']['MarqueeBorder'])
+
+    img = Image.open(image_path)
+    width, height = img.size
+
+    # Ajuster l'image en fonction des paramètres du marquee
+    img_np = np.array(img)[marquee_border:height-marquee_border, marquee_border:width-marquee_border]
+
+    # Analyse Horizontale : Trouver la bande la plus riche en contenu
+    num_bands = 3
+    band_height = (height - 2 * marquee_border) // num_bands
+    max_var = 0
+    best_band = None
+
+    for i in range(num_bands):
+        band = img_np[i * band_height:(i + 1) * band_height, :]
+        var = np.var(band)
+        if var > max_var:
+            max_var = var
+            best_band = band
+
+    # Analyse Verticale : Trouver la région la moins chargée dans la bande sélectionnée
+    var_left = np.var(best_band[:, :marquee_width // 3])
+    var_center = np.var(best_band[:, marquee_width // 3: 2 * marquee_width // 3])
+    var_right = np.var(best_band[:, 2 * marquee_width // 3:])
+    horizontal_region = "left" if var_left < min(var_center, var_right) else "center" if var_center < var_right else "right"
+
+    vertical_region = "top" if i == 0 else "middle" if i == 1 else "bottom"
+
+    return horizontal_region, vertical_region
+
+def autogen_marquee(system_name, game_name, rom_path, target_img_path):
+    logging.info(f"#####>> autogen_marquee : system_name {system_name}, game_name {game_name}, rom_path {rom_path}, marquee_path {target_img_path}")
+
+    # Création du dossier parent s'il n'existe pas
+    parent_dir = os.path.dirname(target_img_path)
+    if not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
+
+    # Chemin de base pour les images
+    base_image_path = os.path.join(config['Settings']['RomsPath'], system_name, "images")
+
+    # Construire les chemins de fichier pour le logo et le fanart
+    logo_file_name = f"{game_name}-marquee.png"
+    fanart_file_name = f"{game_name}-fanart.jpg"
+
+    logo_file_path = os.path.join(base_image_path, logo_file_name).replace("\\", "\\\\")
+    fanart_file_path = os.path.join(base_image_path, fanart_file_name).replace("\\", "\\\\")
+
+    # Appel de la fonction push_datas_to_MPV
+    # push_datas_to_MPV("marquee_compose", marquee_data)
+    # Vérifier si le logo et le fanart existent
+    if os.path.exists(logo_file_path) and os.path.exists(fanart_file_path):
+        logo_align, vertical_align = analyze_image(fanart_file_path)
+        # force middle
+        vertical_align = 'middle'
+        if logo_align == 'left':
+            logo_gravity = 'West'
+            logo_position = '+50+0'  # n pixels depuis la gauche
+        elif logo_align == 'center':
+            logo_gravity = 'Center'
+            logo_position = '+0+0'  # Centre
+        elif logo_align == 'right':
+            logo_gravity = 'East'
+            logo_position = '+50+0'  # n pixels depuis la droite
+
+        fanart_gravity = 'North' if vertical_align == 'top' else 'Center' if vertical_align == 'middle' else 'South'
+        intermediate_img_path = target_img_path.replace('.png', '_temp.png')
+        marquee_width = int(config['Settings']['MarqueeWidth'])
+        marquee_height = int(config['Settings']['MarqueeHeight'])
+        marquee_border = int(config['Settings']['MarqueeBorder'])
+        #logo_max_height = marquee_height - 100
+        #logo_max_width = marquee_width // 2
+        logo_max_width = int(marquee_width * 2 / 3)
+        # Charger l'image du logo pour obtenir ses dimensions
+        logo_img = Image.open(logo_file_path)
+        original_width, original_height = logo_img.size
+
+        # Calculer la hauteur proportionnelle si nécessaire
+        if original_width > logo_max_width:
+            scale_factor = logo_max_width / original_width
+            logo_max_height = int(original_height * scale_factor)
+        else:
+            logo_max_height = original_height
+        logo_max_height = min(logo_max_height+100, marquee_height)
+
+        convert_command_template = config['Settings']['IMConvertCommandMarqueeGen']
+        convert_command = convert_command_template.format(
+            IMPath=config['Settings']['IMPath'],
+            FanartPath=fanart_file_path,
+            FanartGravity=fanart_gravity,
+            MarqueeWidth=marquee_width,
+            MarqueeHeight=marquee_height,
+            LogoMaxWidth=logo_max_width,
+            LogoMaxHeight=logo_max_height,
+            IntermediateImgPath=intermediate_img_path,
+            LogoPath=logo_file_path,
+            LogoGravity=logo_gravity,
+            LogoPosition=logo_position,
+            MarqueeBackgroundColor=config['Settings']['MarqueeBackgroundColor'],
+            ImgTargetPath=target_img_path
+        )
+
+        subprocess.run(convert_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+        os.remove(intermediate_img_path)
+        return target_img_path
+    else:
+        return None
 
 #action=game-start&param1="C:\RetroBatV6\roms\amstradcpc\Back To The Future II (UK) (1990) (Trainer).zip"&param2="Back To The Future II (UK) (1990) (Trainer)"&param3="Back to the Future Part II"
 #action=game-selected&param1="amstradcpc"&param2="C:/RetroBatV6/roms/amstradcpc/007 - Live and Let Die (1988)(Domark).zip"&param3="Live and Let Die" // game
@@ -465,11 +638,17 @@ def parse_path(action, params, systems_config):
 
     return '', '', '', '', ''
 
+last_execution_time = 0  # Timestamp de la dernière exécution
+last_command_id = None
 def execute_command(action, params, systems_config):
-    global last_execution_time
+    global last_execution_time, last_command_id
     if action in config['Commands']:
-        type, param1, param2, param3, param4 = parse_path(action, params, systems_config)
+        current_command_id = f"{action}-{json.dumps(params)}"
+        if current_command_id == last_command_id and (time.time() - last_execution_time) < 1:
+            logging.info("Command skipped as it was executed recently.")
+            return json.dumps({"status": "skipped", "message": "Command was executed recently"})
 
+        type, param1, param2, param3, param4 = parse_path(action, params, systems_config)
         # On remplace les caracteres speciaux par les bons pour chercher l'image
         equivalencesParam = {'!p' : '+'}
         def replace_special_characters_params(value):
@@ -488,6 +667,8 @@ def execute_command(action, params, systems_config):
 
         logging.info(f"find_marquee_file type {type}, param1 {param1} ,param2 {param2}, param3 {param3} ,param4 {param4}")
         marquee_file = find_marquee_file(type, param1, param2, param3, param4, systems_config)
+        if marquee_file == 'marquee_compose':
+            return json.dumps({"status": "success", "message": "marquee_compose"})
         #escaped_marquee_file = escape_file_path(marquee_file)
 
          # On remplace les caracteres speciaux par les bons pour execturer la commande
@@ -513,13 +694,13 @@ def execute_command(action, params, systems_config):
 
         logging.info(f"Executing the command : {command}")
         subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+        last_command_id = current_command_id
         last_execution_time = time.time()
         return json.dumps({"status": "success", "action": action, "command": command})
     return json.dumps({"status": "error", "message": "No command configured for this action"})
 
 # EVENT RECEPTIONNE CLASSIQUE (PAR EXE ou PS1)
 # Variable globale pour stocker le timestamp de la dernière requête
-last_execution_time = 0  # Timestamp de la dernière exécution
 request_list = []        # Liste pour stocker les requêtes
 import time
 import threading
