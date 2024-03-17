@@ -20,8 +20,8 @@ def load_config():
     global config
     config.read('config.ini')
     if config['Settings']['logFile'] == "true":
-        #logging.basicConfig(level=logging.INFO)
-        logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
+        logging.basicConfig(level=logging.INFO)
+        #logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
         logging.getLogger('werkzeug').setLevel(logging.INFO)
         logging.info("Start logging")
 
@@ -318,6 +318,14 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
             #logging.info(f"FMF Found game topper : {marquee_file}")
             return marquee_file
 
+        # Affichage system si aucun marquee trouvé pour le jeu
+        folder_rom_name = systems_config.get(param1, param1)
+        marquee_file = find_system_marquee(param1, folder_rom_name, systems_config)
+        if marquee_file:
+            logging.info(f"FMF Found system : {marquee_file}")
+            return marquee_file
+
+
     logging.info(f"FMF Using the default image : {config['Settings']['DefaultImagePath']}")
     return config['Settings']['DefaultImagePath']
 
@@ -403,34 +411,33 @@ import numpy as np
 def analyze_image(image_path):
     marquee_width = int(config['Settings']['MarqueeWidth'])
     marquee_height = int(config['Settings']['MarqueeHeight'])
-    marquee_border = int(config['Settings']['MarqueeBorder'])
 
-    img = Image.open(image_path)
-    width, height = img.size
+    img = Image.open(image_path).convert('L')  # Convertir en niveaux de gris
+    img_np = np.array(img)
 
     # Ajuster l'image en fonction des paramètres du marquee
-    img_np = np.array(img)[marquee_border:height-marquee_border, marquee_border:width-marquee_border]
+    cropped_img_np = img_np[(img_np.shape[0] - marquee_height) // 2:(img_np.shape[0] + marquee_height) // 2, :]
 
-    # Analyse Horizontale : Trouver la bande la plus riche en contenu
-    num_bands = 3
-    band_height = (height - 2 * marquee_border) // num_bands
-    max_var = 0
-    best_band = None
+    # Sélectionner la bande centrale
+    band_height = marquee_height // 3
+    best_band = cropped_img_np[band_height:2 * band_height, :]
 
-    for i in range(num_bands):
-        band = img_np[i * band_height:(i + 1) * band_height, :]
-        var = np.var(band)
-        if var > max_var:
-            max_var = var
-            best_band = band
+    # Fonction pour calculer la fréquence des changements de couleur
+    def color_change_frequency(region):
+        diff = np.abs(np.diff(region, axis=1))  # Différence horizontale
+        return np.sum(diff)
 
-    # Analyse Verticale : Trouver la région la moins chargée dans la bande sélectionnée
-    var_left = np.var(best_band[:, :marquee_width // 3])
-    var_center = np.var(best_band[:, marquee_width // 3: 2 * marquee_width // 3])
-    var_right = np.var(best_band[:, 2 * marquee_width // 3:])
-    horizontal_region = "left" if var_left < min(var_center, var_right) else "center" if var_center < var_right else "right"
+    # Calculer la fréquence des changements de couleur pour chaque région
+    quarter_width = marquee_width // 4
+    half_width = marquee_width // 2
+    freq_left = color_change_frequency(best_band[:, :quarter_width])
+    freq_center = color_change_frequency(best_band[:, quarter_width:quarter_width + half_width])
+    freq_right = color_change_frequency(best_band[:, -quarter_width:])
 
-    vertical_region = "top" if i == 0 else "middle" if i == 1 else "bottom"
+    # Déterminer la région avec la plus haute fréquence de changement de couleur
+    horizontal_region = "left" if freq_left < min(freq_center, freq_right) else "center" if freq_center < freq_right else "right"
+
+    vertical_region = "middle"  # Car nous avons choisi la bande centrale
 
     return horizontal_region, vertical_region
 
