@@ -487,7 +487,7 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
     fanart_file_path = os.path.join(base_image_path, fanart_file_name).replace("\\", "\\\\")
 
     if not os.path.exists(logo_file_path) or not os.path.exists(fanart_file_path):
-        logging.info(f"PP logo_file_path  {logo_file_path} not exite ->")
+        logging.info(f"PP logo_file_path  {logo_file_path} not exist ->")
         roms_path = config['Settings']['RomsPath']
         marquee_path, fanart_path = find_marquee_and_fanart_in_gamelist(game_name, system_name, roms_path)
         if marquee_path:
