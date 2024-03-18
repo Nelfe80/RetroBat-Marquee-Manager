@@ -446,6 +446,28 @@ def analyze_image(image_path):
 
     return horizontal_region, vertical_region
 
+def find_marquee_and_fanart_in_gamelist(game_name, system_name, roms_path):
+    logging.info(f"PP find_marquee_and_fanart_in_gamelist game_name {game_name} system_name {system_name} roms_path {roms_path}")
+    gamelist_path = os.path.join(roms_path, system_name, "gamelist.xml")
+    logging.info(f"PP find_marquee_and_fanart_in_gamelist gamelist_path {gamelist_path}")
+    if not os.path.exists(gamelist_path):
+        return None, None
+
+    tree = ET.parse(gamelist_path)
+    root = tree.getroot()
+
+    for game in root.findall('game'):
+        game_path = game.find('path').text if game.find('path') is not None else None
+        if game_path:
+            extracted_game_name = os.path.splitext(os.path.basename(game_path))[0]
+            if extracted_game_name == game_name:
+                marquee_path = game.find('marquee').text.replace('/', '\\') if game.find('marquee') is not None else None
+                fanart_path = game.find('fanart').text.replace('/', '\\') if game.find('fanart') is not None else None
+                logging.info(f"PP find_marquee_and_fanart_in_gamelist marquee_path {marquee_path} fanart_path {fanart_path}")
+                return marquee_path, fanart_path
+
+    return None, None
+
 def autogen_marquee(system_name, game_name, rom_path, target_img_path):
     logging.info(f"#####>> autogen_marquee : system_name {system_name}, game_name {game_name}, rom_path {rom_path}, marquee_path {target_img_path}")
 
@@ -463,6 +485,15 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
     logo_file_path = os.path.join(base_image_path, logo_file_name).replace("\\", "\\\\")
     fanart_file_path = os.path.join(base_image_path, fanart_file_name).replace("\\", "\\\\")
+
+    if not os.path.exists(logo_file_path) or not os.path.exists(fanart_file_path):
+        logging.info(f"PP logo_file_path  {logo_file_path} not exite ->")
+        roms_path = config['Settings']['RomsPath']
+        marquee_path, fanart_path = find_marquee_and_fanart_in_gamelist(game_name, system_name, roms_path)
+        if marquee_path:
+            logo_file_path = os.path.join(roms_path, system_name, marquee_path.strip('.\\'))
+        if fanart_path:
+            fanart_file_path = os.path.join(roms_path, system_name, fanart_path.strip('.\\'))
 
     # Appel de la fonction push_datas_to_MPV
     # push_datas_to_MPV("marquee_compose", marquee_data)
