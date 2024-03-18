@@ -57,16 +57,21 @@ def load_systems_config(xml_relative_path):
     system_folders = {}
 
     for system in root.findall('system'):
-        if system.find('name') is not None and system.find('path') is not None:
-            name = system.find('name').text
-            path = system.find('path').text
-            theme = system.find('theme').text
+        name_elem = system.find('name')
+        path_elem = system.find('path')
+        theme_elem = system.find('theme')
+
+        if name_elem is not None and path_elem is not None:
+            name = name_elem.text
+            path = path_elem.text
+            theme = theme_elem.text if theme_elem is not None else "default_theme"
+
             # Recherche du nom du dossier des roms
             roms_path = config['Settings']['RomsPath']
             folder_rom_name = os.path.basename(os.path.normpath(path.strip('~\\..')))
             system_folders[name] = folder_rom_name
-            system_folders[name+".theme"] = theme
-            #logging.info(f"System {name} loading folder_rom_name - {folder_rom_name} path {path} - theme : {system_folders[name+'.theme']}")
+            system_folders[name + ".theme"] = theme
+            #logging.info(f"System {name} loading folder_rom_name - {folder_rom_name} path {path} - theme : {system_folders[name + '.theme']}")
 
         else:
             logging.info(f"Missing name and/or path in es_systems.cfg for the system {system.tag}")
