@@ -1,4 +1,4 @@
-from flask import Flask, request
+#from flask import Flask, request
 import configparser
 import subprocess
 import os
@@ -9,8 +9,10 @@ import xml.etree.ElementTree as ET
 import glob
 import logging
 import re
+import threading
+import time
 
-app = Flask(__name__)
+#app = Flask(__name__)
 creation_flags = 0
 if sys.platform == "win32":  # Uniquement pour Windows
     creation_flags = subprocess.CREATE_NO_WINDOW
@@ -49,6 +51,7 @@ def load_config():
     update_path('MPVPath', os.path.join(current_working_dir, 'mpv', 'mpv.exe'))
     update_path('IMPath', os.path.join(current_working_dir, 'imagemagick', 'convert.exe'))
 
+systems_config = None
 def load_systems_config(xml_relative_path):
     script_dir = os.path.dirname(os.path.realpath(__file__))
     xml_path = os.path.join(script_dir, xml_relative_path)
@@ -244,7 +247,13 @@ def find_system_marquee(system_name, folder_rom_name, systems_config):
 #        return 'system', system_name, system_folder, system_essystems
 #        return 'game', system_name, game_name, game_title, rom_path
 
+current_system_name = None
+current_game_name = None
+current_game_title = None
+current_rom_path = None
 def find_marquee_file(type, param1, param2, param3, param4, systems_config):
+    global current_system_name, current_game_name, current_game_title, current_rom_path
+
     logging.info(f"##################################################")
     logging.info(f"################ NEW MARQUEE #####################")
     logging.info(f"FMF find_marquee_file : type : {type} - param1 : {param1} - param2 : {param2} - param3 : {param3} - param4 : {param4}")
@@ -271,12 +280,12 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
             logging.info(f"FMF Found system : {marquee_file}")
             return marquee_file
 
-    elif type == 'game':
+    elif type == 'game' or type == 'game-forceupdate':
         logging.info(f"############# GAME ###############")
-        system_name = param1
-        game_name = param2
-        game_title = param3
-        rom_path = param4
+        current_system_name = system_name = param1
+        current_game_name = game_name = param2
+        current_game_title = game_title = param3
+        current_rom_path = rom_path = param4
         folder_rom_name = systems_config.get(param1, param1)
 
         logging.info(f"FMF GAME marquee_structure : {marquee_structure} system_name : {system_name} - game_name : {game_name} - folder_rom_name : {folder_rom_name} - rom_path : {rom_path}")
@@ -289,6 +298,11 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
         logging.info(f"############# SUB GAME PATTERN TOPPER ###############")
         marquee_file = find_file(full_marquee_path_topper)
         logging.info(f"FMF TOPPER Full_marquee_path : {full_marquee_path_topper} > marquee_file : {marquee_file}")
+
+        if type == 'game-forceupdate' and os.path.exists(marquee_file):
+            logging.info(f"FMF REMOVE {marquee_file}")
+            os.remove(marquee_file)
+            marquee_file = None
 
         # Lancer la génération automatique du marquee si on dispose d'un fanart et d'un logo et si MarqueeAutoGeneration est à true
         if marquee_file is None and config['Settings']['MarqueeAutoGeneration'] == "true":
@@ -422,7 +436,9 @@ def add_to_scrap_pool(system_name, game_title, game_name, marquee_path, full_mar
 
 from PIL import Image
 import numpy as np
+
 def analyze_image(image_path):
+    global current_band
     marquee_width = int(config['Settings']['MarqueeWidth'])
     marquee_height = int(config['Settings']['MarqueeHeight'])
 
@@ -434,7 +450,8 @@ def analyze_image(image_path):
 
     # Sélectionner la bande centrale
     band_height = marquee_height // 3
-    best_band = cropped_img_np[band_height:2 * band_height, :]
+    best_band = cropped_img_np[(current_band - 1) * band_height:current_band * band_height, :]
+    #best_band = cropped_img_np[band_height:2 * band_height, :]
 
     # Fonction pour calculer la fréquence des changements de couleur
     def color_change_frequency(region):
@@ -451,7 +468,12 @@ def analyze_image(image_path):
     # Déterminer la région avec la plus haute fréquence de changement de couleur
     horizontal_region = "left" if freq_left < min(freq_center, freq_right) else "center" if freq_center < freq_right else "right"
 
-    vertical_region = "middle"  # Car nous avons choisi la bande centrale
+    if current_band == 1:
+        vertical_region = "top"
+    elif current_band == 2:
+        vertical_region = "middle"
+    else:  # current_band == 3
+        vertical_region = "bottom"
 
     return horizontal_region, vertical_region
 
@@ -475,6 +497,7 @@ def find_game_info_in_gamelist(game_name, system_name, roms_path):
     return None
 
 def autogen_marquee(system_name, game_name, rom_path, target_img_path):
+    global current_horizontal_alignment
     logging.info(f"#####>> autogen_marquee : system_name {system_name}, game_name {game_name}, rom_path {rom_path}, marquee_path {target_img_path}")
 
     # Création du dossier parent s'il n'existe pas
@@ -521,11 +544,18 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
     # Appel de la fonction push_datas_to_MPV
     # push_datas_to_MPV("marquee_compose", marquee_data)
+
     # Vérifier si le logo et le fanart existent
     if os.path.exists(logo_file_path) and os.path.exists(fanart_file_path):
+        marquee_width = int(config['Settings']['MarqueeWidth'])
+        marquee_height = int(config['Settings']['MarqueeHeight'])
+        marquee_border = int(config['Settings']['MarqueeBorder'])
+
         logo_align, vertical_align = analyze_image(fanart_file_path)
-        # force middle
-        vertical_align = 'middle'
+
+        if current_logo_align != None:
+            logo_align = current_logo_align
+
         if logo_align == 'left':
             logo_gravity = 'West'
             logo_position = '+50+0'  # n pixels depuis la gauche
@@ -536,17 +566,30 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
             logo_gravity = 'East'
             logo_position = '+50+0'  # n pixels depuis la droite
 
-        fanart_gravity = 'North' if vertical_align == 'top' else 'Center' if vertical_align == 'middle' else 'South'
+        #fanart_gravity = 'North' if vertical_align == 'top' else 'Center' if vertical_align == 'middle' else 'South'
+        # Calculer la demi-hauteur d'une bande
+        band_half_height = marquee_height // 2
+        if vertical_align == 'top':
+            fanart_gravity = 'North'
+            decy_offset = band_half_height if current_band_decy else 0
+        elif vertical_align == 'middle':
+            fanart_gravity = 'Center'
+            decy_offset = band_half_height if current_band_decy else 0
+        elif vertical_align == 'bottom':
+            fanart_gravity = 'South'
+            decy_offset = band_half_height if current_band_decy else 0
+
+        logging.info(f"fanart_gravity {fanart_gravity} current_band_decy {current_band_decy} decy_offset {decy_offset} band_half_height {band_half_height}")
+
         intermediate_img_path = target_img_path.replace('.png', '_temp.png')
-        marquee_width = int(config['Settings']['MarqueeWidth'])
-        marquee_height = int(config['Settings']['MarqueeHeight'])
-        marquee_border = int(config['Settings']['MarqueeBorder'])
+
         #logo_max_height = marquee_height - 100
         #logo_max_width = marquee_width // 2
         logo_max_width = int(marquee_width * 2 / 3)
         # Charger l'image du logo pour obtenir ses dimensions
         logo_img = Image.open(logo_file_path)
         original_width, original_height = logo_img.size
+
 
         # Calculer la hauteur proportionnelle si nécessaire
         if original_width > logo_max_width:
@@ -565,6 +608,24 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
             MarqueeHeight=marquee_height,
             LogoMaxWidth=logo_max_width,
             LogoMaxHeight=logo_max_height,
+            DecyOffset=decy_offset,
+            IntermediateImgPath=intermediate_img_path,
+            LogoPath=logo_file_path,
+            LogoGravity=logo_gravity,
+            LogoPosition=logo_position,
+            MarqueeBackgroundColor=config['Settings']['MarqueeBackgroundColor'],
+            ImgTargetPath=target_img_path
+        )
+        convert_command_template_logo = config['Settings']['IMConvertCommandMarqueeGenLogo']
+        convert_command_logo = convert_command_template_logo.format(
+            IMPath=config['Settings']['IMPath'],
+            FanartPath=fanart_file_path,
+            FanartGravity=fanart_gravity,
+            MarqueeWidth=marquee_width,
+            MarqueeHeight=marquee_height,
+            LogoMaxWidth=logo_max_width,
+            LogoMaxHeight=logo_max_height,
+            DecyOffset=decy_offset,
             IntermediateImgPath=intermediate_img_path,
             LogoPath=logo_file_path,
             LogoGravity=logo_gravity,
@@ -574,6 +635,9 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
         )
 
         subprocess.run(convert_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+        logging.info(f"autogen_marquee convert_command {convert_command}")
+        subprocess.run(convert_command_logo, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+        logging.info(f"autogen_marquee convert_command_logo {convert_command_logo}")
         os.remove(intermediate_img_path)
         return target_img_path
     else:
@@ -615,7 +679,17 @@ def parse_path(action, params, systems_config):
 
     logging.info(f"PP clean params - param1 {param1} param2 {param2} param3 {param3} param4 {param4}")
 
-    if action == 'game-selected' or action == 'system-selected' :
+    # GAME FORCE UPDATE
+    if action == 'game-forceupdate':
+        system_name = param1
+        game_name = param2
+        game_title = param3
+        formatted_rom_path = param4
+        return 'game-forceupdate', system_name, game_name, game_title, formatted_rom_path
+
+    if action == 'game-selected' or action == 'system-selected':
+        current_band = 2
+        current_logo_align = None
         system_name = param1
         system_rom_path = os.path.join(roms_path, param1) # C:\RetroBat\roms\<system>
         formatted_rom_path = os.path.normpath(urllib.parse.unquote(param2)) #C:\RetroBat\roms\<system>\<rom.ext>
@@ -645,7 +719,7 @@ def parse_path(action, params, systems_config):
             logging.info(f"PP game - le chemin de la rom est un fichier")
 
     # GAME START
-    if action == 'game-start' :
+    if action == 'game-start':
         game_name = param2
         game_title = param3
         formatted_rom_path = os.path.normpath(urllib.parse.unquote(param1))
@@ -659,7 +733,7 @@ def parse_path(action, params, systems_config):
         return 'game', system_name, game_name, game_title, formatted_rom_path
 
     # GAME SELECTED
-    if action == 'game-selected' :
+    if action == 'game-selected':
         game_title = param3
         formatted_rom_path = os.path.normpath(urllib.parse.unquote(param2))
         logging.info(f"PP GAME SELECTED formatted_rom_path : {formatted_rom_path}")
@@ -678,20 +752,6 @@ def parse_path(action, params, systems_config):
         logging.info(f"PP GAME-SELECTED system_name : {system_name}, game name : {game_name}, game title : {game_title}, rom_path : {formatted_rom_path}")
         return 'game', system_name, game_name, game_title, formatted_rom_path
 
-        # ICI J AI RAJOUTE UN PARAM GAME EN DESSOUS DYSTEM
-        # Test si le chemin correspond bien à une rom d'un dossier dans système
-        #if os.path.isfile(formatted_path):
-        #    path_parts = formatted_path.split(os.sep)
-        #    game_name = os.path.splitext(os.path.basename(formatted_path))[0]
-        #    if system_name == '' :
-        #        system_name = path_parts[-2] if len(path_parts) > 1 else ''
-        #    logging.info(f"PP Path File System rom folder: {system_name}, Game name : {game_name}, Game title : {game_title}")
-        #    rom_path = formatted_path
-        #    if system_name != game_name:
-        #        return 'system', system_name, '', ''
-        #
-        #return 'system', system_name, '', ''
-
     # SYSTEM / COLLECTION
     elif action == 'system-selected' :
         if system_folder == True and system_essystems == True:
@@ -707,9 +767,11 @@ def parse_path(action, params, systems_config):
 
 last_execution_time = 0  # Timestamp de la dernière exécution
 last_command_id = None
+current_marquee_file = None
 def execute_command(action, params, systems_config):
-    global last_execution_time, last_command_id
-    if action in config['Commands']:
+    global last_execution_time, last_command_id, current_marquee_file
+    if action in config['Commands'] or action == "game-forceupdate":
+        logging.info(f"execute_command {action}")
         current_command_id = f"{action}-{json.dumps(params)}"
         if current_command_id == last_command_id and (time.time() - last_execution_time) < 1:
             logging.info("Command skipped as it was executed recently.")
@@ -734,11 +796,11 @@ def execute_command(action, params, systems_config):
 
         logging.info(f"find_marquee_file type {type}, param1 {param1} ,param2 {param2}, param3 {param3} ,param4 {param4}")
         marquee_file = find_marquee_file(type, param1, param2, param3, param4, systems_config)
-        if marquee_file == 'marquee_compose':
-            return json.dumps({"status": "success", "message": "marquee_compose"})
+        #if marquee_file == 'marquee_compose':
+        #    return json.dumps({"status": "success", "message": "marquee_compose"})
         #escaped_marquee_file = escape_file_path(marquee_file)
 
-         # On remplace les caracteres speciaux par les bons pour execturer la commande
+        # On remplace les caracteres speciaux par les bons pour execturer la commande
         equivalences = {#'^' : '^^',
                         #'&' : '^&',
                         #',' : '^,',
@@ -759,6 +821,7 @@ def execute_command(action, params, systems_config):
             IPCChannel=config['Settings']['IPCChannel']
         )
 
+        current_marquee_file = marquee_file
         logging.info(f"Executing the command : {command}")
         subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
         last_command_id = current_command_id
@@ -768,42 +831,40 @@ def execute_command(action, params, systems_config):
 
 # EVENT RECEPTIONNE CLASSIQUE (PAR EXE ou PS1)
 # Variable globale pour stocker le timestamp de la dernière requête
-request_list = []        # Liste pour stocker les requêtes
-import time
-import threading
-def monitor_and_execute_requests():
-    global request_list
-    while True:
-        current_time = time.time()
-        with lock:
+#request_list = []        # Liste pour stocker les requêtes
+#def monitor_and_execute_requests():
+#    global request_list
+#    while True:
+#        current_time = time.time()
+#        with lock:
             # S'assurer que la liste est triée correctement par timestamp en ordre croissant
-            request_list.sort(key=lambda x: x[0])
+#            request_list.sort(key=lambda x: x[0])
 
-            if request_list and current_time - last_execution_time >= 1:
+#            if request_list and current_time - last_execution_time >= 1:
                 # Exécuter la commande pour la requête avec le plus grand timestamp
-                latest_request = max(request_list, key=lambda x: x[0])
-                _, action, params = latest_request
-                execute_command(action, params, systems_config)
+#                latest_request = max(request_list, key=lambda x: x[0])
+#                _, action, params = latest_request
+#                execute_command(action, params, systems_config)
 
                 # Conserver uniquement les requêtes arrivées après l'exécution de la commande
-                latest_timestamp = latest_request[0]
-                request_list = [req for req in request_list if req[0] > latest_timestamp]
-        time.sleep(0.2)
+#                latest_timestamp = latest_request[0]
+#                request_list = [req for req in request_list if req[0] > latest_timestamp]
+#        time.sleep(0.2)
 
-@app.route('/', methods=['GET'])
-def handle_request():
-    global request_list
-    ensure_mpv_running()
-    action = request.args.get('event', '')
-    params = dict(request.args)
-    params.pop('event', None)
-    logging.info(f"Action received : {action}, Parameters : {params} -+")
-
-    if 'timestamp' in params:
-        with lock:
-            request_list.append((float(params['timestamp']), action, params))
-
-    return "Request received"
+#@app.route('/', methods=['GET'])
+#def handle_request():
+#    global request_list
+#    ensure_mpv_running()
+#    action = request.args.get('event', '')
+#    params = dict(request.args)
+#    params.pop('event', None)
+#    logging.info(f"Action received : {action}, Parameters : {params} -+")
+#
+#    if 'timestamp' in params:
+#        with lock:
+#            request_list.append((float(params['timestamp']), action, params))
+#
+#    return "Request received"
 
 #@app.route('/', methods=['GET'])
 #def handle_request():
@@ -882,6 +943,47 @@ def start_watching():
         observer.stop()
     observer.join()
 
+import keyboard
+current_band = 2
+current_logo_align = None
+current_band_decy = False
+def on_pressed(key):
+    global current_band, current_logo_align, current_band_decy
+    if key.name == 'f8':
+        current_band_decy = not current_band_decy
+        action = 'game-forceupdate'
+    elif key.name == 'f9':
+        current_band = current_band + 1
+        if current_band > 3:
+            current_band = 1
+        action = 'game-forceupdate'
+    elif key.name in ['f10', 'f11', 'f12']:
+        current_logo_align = 'left' if key.name == 'f10' else 'center' if key.name == 'f11' else 'right'
+        action = 'game-forceupdate'
+    else:
+        return
+
+    # Affiche le message de l'action
+    command = config['Settings']['MPVShowText'].format(
+        message=f"Action: {action}, Band: {current_band}, Align: {current_logo_align}",
+        IPCChannel=config['Settings']['IPCChannel']
+    )
+    subprocess.run(command, shell=True)
+
+    # Prépare les paramètres pour l'action
+    params = {
+        'param1': current_system_name,
+        'param2': current_game_name,
+        'param3': current_game_title,
+        'param4': current_rom_path
+    }
+    logging.info(f"{action} pressed, params: {params}")
+    execute_command(action, params, systems_config)
+
+def keyboard_listener():
+    keyboard.on_press(on_pressed)
+    keyboard.wait()
+
 if __name__ == '__main__':
     load_config()
     #systems_config = load_systems_config(os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_systems.cfg'))
@@ -894,10 +996,14 @@ if __name__ == '__main__':
     file_thread.start()
     logging.info(f"File watching thread started: {file_thread.is_alive()}")
 
+    # Thread pour l'écoute du clavier
+    keyboard_thread = threading.Thread(target=keyboard_listener)
+    keyboard_thread.start()
+
     # Démarrer le thread de surveillance de requete http
     #monitor_thread = threading.Thread(target=monitor_and_execute_requests, daemon=True)
     #monitor_thread.start()
 
     launch_media_player()
-    app.run(host=config['Settings']['Host'], port=int(config['Settings']['Port']), debug=False)
+    #app.run(host=config['Settings']['Host'], port=int(config['Settings']['Port']), debug=False)
 
