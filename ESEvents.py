@@ -346,6 +346,7 @@ def find_file(base_path):
     logging.info(f"#########################################>>>>>")
     logging.info(f"#####>>>> FF FIND FILE TEST : {base_path}")
     logging.info(f"#########################################>>>>>")
+
     for fmt in config['Settings']['AcceptedFormats'].split(','):
         logging.info(f"###FF FORMAT TESTED : {fmt.strip()}")
         full_path = f"{base_path}.{fmt.strip()}"
