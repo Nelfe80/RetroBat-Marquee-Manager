@@ -43,6 +43,7 @@ def load_config():
     update_path('DefaultImagePath', os.path.join(current_working_dir, 'images', 'default.png'))
     update_path('MarqueeImagePath', os.path.join(current_working_dir, 'images'))
     update_path('MarqueeImagePathDefault', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
+    update_path('FanartMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
     update_path('SystemMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'themes', 'es-theme-carbon-master', 'art', 'logos'))
     update_path('CollectionMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'themes', 'es-theme-carbon-master', 'art', 'logos'))
     update_path('MPVPath', os.path.join(current_working_dir, 'mpv', 'mpv.exe'))
@@ -353,14 +354,20 @@ def find_file(base_path):
         # Test fichier si marquee standard sans specification lng / code...
         logging.info(f"###FF TEST full_clean_path : {full_clean_path}")
         if os.path.isfile(full_clean_path):
-            # Conservation du fichier d'origine clean
-            logging.info(f"###FF Clean file found : {full_clean_path} >> Using the found file")
-            return full_clean_path
+            if config['Settings']['MarqueeAutoConvert'] == "true" and '-topper' not in base_path:
+                # Optimisation
+                full_path_topper = f"{base_path}-topper.png"
+                logging.info(f"###FF File found : {full_path} >> Convert to marquee size PNG")
+                return convert_image(full_clean_path, full_path_topper)
+            else:
+                # Conservation du fichier d'origine
+                logging.info(f"###FF Clean file found : {full_clean_path} >> Using the found file")
+                return full_clean_path
 
         # Test fichier si marquee standard
         logging.info(f"###FF TEST full_path : {full_path}")
-        if os.path.isfile(full_path):
-            if config['Settings']['MarqueeAutoConvert'] == "true":
+        if os.path.isfile(full_clean_path):
+            if config['Settings']['MarqueeAutoConvert'] == "true" and '-topper' not in base_path:
                 # Optimisation
                 full_path_topper = f"{base_path}-topper.png"
                 logging.info(f"###FF File found : {full_path} >> Convert to marquee size PNG")
@@ -380,21 +387,22 @@ def find_file(base_path):
             return convert_image(full_path_scrapped, full_path_topper)
         else:
             logging.info(f"###FF full_path_scrapped NOT Detected")
+
     # Aucun fichier trouvé >> test SVG
     full_path_suffixe=config['Settings']['MarqueeWhiteTextAlternativNameSuffix']
     full_path_convert_svg = f"{base_path}-topper.png"
     # Test si fond noir, recherche svg texte blanc
     if config['Settings']['MarqueeBackgroundColor'] == "Black":
         full_path_backgroundBoWcolor_svg = f"{base_path}{full_path_suffixe}.svg"
-        #logging.info(f"###FF TEST : {full_path_backgroundBoWcolor_svg}")
+        logging.info(f"##SVG##FF TEST : {full_path_backgroundBoWcolor_svg}")
         if os.path.isfile(full_path_backgroundBoWcolor_svg):
-            #logging.info(f"###FF SVG File White Text found : {full_path_backgroundBoWcolor_svg}")
+            logging.info(f"##SVG##FF SVG File White Text found : {full_path_backgroundBoWcolor_svg}")
             return convert_image(full_path_backgroundBoWcolor_svg, full_path_convert_svg)
     full_path_svg = f"{base_path}.svg"
     # Test standard
-    #logging.info(f"###FF TEST : {full_path_svg}")
+    logging.info(f"##SVG##FF TEST : {full_path_svg}")
     if os.path.isfile(full_path_svg):
-        #logging.info(f"###FF SVG File found : {full_path_svg}")
+        logging.info(f"##SVG##FF SVG File found : {full_path_svg}")
         return convert_image(full_path_svg, full_path_convert_svg)
     logging.info(f"FF No File found : {base_path} - {full_path} - {full_path_svg} - {full_path_convert_svg}")
     return None
@@ -446,12 +454,11 @@ def analyze_image(image_path):
 
     return horizontal_region, vertical_region
 
-def find_marquee_and_fanart_in_gamelist(game_name, system_name, roms_path):
-    logging.info(f"PP find_marquee_and_fanart_in_gamelist game_name {game_name} system_name {system_name} roms_path {roms_path}")
+def find_game_info_in_gamelist(game_name, system_name, roms_path):
     gamelist_path = os.path.join(roms_path, system_name, "gamelist.xml")
-    logging.info(f"PP find_marquee_and_fanart_in_gamelist gamelist_path {gamelist_path}")
     if not os.path.exists(gamelist_path):
-        return None, None
+        logging.info("Gamelist file not found.")
+        return None
 
     tree = ET.parse(gamelist_path)
     root = tree.getroot()
@@ -461,12 +468,10 @@ def find_marquee_and_fanart_in_gamelist(game_name, system_name, roms_path):
         if game_path:
             extracted_game_name = os.path.splitext(os.path.basename(game_path))[0]
             if extracted_game_name == game_name:
-                marquee_path = game.find('marquee').text.replace('/', '\\') if game.find('marquee') is not None else None
-                fanart_path = game.find('fanart').text.replace('/', '\\') if game.find('fanart') is not None else None
-                logging.info(f"PP find_marquee_and_fanart_in_gamelist marquee_path {marquee_path} fanart_path {fanart_path}")
-                return marquee_path, fanart_path
+                game_info = {child.tag: child.text for child in game}
+                return game_info
 
-    return None, None
+    return None
 
 def autogen_marquee(system_name, game_name, rom_path, target_img_path):
     logging.info(f"#####>> autogen_marquee : system_name {system_name}, game_name {game_name}, rom_path {rom_path}, marquee_path {target_img_path}")
@@ -478,6 +483,7 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
     # Chemin de base pour les images
     base_image_path = os.path.join(config['Settings']['RomsPath'], system_name, "images")
+    roms_path = config['Settings']['RomsPath'] # C:\RetroBat\roms
 
     # Construire les chemins de fichier pour le logo et le fanart
     logo_file_name = f"{game_name}-marquee.png"
@@ -485,15 +491,32 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
     logo_file_path = os.path.join(base_image_path, logo_file_name).replace("\\", "\\\\")
     fanart_file_path = os.path.join(base_image_path, fanart_file_name).replace("\\", "\\\\")
+    logging.info(f"autogen_marquee DEFAULT FOLDERS - logo_file_path {logo_file_path} fanart_file_path {fanart_file_path}")
 
+    # Test du chemin personnalisé en priorité FANART
+    if not os.path.exists(logo_file_path) or not os.path.exists(fanart_file_path):
+        fanart_structure = config['Settings']['FanartFilePath']
+        fanart_path = fanart_structure.format(system_name=system_name, game_name=game_name)
+
+        marquee_structure = config['Settings']['MarqueeFilePath']
+        marquee_path = marquee_structure.format(system_name=system_name, game_name=game_name)
+
+        logo_file_path = os.path.join(roms_path, system_name, marquee_path.strip('.\\'))
+        fanart_file_path = os.path.join(roms_path, system_name, fanart_path.strip('.\\'))
+        logging.info(f"autogen_marquee CONFIGINI - logo_file_path {logo_file_path} fanart_file_path {fanart_file_path}")
+
+    # Récupération des chemins dans le fichier Gamelist
     if not os.path.exists(logo_file_path) or not os.path.exists(fanart_file_path):
         logging.info(f"PP logo_file_path  {logo_file_path} not exist ->")
-        roms_path = config['Settings']['RomsPath']
-        marquee_path, fanart_path = find_marquee_and_fanart_in_gamelist(game_name, system_name, roms_path)
-        if marquee_path:
-            logo_file_path = os.path.join(roms_path, system_name, marquee_path.strip('.\\'))
-        if fanart_path:
-            fanart_file_path = os.path.join(roms_path, system_name, fanart_path.strip('.\\'))
+        game_info = find_game_info_in_gamelist(game_name, system_name, roms_path)
+        if game_info:
+            marquee_rel_path = game_info.get('marquee', '').replace('/', '\\')
+            fanart_rel_path = game_info.get('fanart', '').replace('/', '\\')
+            if marquee_rel_path:
+                logo_file_path = os.path.join(roms_path, system_name, marquee_rel_path.strip('.\\'))
+            if fanart_rel_path:
+                fanart_file_path = os.path.join(roms_path, system_name, fanart_rel_path.strip('.\\'))
+        logging.info(f"autogen_marquee GAMELIST - logo_file_path {logo_file_path} fanart_file_path {fanart_file_path}")
 
     # Appel de la fonction push_datas_to_MPV
     # push_datas_to_MPV("marquee_compose", marquee_data)
