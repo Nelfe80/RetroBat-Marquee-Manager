@@ -773,7 +773,7 @@ def execute_command(action, params, systems_config):
     if action in config['Commands'] or action == "game-forceupdate":
         logging.info(f"execute_command {action}")
         current_command_id = f"{action}-{json.dumps(params)}"
-        if current_command_id == last_command_id and (time.time() - last_execution_time) < 1:
+        if current_command_id == last_command_id and (time.time() - last_execution_time) < 1 and action != "game-forceupdate":
             logging.info("Command skipped as it was executed recently.")
             return json.dumps({"status": "skipped", "message": "Command was executed recently"})
 
@@ -960,8 +960,6 @@ def on_pressed(key):
     elif key.name in ['f10', 'f11', 'f12']:
         current_logo_align = 'left' if key.name == 'f10' else 'center' if key.name == 'f11' else 'right'
         action = 'game-forceupdate'
-    else:
-        return
 
     # Affiche le message de l'action
     command = config['Settings']['MPVShowText'].format(
