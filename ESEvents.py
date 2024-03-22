@@ -381,7 +381,7 @@ def find_file(base_path):
 
         # Test fichier si marquee standard
         logging.info(f"###FF TEST full_path : {full_path}")
-        if os.path.isfile(full_clean_path):
+        if os.path.isfile(full_path):
             if config['Settings']['MarqueeAutoConvert'] == "true" and '-topper' not in base_path:
                 # Optimisation
                 full_path_topper = f"{base_path}-topper.png"
