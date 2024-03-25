@@ -299,7 +299,14 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
         marquee_file = find_file(full_marquee_path_topper)
         logging.info(f"FMF TOPPER Full_marquee_path : {full_marquee_path_topper} > marquee_file : {marquee_file}")
 
-        if type == 'game-forceupdate' and os.path.exists(marquee_file):
+        # Recherche pattern basic
+        if marquee_file is None:
+            full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
+            logging.info(f"############# SUB GAME PATTERN BASIC ###############")
+            marquee_file = find_file(full_marquee_path)
+            logging.info(f"FMF BASIC Full_marquee_path : {full_marquee_path} > marquee_file : {marquee_file}")
+
+        if marquee_file is None and type == 'game-forceupdate' and os.path.exists(marquee_file):
             logging.info(f"FMF REMOVE {marquee_file}")
             os.remove(marquee_file)
             marquee_file = None
@@ -311,13 +318,6 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
             compose_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
             full_compose_marquee_path_topper = f"{compose_marquee_path}-topper.png"
             marquee_file = autogen_marquee(system_name, game_name, rom_path, full_compose_marquee_path_topper)
-
-        # Recherche pattern basic
-        if marquee_file is None:
-            full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
-            logging.info(f"############# SUB GAME PATTERN BASIC ###############")
-            marquee_file = find_file(full_marquee_path)
-            logging.info(f"FMF BASIC Full_marquee_path : {full_marquee_path} > marquee_file : {marquee_file}")
 
         # Pattern default
         if marquee_file is None:
@@ -497,7 +497,7 @@ def find_game_info_in_gamelist(game_name, system_name, roms_path):
     return None
 
 def autogen_marquee(system_name, game_name, rom_path, target_img_path):
-    global current_horizontal_alignment
+    global current_logo_align
     logging.info(f"#####>> autogen_marquee : system_name {system_name}, game_name {game_name}, rom_path {rom_path}, marquee_path {target_img_path}")
 
     # Création du dossier parent s'il n'existe pas
@@ -553,7 +553,7 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
         logo_align, vertical_align = analyze_image(fanart_file_path)
 
-        if current_logo_align != None:
+        if current_logo_align is not None:
             logo_align = current_logo_align
 
         if logo_align == 'left':
@@ -648,6 +648,7 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 #action=system-selected&param1="amstradcpc" // systems
 #action=system-selected&param1="all"  event=system-selected&param1="favorites" // collections
 def parse_path(action, params, systems_config):
+    global current_logo_align
     system_name = ''
     system_essystems = ''
     system_folder = False
