@@ -260,6 +260,7 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
     lng = config['Settings']['Language']
     marquee_structure = config['Settings']['MarqueeFilePath']
     marquee_structure_default = config['Settings']['MarqueeFilePathDefault']
+    marquee_file = None
     #rom_path = os.path.normpath(urllib.parse.unquote(param3, ''))) #C:\RetroBat\roms\<system>\<rom.ext>
     if type == 'collection':
         logging.info(f"############# COLLECTION ###############")
@@ -300,13 +301,13 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
         logging.info(f"FMF TOPPER Full_marquee_path : {full_marquee_path_topper} > marquee_file : {marquee_file}")
 
         # Recherche pattern basic
-        if marquee_file is None:
+        if marquee_file is None and type != 'game-forceupdate':
             full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
             logging.info(f"############# SUB GAME PATTERN BASIC ###############")
             marquee_file = find_file(full_marquee_path)
             logging.info(f"FMF BASIC Full_marquee_path : {full_marquee_path} > marquee_file : {marquee_file}")
 
-        if marquee_file is None and type == 'game-forceupdate' and os.path.exists(marquee_file):
+        if type == 'game-forceupdate' and os.path.exists(marquee_file) and "-topper" in marquee_file:
             logging.info(f"FMF REMOVE {marquee_file}")
             os.remove(marquee_file)
             marquee_file = None
