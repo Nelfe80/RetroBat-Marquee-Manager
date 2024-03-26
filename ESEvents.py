@@ -67,13 +67,14 @@ def load_systems_config(xml_relative_path):
 
         if name_elem is not None and path_elem is not None:
             name = name_elem.text
-            path = path_elem.text
+            path = path_elem.text if path_elem is not None else "default_path"
             theme = theme_elem.text if theme_elem is not None else "default_theme"
 
             # Recherche du nom du dossier des roms
             roms_path = config['Settings']['RomsPath']
             folder_rom_name = os.path.basename(os.path.normpath(path.strip('~\\..')))
             system_folders[name] = folder_rom_name
+            system_folders[name + ".path"] = path
             system_folders[name + ".theme"] = theme
             logging.info(f"System {name} loading folder_rom_name - {folder_rom_name} path {path} - theme : {system_folders[name + '.theme']}")
 
@@ -481,8 +482,10 @@ def analyze_image(image_path):
 def find_game_info_in_gamelist(game_name, system_name, roms_path):
     gamelist_path = os.path.join(roms_path, system_name, "gamelist.xml")
     if not os.path.exists(gamelist_path):
-        logging.info("Gamelist file not found.")
-        return None
+        gamelist_path = os.path.join(systems_config.get(system_name + ".path"), "gamelist.xml")
+        if not os.path.exists(gamelist_path):
+            logging.info("Gamelist file not found.")
+            return None
 
     tree = ET.parse(gamelist_path)
     root = tree.getroot()
