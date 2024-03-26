@@ -59,7 +59,7 @@ def load_systems_config(xml_relative_path):
     root = tree.getroot()
 
     system_folders = {}
-
+    logging.info(f"##### load_systems_config {xml_relative_path}")
     for system in root.findall('system'):
         name_elem = system.find('name')
         path_elem = system.find('path')
@@ -75,10 +75,10 @@ def load_systems_config(xml_relative_path):
             folder_rom_name = os.path.basename(os.path.normpath(path.strip('~\\..')))
             system_folders[name] = folder_rom_name
             system_folders[name + ".theme"] = theme
-            #logging.info(f"System {name} loading folder_rom_name - {folder_rom_name} path {path} - theme : {system_folders[name + '.theme']}")
+            logging.info(f"System {name} loading folder_rom_name - {folder_rom_name} path {path} - theme : {system_folders[name + '.theme']}")
 
         else:
-            logging.info(f"Missing name and/or path in es_systems.cfg for the system {system.tag}")
+            logging.info(f"Missing name and/or path in {xml_relative_path} for a system {name_elem} {path_elem}")
 
     return system_folders
 
