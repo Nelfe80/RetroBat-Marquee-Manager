@@ -22,8 +22,8 @@ def load_config():
     global config
     config.read('config.ini')
     if config['Settings']['logFile'] == "true":
-        logging.basicConfig(level=logging.INFO)
-        #logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
+        #logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
         logging.getLogger('werkzeug').setLevel(logging.INFO)
         logging.info("Start logging")
 
