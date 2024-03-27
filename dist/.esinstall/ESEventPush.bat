@@ -5,6 +5,9 @@ for %%i in ("%~dp0.") do set "currentDir=%%~nxi"
 set args0=%*
 echo %args0%
 set args0=%args0:""="%
+set args0=%args0:&=|A%
+set args0=%args0:,=|v%
+set args0=%args0:+=|p%
 set args0=%args0:!=|%
 echo %args0%
 setlocal enabledelayedexpansion

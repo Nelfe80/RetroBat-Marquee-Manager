@@ -805,7 +805,7 @@ def execute_command(action, params, systems_config):
         #    return json.dumps({"status": "success", "message": "marquee_compose"})
         #escaped_marquee_file = escape_file_path(marquee_file)
 
-        # On remplace les caracteres speciaux par les bons pour execturer la commande
+        # On remplace les caracteres speciaux par les bons pour executer la commande
         equivalences = {#'^' : '^^',
                         #'&' : '^&',
                         #',' : '^,',
