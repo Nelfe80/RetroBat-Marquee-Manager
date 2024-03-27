@@ -682,6 +682,10 @@ def parse_path(action, params, systems_config):
     param3 = replace_special_characters(params.get('param3', ''))
     param4 = replace_special_characters(params.get('param4', ''))
 
+    #special collection groupée
+    if param1 == param2 and param2 == param3:
+        action = "system-selected"
+
     logging.info(f"PP clean params - param1 {param1} param2 {param2} param3 {param3} param4 {param4}")
 
     # GAME FORCE UPDATE
