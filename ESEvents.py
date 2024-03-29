@@ -501,7 +501,7 @@ def find_game_info_in_gamelist(game_name, system_name, roms_path):
     return None
 
 def autogen_marquee(system_name, game_name, rom_path, target_img_path):
-    global current_logo_align
+    global current_logo_align, current_logo_zoom, current_gradient_mode
     logging.info(f"#####>> autogen_marquee : system_name {system_name}, game_name {game_name}, rom_path {rom_path}, marquee_path {target_img_path}")
 
     # Création du dossier parent s'il n'existe pas
@@ -589,19 +589,45 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
         #logo_max_height = marquee_height - 100
         #logo_max_width = marquee_width // 2
+        # Mappage de l'échelle de zoom (1 à 7) à un pourcentage (100% à 200%)
+        zoom_scale = {1: 1.0, 2: 1.2, 3: 1.4, 4: 1.6, 5: 1.8, 6: 2.0, 7: 2.2}
+
+        # Calculer le facteur de zoom
+        zoom_factor = zoom_scale.get(current_logo_zoom, 1.0)  # Par défaut à 100% si non trouvé
+
+        # Calculer les dimensions initiales du logo
         logo_max_width = int(marquee_width * 2 / 3)
-        # Charger l'image du logo pour obtenir ses dimensions
         logo_img = Image.open(logo_file_path)
         original_width, original_height = logo_img.size
 
+        # Ajuster la taille selon le facteur de zoom
+        logo_max_width = int(original_width * zoom_factor)
+        logo_max_height = int(original_height * zoom_factor)
 
-        # Calculer la hauteur proportionnelle si nécessaire
-        if original_width > logo_max_width:
-            scale_factor = logo_max_width / original_width
-            logo_max_height = int(original_height * scale_factor)
+        # Assurer que le logo ne dépasse pas les dimensions du marquee
+        logo_max_width = min(logo_max_width, marquee_width)
+        logo_max_height = min(logo_max_height+50, marquee_height)
+
+        if current_gradient_mode == 2:
+            gradient_path = "images/gradient_black.png"
+        elif current_gradient_mode == 3:
+            gradient_path = "images/gradient_white.png"
         else:
-            logo_max_height = original_height
-        logo_max_height = min(logo_max_height+100, marquee_height)
+            gradient_path = ""
+
+        if logo_align == 'left':
+            gradient_gravity = 'West'
+            gradient_center_x = 50 + logo_max_width - (original_width * zoom_factor) # Centre du gradient décalé de la gauche
+        elif logo_align == 'center':
+            gradient_gravity = 'Center'
+            gradient_center_x = 0  # Centre du gradient au centre du marquee
+        elif logo_align == 'right':
+            gradient_gravity = 'East'
+            gradient_center_x = 50 + logo_max_width - (original_width * zoom_factor) # Centre du gradient décalé de la droite
+        #gradient_center_y = marquee_height // 2  # Verticalement au centre
+
+        gradient_position = f"+{gradient_center_x}+0"
+
 
         convert_command_template = config['Settings']['IMConvertCommandMarqueeGen']
         convert_command = convert_command_template.format(
@@ -610,36 +636,40 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
             FanartGravity=fanart_gravity,
             MarqueeWidth=marquee_width,
             MarqueeHeight=marquee_height,
-            LogoMaxWidth=logo_max_width,
-            LogoMaxHeight=logo_max_height,
             DecyOffset=decy_offset,
             IntermediateImgPath=intermediate_img_path,
-            LogoPath=logo_file_path,
-            LogoGravity=logo_gravity,
-            LogoPosition=logo_position,
             MarqueeBackgroundColor=config['Settings']['MarqueeBackgroundColor'],
             ImgTargetPath=target_img_path
         )
+
+        convert_command_template_logo_gradient = config['Settings']['IMConvertCommandMarqueeGenGradientLogo']
+        convert_command_logo_gradient = convert_command_template_logo_gradient.format(
+            IMPath=config['Settings']['IMPath'],
+            LogoMaxWidth=logo_max_width,
+            LogoMaxHeight=logo_max_height,
+            IntermediateImgPath=intermediate_img_path,
+            GradientPath=gradient_path,
+            GradientPosition=gradient_position,
+            GradientGravity=gradient_gravity
+        )
+
         convert_command_template_logo = config['Settings']['IMConvertCommandMarqueeGenLogo']
         convert_command_logo = convert_command_template_logo.format(
             IMPath=config['Settings']['IMPath'],
-            FanartPath=fanart_file_path,
-            FanartGravity=fanart_gravity,
-            MarqueeWidth=marquee_width,
-            MarqueeHeight=marquee_height,
             LogoMaxWidth=logo_max_width,
             LogoMaxHeight=logo_max_height,
-            DecyOffset=decy_offset,
             IntermediateImgPath=intermediate_img_path,
             LogoPath=logo_file_path,
             LogoGravity=logo_gravity,
             LogoPosition=logo_position,
-            MarqueeBackgroundColor=config['Settings']['MarqueeBackgroundColor'],
             ImgTargetPath=target_img_path
         )
 
         subprocess.run(convert_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
         logging.info(f"autogen_marquee convert_command {convert_command}")
+        if current_gradient_mode != 1:
+            subprocess.run(convert_command_logo_gradient, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+            logging.info(f"autogen_marquee convert_command_logo_gradient {convert_command_logo_gradient}")
         subprocess.run(convert_command_logo, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
         logging.info(f"autogen_marquee convert_command_logo {convert_command_logo}")
         os.remove(intermediate_img_path)
@@ -652,7 +682,7 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 #action=system-selected&param1="amstradcpc" // systems
 #action=system-selected&param1="all"  event=system-selected&param1="favorites" // collections
 def parse_path(action, params, systems_config):
-    global current_logo_align
+    global current_logo_align, current_logo_zoom, current_gradient_mode
     system_name = ''
     system_essystems = ''
     system_folder = False
@@ -699,6 +729,8 @@ def parse_path(action, params, systems_config):
     if action == 'game-selected' or action == 'system-selected':
         current_band = 2
         current_logo_align = None
+        current_logo_zoom = 3
+        current_gradient_mode = 1
         system_name = param1
         system_rom_path = os.path.join(roms_path, param1) # C:\RetroBat\roms\<system>
         formatted_rom_path = os.path.normpath(urllib.parse.unquote(param2)) #C:\RetroBat\roms\<system>\<rom.ext>
@@ -954,11 +986,24 @@ def start_watching():
 
 import keyboard
 current_band = 2
+current_logo_zoom = 3
+current_gradient_mode = 1
 current_logo_align = None
 current_band_decy = False
 def on_pressed(key):
-    global current_band, current_logo_align, current_band_decy
-    if key.name == 'f8':
+    global current_band, current_logo_align, current_band_decy, current_logo_zoom, current_gradient_mode
+    action = ''
+    if key.name == 'f6':
+        current_gradient_mode = current_gradient_mode + 1
+        if current_gradient_mode > 3:
+            current_gradient_mode = 1
+        action = 'game-forceupdate'
+    elif key.name == 'f7':
+        current_logo_zoom = current_logo_zoom + 1
+        if current_logo_zoom > 6:
+            current_logo_zoom = 1
+        action = 'game-forceupdate'
+    elif key.name == 'f8':
         current_band_decy = not current_band_decy
         action = 'game-forceupdate'
     elif key.name == 'f9':
@@ -970,22 +1015,23 @@ def on_pressed(key):
         current_logo_align = 'left' if key.name == 'f10' else 'center' if key.name == 'f11' else 'right'
         action = 'game-forceupdate'
 
-    # Affiche le message de l'action
-    command = config['Settings']['MPVShowText'].format(
-        message=f"Action: {action}, Band: {current_band}, Align: {current_logo_align}",
-        IPCChannel=config['Settings']['IPCChannel']
-    )
-    subprocess.run(command, shell=True)
+    if action == 'game-forceupdate':
+        # Affiche le message de l'action
+        command = config['Settings']['MPVShowText'].format(
+            message=f"Action: {action}, Band: {current_band}, Align: {current_logo_align}, Zoom: {current_logo_zoom}, Gradient Mode: {current_gradient_mode}",
+            IPCChannel=config['Settings']['IPCChannel']
+        )
+        subprocess.run(command, shell=True)
 
-    # Prépare les paramètres pour l'action
-    params = {
-        'param1': current_system_name,
-        'param2': current_game_name,
-        'param3': current_game_title,
-        'param4': current_rom_path
-    }
-    logging.info(f"{action} pressed, params: {params}")
-    execute_command(action, params, systems_config)
+        # Prépare les paramètres pour l'action
+        params = {
+            'param1': current_system_name,
+            'param2': current_game_name,
+            'param3': current_game_title,
+            'param4': current_rom_path
+        }
+        logging.info(f"{action} pressed, params: {params}")
+        execute_command(action, params, systems_config)
 
 def keyboard_listener():
     keyboard.on_press(on_pressed)
