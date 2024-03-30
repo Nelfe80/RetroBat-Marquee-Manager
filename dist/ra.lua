@@ -935,10 +935,50 @@ function process_game_info(data_split)
 	
 end
 
+function process_marquee_compose(data_split)
+	update_screen_dimensions(nil)
+	local name = "logo"
+	mp.commandv('vf', 'remove', '@' .. name)
+    -- Traitement des informations du marquee
+	local fanart_file_path = data_split[4]:gsub("\\", "/")
+    local fanart_top_y = data_split[5]
+    local logo_file_path = data_split[2]:gsub("\\", "/")
+    local logo_align = data_split[3]
+	local logo_new_width = image_width / 2
+
+	local x_position
+    if logo_align == "left" then
+        x_position = image_width / 10  -- 1/10th from left
+    elseif logo_align == "center" then
+        x_position = (image_width - logo_new_width) / 2  -- Center
+    elseif logo_align == "right" then
+        x_position = image_width - logo_new_width - (image_width / 10)  -- 1/10th from right
+    end
+
+	mp.commandv("loadfile", fanart_file_path)
+
+	-- Échapper les apostrophes et les deux-points
+	local escapedImagePath = logo_file_path:gsub("'", "\\'"):gsub(":", "\\:")
+	local filter_str = string.format("@%s:lavfi=[movie='%s'[img];[img]scale=%d:%d[scaled];[vid1][scaled]overlay=%d:%d]",
+									 name, escapedImagePath, logo_new_width, -1, x_position, 10)
+	mp.commandv('vf', 'add', filter_str)
+	mp.add_timeout(0.5, function()
+		mp.commandv("screenshot-to-file", "_cacheMarquee.png")
+		mp.add_timeout(0.2, function()
+			mp.add_timeout(0.2, function()
+				mp.commandv("loadfile", "_cacheMarquee.png")
+				mp.add_timeout(0.2, function()
+					mp.commandv('vf', 'remove', '@' .. name)
+				end)
+			end)
+		end)
+	end)
+end
+
 function process_game_stop(data_split)
 	clear_osd(function()
 		restore_cache_screen(initscreen)
-	end)	
+	end)
 end
 
 
@@ -967,35 +1007,35 @@ function process_achievement(data_split)
 	update_screen_dimensions(nil)
     -- Traitement des informations de succès
 	-- "achievement|2|C:\\RetroBat\\marquees\\RA\\Badge\\250352.png|Amateur Collector|Collect 20 rings|2|8.33%"
-    local achievementId = data_split[2] 
+    local achievementId = data_split[2]
     local badgePath = data_split[3]
     local title = data_split[4]
     local description = data_split[5]
     local numAwardedToUser = data_split[6]
     local userCompletion = data_split[7]
-	
+
     -- Récupérer des informations supplémentaires depuis achievements_data
     local achievementInfo = achievements_data[achievementId]
 	local points = achievementInfo and tonumber(achievementInfo.Points) or 0
     local numAwarded = achievementInfo and achievementInfo.NumAwarded or "Inconnu"
     local numAwardedHardcore = achievementInfo and achievementInfo.NumAwardedHardcore or "Inconnu"
     local trueRatio = achievementInfo and achievementInfo.TrueRatio or "Inconnu"
-	
+
 	if achievements_data[achievementId] then
         achievements_data[achievementId].Unlock = "True"  -- Marquer comme débloqué
         achievements_data[achievementId].NumAwarded = tostring(tonumber(achievements_data[achievementId].NumAwarded or "0") + 1)
     end
-	
+
 	-- Calculer le score total
 	local totalPoints = 0
-    for id, ach in pairs(achievements_data) do		
+    for id, ach in pairs(achievements_data) do
 		local achievementName = "AchievementImage" .. id
 		set_object_properties(achievementName, {y = image_height+74})
         if ach.Unlock == "True" then
             totalPoints = totalPoints + (tonumber(ach.Points) or 0)
         end
     end
-	
+
     -- Construire et afficher le message
     local message = string.format(
         "Succès débloqué: %s\nID: %s\nBadge: %s\nDescription: %s\nPoints: %s\nDébloqué par: %s utilisateurs\nDébloqué en mode hardcore par: %s utilisateurs\nRatio: %s\nPourcentage de complétion: %s\nTotal des points: %d",
@@ -1011,7 +1051,7 @@ function process_achievement(data_split)
 		local textAchievement = "AchievementTxt"
 
 		-- clear_visible_objects(function()
-			create(backgroundShape, "shape", {x = 0, y = 0, w = screen_width, h = screen_height, color_hex = "000000", opacity_decimal = 0}, 1)
+			create(backgroundShape, "shape", {x = 0, y = 0, w = image_width, h = screen_height, color_hex = "000000", opacity_decimal = 0}, 1)
 			create(badgeName, "image", {
 				image_path = badgePath,
 				x = (image_width - 64) / 2,
@@ -1029,60 +1069,60 @@ function process_achievement(data_split)
 				h = 235,
 				show = false,
 				opacity_decimal = 1
-				}, 20)			
+				}, 20)
 			mp.add_timeout(1, function()
 				-- move(name, target_x, target_y, target_opacity, duration, on_complete)
 				create(backgroundName, "image", {image_path = 'RA/System/background.png', x = 0, y = 0, w = image_width, h = image_height, show = false, opacity_decimal = 1}, 2)
-				fade_opacity(backgroundShape,  0.9, 0.4, function()						
+				fade_opacity(backgroundShape,  0.9, 0.4, function()
 					mp.add_timeout(0.6, function()
-						-- Positionnement de l'image du badge	
+						-- Positionnement de l'image du badge
 						set_object_properties(backgroundName, {show = true})
 						mp.add_timeout(0.2, function()
-							fade_opacity(backgroundShape,  0, 0, function()								
+							fade_opacity(backgroundShape,  0, 0, function()
 								create(textAchievement, "text", {
 									text = title .. "!",
 									color = "FFFFFF",
 									size = 70,
-									font = "VT323",						
+									font = "VT323",
 									align=2,
 									show = true,
 									border_size = 5,
 									opacity_decimal = 0
 								}, 25)
-								-- move(name, target_x, target_y, target_opacity, duration, on_complete)	
-								-- fade_opacity(name, target_opacity, duration, on_complete)						
-								--mp.add_timeout(1, function()		
+								-- move(name, target_x, target_y, target_opacity, duration, on_complete)
+								-- fade_opacity(name, target_opacity, duration, on_complete)
+								--mp.add_timeout(1, function()
 									set_object_properties(cupName, {show = true})
 									set_object_properties(badgeName, {show = true})
 									mp.add_timeout(0.6, function()
-										cache_screen("_cacheNewAchv", true, false, function()		
-											fade_opacity(textAchievement, 1, 0.6, function()												
-												mp.add_timeout(1, function()  
+										cache_screen("_cacheNewAchv", true, false, function()
+											fade_opacity(textAchievement, 1, 0.6, function()
+												mp.add_timeout(1, function()
 													fade_opacity(textAchievement, 0, 0.6, function()
 														set_object_properties(textAchievement, {size = 80})
 														set_object_properties(textAchievement, {text = "(" .. description .. ")"})
-														mp.add_timeout(1, function()  
-															fade_opacity(textAchievement, 1, 0.6, function()												
-																mp.add_timeout(1, function()  														
+														mp.add_timeout(1, function()
+															fade_opacity(textAchievement, 1, 0.6, function()
+																mp.add_timeout(1, function()
 																	fade_opacity(textAchievement, 0, 0.6, function()
 																		set_object_properties(textAchievement, {size = 140})
 																		set_object_properties(textAchievement, {text = "+" .. points .. "pts"})
-																		mp.add_timeout(1, function()  
+																		mp.add_timeout(1, function()
 																			fade_opacity(textAchievement, 1, 0.6, function()
-																			
-																				mp.add_timeout(2, function()  														
-																					fade_opacity(textAchievement, 0, 0.6, function()	
-																						remove_object(textAchievement)	
-																						fade_opacity(backgroundShape,  1, 0, function()	
-																							restore_cache_screen(initscreen)											
-																							fade_opacity(backgroundShape,  0, 1, function()					
+
+																				mp.add_timeout(2, function()
+																					fade_opacity(textAchievement, 0, 0.6, function()
+																						remove_object(textAchievement)
+																						fade_opacity(backgroundShape,  1, 0, function()
+																							restore_cache_screen(initscreen)
+																							fade_opacity(backgroundShape,  0, 1, function()
 																								set_object_properties(backgroundShape, {show = false})
 																								set_object_properties(badgeName, {show = false})
 																								set_object_properties(cupName, {show = false})
-																								set_object_properties(backgroundName, {show = false})																								
-																								show_achievements(function()																									
+																								set_object_properties(backgroundName, {show = false})
+																								show_achievements(function()
 																									print("Animation des achievements terminée")
-																									mp.add_timeout(1, function()
+																									mp.add_timeout(2, function()
 																										cache_screen("_cacheAchv", true, true, function()
 																											print("Image cache des achievements")
 																											show_score()
