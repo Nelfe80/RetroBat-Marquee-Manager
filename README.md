@@ -3,7 +3,7 @@
 <h2>A Dynamic Marquees for RetroBat with Svg support / Auto-resizing / Dynamic Scraping / RetroAchievements (WIP)</h2>
 <p>This project enables <b>dynamic display of marquees</b> on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
 </p>
-<p>Thanks to Aynshe and Retrobat's community testers. </p>
+<p>Thanks to Aynshe, Bob Morane and Retrobat's community testers. </p>
 <p><a href="https://www.youtube.com/watch?v=AFS7f5RKJZo" target="_blank">
     <img src="https://img.youtube.com/vi/AFS7f5RKJZo/0.jpg" alt="Lien vers la vidéo YouTube">
 </a></p>
