@@ -119,7 +119,7 @@ def decode_gray4planes_message(message, width, height):
     # Obtenir le temps actuel
     current_time = time.time()
     # Vérifier si la dernière exécution a eu lieu il y a moins d'une seconde
-    if current_time - last_execution_time < 0.5:
+    if current_time - last_execution_time < 0.1:
         return "Demande ignorée, car appelée trop fréquemment."
     planes = message[4:]  # Ajustez selon la structure exacte du message
     buffer = join_planes(4, planes, width, height)
@@ -148,7 +148,7 @@ def join_planes(bitlength, planes, width, height):
     bit_pos = c_int32(0)
 
     # Calculer l'offset de base pour déplacer le début de la frame vers la gauche
-    base_offset = 24 * 6
+    base_offset = width-20
 
     for byte_pos.value in range(width * height // 8):
         for bit_pos.value in range(7, -1, -1):
