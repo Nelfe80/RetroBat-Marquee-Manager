@@ -82,7 +82,7 @@ def decode_image_data(message, image_width, image_height):
     # Obtenir le temps actuel
     current_time = time.time()
     # Vérifier si la dernière exécution a eu lieu il y a moins d'une seconde
-    if current_time - last_execution_time < 0.05:
+    if current_time - last_execution_time < 0.2:
         return "Demande ignorée, car appelée trop fréquemment."
     # La suite du traitement comme avant
     image_data = message
@@ -97,7 +97,7 @@ def decode_gray2planes_message(message, width, height):
     # Obtenir le temps actuel
     current_time = time.time()
     # Vérifier si la dernière exécution a eu lieu il y a moins d'une seconde
-    if current_time - last_execution_time < 0.05:
+    if current_time - last_execution_time < 0.1:
         return "Demande ignorée, car appelée trop fréquemment."
     planes = message[4:]  # Ajustez selon la structure exacte du message
     buffer = join_planes(2, planes, width, height)
