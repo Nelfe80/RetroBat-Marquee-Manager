@@ -91,7 +91,7 @@ def decode_image_data(message, image_width, image_height):
 
 def decode_gray2planes_message(message, width, height):
     planes = message[4:]  # Ajustez selon la structure exacte du message
-    buffer = join_planes(2, planes, width, height)
+    buffer = join_planes_gray2(2, planes, width, height)
 
     colored_buffer = bytearray()
     for gray_value in buffer:
@@ -116,6 +116,32 @@ def decode_gray4planes_message(message, width, height):
     timestamp = perf_counter()
     frame_queue.append((img, timestamp))
     return img
+
+
+def join_planes_gray2(bitlength, planes, width, height):
+    frame = bytearray(width * height)
+    plane_size = len(planes) // bitlength
+
+    # Calculer l'offset de base pour déplacer le début de la frame vers la gauche
+    base_offset = width - 26
+
+    for byte_pos in range(width * height // 8):
+        # Calculer le décalage en fonction de la position du plan et du décalage relatif
+        offset = base_offset
+
+        for bit_and_plane_pos in range(bitlength * 8 - 1, -1, -1):
+            plane_pos = bit_and_plane_pos // 8
+            bit_pos = bit_and_plane_pos % 8
+
+            bit = 1 if is_bit_set(planes[plane_size * plane_pos + byte_pos], bit_pos) else 0
+            offset = (bitlength - plane_pos) * 3 + plane_pos * 51 - base_offset
+
+            frame_index = (byte_pos * 8 + bit_pos) + offset
+            #if 0 <= frame_index < len(frame):
+            #    frame[frame_index] |= (bit << plane_pos)
+            frame[frame_index] |= (bit << plane_pos)
+
+    return frame
 
 def join_planes(bitlength, planes, width, height):
     frame = bytearray(width * height)
