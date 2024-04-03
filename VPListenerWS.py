@@ -7,13 +7,20 @@ import struct
 from PIL import Image, ImageDraw
 import os
 import time
+from time import perf_counter
 import numpy as np
+from collections import deque
 
 logging.basicConfig(level=logging.DEBUG)
-creation_flags = 0
+
 # Configuration
+creation_flags = 0
+
 WEBSOCKET_HOST = '127.0.0.1'
 WEBSOCKET_PORT = 80
+
+FRAME_QUEUE_SIZE = 30
+frame_queue = deque(maxlen=FRAME_QUEUE_SIZE)
 
 global_image_width = 128  # Valeurs par défaut
 global_image_height = 32
@@ -21,7 +28,6 @@ default_color = 0xec843d  # Couleur par défaut
 current_color = default_color
 gray2_palette = None
 gray4_palette = None
-
 
 def decode_binary_message(message):
     global global_image_width, global_image_height
@@ -76,29 +82,14 @@ def clear_palette():
     gray2_palette = None
     gray4_palette = None
 
-last_execution_time = 0
 def decode_image_data(message, image_width, image_height):
-    global last_execution_time
-    # Obtenir le temps actuel
-    current_time = time.time()
-    # Vérifier si la dernière exécution a eu lieu il y a moins d'une seconde
-    if current_time - last_execution_time < 0.2:
-        return "Demande ignorée, car appelée trop fréquemment."
-    # La suite du traitement comme avant
     image_data = message
     img = convert_binary_to_image(image_data, image_width, image_height)
-    update_imagedmd(img)
-    # Mise à jour du temps de la dernière exécution
-    last_execution_time = current_time
+    timestamp = perf_counter()
+    frame_queue.append((img, timestamp))
     return f"Image pushed"
 
 def decode_gray2planes_message(message, width, height):
-    global last_execution_time
-    # Obtenir le temps actuel
-    current_time = time.time()
-    # Vérifier si la dernière exécution a eu lieu il y a moins d'une seconde
-    if current_time - last_execution_time < 0.1:
-        return "Demande ignorée, car appelée trop fréquemment."
     planes = message[4:]  # Ajustez selon la structure exacte du message
     buffer = join_planes(2, planes, width, height)
 
@@ -108,19 +99,11 @@ def decode_gray2planes_message(message, width, height):
         colored_buffer.extend(color)
 
     img = Image.frombytes('RGB', (width, height), bytes(colored_buffer))
-
-    update_imagedmd(img)
-    # Mise à jour du temps de la dernière exécution
-    last_execution_time = current_time
+    timestamp = perf_counter()
+    frame_queue.append((img, timestamp))
     return img
 
 def decode_gray4planes_message(message, width, height):
-    global last_execution_time, current_color, gray2_palette, gray4_palette
-    # Obtenir le temps actuel
-    current_time = time.time()
-    # Vérifier si la dernière exécution a eu lieu il y a moins d'une seconde
-    if current_time - last_execution_time < 0.1:
-        return "Demande ignorée, car appelée trop fréquemment."
     planes = message[4:]  # Ajustez selon la structure exacte du message
     buffer = join_planes(4, planes, width, height)
 
@@ -130,40 +113,33 @@ def decode_gray4planes_message(message, width, height):
         colored_buffer.extend(color)
 
     img = Image.frombytes('RGB', (width, height), bytes(colored_buffer))
-
-    update_imagedmd(img)
-    # Mise à jour du temps de la dernière exécution
-    last_execution_time = current_time
+    timestamp = perf_counter()
+    frame_queue.append((img, timestamp))
     return img
-
-import ctypes
 
 def join_planes(bitlength, planes, width, height):
     frame = bytearray(width * height)
     plane_size = len(planes) // bitlength
 
-    # Définir des types d'entiers signés de 32 bits pour byte_pos et bit_pos
-    c_int32 = ctypes.c_int32
-    byte_pos = c_int32(0)
-    bit_pos = c_int32(0)
-
     # Calculer l'offset de base pour déplacer le début de la frame vers la gauche
-    base_offset = width-20
+    base_offset = width - 20
 
-    for byte_pos.value in range(width * height // 8):
-        for bit_pos.value in range(7, -1, -1):
-            for plane_pos in range(bitlength):
-                bit = 1 if is_bit_set(planes[plane_size * plane_pos + byte_pos.value], bit_pos.value) else 0
+    for byte_pos in range(width * height // 8):
+        # Calculer le décalage en fonction de la position du plan et du décalage relatif
+        offset = base_offset
 
-                # Calculer le décalage en fonction de la position du plan et du décalage relatif
-                offset = (bitlength - plane_pos) * 3 + plane_pos * 27 - base_offset
+        for bit_and_plane_pos in range(bitlength * 8 - 1, -1, -1):
+            plane_pos = bit_and_plane_pos // 8
+            bit_pos = bit_and_plane_pos % 8
 
-                frame_index = (byte_pos.value * 8 + bit_pos.value) + offset
-                if 0 <= frame_index < len(frame):
-                    frame[frame_index] |= (bit << plane_pos)
+            bit = 1 if is_bit_set(planes[plane_size * plane_pos + byte_pos], bit_pos) else 0
+            offset = (bitlength - plane_pos) * 3 + plane_pos * 27 - base_offset
+
+            frame_index = (byte_pos * 8 + bit_pos) + offset
+            if 0 <= frame_index < len(frame):
+                frame[frame_index] |= (bit << plane_pos)
 
     return frame
-
 
 def is_bit_set(byte, pos):
     return (byte & (1 << pos)) != 0
@@ -210,41 +186,36 @@ def apply_color_to_gray_scale(value, bit_depth):
 
     return color
 
+def draw_ellipse(draw, position, color, diameter):
+    x, y = position
+    draw.ellipse([x, y, x + diameter, y + diameter], fill=color)
+
 def apply_dmd_effect(img, target_width, target_height):
-    # Convertir l'image PIL en tableau Numpy
     img_array = np.array(img)
 
-    # Calculer le facteur d'échelle et les nouvelles dimensions
     scale_x = target_width // img.width
     scale_y = target_height // img.height
     scale_factor = min(scale_x, scale_y)
 
-    # Calculer le dot_size en fonction de l'échelle
     dot_size = max(1, scale_factor)
-
-    # Réduire légèrement le diamètre de chaque dot
     dot_diameter = dot_size - 2
 
-    # Nouvelles dimensions ajustées en fonction du dot_size
     new_width = img.width * dot_size
     new_height = img.height * dot_size
 
-    # Créer une nouvelle image avec des bords noirs
     dmd_img = Image.new('RGB', (target_width, target_height), (0, 0, 0))
     draw = ImageDraw.Draw(dmd_img)
 
-    # Parcourir chaque pixel de l'image et dessiner un dot
     for y in range(img.height):
         for x in range(img.width):
             dot_x = (target_width - new_width) // 2 + x * dot_size
             dot_y = (target_height - new_height) // 2 + y * dot_size
-            color = tuple(img_array[y, x])
-            draw.ellipse([dot_x, dot_y, dot_x + dot_diameter, dot_y + dot_diameter], fill=color)
+            color = img_array[y, x]
+            draw_ellipse(draw, (dot_x, dot_y), tuple(color), dot_diameter)
 
     return dmd_img
 
 def update_imagedmd(img):
-    #dmd_img = img
     dmd_img = apply_dmd_effect(img, int(config['Settings']['MarqueeWidth']), int(config['Settings']['MarqueeHeight']))
     filename = f"images/image_dmd.png"
     dmd_img.save(filename)
@@ -358,6 +329,35 @@ def load_config():
     update_path('MPVPath', os.path.join(current_working_dir, 'mpv', 'mpv.exe'))
     update_path('IMPath', os.path.join(current_working_dir, 'imagemagick', 'convert.exe'))
 
+FRAMERATE = 30
+async def main_loop():
+    global last_update_time
+    last_update_time = perf_counter()
+
+    while True:
+        current_time = perf_counter()
+
+        if len(frame_queue) > 0:
+            img, img_timestamp = frame_queue.popleft()
+
+            # Calculer le temps écoulé depuis la capture de l'image
+            time_since_img_captured = current_time - img_timestamp
+
+            # Vérifier si l'image est toujours dans le cadre du framerate ou si c'est la derniere frame
+            if time_since_img_captured <= 1 / FRAMERATE or len(frame_queue) == 0:
+                update_imagedmd(img)
+
+                # Mise à jour de last_update_time
+                last_update_time = current_time
+
+            # Calculer le délai nécessaire pour maintenir le framerate
+            time_since_last_update = current_time - last_update_time
+            delay = max(0, (1 / FRAMERATE) - time_since_last_update)
+            await asyncio.sleep(delay)
+        else:
+            await asyncio.sleep(0.01)  # Petit délai pour éviter de surcharger la boucle
+
+
 if __name__ == '__main__':
     load_config()
     if not os.path.exists('images'):
@@ -366,9 +366,14 @@ if __name__ == '__main__':
     start_server = websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT)
     ensure_mpv_running()
 
+    # Ajouter la tâche asynchrone à la boucle d'événements
+    asyncio.get_event_loop().create_task(main_loop())
+
     # Exécuter le serveur
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
+
+
 
 
 
