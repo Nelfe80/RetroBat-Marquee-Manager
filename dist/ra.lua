@@ -1051,7 +1051,7 @@ function process_achievement(data_split)
 		local textAchievement = "AchievementTxt"
 
 		-- clear_visible_objects(function()
-			create(backgroundShape, "shape", {x = 0, y = 0, w = image_width, h = screen_height, color_hex = "000000", opacity_decimal = 0}, 1)
+		    create(backgroundShape, "shape", {x = 0, y = -1, w = image_width, h = image_height+1, color_hex = "000000", opacity_decimal = 0}, 1)
 			create(badgeName, "image", {
 				image_path = badgePath,
 				x = (image_width - 64) / 2,

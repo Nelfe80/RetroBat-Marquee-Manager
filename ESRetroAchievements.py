@@ -306,6 +306,18 @@ def watch_retroarch_log(config, last_line_num, player_username):
 
         return last_line_num
 
+    # [INFO] [RCHEEVOS]: Identified game: 1 (1bc674be034e43c96b86487ac69d9293)
+    # [INFO] [RCHEEVOS]: Nelfe logged in successfully
+    # [INFO] [RCHEEVOS]: Fetching data for game 1
+    # [INFO] [RCHEEVOS]: Starting session for game 1
+    # [INFO] [RCHEEVOS]: Registered 0x10000 bytes of SYSTEM RAM at $000000 (offset 0x000000)
+    # [INFO] [RCHEEVOS]: Could not map region starting at $010000
+    # [INFO] [RCHEEVOS]: Registered 0x10000 bytes of SRAM at $010000 (null filler)
+    # [INFO] [RCHEEVOS]: 38/38 memory addresses valid
+    # [INFO] [RCHEEVOS]: Game 1 loaded, hardcore disabled
+    # [INFO] [RCHEEVOS]: You have 2 of 24 achievements unlocked.
+    # [INFO] [RCHEEVOS]: Awarding achievement 2: Amateur Collector
+    # [INFO] [RCHEEVOS]: Achievement 2 awarded, new score: 37
 
     # [INFO] [RCHEEVOS]: Load started, hardcore active
     # [INFO] [RCHEEVOS]: Using host: https://retroachievements.org
@@ -342,9 +354,10 @@ def process_log_line(line, player_username):
         handle_user_info(user_profile)
 
     # Détection du chargement d'un jeu
-    game_data_match = re.search(r"Fetched game data (\d+)", line)
+    # game_data_match = re.search(r"Fetched game data (\d+)", line)
+    game_data_match = re.search(r"Fetched game data (\d+)|Fetching data for game (\d+)", line)
     if game_data_match:
-        current_game_id = game_data_match.group(1)
+        current_game_id = next(g for g in game_data_match.groups() if g is not None)
         logging.info(f"Nouveau jeu chargé: ID {current_game_id}")
         game_info = get_game_info(current_game_id, player_username)
         current_game_info = game_info
@@ -359,9 +372,9 @@ def process_log_line(line, player_username):
        handle_game_stop()
 
     # Détection d'un succès décerné
-    achievement_match = re.search(r"Awarded achievement (\d+)", line)
+    achievement_match = re.search(r"Awarded achievement (\d+)|Achievement (\d+) awarded, new score: \d+", line)
     if achievement_match and current_game_id:
-        achievement_id = achievement_match.group(1)
+        achievement_id = next(g for g in achievement_match.groups() if g is not None)
         logging.info(f"Succès décerné: ID {achievement_id}")
         # Appeler l'API pour obtenir les détails du succès
         user_progress = get_user_progress(current_game_id, player_username)
