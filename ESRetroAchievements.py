@@ -286,10 +286,13 @@ def get_user_leaderboard(lbid, lbname=None, lbtime=None):
 # Surveiller retroarch.log pour les succès
 def watch_retroarch_log(config, last_line_num, player_username):
     log_path = os.path.join(config['Settings']['RetroBatPath'], 'emulators', 'retroarch', 'logs', 'retroarch.log')
-    with open(log_path, 'a+') as file:
-            pass
 
-    with open(log_path, 'r') as file:
+    # Création du fichier s'il n'existe pas
+    with open(log_path, 'a+') as file:
+        pass
+
+    # Ouvrir le fichier avec l'encodage spécifié en 'utf-8'
+    with open(log_path, 'r', encoding='utf-8') as file:
         lines = file.readlines()
         new_line_num = len(lines)
 
@@ -318,6 +321,8 @@ def watch_retroarch_log(config, last_line_num, player_username):
     # [INFO] [RCHEEVOS]: You have 2 of 24 achievements unlocked.
     # [INFO] [RCHEEVOS]: Awarding achievement 2: Amateur Collector
     # [INFO] [RCHEEVOS]: Achievement 2 awarded, new score: 37
+    # [INFO] [RCHEEVOS]: Awarding achievement 2: Amateur Collector
+    # [INFO] [RCHEEVOS]: Achievement 2: User already has this achievement unlocked.
 
     # [INFO] [RCHEEVOS]: Load started, hardcore active
     # [INFO] [RCHEEVOS]: Using host: https://retroachievements.org
@@ -372,7 +377,7 @@ def process_log_line(line, player_username):
        handle_game_stop()
 
     # Détection d'un succès décerné
-    achievement_match = re.search(r"Awarded achievement (\d+)|Achievement (\d+) awarded, new score: \d+", line)
+    achievement_match = re.search(r"Achievement (\d+) awarded, new score: \d+|Awarding achievement (\d+):", line)
     if achievement_match and current_game_id:
         achievement_id = next(g for g in achievement_match.groups() if g is not None)
         logging.info(f"Succès décerné: ID {achievement_id}")
