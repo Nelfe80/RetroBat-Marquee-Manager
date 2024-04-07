@@ -89,20 +89,6 @@ def decode_image_data(message, image_width, image_height):
     frame_queue.append((img, timestamp))
     return f"Image pushed"
 
-def decode_gray2planes_message(message, width, height):
-    planes = message[4:]  # Ajustez selon la structure exacte du message
-    buffer = join_planes_gray2(2, planes, width, height)
-
-    colored_buffer = bytearray()
-    for gray_value in buffer:
-        color = apply_color_to_gray_scale(gray_value, 2)  # 2 bits pour gray2Planes
-        colored_buffer.extend(color)
-
-    img = Image.frombytes('RGB', (width, height), bytes(colored_buffer))
-    timestamp = perf_counter()
-    frame_queue.append((img, timestamp))
-    return img
-
 def decode_gray4planes_message(message, width, height):
     planes = message[4:]  # Ajustez selon la structure exacte du message
     buffer = join_planes(4, planes, width, height)
@@ -117,38 +103,35 @@ def decode_gray4planes_message(message, width, height):
     frame_queue.append((img, timestamp))
     return img
 
+def decode_gray2planes_message(message, width, height):
+    print(f"### Received gray2Planes message of length {len(message)}")
+    print(f"### Message content: {message.hex()}")
+    print(f"### Image dimensions: {width}x{height}")
 
-def join_planes_gray2(bitlength, planes, width, height):
-    frame = bytearray(width * height)
-    plane_size = len(planes) // bitlength
+    planes = message[4:]  # Ajustez selon la structure exacte du message
+    buffer = join_planes(2, planes, width, height)
 
-    # Calculer l'offset de base pour déplacer le début de la frame vers la gauche
-    base_offset = width - 26
+    colored_buffer = bytearray()
+    for gray_value in buffer:
+        color = apply_color_to_gray_scale(gray_value, 2)  # 2 bits pour gray2Planes
+        colored_buffer.extend(color)
 
-    for byte_pos in range(width * height // 8):
-        # Calculer le décalage en fonction de la position du plan et du décalage relatif
-        offset = base_offset
-
-        for bit_and_plane_pos in range(bitlength * 8 - 1, -1, -1):
-            plane_pos = bit_and_plane_pos // 8
-            bit_pos = bit_and_plane_pos % 8
-
-            bit = 1 if is_bit_set(planes[plane_size * plane_pos + byte_pos], bit_pos) else 0
-            offset = (bitlength - plane_pos) * 3 + plane_pos * 51 - base_offset
-
-            frame_index = (byte_pos * 8 + bit_pos) + offset
-            #if 0 <= frame_index < len(frame):
-            #    frame[frame_index] |= (bit << plane_pos)
-            frame[frame_index] |= (bit << plane_pos)
-
-    return frame
+    img = Image.frombytes('RGB', (width, height), bytes(colored_buffer))
+    timestamp = perf_counter()
+    frame_queue.append((img, timestamp))
+    return img
 
 def join_planes(bitlength, planes, width, height):
     frame = bytearray(width * height)
     plane_size = len(planes) // bitlength
 
     # Calculer l'offset de base pour déplacer le début de la frame vers la gauche
-    base_offset = width - 20
+    if bitlength == 2:
+        base_offset = width - 26
+    elif bitlength == 4:
+        base_offset = width - 20
+    else:
+        raise ValueError("Invalid bitlength. Expected 2 or 4.")
 
     for byte_pos in range(width * height // 8):
         # Calculer le décalage en fonction de la position du plan et du décalage relatif
@@ -159,11 +142,14 @@ def join_planes(bitlength, planes, width, height):
             bit_pos = bit_and_plane_pos % 8
 
             bit = 1 if is_bit_set(planes[plane_size * plane_pos + byte_pos], bit_pos) else 0
-            offset = (bitlength - plane_pos) * 3 + plane_pos * 27 - base_offset
+            if bitlength == 2:
+                offset = (bitlength - plane_pos) * 3 + plane_pos * 51 - base_offset
+            elif bitlength == 4:
+                offset = (bitlength - plane_pos) * 3 + plane_pos * 27 - base_offset
 
             frame_index = (byte_pos * 8 + bit_pos) + offset
-            if 0 <= frame_index < len(frame):
-                frame[frame_index] |= (bit << plane_pos)
+            #if 0 <= frame_index < len(frame):
+            frame[frame_index] |= (bit << plane_pos)
 
     return frame
 
@@ -364,13 +350,14 @@ async def main_loop():
         current_time = perf_counter()
 
         if len(frame_queue) > 0:
-            img, img_timestamp = frame_queue.popleft()
-
+            #img, img_timestamp = frame_queue.popleft()
+            img, img_timestamp = frame_queue[-1]
             # Calculer le temps écoulé depuis la capture de l'image
             time_since_img_captured = current_time - img_timestamp
 
             # Vérifier si l'image est toujours dans le cadre du framerate ou si c'est la derniere frame
             if time_since_img_captured <= 1 / FRAMERATE or len(frame_queue) == 0:
+
                 update_imagedmd(img)
 
                 # Mise à jour de last_update_time
