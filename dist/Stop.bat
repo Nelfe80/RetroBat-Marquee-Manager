@@ -17,6 +17,10 @@ if not errorlevel 1 taskkill /IM ESEventsScrapTopper.exe /F
 tasklist | find /I "ESRetroAchievements.exe" > NUL
 if not errorlevel 1 taskkill /IM ESRetroAchievements.exe /F
 
+:: Vérifier et fermer VPListenerWS.exe si en cours d'exécution
+tasklist | find /I "VPListenerWS.exe" > NUL
+if not errorlevel 1 taskkill /IM VPListenerWS.exe /F
+
 :: Vérifier et fermer mpv.exe si en cours d'exécution
 tasklist | find /I "mpv.exe" > NUL
 if not errorlevel 1 taskkill /IM mpv.exe /F

@@ -37,6 +37,7 @@ def decode_binary_message(message):
             return f'Type: gameName, Game Name: {game_name}'
 
         elif message.startswith(b'dimensions'):
+            logging.warning(f"#### dimensions {message}")
             _, width, height = struct.unpack('<11sII', message)
             global_image_width, global_image_height = width, height
             return f'Type: dimensions, Dimensions: {width}x{height}'
@@ -90,6 +91,9 @@ def decode_image_data(message, image_width, image_height):
     return f"Image pushed"
 
 def decode_gray4planes_message(message, width, height):
+    print(f"### Received gray4Planes message of length {len(message)}")
+    print(f"### Message content: {message.hex()}")
+    print(f"### Image dimensions: {width}x{height}")
     planes = message[4:]  # Ajustez selon la structure exacte du message
     buffer = join_planes(4, planes, width, height)
 
@@ -249,9 +253,9 @@ async def handler(websocket, path):
             if isinstance(message, str):
                 logging.debug(f"Text message received: {message}")
                 continue
-
+            logging.debug(f"#> Encoded_message: {message}")
             decoded_message = decode_binary_message(message)
-            logging.debug(f"Decoded_message: {decoded_message}")
+            logging.debug(f"#> Decoded_message: {decoded_message}")
 
     except Exception as e:
         logging.error(f"WebSocket error: {e}")
@@ -341,6 +345,28 @@ def load_config():
     update_path('MPVPath', os.path.join(current_working_dir, 'mpv', 'mpv.exe'))
     update_path('IMPath', os.path.join(current_working_dir, 'imagemagick', 'convert.exe'))
 
+# Modifier DmdDevice.ini pour activer le stream DMD
+#C:\RetroBatV6\emulators\vpinball\VPinMAME\DmdDevice.ini -> [networkstream] enabled = true retry = true
+def modify_dmddevice_config(config):
+    dmddevice_config_path = os.path.join(config['Settings']['RetroBatPath'], 'emulators', 'vpinball', 'VPinMAME', 'DmdDevice.ini')
+
+    # Initialisation du parser de configuration
+    config_parser = configparser.ConfigParser()
+    config_parser.read(dmddevice_config_path)
+
+    # Modification de la section [networkstream]
+    if 'networkstream' not in config_parser:
+        config_parser.add_section('networkstream')
+    config_parser.set('networkstream', 'enabled', 'true')
+    config_parser.set('networkstream', 'retry', 'true')
+    config_parser.set('networkstream', 'retry-interval', '5')  # Assurez-vous que cette option existe si nécessaire
+
+    # Ecriture des modifications dans le fichier
+    with open(dmddevice_config_path, 'w') as configfile:
+        config_parser.write(configfile)
+
+    logging.info("Configuration de DmdDevice modifiée pour activer le stream dmd")
+
 FRAMERATE = 30
 async def main_loop():
     global last_update_time
@@ -373,18 +399,20 @@ async def main_loop():
 
 if __name__ == '__main__':
     load_config()
-    if not os.path.exists('images'):
-        os.makedirs('images')
-    # Démarrer le serveur WebSocket
-    start_server = websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT)
-    ensure_mpv_running()
+    if config['Settings']['MarqueePinballDMD'] == "true":
+        modify_dmddevice_config(config)
+        if not os.path.exists('images'):
+            os.makedirs('images')
+        # Démarrer le serveur WebSocket
+        start_server = websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT)
+        ensure_mpv_running()
 
-    # Ajouter la tâche asynchrone à la boucle d'événements
-    asyncio.get_event_loop().create_task(main_loop())
+        # Ajouter la tâche asynchrone à la boucle d'événements
+        asyncio.get_event_loop().create_task(main_loop())
 
-    # Exécuter le serveur
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
+        # Exécuter le serveur
+        asyncio.get_event_loop().run_until_complete(start_server)
+        asyncio.get_event_loop().run_forever()
 
 
 
