@@ -5,10 +5,6 @@ setlocal enabledelayedexpansion
 tasklist | find /I "ESEvents.exe" > NUL
 if not errorlevel 1 taskkill /IM ESEvents.exe /F
 
-:: Vérifier et fermer ESEventPush.exe si en cours d'exécution
-tasklist | find /I "ESEventPush.exe" > NUL
-if not errorlevel 1 taskkill /IM ESEventPush.exe /F
-
 :: Vérifier et fermer ESEventsScrapTopper.exe si en cours d'exécution
 tasklist | find /I "ESEventsScrapTopper.exe" > NUL
 if not errorlevel 1 taskkill /IM ESEventsScrapTopper.exe /F
@@ -16,6 +12,10 @@ if not errorlevel 1 taskkill /IM ESEventsScrapTopper.exe /F
 :: Vérifier et fermer ESRetroAchievements.exe si en cours d'exécution
 tasklist | find /I "ESRetroAchievements.exe" > NUL
 if not errorlevel 1 taskkill /IM ESRetroAchievements.exe /F
+
+:: Vérifier et fermer VPListenerWS.exe si en cours d'exécution
+tasklist | find /I "VPListenerWS.exe" > NUL
+if not errorlevel 1 taskkill /IM VPListenerWS.exe /F
 
 :: Vérifier et fermer ESRetroAchievements.exe si en cours d'exécution
 tasklist | find /I "retroarch.exe" > NUL
@@ -45,6 +45,12 @@ timeout /t 1 /nobreak >NUL
 start ESRetroAchievements.exe
 timeout /t 1 /nobreak >NUL
 tasklist | find /I "ESRetroAchievements.exe" > NUL
+timeout /t 1 /nobreak >NUL
+
+:: Démarrer VPListenerWS.exe
+start VPListenerWS.exe
+timeout /t 1 /nobreak >NUL
+tasklist | find /I "VPListenerWS.exe" > NUL
 timeout /t 1 /nobreak >NUL
 
 :: Démarrer retrobat.exe
