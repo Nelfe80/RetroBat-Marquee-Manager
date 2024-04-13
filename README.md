@@ -62,11 +62,12 @@ This approach allows you to scrape specific marquee images that are more suited 
 After scraping, you might encounter the situation where both marquees and logos are labeled with <b>-marquee</b>. To resolve this, use the script in tools folder, <b>RenameMarquees.bat</b> (edit file with notepad to change folder link). This script will rename all marquee images, changing the <b>-marquee</b> suffix to <b>-marqueescraped</b>. This renaming step is crucial for ensuring that marquee images are properly recognized and prioritized by the system. Moreover, it allows you to rescrape for the actual logos without overwriting the marquees you've just scraped. Once the script has been executed, and the marquee images are renamed to include <b>-marqueescraped.png</b>, you can safely scrape again to obtain the true <b>-marquee</b> logos without any file conflicts.
 </p>
 <h2>START</h2>
-<h3>StartRetrobatMarqueesASRA.bat (with dynamic scraping and retroachievements)</h3>
-<h3>StartRetrobatMarqueesRA.bat (with retroachievements only)</h3>
-<h3>StartRetrobatMarqueesAS.bat (with dynamic scraping only)</h3>
-<h3>StartRetrobatMarquees.bat (without dynamic scraping and retroachievements)</h3><br><br>
+<h3>Launch Start.bat</h3>
+<br><br>
 <h2>Notes</h2>
+<p>
+For visual pinball, don't forget to update VPinMame
+</p>
 <p>
 It is important to note that SVG files may require additional processing time during their first use. However, once they are converted to PNG format, you will experience smoother navigation and quicker access to these images within the system.
 </p>
