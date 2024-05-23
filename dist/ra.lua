@@ -708,7 +708,7 @@ function update_chrono_display()
     end
     local color_hex = calculate_progression_color(progression)
     set_object_properties("ProgressionBar", {
-        w = (screen_width+10) * progression,
+        w = (screen_width+10) * (progression*2),
         color_hex = color_hex
     })
 
@@ -740,13 +740,13 @@ function calculate_progression_color(progression)
         -- Interpoler entre vert (0x00FF00) et orange (0x00A5FF)
         b = 0
 		g = 0xFF
-        r = 0xA5 * progression / 0.5        
+        r = 0xA5 * progression / 0.5
     elseif progression < 0.8 then
         -- Interpoler entre orange (0x00A5FF) et rouge (0xFF0000)
         local local_progress = (progression - 0.5) / 0.3
         b = 0
 		g = 0xFF - 0xFF * local_progress
-        r = 0xA5 + (0xFF - 0xA5) * local_progress        
+        r = 0xA5 + (0xFF - 0xA5) * local_progress
     else
         -- Reste sur rouge
         b, g, r = 0, 0, 0xFF
@@ -766,17 +766,21 @@ end
 -- #####################################&
 
 function process_leaderboard_started(data_split)
+	clear_osd(function()
+		restore_cache_screen(initscreen)
+	end)
+
 	show_score()
     chrono_mode = true
 	set_object_properties("BottomBar", {show = false})
 	create("BackgroundBar", "shape", {
         x = 0, y = 0,
-        w = screen_width, h = screen_height,
+        w = screen_width*2, h = screen_height*2,
         color_hex = "000000",
         opacity_decimal = 0.6
     }, 1)
-	
-	
+
+
     local text_properties = {
         align = 6,
         text = "0:00.00",
@@ -795,7 +799,7 @@ function process_leaderboard_started(data_split)
     -- Créer un shape pour la progression
     create("ProgressionBar", "shape", {
         x = 0, y = 0,
-        w = 0, h = screen_height,
+        w = 0, h = screen_height*2,
         color_hex = "00FF00",
         opacity_decimal = 0.7
     }, 2)
@@ -808,7 +812,7 @@ function process_leaderboard_started(data_split)
         border_size = 3
     }
 
-    -- Démarrer le chronomètre	
+    -- Démarrer le chronomètre
 	if data_split[4] ~= "No Record" then
         record_time_global = convert_time_to_seconds(data_split[4])
 		record_text_properties.text = "Record: " .. data_split[4]
@@ -816,13 +820,13 @@ function process_leaderboard_started(data_split)
         record_time_global = nil -- Aucun record disponible
 		record_text_properties.text = "Record: No Record"
     end
-	
+
 	create("RecordTime", "text", record_text_properties, 200)
-	
+
     chrono_active = true
     chrono_paused = false
     chrono_start_time = mp.get_time() - 0.43
-	
+
     update_chrono_display()
 end
 
@@ -839,9 +843,9 @@ function process_leaderboard_submitting(data_split)
 	animate_properties("BottomBar", {y = screen_height-13, opacity_decimal = 0.7}, 3, nil)
     -- Arrêter le chronomètre
     local final_time_str = data_split[3]
-    set_object_properties("Chrono", {text = final_time_str})	
+    set_object_properties("Chrono", {text = final_time_str})
     chrono_active = false
-	
+
 	local submitted_time = convert_time_to_seconds(data_split[3])
     local time_diff = record_time_global and (submitted_time - record_time_global) or nil
 
@@ -893,14 +897,14 @@ function process_user_info(data_split)
 	create("BlackRectangle", "shape", {x = -128, y = 10, w = 128, h = 128, color_hex = "000000", show = true, opacity_decimal = 0} , 1)
 	create("UserText", "text", {text = username .. " connected", color = textColor, font = "VT323", x = 0, y = 90, border = 3, size = 40, show = true, opacity_decimal = 0}, 2)
 	create("UserImage", "image", {image_path = userPicPath, x = 10, y = 10, w = 128, h = 128, show = false, opacity_decimal = 1}, 3)
-	move("BlackRectangle", 10, 10, 0.2, 0.5, function ()	
+	move("BlackRectangle", 10, 10, 0.2, 0.5, function ()
 		move("UserText", 30, 90, 1, 1, nil)
 		set_object_properties('UserImage', {show = true})
-		mp.add_timeout(3, function()	
+		mp.add_timeout(3, function()
 			set_object_properties('UserImage', {show = false})
 			move("UserText", -50, 90, 0, 0, nil)
-			move("BlackRectangle", -128, 10, 0, 0.5, function ()	
-				remove_object("BlackRectangle", function ()	
+			move("BlackRectangle", -128, 10, 0, 0.5, function ()
+				remove_object("BlackRectangle", function ()
 					remove_object("UserImage", nil)
 					remove_object("UserText", nil)
 				end)
@@ -911,7 +915,7 @@ end
 
 function process_game_info(data_split)
 	update_screen_dimensions(nil)
-	
+
     -- Traitement des informations du jeu
     local gameTitle = data_split[2]
     local gameIconPath = data_split[3]
@@ -929,10 +933,10 @@ function process_game_info(data_split)
 					print("Image cache des achievements")
 					show_score()
 				end)
-			end)	
-		end)		
+			end)
+		end)
 	end)
-	
+
 end
 
 function process_marquee_compose(data_split)
@@ -1051,7 +1055,7 @@ function process_achievement(data_split)
 		local textAchievement = "AchievementTxt"
 
 		-- clear_visible_objects(function()
-		    create(backgroundShape, "shape", {x = 0, y = -1, w = image_width, h = image_height+1, color_hex = "000000", opacity_decimal = 0}, 1)
+			create(backgroundShape, "shape", {x = 0, y = 0, w = image_width, h = image_height, color_hex = "000000", opacity_decimal = 0}, 1)
 			create(badgeName, "image", {
 				image_path = badgePath,
 				x = (image_width - 64) / 2,

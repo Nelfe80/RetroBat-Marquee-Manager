@@ -42,6 +42,7 @@ current_player = None
 current_lbname = None
 user_hardcore_mode = False
 login_attempt_start_time = None
+cheevos_leaderboards_enable = False
 
 # Chemins des dossiers de cache
 RA_BASE_CACHE = 'RA'
@@ -116,6 +117,28 @@ def modify_retroarch_config(config):
         file.write("log_to_file_timestamp = \"false\"\n")
         file.write("log_verbosity = \"true\"\n")
     logging.info("Configuration de RetroArch modifiée pour activer la journalisation")
+
+def read_cheevos_leaderboards_enable(config):
+    retroarch_config_path = os.path.join(config['Settings']['RetroBatPath'], 'emulators', 'retroarch', 'retroarch.cfg')
+    try:
+        with open(retroarch_config_path, 'r') as file:
+            for line in file:
+                if 'cheevos_leaderboards_enable' in line:
+                    value = line.split('=')[1].strip().strip('"')
+                    if value.lower() == "true":
+                        logging.info("cheevos_leaderboards_enable est activé")
+                        return True
+                    else:
+                        logging.info("cheevos_leaderboards_enable est désactivé ou vide")
+                        return False
+        logging.info("La variable 'cheevos_leaderboards_enable' n'a pas été trouvée dans le fichier")
+        return False
+    except FileNotFoundError:
+        logging.error(f"Le fichier de configuration '{retroarch_config_path}' n'a pas été trouvé")
+        return False
+    except Exception as e:
+        logging.error(f"Erreur lors de la lecture du fichier de configuration : {e}")
+        return False
 
 # Fonction générique pour appeler l'API RetroAchievements
 def call_retroachievements_api(endpoint, params):
@@ -341,6 +364,7 @@ def watch_retroarch_log(config, last_line_num, player_username):
     # [INFO] [RCHEEVOS]: Leaderboard 4 started: Green Hill Zone - Act 3
     # [INFO] [RCHEEVOS]: Leaderboard 4 canceled: Green Hill Zone - Act 3
     # [INFO] [RCHEEVOS]: Submitting 4:57.55 for leaderboard 4
+    # [INFO] [RCHEEVOS]: Submitting 0:50.18 (3011) for leaderboard 2: Green Hill Zone - Act 1
     # [INFO] [RCHEEVOS]: Submitted leaderboard 4
     # [INFO] [RCHEEVOS]: Error logging in: HTTP error code 504
     # [INFO] [Core]: Unloading game..
@@ -348,6 +372,8 @@ def watch_retroarch_log(config, last_line_num, player_username):
 def process_log_line(line, player_username):
     global current_game_id  # Utilisation de la variable globale
     global current_game_info  # Utilisation de la variable globale
+    global config
+    line = re.sub(r'\(.*?\)\s*', '', line)
 
     # Détection de la connection d'un joueur
     user_login_match = re.search(r"RCHEEVOS\]: (.+) logged in successfully", line)
@@ -390,10 +416,12 @@ def process_log_line(line, player_username):
     # Détection d'un challenge leaderboard
     lb_started_match = re.search(r"Leaderboard (\d+) started: (.+)", line)
     if lb_started_match:
-        lbid, lbname = lb_started_match.groups()
-        current_lbname = lbname
-        user_leaderboard = get_user_leaderboard(lbid, lbname)
-        handle_leaderboard_started(user_leaderboard)
+        cheevos_leaderboards_enable = read_cheevos_leaderboards_enable(config)
+        if cheevos_leaderboards_enable:
+            lbid, lbname = lb_started_match.groups()
+            current_lbname = lbname
+            user_leaderboard = get_user_leaderboard(lbid, lbname)
+            handle_leaderboard_started(user_leaderboard)
 
     # Détection d'un challenge leaderboard annulé
     lb_canceled_match = re.search(r"Leaderboard (\d+) canceled: (.+)", line)
@@ -402,7 +430,9 @@ def process_log_line(line, player_username):
         handle_leaderboard_canceled(lbid, lbname)
 
     # Détection d'un challenge leaderboard soumis
-    lb_submitting_match = re.search(r"Submitting (\d+:\d+\.\d+) for leaderboard (\d+)", line)
+    # [INFO] [RCHEEVOS]: Submitting 4:57.55 for leaderboard 4
+    # [INFO] [RCHEEVOS]: Submitting 0:50.18 (3011) for leaderboard 2: Green Hill Zone - Act 1
+    lb_submitting_match = re.search(r"Submitting (\d+:\d+\.\d+) for leaderboard (\d+)|Submitting (\d+:\d+\.\d+) for leaderboard (\d+): (.+)", line)
     if lb_submitting_match:
         lbtime, lbid = lb_submitting_match.group(1), lb_submitting_match.group(2)
         user_leaderboard = get_user_leaderboard(lbid, current_lbname, lbtime)
@@ -683,13 +713,14 @@ def pushRAdatasToMPV(type, datas):
 # Fonction principale
 def main():
     clear_retroarch_log(config)
-    global es_settings
+    global es_settings, cheevos_leaderboards_enable
     es_settings_path = os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_settings.cfg')
     es_settings = load_es_settings(es_settings_path)
 
     player_username = es_settings['global.retroachievements.username']
 
     if config['Settings']['MarqueeRetroAchievements'] == "true":
+        cheevos_leaderboards_enable = read_cheevos_leaderboards_enable(config)
         modify_retroarch_config(config)
         last_line_num = 0
         while True:
