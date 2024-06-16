@@ -22,8 +22,8 @@ def load_config():
     global config
     config.read('config.ini')
     if config['Settings']['logFile'] == "true":
-        #logging.basicConfig(level=logging.INFO)
-        logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
+        logging.basicConfig(level=logging.INFO)
+        #logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
         logging.getLogger('werkzeug').setLevel(logging.INFO)
         logging.info("Start logging")
 
@@ -126,7 +126,10 @@ def launch_media_player():
         DefaultImagePath=config['Settings']['DefaultImagePath'],
         MarqueeBackgroundCodeColor=config['Settings']['MarqueeBackgroundCodeColor']
     )
-    subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+    #subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+    #subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, creationflags=creation_flags)
+    #subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, creationflags=creation_flags)
+    subprocess.Popen(launch_command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=creation_flags)
     logging.info(f"MPV launch command executed : {launch_command}")
 
 def is_mpv_running():
@@ -135,8 +138,10 @@ def is_mpv_running():
         subprocess.run(test_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
         logging.info(f"MPV is currently running.")
         return True
-    except subprocess.CalledProcessError:
-        logging.info(f"MPV is not currently running.")
+    except subprocess.CalledProcessError as e:
+        # Log de l'erreur en cas d'échec de la commande
+        logging.info(f"MPV is not currently running. Error: {e}")
+        #logging.info(f"Command error output: {e.stderr.decode().strip()}")
         return False
 
 def ensure_mpv_running():
@@ -1059,4 +1064,3 @@ if __name__ == '__main__':
 
     launch_media_player()
     #app.run(host=config['Settings']['Host'], port=int(config['Settings']['Port']), debug=False)
-
