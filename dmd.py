@@ -88,20 +88,23 @@ def detect_com_ports_and_baudrates():
                 return port.device, baudrate, width, height
     return None, None, None, None
 
-def resize_and_pad(image, target_width, target_height):
+def resize_and_pad(image, target_width, target_height, limit_width=False):
     image_ratio = image.width / image.height
     target_ratio = target_width / target_height
 
     # Scale the image to the target height
     new_height = target_height
     new_width = int(new_height * image_ratio)
+    if limit_width and new_width > target_width:
+        new_width = target_width
+        new_height = int(new_width / image_ratio)
     resized_image = image.resize((new_width, new_height))
 
     # Create a new image with transparent background
     new_image = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))
 
     # Paste the resized image onto the new image
-    offset = ((target_width - new_width) // 2, 0)
+    offset = ((target_width - new_width) // 2, (target_height - new_height) // 2)
     new_image.paste(resized_image, offset)
 
     return new_image
@@ -116,7 +119,7 @@ def image_to_rgb_array(image, width, height):
 def convert_image_to_gif(image_path, width, height):
     ensure_cache_dir()
     image = Image.open(image_path).convert("RGBA")
-    image = resize_and_pad(image, width, height)
+    image = resize_and_pad(image, width, height, limit_width=True)
     gif_path = os.path.join(CACHE_DIR, f"{os.path.splitext(os.path.basename(image_path))[0]}.gif")
     image.save(gif_path, format="GIF", save_all=True, duration=100, loop=0, transparency=0)
     print(f"Converted image to GIF and saved to cache: {gif_path}")
@@ -271,6 +274,7 @@ class DMDServer:
         self.image_buffer = []
         self.conversion_locks = {}
         self.last_request_time = time.time()
+        self.last_client_activity = time.time()  # To track client activity
         self.last_request = None
         self.image_queue = Queue(maxsize=2)
         self.display_count = 0  # To keep track of the number of displays
@@ -286,6 +290,8 @@ class DMDServer:
                 self.zedmd.enable_pre_downscaling()
                 self.zedmd.enable_pre_upscaling()
                 self.zedmd.enforce_streaming()
+                self.last_request_time = time.time()
+                self.last_client_activity = time.time()  # Update client activity time
                 print("ZeDMD opened successfully.")
                 print("Default image display")
                 self.display_image('images/default.png', width, height)
@@ -323,6 +329,7 @@ class DMDServer:
                     image_path = command[start_idx:end_idx]
                     print(f"Full image path: {image_path}")
                     self.last_request_time = time.time()
+                    self.last_client_activity = time.time()  # Update client activity time
                     self.last_request = (image_path, width, height)
                     try:
                         self.image_queue.put_nowait((image_path, width, height))
@@ -378,7 +385,7 @@ class DMDServer:
                 gif_path = gif_final_path
             elif os.path.exists(gif_single_frame_path):
                 print(f"Single-frame GIF already exists: {gif_single_frame_path}")
-                gif_path = gif_single_frame_path
+                gif_path = gif_single_frame_gif_path
                 if not os.path.exists(gif_final_path) and not os.path.exists(gif_temp_path):
                     print(f"Launching background conversion of MP4 to GIF: {image_path}")
                     threading.Thread(target=convert_mp4_to_gif, args=(image_path, width, height, gif_temp_path, gif_final_path, gif_single_frame_path, conversion_lock), daemon=True).start()
@@ -449,6 +456,25 @@ class DMDServer:
 
     def keep_dmd_alive(self):
         while True:
+            current_time = time.time()
+
+            # Check for client inactivity
+            if current_time - self.last_client_activity >= 600:  # 10 minutes
+                print("Restarting DMDServer due to inactivity...")
+                self.close()
+                self.start()
+                return
+            elif current_time - self.last_client_activity >= 300:  # 5 minutes
+                print("Clearing screen due to inactivity...")
+                #self.zedmd.clear_screen()
+                if not self.stop_event.is_set():
+                    self.display_image(self.last_image, self.last_width, self.last_height)
+            elif current_time - self.last_request_time >= 30:
+                if not self.stop_event.is_set():
+                    #self.zedmd.clear_screen()
+                    self.last_request_time = time.time()
+                    self.display_image(self.last_image, self.last_width, self.last_height)
+
             time.sleep(5)
 
     def detect_dmd_size(self):
