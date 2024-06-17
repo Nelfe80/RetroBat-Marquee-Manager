@@ -25,7 +25,7 @@ Don't forget to enter your RetroAchievements and ScreenScraper credentials in Re
 
 ## New Feature: DMD Screen Support
 
-With the latest update, DMD screen support is now available. To enable this, you need to rename `config-ini` to `config` and adjust the path to `dmd.exe` in your configuration file. Make sure the path correctly points to the location of `dmd.exe` to utilize the new display capabilities.
+With the latest update, DMD screen support is now available. To enable this, you need to rename `config-dmd.ini` to `config.ini` and adjust the path to `dmd.exe` in your configuration file. Make sure the path correctly points to the location of `dmd.exe` to utilize the new display capabilities.
 
 ---
 
@@ -56,4 +56,4 @@ N'oubliez pas d'entrer vos identifiants pour RetroAchievements et ScreenScraper 
 
 ## Nouvelle fonctionnalité : Support de l'écran DMD
 
-Avec la dernière mise à jour, le support de l'écran DMD est désormais disponible. Pour l'activer, vous devez renommer `config-ini` en `config` et ajuster le chemin vers `dmd.exe` dans votre fichier de configuration. Assurez-vous que le chemin pointe correctement vers l'emplacement de `dmd.exe` pour utiliser les nouvelles capacités d'affichage.
+Avec la dernière mise à jour, le support de l'écran DMD est désormais disponible. Pour l'activer, vous devez renommer `config-dmd.ini` en `config.ini` et ajuster le chemin vers `dmd.exe` dans votre fichier de configuration. Assurez-vous que le chemin pointe correctement vers l'emplacement de `dmd.exe` pour utiliser les nouvelles capacités d'affichage.
