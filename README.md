@@ -77,7 +77,7 @@ Organize your marquee images according to the structure defined in config.ini.
 </p>
 <h2>New Feature: DMD Screen Support</h2>
 <p>
-With the latest update, DMD screen support is now available. To enable this, you need to rename `config-ini` to `config` and adjust the path to `dmd.exe` in your configuration file. Make sure the path correctly points to the location of `dmd.exe` to utilize the new display capabilities.
+With the latest update, DMD screen support is now available. To enable this, you need to rename `config-dmd.ini` to `config.ini` and adjust the path to `dmd.exe` in your configuration file. Make sure the path correctly points to the location of `dmd.exe` to utilize the new display capabilities.
 </p>
 
 
