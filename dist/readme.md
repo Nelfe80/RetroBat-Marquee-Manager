@@ -11,7 +11,7 @@ This document provides instructions for using Marquee Manager, a tool designed t
 
 ## Installation
 1. Copy the files from the `/dist` folder into the `/plugins/MarqueeManager/` directory of RetroBat.
-2. Run `install.bat`, then choose one of the following `.bat` files based on your needs:
+2. Run `install.bat`, then run `.bat` file :
     - `Start`: Default marquee launcher.
 
 ## Customization
@@ -42,7 +42,7 @@ Ce document fournit des instructions pour utiliser Marquee Manager, un outil con
 
 ## Installation
 1. Copiez les fichiers du dossier `/dist` dans `/plugins/MarqueeManager/` de RetroBat.
-2. Exécutez `install.bat`, puis choisissez l'un des trois fichiers `.bat` suivants selon vos besoins :
+2. Exécutez `install.bat`, puis lancez le fichier `.bat` suivant :
     - `Start`: Lanceur de marquee par défaut.
 
 ## Personnalisation
