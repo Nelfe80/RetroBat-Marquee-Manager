@@ -277,7 +277,6 @@ class DMDServer:
         self.last_client_activity = time.time()  # To track client activity
         self.last_request = None
         self.image_queue = Queue(maxsize=2)
-        self.display_count = 0  # To keep track of the number of displays
 
     def start(self):
         port, baudrate, width, height = self.detect_dmd_size()
@@ -354,12 +353,6 @@ class DMDServer:
                 pass  # Ignore if the queue is empty
 
     def display_image(self, image_path, width, height):
-        self.display_count += 1
-        if self.display_count >= 10:
-            print("Clearing screen...")
-            self.zedmd.clear_screen()
-            self.display_count = 0
-
         image_path = os.path.normpath(image_path)
         if self.zedmd.obj is None:
             print("ZeDMD instance not available.")
@@ -464,16 +457,6 @@ class DMDServer:
                 self.close()
                 self.start()
                 return
-            elif current_time - self.last_client_activity >= 300:  # 5 minutes
-                print("Clearing screen due to inactivity...")
-                #self.zedmd.clear_screen()
-                if not self.stop_event.is_set():
-                    self.display_image(self.last_image, self.last_width, self.last_height)
-            elif current_time - self.last_request_time >= 30:
-                if not self.stop_event.is_set():
-                    #self.zedmd.clear_screen()
-                    self.last_request_time = time.time()
-                    self.display_image(self.last_image, self.last_width, self.last_height)
 
             time.sleep(5)
 
@@ -487,6 +470,13 @@ class DMDServer:
         if self.zedmd_open:
             self.zedmd.close()
             self.zedmd_open = False
+
+    def restart_server(self):
+        self.close()
+        self.start()
+        if self.last_image and self.last_width and self.last_height:
+            self.display_image(self.last_image, self.last_width, self.last_height)
+        print("Server restarted and last image displayed.")
 
 if __name__ == "__main__":
     ensure_cache_dir()
