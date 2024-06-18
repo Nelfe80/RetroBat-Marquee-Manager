@@ -276,6 +276,7 @@ class DMDServer:
         self.last_request_time = time.time()
         self.last_client_activity = time.time()  # To track client activity
         self.last_request = None
+        self.display_count = 0
         self.image_queue = Queue(maxsize=2)
 
     def start(self):
@@ -291,6 +292,7 @@ class DMDServer:
                 self.zedmd.enforce_streaming()
                 self.last_request_time = time.time()
                 self.last_client_activity = time.time()  # Update client activity time
+                self.display_count = 0
                 print("ZeDMD opened successfully.")
                 print("Default image display")
                 self.display_image('images/default.png', width, height)
@@ -353,6 +355,12 @@ class DMDServer:
                 pass  # Ignore if the queue is empty
 
     def display_image(self, image_path, width, height):
+        self.display_count += 1
+        if self.display_count >= 10:
+            print("Clearing screen...")
+            self.zedmd.clear_screen()
+            self.display_count = 0
+
         image_path = os.path.normpath(image_path)
         if self.zedmd.obj is None:
             print("ZeDMD instance not available.")
