@@ -214,6 +214,11 @@ if lib:
     lib.ZeDMD_DisablePreUpscaling.argtypes = [ZeDMD_ptr]
     lib.ZeDMD_EnforceStreaming.argtypes = [ZeDMD_ptr]
 
+    lib.ZeDMD_EnableDebug.argtypes = [ZeDMD_ptr]
+    lib.ZeDMD_DisableDebug.argtypes = [ZeDMD_ptr]
+    lib.ZeDMD_EnableDebug.restype = ctypes.c_bool
+    lib.ZeDMD_DisableDebug.restype = ctypes.c_bool
+
     class ZeDMD:
         def __init__(self):
             self.obj = lib.ZeDMD_GetInstance()
@@ -259,6 +264,18 @@ if lib:
         def enforce_streaming(self):
             lib.ZeDMD_EnforceStreaming(self.obj)
 
+        def enable_debug(self):
+            if lib.ZeDMD_EnableDebug(self.obj):
+                print("Debug mode enabled.")
+            else:
+                print("Failed to enable debug mode.")
+
+        def disable_debug(self):
+            if lib.ZeDMD_DisableDebug(self.obj):
+                print("Debug mode disabled.")
+            else:
+                print("Failed to disable debug mode.")
+
 class DMDServer:
     def __init__(self, pipe_name):
         self.pipe_name = pipe_name
@@ -278,8 +295,12 @@ class DMDServer:
         self.last_request = None
         self.display_count = 0
         self.image_queue = Queue(maxsize=2)
+        self.pipe = None
+        self.keep_alive_thread = None
+        self.process_image_thread = None
 
     def start(self):
+        print("Starting server...")
         port, baudrate, width, height = self.detect_dmd_size()
         if port and baudrate and width and height:
             print("Opening ZeDMD...")
@@ -295,26 +316,37 @@ class DMDServer:
                 self.display_count = 0
                 print("ZeDMD opened successfully.")
                 print("Default image display")
-                self.display_image('images/default.png', width, height)
-                threading.Thread(target=self.keep_dmd_alive, daemon=True).start()
-                threading.Thread(target=self.process_image_queue, daemon=True).start()
+                if self.last_image and self.last_width and self.last_height:
+                    self.display_image(self.last_image, self.last_width, self.last_height)
+                else:
+                    self.display_image('images/default.png', width, height)
             else:
                 print("Failed to open ZeDMD")
                 return
+
+    def listen_for_clients(self):
+        self.keep_alive_thread = threading.Thread(target=self.keep_dmd_alive, daemon=True)
+        self.keep_alive_thread.start()
+        self.process_image_thread = threading.Thread(target=self.process_image_queue, daemon=True)
+        self.process_image_thread.start()
         while True:
             print(f"Waiting for client connection on {self.pipe_name}...")
             try:
-                pipe = win32pipe.CreateNamedPipe(
+                self.pipe = win32pipe.CreateNamedPipe(
                     self.pipe_name,
                     win32pipe.PIPE_ACCESS_DUPLEX,
                     win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_READMODE_MESSAGE | win32pipe.PIPE_WAIT,
                     1, 65536, 65536, 0, None)
-                win32pipe.ConnectNamedPipe(pipe, None)
+                win32pipe.ConnectNamedPipe(self.pipe, None)
                 print(f"Client connected on {self.pipe_name}")
                 self.stop_animation()
-                self.handle_client(pipe, width, height)
+                self.handle_client(self.pipe, self.last_width, self.last_height)
             except pywintypes.error as e:
                 print(f"CreateNamedPipe error: {e}")
+                if e.winerror == 231:  # All pipe instances are busy
+                    time.sleep(1)
+                else:
+                    break
 
     def handle_client(self, pipe, width, height):
         try:
@@ -371,6 +403,9 @@ class DMDServer:
         self.last_image = image_path
         self.last_width = width
         self.last_height = height
+
+        start_time = time.time()  # Start timing
+
         self.zedmd.set_frame_size(width, height)
 
         gif_single_frame_path = os.path.join(CACHE_DIR, f"{os.path.splitext(os.path.basename(image_path))[0]}_single_frame.gif")
@@ -403,8 +438,16 @@ class DMDServer:
                     gif_path = convert_image_to_gif(image_path, width, height)
 
         self.wait_for_file(gif_path)
+
+        middle_time = time.time()  # Intermediate timing
+
         if os.path.exists(gif_path):
             self.display_gif(gif_path, width, height)
+
+        end_time = time.time()  # End timing
+
+        print(f"Time to set frame size and process image: {middle_time - start_time:.6f} seconds")
+        print(f"Time to wait for file and display GIF: {end_time - middle_time:.6f} seconds")
 
     def wait_for_file(self, file_path):
         while not os.path.exists(file_path):
@@ -424,7 +467,9 @@ class DMDServer:
             except UnidentifiedImageError:
                 print(f"Unidentified image error for: {image_path}")
                 return
-
+        if len(self.gif_frames) == 0:
+            print("No frames found in GIF, cannot display.")
+            return
         if len(self.gif_frames) == 1:
             print("GIF has only one frame, rendering once.")
             rgb_frame = image_to_rgb_array(self.gif_frames[0], width, height)
@@ -458,12 +503,17 @@ class DMDServer:
     def keep_dmd_alive(self):
         while True:
             current_time = time.time()
+            elapsed_time = current_time - self.last_client_activity
+            print(f"Elapsed time since last client activity: {elapsed_time:.2f} seconds")
 
             # Check for client inactivity
-            if current_time - self.last_client_activity >= 600:  # 10 minutes
+            if elapsed_time >= 600:  # 10 minutes = 600
                 print("Restarting DMDServer due to inactivity...")
-                restart_server(self)
-                return
+                print("Closing server for restart...")
+                self.close()
+                print("Server closed. Restarting...")
+                self.start()
+                print("Server restarted and last image displayed.")
             if self.last_image and self.last_width and self.last_height:
                 self.display_image(self.last_image, self.last_width, self.last_height)
             time.sleep(5)
@@ -475,23 +525,20 @@ class DMDServer:
         return None, None, None, None
 
     def close(self):
+        print(f"Close server starting...")
         if self.zedmd_open:
+            print(f"zedmd close")
             self.zedmd.close()
             self.zedmd_open = False
-
-    def restart_server(self):
-        self.close()
-        self.start()
-        if self.last_image and self.last_width and self.last_height:
-            self.display_image(self.last_image, self.last_width, self.last_height)
-            self.last_client_activity = time.time()
-        print("Server restarted and last image displayed.")
 
 if __name__ == "__main__":
     ensure_cache_dir()
     server = DMDServer(r'\\.\pipe\dmd-pipe')
     try:
+        server.zedmd.enable_debug()  # Activer le mode débogage avant de démarrer le serveur
         server.start()
+        server.listen_for_clients()
     except KeyboardInterrupt:
         print("Shutting down server...")
         server.close()
+        server.zedmd.disable_debug()  # Désactiver le mode débogage avant de quitter
