@@ -462,10 +462,10 @@ class DMDServer:
             # Check for client inactivity
             if current_time - self.last_client_activity >= 600:  # 10 minutes
                 print("Restarting DMDServer due to inactivity...")
-                self.close()
-                self.start()
+                restart_server(self)
                 return
-
+            if self.last_image and self.last_width and self.last_height:
+                self.display_image(self.last_image, self.last_width, self.last_height)
             time.sleep(5)
 
     def detect_dmd_size(self):
@@ -484,6 +484,7 @@ class DMDServer:
         self.start()
         if self.last_image and self.last_width and self.last_height:
             self.display_image(self.last_image, self.last_width, self.last_height)
+            self.last_client_activity = time.time()
         print("Server restarted and last image displayed.")
 
 if __name__ == "__main__":
