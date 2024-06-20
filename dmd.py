@@ -390,7 +390,7 @@ class DMDServer:
         self.display_count += 1
         if self.display_count >= 10:
             print("Clearing screen...")
-            self.zedmd.clear_screen()
+            #self.zedmd.clear_screen()
             self.display_count = 0
 
         image_path = os.path.normpath(image_path)
