@@ -113,7 +113,7 @@ def image_to_rgb_array(image, width, height):
     image = resize_and_pad(image, width, height)
     image = image.convert('RGB')
     data = image.tobytes()
-    print(f"Image data length: {len(data)}")
+    #print(f"Image data length: {len(data)}")
     return (ctypes.c_uint8 * len(data))(*data)
 
 def convert_image_to_gif(image_path, width, height):
@@ -487,7 +487,7 @@ class DMDServer:
                     rgb_frame = image_to_rgb_array(frame, width, height)
                     self.zedmd.render_rgb24(rgb_frame)
                     end_time = time.time()
-                    print(f"GIF Time to convert and render frame: {end_time - start_time:.6f} seconds")
+                    #print(f"GIF Time to convert and render frame: {end_time - start_time:.6f} seconds")
                     time.sleep(duration)
             # Ensure GIF loops indefinitely
             if not self.stop_event.is_set():
@@ -504,19 +504,49 @@ class DMDServer:
         while True:
             current_time = time.time()
             elapsed_time = current_time - self.last_client_activity
-            print(f"Elapsed time since last client activity: {elapsed_time:.2f} seconds")
+            print(f"### Keep_dmd_alive - Elapsed time since last client activity: {elapsed_time:.2f} seconds")
 
             # Check for client inactivity
-            if elapsed_time >= 600:  # 10 minutes = 600
+            if elapsed_time >= 600:  # 10 seconds = 10
+                print("Restarting DMDServer due to inactivity...")
+                self.stop_animation()  # Ensure any ongoing animation is stopped
+                self.close()
+                print("Server closed. Restarting...")
+                self.start()
+                print("Server restarted and last image displayed.")
+
+            # Check if GIF is currently being displayed
+            if not self.stop_event.is_set() and self.gif_frames:
+                print("GIF animation is currently playing.")
+            else:
+                if self.last_image and self.last_width and self.last_height:
+                    self.display_image(self.last_image, self.last_width, self.last_height)
+            time.sleep(10)
+
+    def keep_dmd_alive_old(self):
+
+        if self.last_image:
+            print(f"Keep_dmd_alive: {self.last_image}")
+        while True:
+            current_time = time.time()
+            elapsed_time = current_time - self.last_client_activity
+            print(f"### Keep_dmd_alive: current_time {current_time} - elapsed_time {elapsed_time}")
+            if self.last_image:
+                print(f"### Keep_dmd_alive: {self.last_image}")
+            print(f"### Keep_dmd_alive - Elapsed time since last client activity: {elapsed_time:.2f} seconds")
+
+            # Check for client inactivity
+            if elapsed_time >= 10:  # 10 minutes = 600
                 print("Restarting DMDServer due to inactivity...")
                 print("Closing server for restart...")
                 self.close()
                 print("Server closed. Restarting...")
                 self.start()
                 print("Server restarted and last image displayed.")
+
             if self.last_image and self.last_width and self.last_height:
                 self.display_image(self.last_image, self.last_width, self.last_height)
-            time.sleep(5)
+            time.sleep(10)
 
     def detect_dmd_size(self):
         port, baudrate, width, height = detect_com_ports_and_baudrates()
@@ -542,3 +572,5 @@ if __name__ == "__main__":
         print("Shutting down server...")
         server.close()
         server.zedmd.disable_debug()  # Désactiver le mode débogage avant de quitter
+
+# verifier que l'annimation s'arrête bien quand il y a redemarrage
