@@ -507,7 +507,7 @@ class DMDServer:
             print(f"### Keep_dmd_alive - Elapsed time since last client activity: {elapsed_time:.2f} seconds")
 
             # Check for client inactivity
-            if elapsed_time >= 600:  # 10 seconds = 10
+            if elapsed_time >= 120:  # 10 seconds = 10
                 print("Restarting DMDServer due to inactivity...")
                 self.stop_animation()  # Ensure any ongoing animation is stopped
                 self.close()
