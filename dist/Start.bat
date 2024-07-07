@@ -25,6 +25,10 @@ if not errorlevel 1 taskkill /IM retroarch.exe /F
 tasklist | find /I "mpv.exe" > NUL
 if not errorlevel 1 taskkill /IM mpv.exe /F
 
+:: Vérifier et fermer dmd.exe si en cours d'exécution
+tasklist | find /I "dmd.exe" > NUL
+if not errorlevel 1 taskkill /IM dmd.exe /F
+
 :: Vérifier et fermer emulationstation.exe si en cours d'exécution
 tasklist | find /I "emulationstation.exe" > NUL
 if not errorlevel 1 taskkill /IM emulationstation.exe /F
@@ -33,24 +37,6 @@ if not errorlevel 1 taskkill /IM emulationstation.exe /F
 start ESEvents.exe
 timeout /t 1 /nobreak >NUL
 tasklist | find /I "ESEvents.exe" > NUL
-timeout /t 1 /nobreak >NUL
-
-:: Démarrer ESEventsScrapTopper.exe
-start ESEventsScrapTopper.exe
-timeout /t 1 /nobreak >NUL
-tasklist | find /I "ESEventsScrapTopper.exe" > NUL
-timeout /t 1 /nobreak >NUL
-
-:: Démarrer ESRetroAchievements.exe
-start ESRetroAchievements.exe
-timeout /t 1 /nobreak >NUL
-tasklist | find /I "ESRetroAchievements.exe" > NUL
-timeout /t 1 /nobreak >NUL
-
-:: Démarrer VPListenerWS.exe
-start VPListenerWS.exe
-timeout /t 1 /nobreak >NUL
-tasklist | find /I "VPListenerWS.exe" > NUL
 timeout /t 1 /nobreak >NUL
 
 :: Démarrer retrobat.exe

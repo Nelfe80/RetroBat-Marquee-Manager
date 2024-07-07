@@ -12,7 +12,6 @@ import re
 import threading
 import time
 
-#app = Flask(__name__)
 creation_flags = 0
 if sys.platform == "win32":  # Uniquement pour Windows
     creation_flags = subprocess.CREATE_NO_WINDOW
@@ -22,8 +21,8 @@ def load_config():
     global config
     config.read('config.ini')
     if config['Settings']['logFile'] == "true":
-        logging.basicConfig(level=logging.INFO)
-        #logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
+        #logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
         logging.getLogger('werkzeug').setLevel(logging.INFO)
         logging.info("Start logging")
 
@@ -50,6 +49,7 @@ def load_config():
     update_path('CollectionMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'themes', 'es-theme-carbon-master', 'art', 'logos'))
     update_path('MPVPath', os.path.join(current_working_dir, 'mpv', 'mpv.exe'))
     update_path('IMPath', os.path.join(current_working_dir, 'imagemagick', 'convert.exe'))
+
 
 systems_config = None
 def load_systems_config(xml_relative_path):
@@ -128,9 +128,13 @@ def launch_media_player():
     )
     #subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
     #subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, creationflags=creation_flags)
-    #subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, creationflags=creation_flags)
     subprocess.Popen(launch_command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=creation_flags)
     logging.info(f"MPV launch command executed : {launch_command}")
+
+def launch_process(process):
+    logging.info(f"Execute process : {process}")
+    subprocess.Popen(f"\"{process}\"", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=creation_flags)
+    logging.info(f"Launch process : {process}")
 
 def is_mpv_running():
     try:
@@ -875,52 +879,6 @@ def execute_command(action, params, systems_config):
         return json.dumps({"status": "success", "action": action, "command": command})
     return json.dumps({"status": "error", "message": "No command configured for this action"})
 
-# EVENT RECEPTIONNE CLASSIQUE (PAR EXE ou PS1)
-# Variable globale pour stocker le timestamp de la dernière requête
-#request_list = []        # Liste pour stocker les requêtes
-#def monitor_and_execute_requests():
-#    global request_list
-#    while True:
-#        current_time = time.time()
-#        with lock:
-            # S'assurer que la liste est triée correctement par timestamp en ordre croissant
-#            request_list.sort(key=lambda x: x[0])
-
-#            if request_list and current_time - last_execution_time >= 1:
-                # Exécuter la commande pour la requête avec le plus grand timestamp
-#                latest_request = max(request_list, key=lambda x: x[0])
-#                _, action, params = latest_request
-#                execute_command(action, params, systems_config)
-
-                # Conserver uniquement les requêtes arrivées après l'exécution de la commande
-#                latest_timestamp = latest_request[0]
-#                request_list = [req for req in request_list if req[0] > latest_timestamp]
-#        time.sleep(0.2)
-
-#@app.route('/', methods=['GET'])
-#def handle_request():
-#    global request_list
-#    ensure_mpv_running()
-#    action = request.args.get('event', '')
-#    params = dict(request.args)
-#    params.pop('event', None)
-#    logging.info(f"Action received : {action}, Parameters : {params} -+")
-#
-#    if 'timestamp' in params:
-#        with lock:
-#            request_list.append((float(params['timestamp']), action, params))
-#
-#    return "Request received"
-
-#@app.route('/', methods=['GET'])
-#def handle_request():
-    #subprocess.run(f"taskkill /IM ESEventPush.exe /F", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#    ensure_mpv_running()
-#    action = request.args.get('event', '')
-#    params = dict(request.args)
-#    logging.info(f"Action received : {action}, Parameters : {params}")
-#    params.pop('event', None)
-#    return execute_command(action, params, systems_config)
 
 # EVENT SURVEILLE PAR LECTURE FICHIER ARG
 from watchdog.observers import Observer
@@ -1058,9 +1016,11 @@ if __name__ == '__main__':
     keyboard_thread = threading.Thread(target=keyboard_listener)
     keyboard_thread.start()
 
-    # Démarrer le thread de surveillance de requete http
-    #monitor_thread = threading.Thread(target=monitor_and_execute_requests, daemon=True)
-    #monitor_thread.start()
-
     launch_media_player()
-    #app.run(host=config['Settings']['Host'], port=int(config['Settings']['Port']), debug=False)
+
+    if config['Settings']['MarqueeRetroAchievements'] == "true":
+       launch_process("ESRetroAchievements.exe")
+    if config['Settings']['MarqueeAutoScraping'] == "true":
+       launch_process("ESEventsScrapTopper.exe")
+    if config['Settings']['MarqueePinballDMD'] == "true":
+       launch_process("VPListenerWS.exe")

@@ -5,10 +5,6 @@ setlocal enabledelayedexpansion
 tasklist | find /I "ESEvents.exe" > NUL
 if not errorlevel 1 taskkill /IM ESEvents.exe /F
 
-:: Vérifier et fermer ESEventPush.exe si en cours d'exécution
-tasklist | find /I "ESEventPush.exe" > NUL
-if not errorlevel 1 taskkill /IM ESEventPush.exe /F
-
 :: Vérifier et fermer ESEventsScrapTopper.exe si en cours d'exécution
 tasklist | find /I "ESEventsScrapTopper.exe" > NUL
 if not errorlevel 1 taskkill /IM ESEventsScrapTopper.exe /F
@@ -24,6 +20,10 @@ if not errorlevel 1 taskkill /IM VPListenerWS.exe /F
 :: Vérifier et fermer mpv.exe si en cours d'exécution
 tasklist | find /I "mpv.exe" > NUL
 if not errorlevel 1 taskkill /IM mpv.exe /F
+
+:: Vérifier et fermer dmd.exe si en cours d'exécution
+tasklist | find /I "dmd.exe" > NUL
+if not errorlevel 1 taskkill /IM dmd.exe /F
 
 :: Vérifier et fermer emulationstation.exe si en cours d'exécution
 tasklist | find /I "emulationstation.exe" > NUL
