@@ -56,21 +56,19 @@ Example: MarqueeHeight = 360 configures the marquee to have a height of 360 pixe
 </p>
 <p>
 <h3>MarqueeAutoConvert = false</h3>
-This parameter controls whether the Marquee Manager automatically converts existing images into a marquee format. When set to false, it will not perform automatic conversions.
-
-
+This parameter controls whether the Marquee Manager automatically converts existing images into a new image with specific marquee size (MarqueeWidth and MarqueeHeight). When set to false, it will not perform automatic conversions.
 
 <h3>MarqueeRetroAchievements = false</h3>
-When set to false, this option disables the integration of RetroAchievements into the marquee. If you want to display RetroAchievements on the marquee, you would set this to true.
+When set to false, this option disables the integration of RetroAchievements into the marquee. If you want to display RetroAchievements on the marquee, you would set this to true. If it's a dmd screen, it doesn't work, sorry.
 
 <h3>MarqueePinballDMD = false</h3>
-This parameter, when set to false, disables the feature that would allow pinball DMD (Dot Matrix Display) data to be displayed on the marquee. If you are using the Marquee Manager for pinball games and want to include DMD information, you would set this to true.
+This parameter, when set to false, disables the feature that would allow Visual Pinball DMD (Dot Matrix Display) data to be displayed on a LCD marquee. If you are using the Marquee Manager for pinball games, you would set this to true.
 
 <h3>MarqueeAutoScraping = false</h3>
-When set to false, this option prevents the Marquee Manager from automatically scraping new media content to generate marquees. Scraping refers to the process of gathering images and logos from the internet. Setting it to true would automate this process.
+When set to false, this option prevents the Marquee Manager from automatically scraping (on ScreenScraper only, don't forget to set your ScreenScraper login and password in RetroBat) new media content to get marquees ("marquee" image or "screenmarquee" image if "marquee" image doesn't exist) from ScreenScraper. Scraping refers to the process of gathering images and logos from the internet. Setting it to true would automate this process.
 
 <h3>MarqueeAutoGeneration = true</h3>
-This is a key parameter that, when set to true, enables the automatic generation of a marquee. The marquee is created using a combination of a fanart image and a scraped logo. This allows you to have a custom marquee display without manual intervention.<br>
+This is a key parameter that, when set to true, enables the automatic generation of a marquee. The marquee is created using a combination of a fanart image and a scraped logo (Scrap games before the autogen please). This allows you to have a custom marquee display without manual intervention.<br>
 <h4>MarqueeAutoGeneration Options</h4>
 When MarqueeAutoGeneration is enabled, you can customize the marquee's appearance using the following key commands:<br><br>
 
