@@ -56,7 +56,7 @@ Example: MarqueeHeight = 360 configures the marquee to have a height of 360 pixe
 </p>
 <p>
 <h3>MarqueeAutoConvert = false</h3>
-This parameter controls whether the Marquee Manager automatically converts existing images into a new image with specific marquee size (MarqueeWidth and MarqueeHeight). When set to false, it will not perform automatic conversions.
+This parameter controls whether the Marquee Manager automatically converts existing images into a new image with specific marquee size (MarqueeWidth and MarqueeHeight) and svg to png. When set to false, it will not perform automatic conversions.
 
 <h3>MarqueeRetroAchievements = false</h3>
 When set to false, this option disables the integration of RetroAchievements into the marquee. If you want to display RetroAchievements on the marquee, you would set this to true. If it's a dmd screen, it doesn't work, sorry.
