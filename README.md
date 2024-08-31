@@ -25,7 +25,63 @@ To install the Marquee Manager in RetroBat, follow these steps:<br>
 </p>
 <h2>Configuring config.ini File if needed</h2>
 <p>
-Configure config.ini to specify paths for marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly. (MarqueeRetroAchievements = true in config.ini file to activate RetroAchievements or MarqueeAutoScraping = true to scrap banners...)
+Configure config.ini ( in the folder /RetroBat/plugins/MarqueeManager/ ) to specify paths for your own marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly. (MarqueeRetroAchievements = true in config.ini file to activate RetroAchievements or MarqueeAutoScraping = true to scrap banners...)
+</p>
+<p>
+<h3>ScreenNumber = 2</h3>
+This parameter specifies which screen the marquee should be displayed on. If you have multiple monitors connected to your system, you can assign the marquee to a particular screen by setting this parameter.<br>
+
+Example: ScreenNumber = 2 directs the marquee display to the second monitor connected to your setup.<br>
+You can configure this setting manually by editing the config.ini file or through the BatGui interface, where you can select the appropriate screen number from a dropdown menu.<br>
+
+<h3>AcceptedFormats = mp4, jpg, png</h3>
+This parameter defines the types of media formats that the Marquee Manager will accept for generating marquees.<br>
+
+mp4: Allows video files to be used as part of the marquee display.<br>
+jpg: Allows JPEG image files.<br>
+png: Allows PNG image files.<br>
+By listing these formats, you ensure that the Marquee Manager can handle and display media in these file types, providing flexibility in the kinds of content you use for your marquees.<br>
+
+<h3>Language = fr</h3>
+This setting specifies the language used by the Marquee Manager interface and any relevant text. Setting it to fr switches the language to French, ensuring that all instructions, menus, and notifications are displayed in French.<br>
+
+<h3>MarqueeWidth = 1920</h3>
+This parameter sets the width of the marquee display in pixels.<br>
+
+Example: MarqueeWidth = 1920 configures the marquee to have a width of 1920 pixels, which is typically the width of a Full HD screen.<br>
+<h3>MarqueeHeight = 360</h3>
+This parameter sets the height of the marquee display in pixels.<br>
+
+Example: MarqueeHeight = 360 configures the marquee to have a height of 360 pixels, which is a common height for a marquee display on a secondary screen or a custom display.
+</p>
+<p>
+<h3>MarqueeAutoConvert = false</h3>
+This parameter controls whether the Marquee Manager automatically converts existing images into a marquee format. When set to false, it will not perform automatic conversions.
+
+
+
+<h3>MarqueeRetroAchievements = false</h3>
+When set to false, this option disables the integration of RetroAchievements into the marquee. If you want to display RetroAchievements on the marquee, you would set this to true.
+
+<h3>MarqueePinballDMD = false</h3>
+This parameter, when set to false, disables the feature that would allow pinball DMD (Dot Matrix Display) data to be displayed on the marquee. If you are using the Marquee Manager for pinball games and want to include DMD information, you would set this to true.
+
+<h3>MarqueeAutoScraping = false</h3>
+When set to false, this option prevents the Marquee Manager from automatically scraping new media content to generate marquees. Scraping refers to the process of gathering images and logos from the internet. Setting it to true would automate this process.
+
+<h3>MarqueeAutoGeneration = true</h3>
+This is a key parameter that, when set to true, enables the automatic generation of a marquee. The marquee is created using a combination of a fanart image and a scraped logo. This allows you to have a custom marquee display without manual intervention.<br>
+<h4>MarqueeAutoGeneration Options</h4>
+When MarqueeAutoGeneration is enabled, you can customize the marquee's appearance using the following key commands:<br><br>
+
+F12: Aligns the logo to the right of the marquee.<br>
+F11: Centers the logo within the marquee.<br>
+F10: Aligns the logo to the left of the marquee.<br>
+F9: Moves the fanart background vertically.<br>
+F8: Slightly adjusts the fanart background vertically.<br>
+F7: Resizes the logo, either increasing or decreasing its size relative to its original dimensions.<br>
+F6: Adds a gradient background behind the logo. You can choose between a white, black, or no gradient at all.<br>
+These parameters and options allow you to tailor the marquee display to your preferences, ensuring that the visual presentation matches your setup and aesthetic choices.
 </p>
 <h2>Download and install marquees</h2>
 You can download marquees here then install in the default folder "\RetroBat\plugins\MarqueeManager\images\" :<br>Use the format {system_name}-{game_name}.ext. For example, for Mario on NES, use nes-mario.jpg. (game_name = rom name without ext, system_name = system folder)<br>
@@ -46,9 +102,6 @@ To scrape marquees directly within RetroBat:
 <li>In the 'Logo Source' option, select 'Banner' to obtain real topper marquees.</li>
 </ol>
 This approach allows you to scrape specific marquee images that are more suited for use as toppers.
-</p>
-<p>
-After scraping, you might encounter the situation where both marquees and logos are labeled with <b>-marquee</b>. To resolve this, use the script in tools folder, <b>RenameMarquees.bat</b> (edit file with notepad to change folder link). This script will rename all marquee images, changing the <b>-marquee</b> suffix to <b>-marqueescraped</b>. This renaming step is crucial for ensuring that marquee images are properly recognized and prioritized by the system. Moreover, it allows you to rescrape for the actual logos without overwriting the marquees you've just scraped. Once the script has been executed, and the marquee images are renamed to include <b>-marqueescraped.png</b>, you can safely scrape again to obtain the true <b>-marquee</b> logos without any file conflicts.
 </p>
 <h2>START</h2>
 <h3>Launch Start.bat</h3>
