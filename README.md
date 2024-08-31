@@ -35,7 +35,7 @@ Example: ScreenNumber = 2 directs the marquee display to the second monitor conn
 You can configure this setting manually by editing the config.ini file or through the BatGui interface, where you can select the appropriate screen number from a dropdown menu.<br>
 
 <h3>AcceptedFormats = mp4, jpg, png</h3>
-This parameter defines the types of media formats that the Marquee Manager will accept for generating marquees.<br>
+This parameter defines the types of media formats that the Marquee Manager will accept for generating marquees in this priority order.<br>
 
 mp4: Allows video files to be used as part of the marquee display.<br>
 jpg: Allows JPEG image files.<br>
