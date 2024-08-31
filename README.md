@@ -1,45 +1,29 @@
 <img src="https://github.com/Nelfe80/RetroBat-Marquee-Manager/blob/master/dist/images/logo.png" style="width:100%;">
-<h1>RetroBat Marquee Manager (V3.2)</h1>
+<h1>RetroBat Marquee Manager (V3.3)</h1>
 <h2>A Dynamic Marquees for RetroBat with Svg support / Auto-resizing / Dynamic Scraping / RetroAchievements (WIP)</h2>
 <p>This project enables <b>dynamic display of marquees</b> on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
 </p>
 <p>Thanks to Aynshe, Bob Morane and Retrobat's community testers. </p>
 <p>
     <a href="https://www.youtube.com/watch?v=7LwR_cwa0Cg" target="_blank">
-        <img src="https://i.ytimg.com/an_webp/AFS7f5RKJZo/mqdefault_6s.webp?du=3000&sqp=COLSwbYG&rs=AOn4CLBe_bXsqY-7CEe3Q8tB6E6M2qR6rg" alt="Lien vers la vidéo YouTube">
+        <img src="https://i.ytimg.com/vi/7LwR_cwa0Cg/hqdefault.jpg" alt="Lien vers la vidéo YouTube">
     </a>
     <a href="https://www.youtube.com/watch?v=AFS7f5RKJZo" target="_blank">
-        <img src="https://i.ytimg.com/an_webp/7LwR_cwa0Cg/mqdefault_6s.webp?du=3000&sqp=CNjgwbYG&rs=AOn4CLBf5XICdAYS9ZLq_BTF4kxQiJXIGA" alt="Lien vers la vidéo YouTube">
+        <img src="https://i.ytimg.com/vi/AFS7f5RKJZo/hqdefault.jpg" alt="Lien vers la vidéo YouTube">
     </a>
 </p>
 <h2>Install</h2>
 <p>
-Important Setup Instructions<br>
-Create a marquees folder : "\RetroBat\plugins\MarqueeManager\"<br>
-Download the project and go to the /dist folder and copy all files in "\RetroBat\plugins\MarqueeManager\"<br>
-In the "\RetroBat\plugins\MarqueeManager\" folder :<br>
-- config.ini (settings file)<br>
-- ESEvents.exe (events listener like game-selected/game-start/system-selected...)<br>
-- StartRetrobatMarquees.bat (to launch without dynamic scraping) or StartRetrobatMarqueesAS.bat (to launche with Auto dynamic Scraping) or StartRetrobatMarqueesASRA.bat (with Auto-Scraping & RetroAchievements)...<br>
-- ESEventsScrapTopper.exe (dynamic scraping listener, download image on screenscraper then rename and push scraped image in MarqueeImagePath\MarqueeFilePath)<br>
-- ESRetroAchievements.exe (retro-achievements)<br>
-- screenscraper.ini (dynamic scraping dictionnary)<br>
-- retroachievements.ini (RA dictionnary)<br>
-- systems.scrap (screenscraper systems ids)<br>
-<br><br>
-Click to install.bat to copy ESEventPush.bat in folders such as <br>
-- "C:\RetroBat\emulationstation\.emulationstation\scripts\game-selected" >> update marquee when a game is selected<br>
-- "C:\RetroBat\emulationstation\.emulationstation\scripts\system-selected" >> update marquee when a system is selected<br>
-- "C:\RetroBat\emulationstation\.emulationstation\scripts\game-start" >> update marquee when a game start<br>
-<b>Configuration File Setup</b>:<br>
-Ensure that the ini file is correctly configured for proper operation of the executables.<br><br>
-<b>Updating and installing dependencies if needed</b>:<br>
-Download and install mpv and ImageMagick. These are essential for the functioning of the system.<br>
-MPV to target screen and display images and videos : for mpv, visit their official website <a href="https://mpv.io">MPV's Website</a> and install it to the marquees directory, resulting in a path like "\RetroBat\plugins\MarqueeManager\mpv\mpv.exe".<br>
-ImageMagick to convert (svg to png), resize and optimize images : for ImageMagick, visit <a href="https://imagemagick.org">ImageMagick's Website</a> and install it similarly in the marquees directory. This should result in a path like "\RetroBat\plugins\MarqueeManager\imagemagick\convert.exe".<br>
-By following these instructions, you'll ensure that ESEvents.exe and ESEventPush.exe are correctly placed, and the necessary tools (mpv and ImageMagick) are installed and configured for optimal performance.
+To install the Marquee Manager in RetroBat, follow these steps:<br>
+- Access the Main Menu: Start by launching RetroBat. Once you're on the main screen, navigate to the Main Menu.<br>
+- Updates and Downloads: In the Main Menu, look for the Updates and Downloads section. Select it to proceed.<br>
+- Download Content: Within the Updates and Downloads menu, find and select the Download Content option.<br>
+- Media Tab: After selecting Download Content, switch to the Media tab.<br>
+- Select Marquee Manager: In the Media tab, you will see a list of media options available for download. Look for and select Marquee Manager from the list.<br>
+- Use BatGui for Configuration: Once the Marquee Manager is installed, you can use BatGui to further configure the settings. This includes selecting which screen to target for the marquee display and deciding whether to activate any additional modules.<br>
 </p>
-<h2>Configuring config.ini File</h2>
+</p>
+<h2>Configuring config.ini File if needed</h2>
 <p>
 Configure config.ini to specify paths for marquees and other key settings like accepted formats, MPV path and ImageMagick path, etc. This file is crucial for the marquee system to function properly. (MarqueeRetroAchievements = true in config.ini file to activate RetroAchievements or MarqueeAutoScraping = true to scrap banners...)
 </p>
