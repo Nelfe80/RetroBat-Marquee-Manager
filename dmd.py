@@ -224,14 +224,22 @@ if lib:
             self.obj = lib.ZeDMD_GetInstance()
             if not self.obj:
                 print("Failed to get ZeDMD instance")
+            else:
+                print(f"ZeDMD instance created: {self.obj}")
 
         def open(self):
+            if not self.obj:
+                print("ZeDMD instance not initialized. Cannot open.")
+                return False
             return lib.ZeDMD_Open(self.obj)
 
         def render_rgb24(self, frame):
             lib.ZeDMD_RenderRgb24(self.obj, frame)
 
         def clear_screen(self):
+            if not self.obj:
+                print("ZeDMD instance not initialized. Cannot clear screen.")
+                return
             lib.ZeDMD_ClearScreen(self.obj)
 
         def set_frame_size(self, width, height):
