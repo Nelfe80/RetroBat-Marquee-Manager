@@ -3,6 +3,7 @@ import os
 import platform
 import threading
 import time
+import configparser
 from PIL import Image, ImageSequence, UnidentifiedImageError, ImageOps
 import serial
 from serial.tools import list_ports
@@ -12,6 +13,11 @@ import cv2
 from queue import Queue, Full, Empty
 
 CACHE_DIR = 'dmd/cache'
+
+config = configparser.ConfigParser()
+def load_config():
+    global config
+    config.read('config.ini')
 
 def ensure_cache_dir():
     if not os.path.exists(CACHE_DIR):
@@ -196,6 +202,9 @@ if lib:
     lib.ZeDMD_Open.argtypes = [ZeDMD_ptr]
     lib.ZeDMD_Open.restype = ctypes.c_bool
 
+    lib.ZeDMD_OpenWiFi.argtypes = [ZeDMD_ptr, ctypes.c_char_p, ctypes.c_int]
+    lib.ZeDMD_OpenWiFi.restype = ctypes.c_bool
+
     lib.ZeDMD_Close.argtypes = [ZeDMD_ptr]
 
     lib.ZeDMD_RenderRgb24.argtypes = [ZeDMD_ptr, ctypes.POINTER(ctypes.c_uint8)]
@@ -231,8 +240,15 @@ if lib:
             if not self.obj:
                 print("ZeDMD instance not initialized. Cannot open.")
                 return False
-            return lib.ZeDMD_Open(self.obj)
-
+            DMDConnection = config['Settings']['DMDConnection']
+            if DMDConnection == 'wifi':
+                ip_address = config['Settings']['DMDIPAddress']
+                ip_address_bytes = ip_address.encode('utf-8') # Convert to bytes
+                port = int(config['Settings']['DMDPort'])
+                return lib.ZeDMD_OpenWiFi(self.obj, ip_address_bytes, port)
+            else:
+                return lib.ZeDMD_Open(self.obj)
+        
         def render_rgb24(self, frame):
             lib.ZeDMD_RenderRgb24(self.obj, frame)
 
@@ -308,9 +324,16 @@ class DMDServer:
         self.process_image_thread = None
 
     def start(self):
+        DMDConnection = config['Settings']['DMDConnection']
         print("Starting server...")
-        port, baudrate, width, height = self.detect_dmd_size()
-        if port and baudrate and width and height:
+        if DMDConnection == 'wifi':
+            width = int(config['Settings']['MarqueeWidth'])
+            height = int(config['Settings']['MarqueeHeight'])
+            port = None
+            baudrate = None
+        else:
+            port, baudrate, width, height = self.detect_dmd_size()
+        if (port and baudrate and width and height) or (DMDConnection == 'wifi' and width and height):
             print("Opening ZeDMD...")
             if self.zedmd.open():
                 self.zedmd_open = True
@@ -509,13 +532,14 @@ class DMDServer:
             self.gif_durations = []
 
     def keep_dmd_alive(self):
+        DMDConnection = config['Settings']['DMDConnection']
         while True:
             current_time = time.time()
             elapsed_time = current_time - self.last_client_activity
             print(f"### Keep_dmd_alive - Elapsed time since last client activity: {elapsed_time:.2f} seconds")
 
             # Check for client inactivity
-            if elapsed_time >= 120:  # 10 seconds = 10
+            if elapsed_time >= 120 and DMDConnection != 'wifi':  # For WiFi no need to close the connection
                 print("Restarting DMDServer due to inactivity...")
                 self.stop_animation()  # Ensure any ongoing animation is stopped
                 self.close()
@@ -571,6 +595,7 @@ class DMDServer:
 
 if __name__ == "__main__":
     ensure_cache_dir()
+    load_config()
     server = DMDServer(r'\\.\pipe\dmd-pipe')
     try:
         server.zedmd.enable_debug()  # Activer le mode débogage avant de démarrer le serveur
