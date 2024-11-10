@@ -17,7 +17,7 @@ CACHE_DIR = 'dmd/cache'
 config = configparser.ConfigParser()
 def load_config():
     global config
-    config.read('../config.ini')
+    config.read('config.ini')
 
 def ensure_cache_dir():
     if not os.path.exists(CACHE_DIR):
