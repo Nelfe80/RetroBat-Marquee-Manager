@@ -68,6 +68,8 @@ def load_systems_config(xml_relative_path):
         if name_elem is not None and path_elem is not None:
             name = name_elem.text
             path = path_elem.text if path_elem is not None else "default_path"
+            if path is None or path.strip() == "":
+                    path = "default_path"
             theme = theme_elem.text if theme_elem is not None else "default_theme"
 
             # Recherche du nom du dossier des roms
@@ -532,7 +534,7 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
     # Test du chemin personnalisé en priorité FANART
     if not os.path.exists(logo_file_path) or not os.path.exists(fanart_file_path):
-        fanart_structure = config['Settings']['FanartFilePath']
+        fanart_structure = config['Settings']['FanartGameFilePath']
         fanart_path = fanart_structure.format(system_name=system_name, game_name=game_name)
 
         marquee_structure = config['Settings']['MarqueeFilePath']
