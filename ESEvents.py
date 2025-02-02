@@ -231,6 +231,7 @@ def find_marquee_for_collection(game_name):
     # Si aucun marquee n'a été trouvé
     return None
 
+full_marquee_path = None
 def find_system_marquee(system_name, folder_rom_name, systems_config):
     logging.info(f"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     logging.info(f"FMF find_system_marquee")
@@ -304,15 +305,20 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
         logging.info(f"FMF GAME marquee_structure : {marquee_structure} system_name : {system_name} - game_name : {game_name} - folder_rom_name : {folder_rom_name} - rom_path : {rom_path}")
 
         marquee_path = marquee_structure.format(system_name=folder_rom_name, game_name=game_name)
+        full_marquee_path = None  # Initialisation
 
-        # Priorité sur le pattern name -topper
+        # Pattern topper
         marquee_path_topper = f"{marquee_path}-topper"
         full_marquee_path_topper = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path_topper)
         logging.info(f"############# SUB GAME PATTERN TOPPER ###############")
         marquee_file = find_file(full_marquee_path_topper)
         logging.info(f"FMF TOPPER Full_marquee_path : {full_marquee_path_topper} > marquee_file : {marquee_file}")
 
-        # Recherche pattern basic
+        # Si le fichier est trouvé avec le pattern topper, on affecte full_marquee_path
+        if marquee_file is not None:
+            full_marquee_path = full_marquee_path_topper
+
+        # Recherche avec le pattern basic si nécessaire
         if marquee_file is None and type != 'game-forceupdate':
             full_marquee_path = os.path.join(config['Settings']['MarqueeImagePath'], marquee_path)
             logging.info(f"############# SUB GAME PATTERN BASIC ###############")
