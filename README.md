@@ -18,8 +18,9 @@ To install the Marquee Manager in RetroBat, follow these steps:<br>
 - Access the Main Menu: Start by launching RetroBat. Once you're on the main screen, navigate to the Main Menu.<br>
 - Updates and Downloads: In the Main Menu, look for the Updates and Downloads section. Select it to proceed.<br>
 - Download Content: Within the Updates and Downloads menu, find and select the Download Content option.<br>
-- Media Tab: After selecting Download Content, switch to the Media tab.<br>
-- Select Marquee Manager: In the Media tab, you will see a list of media options available for download. Look for and select Marquee Manager from the list.<br>
+- Media Tab: After selecting Download Content, switch to the Medias & Tools tab.<br>
+- Select Marquee Manager: In the Media & Tools tab, you will see a list of media options available for download. Look for and select Marquee Manager from the list to install it.<br>
+- Launch start.bat in the RetroBat/plugins/marqueemanager/ folder.<br>
 - Use BatGui for Configuration: Once the Marquee Manager is installed, you can use BatGui to further configure the settings. This includes selecting which screen to target for the marquee display and deciding whether to activate any additional modules.<br>
 </p>
 </p>
