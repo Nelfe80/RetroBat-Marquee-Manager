@@ -42,6 +42,7 @@ def load_config():
     update_path('RetroBatPath', os.path.dirname(os.path.dirname(current_working_dir)))
     update_path('RomsPath', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
     update_path('DefaultImagePath', os.path.join(current_working_dir, 'images', 'default.png'))
+    update_path('DefaultFanartPath', os.path.join(current_working_dir, 'images', 'defaultfanart.png'))
     update_path('MarqueeImagePath', os.path.join(current_working_dir, 'images'))
     update_path('MarqueeImagePathDefault', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
     update_path('FanartMarqueePath', os.path.join(config['Settings']['RetroBatPath'], 'roms'))
@@ -95,26 +96,6 @@ def load_all_systems_configs(config_directory):
         all_system_folders.update(system_folders)
 
     return all_system_folders
-
-def push_datas_to_MPV(type, datas):
-    # Joindre les données en une chaîne séparée par des barres verticales
-    data_str = "|".join([type] + [str(value) for value in datas.values()])
-
-    # Récupération de la commande depuis le fichier de configuration (RA historiquement)
-    command_template = config['Settings']['MPVPushRetroAchievementsDatas']
-    if command_template:
-        # Remplacement du placeholder {data} par la chaîne
-        command = command_template.replace("{IPCChannel}", config['Settings']['IPCChannel'])
-        command = command.replace("{data}", data_str)
-
-        # Exécution de la commande
-        try:
-            subprocess.run(command, shell=True, check=True)
-            logging.info(f"Commande push_datas_to_MPV exécutée avec succès : {command}")
-        except Exception as e:
-            logging.error(f"Erreur lors de l'exécution de la commande push_datas_to_MPV : {e}")
-    else:
-        logging.error("La commande MPVPushRetroAchievementsDatas n'est pas définie dans le fichier de configuration.")
 
 def launch_media_player():
     kill_command = config['Settings']['MPVKillCommand']
@@ -367,6 +348,83 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
 
     logging.info(f"FMF Using the default image : {config['Settings']['DefaultImagePath']}")
     return config['Settings']['DefaultImagePath']
+
+def find_fanart_file(file_type, param1, param2, param3, param4, systems_config):
+    """
+    Renvoie le chemin du fanart en fonction du type.
+
+    Pour un jeu (file_type 'game' ou 'game-forceupdate'):
+      - param1 : system_name
+      - param2 : game_name
+      - param3 : game_title
+      - param4 : rom_path
+
+    Pour un système (file_type 'system'):
+      - param1 : system_name
+
+    systems_config est un dictionnaire pour récupérer le nom de dossier du système.
+    """
+    global current_system_name, current_game_name, current_game_title, current_rom_path
+
+    logging.info(f"#####>> find_fanart_file : type: {file_type} - param1: {param1} - param2: {param2} - param3: {param3} - param4: {param4}")
+
+    roms_path = config['Settings']['RomsPath']  # par exemple "C:\\RetroBat\\roms"
+    fanart_file = None
+
+    if file_type == 'system':
+        # Pour un système, le chemin de fanart se base sur FanartSystemFilePath
+        folder_rom_name = systems_config.get(param1, param1)
+        # Exemple : FanartSystemFilePath = {system_name}
+        fanart_relative = config['Settings'].get('FanartSystemFilePath', "{system_name}").format(system_name=folder_rom_name)
+        full_fanart_path = os.path.join(roms_path, fanart_relative + ".jpg")
+        logging.info(f"find_fanart_file (system) full path: {full_fanart_path}")
+        if os.path.exists(full_fanart_path):
+            return full_fanart_path
+
+    elif file_type in ['game', 'game-forceupdate']:
+        # Pour un jeu, on extrait les informations
+        current_system_name = param1
+        current_game_name = param2
+        current_game_title = param3
+        current_rom_path = param4
+        folder_rom_name = systems_config.get(param1, param1)
+
+        # Construction du chemin par défaut pour le fanart
+        base_image_path = os.path.join(roms_path, param1, "images")
+        fanart_file_name = f"{param2}-fanart.jpg"
+        full_fanart_path = os.path.join(base_image_path, fanart_file_name).replace("\\", "\\\\")
+        logging.info(f"find_fanart_file DEFAULT - fanart_file_path: {full_fanart_path}")
+
+        # Si le fichier n'existe pas, on utilise la structure configurée
+        if not os.path.exists(full_fanart_path):
+            fanart_structure = config['Settings'].get('FanartGameFilePath')
+            fanart_path = fanart_structure.format(system_name=folder_rom_name, game_name=param2)
+            full_fanart_path = os.path.join(roms_path, param1, fanart_path.strip('.\\'))
+            logging.info(f"find_fanart_file CONFIGINI - fanart_file_path: {full_fanart_path}")
+
+        # Si le fichier n'existe toujours pas, tenter de récupérer le chemin depuis la gamelist
+        if not os.path.exists(full_fanart_path):
+            logging.info(f"find_fanart_file: {full_fanart_path} n'existe pas, recherche dans la gamelist")
+            game_info = find_game_info_in_gamelist(param2, param1, roms_path)
+            if game_info:
+                fanart_rel_path = game_info.get('fanart', '').replace('/', '\\')
+                if fanart_rel_path:
+                    full_fanart_path = os.path.join(roms_path, param1, fanart_rel_path.strip('.\\'))
+            logging.info(f"find_fanart_file GAMELIST - fanart_file_path: {full_fanart_path}")
+
+        # Pour un 'game-forceupdate', supprimer l'ancien fanart si présent
+        if file_type == 'game-forceupdate' and os.path.exists(full_fanart_path):
+            logging.info(f"find_fanart_file removing old fanart: {full_fanart_path}")
+            os.remove(full_fanart_path)
+            full_fanart_path = None
+
+        fanart_file = full_fanart_path
+
+    if not fanart_file:
+        logging.info(f"find_fanart_file: Using default fanart: {config['Settings']['DefaultFanartPath']}")
+        fanart_file = config['Settings']['DefaultFanartPath']
+
+    return fanart_file
 
 def clean_rom_name(rom_name):
     # Supprime tout texte entre parenthèses ou crochets à la fin de la chaîne
@@ -829,10 +887,11 @@ current_marquee_file = None
 def execute_command(action, params, systems_config):
     global last_execution_time, last_command_id, current_marquee_file
     if action in config['Commands'] or action == "game-forceupdate":
-        logging.info(f"execute_command {action}")
+        logging.info(f"EE execute_command {action}")
+
         current_command_id = f"{action}-{json.dumps(params)}"
         if current_command_id == last_command_id and (time.time() - last_execution_time) < 1 and action != "game-forceupdate":
-            logging.info("Command skipped as it was executed recently.")
+            logging.info("EE Command skipped as it was executed recently.")
             return json.dumps({"status": "skipped", "message": "Command was executed recently"})
 
         type, param1, param2, param3, param4 = parse_path(action, params, systems_config)
@@ -852,8 +911,10 @@ def execute_command(action, params, systems_config):
         param3=replace_special_characters_params(param3)
         param4=replace_special_characters_params(param4)
 
-        logging.info(f"find_marquee_file type {type}, param1 {param1} ,param2 {param2}, param3 {param3} ,param4 {param4}")
+        logging.info(f"EE find_marquee_file type {type}, param1 {param1} ,param2 {param2}, param3 {param3} ,param4 {param4}")
+        logging.info(f"EE find_fanart_file type {type}, param1 {param1} ,param2 {param2}, param3 {param3} ,param4 {param4}")
         marquee_file = find_marquee_file(type, param1, param2, param3, param4, systems_config)
+        fanart_file = find_fanart_file(type, param1, param2, param3, param4, systems_config)
         #if marquee_file == 'marquee_compose':
         #    return json.dumps({"status": "success", "message": "marquee_compose"})
         #escaped_marquee_file = escape_file_path(marquee_file)
@@ -873,20 +934,74 @@ def execute_command(action, params, systems_config):
             return value
 
         marquee_file=replace_special_characters(marquee_file)
+        fanart_file=replace_special_characters(fanart_file)
 
-        command = config['Commands'][action].format(
-            marquee_file=marquee_file,
-            IPCChannel=config['Settings']['IPCChannel']
-        )
+        logging.info(f"EE marquee_file {marquee_file}")
+        logging.info(f"EE fanart_file {fanart_file}")
+
+        logging.info(f"EE Vérification de action: {action}")
+        logging.info(f"EE Vérification de params: {params}")
+        #logging.info(f"EE Vérification de systems_config: {systems_config}")
+        logging.info(f"EE Vérification de config['Commands']: {config['Commands']}")
+        logging.info(f"EE Vérification de config['Commands'].get(action): {config['Commands'].get(action)}")
 
         current_marquee_file = marquee_file
-        logging.info(f"Executing the command : {command}")
-        subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+
+        if config['Settings']['MarqueeCompose'] == "true":
+            logging.info(f"EE MarqueeCompose : {config['Settings']['MarqueeCompose']}")
+            json_command = json.dumps({"command": ["script-message", "change-img", marquee_file, fanart_file]})
+            command = f'echo {json_command} > {config["Settings"]["IPCChannel"]}'
+            push_datas_to_MPV("marquee-commpose", {"marquee": marquee_file, "fanart": fanart_file})
+        else:
+            command = config['Commands'].get(action).format(
+                    marquee_file=marquee_file,
+                    IPCChannel=config['Settings']['IPCChannel']
+            )
+            subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+        logging.info(f"EE Executing the command : {command}")
+        logging.info(f"EE Commande brute avant exécution : {repr(command)}")
         last_command_id = current_command_id
         last_execution_time = time.time()
         return json.dumps({"status": "success", "action": action, "command": command})
     return json.dumps({"status": "error", "message": "No command configured for this action"})
 
+def recursive_clean_slashes(s):
+    new_s = re.sub(r'\\+', r'\\\\', s)
+    # Si la chaîne ne change plus, on a terminé
+    if new_s == s:
+        return new_s
+    else:
+        return recursive_clean_slashes(new_s)
+
+def push_datas_to_MPV(action, datas):
+    logging.info(f"Executing push_datas_to_MPV")
+    # Joindre les données en une chaîne séparée par des barres verticales
+    if isinstance(datas, dict):
+        data_str = "|".join([action] + [recursive_clean_slashes(str(value)) for value in datas.values()])
+    elif isinstance(datas, (list, tuple)):
+        data_str = "|".join([action] + [recursive_clean_slashes(str(item)) for item in datas])
+    else:
+        data_str = f"{action}|{str(datas)}"
+
+
+    # Récupération de la commande depuis le fichier de configuration (RA historiquement)
+    command_template = config['Commands'][action]
+    if command_template:
+        # Remplacement du placeholder {data} par la chaîne
+        command = command_template.replace("{IPCChannel}", config['Settings']['IPCChannel'])
+        command = command.replace("{data}", data_str)
+
+        # Exécution de la commande
+        try:
+            subprocess.run(command, shell=True, check=True)
+            logging.info(f"Commande push_datas_to_MPV exécutée avec succès : {command}")
+            return True
+        except Exception as e:
+            logging.error(f"Erreur lors de l'exécution de la commande push_datas_to_MPV : {e}")
+            return False
+    else:
+        logging.error("La commande MPVPushRetroAchievementsDatas n'est pas définie dans le fichier de configuration.")
+        return False
 
 # EVENT SURVEILLE PAR LECTURE FICHIER ARG
 from watchdog.observers import Observer

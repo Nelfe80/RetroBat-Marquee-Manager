@@ -37,8 +37,6 @@ class ScreenScraperAPI:
                 for media in jeu["medias"]:
                     if media["type"] == "marquee":
                         return media, ''
-                    elif media["type"] == "screenmarquee":
-                        return media, ''
         return None, error_message
 
     def downloadAndSaveImage(self, image_url, save_path, marquee_format):

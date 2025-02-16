@@ -24,7 +24,7 @@
 
 -- Variables globales
 local gfx_objects = {}
-local refresh_interval = 0.02  -- Par exemple, 0.1 seconde
+local refresh_interval = 0.01  -- Par exemple, 0.1 seconde
 local achievements_data = {}
 -- dimensions de l'écran
 local screen_width = 0
@@ -47,6 +47,113 @@ mp.register_event("file-loaded", function()
 		initialisation = false
 	end
 end)
+
+function change_img(data)
+	
+	local backgroundShape = "BGShape"
+	local overlay_name = "CenterOverlay"
+	local background_name = "BackgroundOverlay" 
+	
+	if not(get_object_property(backgroundShape, "type")) then
+		create(backgroundShape, "shape", {x = -1, y = 0, w = image_width+1, h = image_height, color_hex = "000000", opacity_decimal = 1}, 50)
+	end
+
+	fade_opacity(backgroundShape,  1, 0.05, function()
+		
+		-- mp.commandv("vf", "remove", "@" .. backgroundShape)
+		
+		-- Découper la chaîne reçue par "|" pour obtenir plusieurs segments.
+		local parts = {}
+		for part in string.gmatch(data, "([^|]+)") do
+			table.insert(parts, part)
+		end
+
+		-- Supposons que le premier segment soit une étiquette (ex: "game-selected"),
+		-- le deuxième soit le chemin du marquee et le troisième le chemin du fanart.
+		local cmd = parts[1] or ""
+		local marquee_path = parts[2] or ""
+		local fanart_path = parts[3] or ""
+
+		-- Traitement du marquee
+		marquee_path = marquee_path:gsub("^['\"]", ""):gsub("['\"]$", "")
+		marquee_path = marquee_path:gsub("\\", "/")
+		--mp.osd_message("change_img (marquee): " .. marquee_path, 3)
+		if marquee_path:find(":%/") then
+			marquee_path = marquee_path:gsub("^%a:/[^/]+/", "../../")
+		end
+
+		-- Traitement du fanart, si fourni
+		if fanart_path and fanart_path ~= "" then
+			fanart_path = fanart_path:gsub("^['\"]", ""):gsub("['\"]$", "")
+			fanart_path = fanart_path:gsub("\\", "/")
+			-- mp.osd_message("change_img (fanart): " .. fanart_path, 3)
+			if fanart_path:find(":%/") then
+				fanart_path = fanart_path:gsub("^%a:/[^/]+/", "../../")
+			end
+			-- mp.msg.info("Fanart chemin relatif: " .. fanart_path)
+		else
+			fanart_path = nil
+		end
+		--mp.osd_message("change_img (fanart): " .. fanart_path, 3)
+		-- Mise à jour des dimensions globales (image_width et image_height)
+		update_screen_dimensions(nil)
+
+		-- Création de l'arrière-plan (utilise le fanart s'il est fourni, sinon le background par défaut)
+		   
+		local bg_path = fanart_path
+
+		-- Vérifier si la chaîne se termine par un point suivi de 3 ou 4 caractères (qui ne sont pas des points)
+		local lower_path = fanart_path:lower()
+		if not (string.match(lower_path, "%.[^%.][^%.][^%.]$") or string.match(lower_path, "%.[^%.][^%.][^%.][^%.]$")) then
+			bg_path = 'RA/System/background.png'
+		end
+		
+		-- Création de l'overlay marquee
+		local overlay_height = image_height  -- L'overlay occupe toute la hauteur
+		local overlay_width = -1  -- -1 indique que ffmpeg calcule la largeur pour préserver le ratio
+		local overlay_x = 0      -- On positionne à 0 (le centrage devra être géré dans le filtre, si besoin)
+		local overlay_y = 0
+
+		remove_object(background_name, function ()
+			create(background_name, "image", {
+					image_path = bg_path,
+					x = 0,
+					y = 0,
+					w = image_width,
+					h = -1,
+					show = false,
+					opacity_decimal = 1
+				}, 0)
+			mp.add_timeout(0.03, function()								
+				set_object_properties(background_name, {show = true})
+				remove_object(overlay_name, function ()						
+					create(overlay_name, "image", {
+						image_path = marquee_path,
+						x = overlay_x,
+						y = overlay_y,
+						w = overlay_width,  -- ffmpeg calcule la largeur automatiquement
+						h = overlay_height,
+						logo_align = "center",
+						show = false,
+						opacity_decimal = 1
+					}, 30)		
+					mp.add_timeout(0.03, function()
+						set_object_properties(overlay_name, {show = true})							
+						mp.add_timeout(0.03, function()								
+							fade_opacity(backgroundShape,  0, 0.3, function()
+							end)
+						end)
+					end)						
+				end)					
+			end)
+		end)
+		
+	end)
+		
+end
+
+mp.register_script_message("change-img", change_img)
+
 
 -- Fonction pour afficher le nom de la touche pressée
 function display_key_binding(name, event)
@@ -492,7 +599,7 @@ function fade_opacity(name, target_opacity, duration, on_complete)
             obj.updated = true
             -- Planifier la prochaine mise à jour
             if progress < 1 then
-                mp.add_timeout(0.01, update_opacity)
+                mp.add_timeout(0.05, update_opacity)
             end
         end
     end
@@ -659,18 +766,38 @@ end
 
 function gfx_draw_image(name, properties, callback)
     if properties.show then
-        -- Afficher l'image
         local transformed_path = properties.image_path:gsub(".*\\(RA\\)", "%1"):gsub("\\", "/")
-        local filter_str = string.format("@%s:lavfi=[movie='%s'[img];[img]scale=%d:%d[scaled];[vid1][scaled]overlay=%d:%d]",
-                                         name, transformed_path, properties.w, properties.h, properties.x, properties.y)
+        -- Si properties.w ou properties.h ne sont pas définis (ou sont -1),
+        -- on laisse ffmpeg calculer la dimension manquante en préservant le ratio.
+        local scale_w = properties.w or -1
+        local scale_h = properties.h or -1
+
+        local overlay_x
+        if properties.logo_align then
+            if properties.logo_align == "left" then
+                overlay_x = "W/10"
+            elseif properties.logo_align == "right" then
+                overlay_x = "W - w - W/10"
+            elseif properties.logo_align == "center" then
+                overlay_x = "(W-w)/2"
+            else
+                overlay_x = properties.x or 0
+            end
+        else
+            overlay_x = properties.x or 0
+        end
+        local overlay_y = properties.y or 0
+
+        local filter_str = string.format(
+            "@%s:lavfi=[movie='%s'[img];[img]scale=%d:%d[scaled];[vid1][scaled]overlay=%s:%d]",
+            name, transformed_path, scale_w, scale_h, overlay_x, overlay_y
+        )
         mp.commandv('vf', 'add', filter_str)
     else
-        -- Cacher l'image
         mp.commandv('vf', 'remove', '@' .. name)
     end
-    -- Exécuter un callback si nécessaire
-    -- if properties.callback then properties.callback() end
-	if callback then
+
+    if callback then
         callback()
     end
 end
