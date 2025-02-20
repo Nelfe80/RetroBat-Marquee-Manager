@@ -412,12 +412,6 @@ def find_fanart_file(file_type, param1, param2, param3, param4, systems_config):
                     full_fanart_path = os.path.join(roms_path, param1, fanart_rel_path.strip('.\\'))
             logging.info(f"find_fanart_file GAMELIST - fanart_file_path: {full_fanart_path}")
 
-        # Pour un 'game-forceupdate', supprimer l'ancien fanart si présent
-        if file_type == 'game-forceupdate' and os.path.exists(full_fanart_path):
-            logging.info(f"find_fanart_file removing old fanart: {full_fanart_path}")
-            os.remove(full_fanart_path)
-            full_fanart_path = None
-
         fanart_file = full_fanart_path
 
     if not fanart_file:
