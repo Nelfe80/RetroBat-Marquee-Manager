@@ -68,6 +68,9 @@ This parameter, when set to false, disables the feature that would allow Visual 
 <h3>MarqueeAutoScraping = false</h3>
 When set to false, this option prevents the Marquee Manager from automatically scraping (on ScreenScraper only, don't forget to set your ScreenScraper login and password in RetroBat) new media content to get marquees ("marquee" image or "screenmarquee" image if "marquee" image doesn't exist) from ScreenScraper. Scraping refers to the process of gathering images and logos from the internet. Setting it to true would automate this process.
 
+<h3>MarqueeCompose = false</h3>
+When set to true, enables the automatic generation of a marquee. The marquee is composed using a combination of a fanart image and a scraped logo (Scrap games before the autogen please). This allows you to have a custom marquee display but speed depends of your cpu. No custom options to align logos with MarqueeCompose, sorry.
+
 <h3>MarqueeAutoGeneration = true</h3>
 This is a key parameter that, when set to true, enables the automatic generation of a marquee. The marquee is created using a combination of a fanart image and a scraped logo (Scrap games before the autogen please). This allows you to have a custom marquee display without manual intervention.<br>
 <h4>MarqueeAutoGeneration Options</h4>
@@ -118,7 +121,11 @@ Organize your marquee images according to the structure defined in config.ini.
 </p>
 <h2>New Feature: DMD Screen Support</h2>
 <p>
-With the latest update, DMD screen support is now available only for ZeDMD (install esp32 fw : https://github.com/zesinger/ZeDMD_Updater/releases ) and create DMD ( https://www.youtube.com/watch?v=hgdIUG90M0c ) . To enable this, you need to rename `config-dmd.ini` to `config.ini` and adjust the path to `dmd.exe` in your configuration file. Make sure the path correctly points to the location of `dmd.exe` to utilize the new display capabilities.
+With the latest update, DMD screen support is now available only for ZeDMD
+Create DMD : https://www.youtube.com/watch?v=hgdIUG90M0c
+Install fw : https://github.com/PPUC/ZeDMD/releases/ with installer https://github.com/zesinger/ZeDMD_Updater/releases
+Update last dlls : https://github.com/PPUC/libzedmd/releases/
+To enable this, you need to rename `config-dmd.ini` to `config.ini` and adjust the path to `dmd.exe` in your configuration file. Make sure the path correctly points to the location of `dmd.exe` to utilize the new display capabilities.
 </p>
 
 
