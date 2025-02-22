@@ -1,0 +1,39 @@
+<!-- chasehq.lay -->
+
+<mamelayout version="2">
+
+<!-- Define Elements -->
+
+	<element name="marquee">
+		<image file="chasehq_marquee.png" />
+	</element>
+	<element name="redlamp">
+		<image file="redlamp.png" state="0" />
+	</element>
+	<element name="bluelamp">
+		<image file="bluelamp.png" state="0" />
+	</element>
+	
+<!-- Define Views -->	
+	<view name="Marquee_Only">
+		<element ref="marquee">
+			<bounds x="0" y="0" width="1920" height="360" />
+		</element>
+		<element name="genout5" ref="redlamp">
+			<bounds x="1480" y="0" width="440" height="360" />
+		</element>
+		<element name="genout6" ref="bluelamp">
+			<bounds x="0" y="0" width="440" height="360" />
+		</element>
+	</view>	
+</mamelayout>
+
+<!--
+
+- Artwork type: Marquee, Lamps
+- Scanned marquee provivded by Mr. Do
+- Marquee corrected by Nelfe80
+- Lamp effects by Nelfe80
+- Lay file by Nelfe80
+
+-->

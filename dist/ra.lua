@@ -1,3 +1,5 @@
+-- ra.lua
+
 -- écran des amis et ce à quoi ils sont en train de jouer 
 -- écran de connexion de l'utilisateur
 -- écran comme quoi il n'y a pas de succès pour le jeu (total 0 achievement)
@@ -24,7 +26,7 @@
 
 -- Variables globales
 local gfx_objects = {}
-local refresh_interval = 0.01  -- Par exemple, 0.1 seconde
+local refresh_interval = 0.02  -- Par exemple, 0.1 seconde
 local achievements_data = {}
 -- dimensions de l'écran
 local screen_width = 0
@@ -48,17 +50,288 @@ mp.register_event("file-loaded", function()
 	end
 end)
 
+-- MAME OUTPUT SUPPORT
+-- Download artworks and lays files here : https://dragonking.arcadecontrols.com/static.php?page=mhDisplays
+-- Variables globales
+current_game_dir = nil
+layout_cache = nil  -- Contenu du layout (default.lay) chargé une fois
+actual_width = 0
+actual_height = 0
+scale_x = 1
+scale_y = 1
+ref_width = nil
+ref_height = nil
+current_overlay_states = {}
+
+-- Fonction get_view_mapping améliorée pour extraire tous les paramètres, y compris les sous-éléments
+function get_view_mapping(layout_content, view_name)
+    local mapping = {}
+    local view_pattern = '<view%s+name%s*=%s*"' .. view_name .. '"([%s%S]-)</view>'
+    local view_content = layout_content:match(view_pattern)
+    if view_content then
+        for element_block in view_content:gmatch("<element[%s%S]-</element>") do
+            local name = element_block:match('name%s*=%s*"(.-)"')
+            local ref = element_block:match('ref%s*=%s*"(.-)"')
+            if name and ref then
+                local element_data = { ref = ref }
+                -- Extraction dynamique du(s) sous-élément(s)
+                -- On cherche les balises self-closing comme <bounds .../>
+                local children = {}
+                for tag, attrs in element_block:gmatch("<(%w+)%s+([^>/]+)%s*/>") do
+                    local child_attrs = {}
+                    for k, v in attrs:gmatch('(%w+)%s*=%s*"(.-)"') do
+                        child_attrs[k] = tonumber(v) or v
+                    end
+                    children[tag] = child_attrs
+                end
+                element_data.children = children
+                mapping[name] = element_data
+            end
+        end
+    end
+    return mapping
+end
+
+-- Fonction pour récupérer le fichier image depuis la section de base du layout pour un élément donné
+function get_base_image_file(layout_content, element_name)
+    local pattern = '<element%s+name%s*=%s*"' .. element_name .. '"(.-)</element>'
+    local element_block = layout_content:match(pattern)
+    if element_block then
+        local file_attr = element_block:match('<image%s+file%s*=%s*"([^"]+)"')
+        return file_attr
+    end
+    return nil
+end
+
+-- Fonction pour récupérer les propriétés de l'image depuis la section de base du layout pour un élément donné
+function get_base_image_properties(layout_content, element_name)
+    local pattern = '<element%s+name%s*=%s*"' .. element_name .. '"(.-)</element>'
+    local element_block = layout_content:match(pattern)
+    if element_block then
+        local file_attr = element_block:match('<image%s+file%s*=%s*"([^"]+)"')
+        local state_attr = element_block:match('<image%s+file%s*=%s*"[^"]+"%s+state%s*=%s*"(%d+)"')
+        return { file = file_attr, state = state_attr }
+    end
+    return nil
+end
+
+-- Fonction pour récupérer les dimensions du marquee depuis l'élément dont ref="marquee"
+function get_marquee_bounds(layout_content)
+    local marquee_block = layout_content:match('<element%s+ref%s*=%s*"marquee".-</element>')
+    if marquee_block then
+        local w = marquee_block:match('width%s*=%s*"(%d+)"')
+        local h = marquee_block:match('height%s*=%s*"(%d+)"')
+        if w and h then
+            return tonumber(w), tonumber(h)
+        end
+    end
+    return nil, nil
+end
+
+-- Fonction utilitaire pour retirer les espaces en début et fin de chaîne
+local function trim(s)
+    return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
+-- Fonction process_control_message telle que fournie (pour traitement générique des messages de contrôle)
+function process_control_message(data)
+    -- mp.osd_message("process_control_message: " .. data, 3)
+	refresh_interval = 0.25
+    local id, state = data:match("^(%S+)%s*=%s*(%d+)")
+    if id and state then
+        if not current_game_dir then
+            -- mp.osd_message("Game directory not set", 3)
+            return
+        end
+        if not layout_cache then
+            -- mp.osd_message("Layout cache is empty", 3)
+            return
+        end
+
+        local layout_content = layout_cache  -- Utilisation du layout déjà chargé
+        local view_mapping = get_view_mapping(layout_content, "Marquee_Only")
+        if not view_mapping then
+            -- mp.osd_message("View mapping is empty", 3)
+            return
+        end
+
+        local lookup_id = trim(id):lower()
+        local found_key = nil
+        for key, _ in pairs(view_mapping) do
+            if trim(key):lower() == lookup_id then
+                found_key = key
+                break
+            end
+        end
+
+        if not found_key then
+            return  -- Ignorer l'élément non défini dans le layout
+        end
+
+        local element_data = view_mapping[found_key]
+        if element_data then
+            local ref = element_data.ref
+            local children = element_data.children  -- Devrait contenir par exemple children.bounds
+            if children and children.bounds then
+                local bounds = children.bounds
+                local image_file = get_base_image_file(layout_content, ref)
+				if current_overlay_states[found_key] == state then
+					return  -- Ignorer si l'état n'a pas changé
+				end
+				current_overlay_states[found_key] = state
+                if image_file then
+                    local full_image_path = current_game_dir .. "/" .. image_file
+                    if state == "1" then
+                        -- mp.osd_message("Turning ON " .. id .. " (" .. ref .. "): " .. full_image_path, 3)
+                        set_object_properties(found_key, {show = true})
+                    end
+					 if state == "0" then
+                        -- mp.osd_message("Turning OFF " .. id .. " (" .. ref .. ")", 3)
+                        set_object_properties(found_key, {show = false})
+                    end
+                else
+                    -- mp.osd_message("Image file for ref " .. tostring(ref) .. " not found", 3)
+                end
+            else
+                -- mp.osd_message("No bounds found for element " .. found_key, 3)
+            end
+        else
+            -- mp.osd_message("No view mapping found for element " .. id, 3)
+        end        
+    end
+end
+
+-- Fonction mame_action appelée par MPV lors de la réception d'une commande via IPC
+function mame_action(data)
+    -- mp.osd_message("mame_action (raw data): " .. data, 3)
+    data = data or ""
+    
+    -- Découper la chaîne reçue en segments séparés par "|"
+    local parts = {}
+    for part in string.gmatch(data, "([^|]+)") do
+        table.insert(parts, part)
+    end
+
+    for i, segment in ipairs(parts) do
+        local lower_segment = segment:lower()
+        if lower_segment:find("mame_start") then
+            local game = segment:match("mame_start%s*=%s*(%S+)")
+            if game then
+                current_game_dir = "dof/mame/" .. game
+                -- mp.osd_message("Game directory set to: " .. current_game_dir, 3)
+                local layout_path = current_game_dir .. "/default.lay"
+                local f = io.open(layout_path, "r")
+                if f then
+                    layout_cache = f:read("*a")
+                    f:close()
+                    local bg_image = layout_cache:match('<element%s+name%s*=%s*"marquee".-<image%s+file%s*=%s*"([^"]+)"')
+                    if bg_image then
+                        local full_bg_path = current_game_dir .. "/" .. bg_image
+                        -- mp.osd_message("Loading background: " .. full_bg_path, 3)
+                        mp.commandv("loadfile", full_bg_path, "replace")
+                    else
+                        -- mp.osd_message("Background image not found in layout.", 3)
+                    end
+                    ref_width, ref_height = get_marquee_bounds(layout_cache)
+                    if ref_width and ref_height then
+                        -- mp.osd_message("Reference marquee dimensions: " .. ref_width .. "x" .. ref_height, 3)
+                    else
+                        -- mp.osd_message("Reference marquee dimensions not found", 3)
+                    end
+                    -- Affichage des images par défaut pour tous les éléments de la vue "Marquee_Only"
+                    local view_mapping = get_view_mapping(layout_cache, "Marquee_Only")
+                    if view_mapping then
+                        for key, element_data in pairs(view_mapping) do
+                            local ref = element_data.ref
+                            local children = element_data.children
+                            if children and children.bounds then
+                                local bounds = children.bounds
+                                local image_file = get_base_image_file(layout_cache, ref)
+                                local base_props = get_base_image_properties(layout_cache, ref)
+                                if base_props and base_props.file then
+                                    local full_image_path = current_game_dir .. "/" .. base_props.file
+                                    local show_initial = (base_props.state == "1")
+                                    -- mp.osd_message("Loading default image for " .. key .. " (" .. ref .. ") show:" .. tostring(show_initial) .. " " .. full_image_path, 3)
+                                    local z_index = 30  -- Vous pouvez ajuster le z-index
+                                    create(key, "image", { 
+                                        image_path = full_image_path,
+                                        x = bounds.x,
+                                        y = bounds.y,
+                                        w = bounds.width,
+                                        h = bounds.height,
+                                        show = show_initial,
+                                        opacity_decimal = 1
+                                    }, z_index)
+                                    current_overlay_states[key] = base_props.state
+                                else
+                                    -- mp.osd_message("Image file for ref " .. tostring(ref) .. " not found", 3)
+                                end
+                            else
+                                -- mp.osd_message("No bounds found for element " .. key, 3)
+                            end
+                        end
+                    end
+                else
+                    -- mp.osd_message("Layout file not found: " .. layout_path, 3)
+                end
+            end
+
+        elseif segment:find("^width=") then
+            local w = segment:match("width=(%d+)")
+            if w then
+                actual_width = tonumber(w)
+                -- mp.osd_message("Actual marquee width: " .. actual_width, 3)
+            end
+            if actual_width and actual_height and ref_width and ref_height then
+                scale_x = actual_width / ref_width
+                scale_y = actual_height / ref_height
+                -- mp.osd_message("Scale factors: " .. scale_x .. " x " .. scale_y, 3)
+            end
+
+        elseif segment:find("^height=") then
+            local h = segment:match("height=(%d+)")
+            if h then
+                actual_height = tonumber(h)
+                -- mp.osd_message("Actual marquee height: " .. actual_height, 3)
+            end
+            if actual_width and actual_height and ref_width and ref_height then
+                scale_x = actual_width / ref_width
+                scale_y = actual_height / ref_height
+                -- mp.osd_message("Scale factors: " .. scale_x .. " x " .. scale_y, 3)
+            end
+			
+		elseif lower_segment:find("mame_stop") then
+            -- Supprime tous les objets existants
+            if gfx_objects then
+                for name, _ in pairs(gfx_objects) do
+                    remove_object(name)
+                end
+                -- mp.osd_message("All overlays removed (mame_stop)", 3)
+            else
+                -- mp.osd_message("No overlays to remove (gfx_objects is nil)", 3)
+			end
+	
+        elseif segment:match("^%S+%s*=%s*%d+") then
+            process_control_message(segment)
+        end
+    end
+end
+
+mp.register_script_message("mame-action", mame_action)
+
+-- MARQUEE COMPOSE
 function change_img(data)
 	
 	local backgroundShape = "BGShape"
 	local overlay_name = "CenterOverlay"
 	local background_name = "BackgroundOverlay" 
+	update_screen_dimensions(nil)
 	
 	if not(get_object_property(backgroundShape, "type")) then
-		create(backgroundShape, "shape", {x = -1, y = 0, w = image_width+1, h = image_height, color_hex = "000000", opacity_decimal = 1}, 50)
+		create(backgroundShape, "shape", {x = -2, y = 0, w = image_width+2, h = image_height, color_hex = "000000", opacity_decimal = 1}, 50)
 	end
 
-	fade_opacity(backgroundShape,  1, 0.05, function()
+	fade_opacity(backgroundShape,  1, 0.01, function()
 		
 		-- mp.commandv("vf", "remove", "@" .. backgroundShape)
 		
@@ -96,7 +369,7 @@ function change_img(data)
 		end
 		--mp.osd_message("change_img (fanart): " .. fanart_path, 3)
 		-- Mise à jour des dimensions globales (image_width et image_height)
-		update_screen_dimensions(nil)
+		
 
 		-- Création de l'arrière-plan (utilise le fanart s'il est fourni, sinon le background par défaut)
 		   
@@ -108,50 +381,58 @@ function change_img(data)
 			bg_path = 'RA/System/background.png'
 		end
 		
+		
+		
 		-- Création de l'overlay marquee
 		local overlay_height = image_height  -- L'overlay occupe toute la hauteur
 		local overlay_width = -1  -- -1 indique que ffmpeg calcule la largeur pour préserver le ratio
 		local overlay_x = 0      -- On positionne à 0 (le centrage devra être géré dans le filtre, si besoin)
 		local overlay_y = 0
+		
+		if not(get_object_property(overlay_name, "type")) then
+			create(overlay_name, "image", {
+							image_path = marquee_path,
+							x = overlay_x,
+							y = overlay_y,
+							w = overlay_width,  -- ffmpeg calcule la largeur automatiquement
+							h = overlay_height,
+							logo_align = "center",
+							show = false,
+							opacity_decimal = 1
+						}, 30)	
+		end
 
-		remove_object(background_name, function ()
-			create(background_name, "image", {
-					image_path = bg_path,
-					x = 0,
-					y = 0,
-					w = image_width,
-					h = -1,
-					show = false,
-					opacity_decimal = 1
-				}, 0)
-			mp.add_timeout(0.03, function()								
-				set_object_properties(background_name, {show = true})
-				remove_object(overlay_name, function ()						
-					create(overlay_name, "image", {
-						image_path = marquee_path,
-						x = overlay_x,
-						y = overlay_y,
-						w = overlay_width,  -- ffmpeg calcule la largeur automatiquement
-						h = overlay_height,
-						logo_align = "center",
-						show = false,
-						opacity_decimal = 1
-					}, 30)		
-					mp.add_timeout(0.03, function()
-						set_object_properties(overlay_name, {show = true})							
-						mp.add_timeout(0.03, function()								
-							fade_opacity(backgroundShape,  0, 0.3, function()
-							end)
-						end)
-					end)						
-				end)					
+		if not(get_object_property(background_name, "type")) then
+			mp.add_timeout(0.03, function()	
+				create(background_name, "image", {
+							image_path = bg_path,
+							x = 0,
+							y = 0,
+							w = image_width,
+							h = -1,
+							show = false,
+							opacity_decimal = 1
+						}, 0)
 			end)
+		end
+		set_object_properties(background_name, {image_path = bg_path})
+		set_object_properties(background_name, {show = false})		
+		fade_opacity(backgroundShape,  1, 0.05, function()						
+			set_object_properties(background_name, {show = true})
+			set_object_properties(overlay_name, {image_path = marquee_path})
+			set_object_properties(overlay_name, {show = false})								
+			fade_opacity(backgroundShape,  1, 0.05, function()
+				set_object_properties(overlay_name, {show = true})							
+				fade_opacity(backgroundShape,  1, 0.05, function()							
+					fade_opacity(backgroundShape,  0, 0.5, function()
+					end)
+				end)
+			end)											
 		end)
 		
 	end)
 		
 end
-
 mp.register_script_message("change-img", change_img)
 
 

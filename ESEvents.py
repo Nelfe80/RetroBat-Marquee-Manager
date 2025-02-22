@@ -1141,3 +1141,5 @@ if __name__ == '__main__':
        launch_process("ESEventsScrapTopper.exe")
     if config['Settings']['MarqueePinballDMD'] == "true":
        launch_process("VPListenerWS.exe")
+    if config['Settings']['MarqueeMameOutput'] == "true":
+       launch_process("MAMEListenerWS.exe")
