@@ -17,6 +17,10 @@ if not errorlevel 1 taskkill /IM ESRetroAchievements.exe /F
 tasklist | find /I "VPListenerWS.exe" > NUL
 if not errorlevel 1 taskkill /IM VPListenerWS.exe /F
 
+:: Vérifier et fermer MAMEListenerWS.exe si en cours d'exécution
+tasklist | find /I "MAMEListenerWS.exe" > NUL
+if not errorlevel 1 taskkill /IM MAMEListenerWS.exe /F
+
 :: Vérifier et fermer ESRetroAchievements.exe si en cours d'exécution
 tasklist | find /I "retroarch.exe" > NUL
 if not errorlevel 1 taskkill /IM retroarch.exe /F
