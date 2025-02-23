@@ -184,10 +184,10 @@ function process_control_message(data)
                         set_object_properties(composite_key, { show = false })
                     end
                 else
-                    mp.osd_message("Image properties for ref " .. tostring(ref) .. " not found", 3)
+                    -- mp.osd_message("Image properties for ref " .. tostring(ref) .. " not found", 3)
                 end
             else
-                mp.osd_message("No bounds found for element " .. found_key, 3)
+                -- mp.osd_message("No bounds found for element " .. found_key, 3)
             end
             ::continue::
         end
