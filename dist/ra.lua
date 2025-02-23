@@ -52,6 +52,8 @@ end)
 
 -- MAME OUTPUT SUPPORT
 -- Download artworks and lays files here : https://dragonking.arcadecontrols.com/static.php?page=mhDisplays
+-- MAME OUTPUT SUPPORT
+
 -- Variables globales
 current_game_dir = nil
 layout_cache = nil  -- Contenu du layout (default.lay) chargé une fois
@@ -61,9 +63,10 @@ scale_x = 1
 scale_y = 1
 ref_width = nil
 ref_height = nil
-current_overlay_states = {}
+current_overlay_states = {}  -- Pour stocker l'état de chaque overlay (nom composite)
 
--- Fonction get_view_mapping améliorée pour extraire tous les paramètres, y compris les sous-éléments
+-- Fonction get_view_mapping améliorée pour extraire tous les paramètres, y compris les sous-éléments.
+-- Retourne un mapping où chaque clé est le nom de l'élément et la valeur est un tableau contenant tous les éléments avec ce nom.
 function get_view_mapping(layout_content, view_name)
     local mapping = {}
     local view_pattern = '<view%s+name%s*=%s*"' .. view_name .. '"([%s%S]-)</view>'
@@ -74,8 +77,7 @@ function get_view_mapping(layout_content, view_name)
             local ref = element_block:match('ref%s*=%s*"(.-)"')
             if name and ref then
                 local element_data = { ref = ref }
-                -- Extraction dynamique du(s) sous-élément(s)
-                -- On cherche les balises self-closing comme <bounds .../>
+                -- Extraction dynamique du(s) sous-élément(s), par exemple <bounds .../>
                 local children = {}
                 for tag, attrs in element_block:gmatch("<(%w+)%s+([^>/]+)%s*/>") do
                     local child_attrs = {}
@@ -85,7 +87,11 @@ function get_view_mapping(layout_content, view_name)
                     children[tag] = child_attrs
                 end
                 element_data.children = children
-                mapping[name] = element_data
+                if mapping[name] then
+                    table.insert(mapping[name], element_data)
+                else
+                    mapping[name] = { element_data }
+                end
             end
         end
     end
@@ -133,27 +139,16 @@ local function trim(s)
     return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
--- Fonction process_control_message telle que fournie (pour traitement générique des messages de contrôle)
+-- Fonction process_control_message pour le traitement générique des messages de contrôle
 function process_control_message(data)
     -- mp.osd_message("process_control_message: " .. data, 3)
 	refresh_interval = 0.25
     local id, state = data:match("^(%S+)%s*=%s*(%d+)")
     if id and state then
-        if not current_game_dir then
-            -- mp.osd_message("Game directory not set", 3)
-            return
-        end
-        if not layout_cache then
-            -- mp.osd_message("Layout cache is empty", 3)
-            return
-        end
-
-        local layout_content = layout_cache  -- Utilisation du layout déjà chargé
+        if not current_game_dir or not layout_cache then return end
+        local layout_content = layout_cache
         local view_mapping = get_view_mapping(layout_content, "Marquee_Only")
-        if not view_mapping then
-            -- mp.osd_message("View mapping is empty", 3)
-            return
-        end
+        if not view_mapping then return end
 
         local lookup_id = trim(id):lower()
         local found_key = nil
@@ -163,49 +158,56 @@ function process_control_message(data)
                 break
             end
         end
+        if not found_key then return end
 
-        if not found_key then
-            return  -- Ignorer l'élément non défini dans le layout
-        end
-
-        local element_data = view_mapping[found_key]
-        if element_data then
+        -- Ici, view_mapping[found_key] est un tableau d'éléments.
+        local elements = view_mapping[found_key]
+        for i, element_data in ipairs(elements) do
+            local composite_key = found_key .. "_" .. tostring(i)
             local ref = element_data.ref
-            local children = element_data.children  -- Devrait contenir par exemple children.bounds
+            local children = element_data.children
             if children and children.bounds then
                 local bounds = children.bounds
-                local image_file = get_base_image_file(layout_content, ref)
-				if current_overlay_states[found_key] == state then
-					return  -- Ignorer si l'état n'a pas changé
-				end
-				current_overlay_states[found_key] = state
-                if image_file then
-                    local full_image_path = current_game_dir .. "/" .. image_file
-                    if state == "1" then
-                        -- mp.osd_message("Turning ON " .. id .. " (" .. ref .. "): " .. full_image_path, 3)
-                        set_object_properties(found_key, {show = true})
+                local base_props = get_base_image_properties(layout_content, ref)
+                if base_props and base_props.file then
+                    local full_image_path = current_game_dir .. "/" .. base_props.file
+                    if current_overlay_states[composite_key] == state then
+                        -- Ignorer si l'état n'a pas changé pour cet overlay
+                        goto continue
                     end
-					 if state == "0" then
-                        -- mp.osd_message("Turning OFF " .. id .. " (" .. ref .. ")", 3)
-                        set_object_properties(found_key, {show = false})
+                    current_overlay_states[composite_key] = state
+                    if state == "1" then
+                        -- mp.osd_message("Turning ON " .. id .. " (" .. ref .. ") for " .. composite_key, 3)
+                        set_object_properties(composite_key, { show = true })
+                    elseif state == "0" then
+                        -- mp.osd_message("Turning OFF " .. id .. " (" .. ref .. ") for " .. composite_key, 3)
+                        set_object_properties(composite_key, { show = false })
                     end
                 else
-                    -- mp.osd_message("Image file for ref " .. tostring(ref) .. " not found", 3)
+                    mp.osd_message("Image properties for ref " .. tostring(ref) .. " not found", 3)
                 end
             else
-                -- mp.osd_message("No bounds found for element " .. found_key, 3)
+                mp.osd_message("No bounds found for element " .. found_key, 3)
             end
-        else
-            -- mp.osd_message("No view mapping found for element " .. id, 3)
-        end        
+            ::continue::
+        end
     end
 end
 
+
+-- Variable globale pour stocker la dernière donnée reçue
+last_mame_data = nil
 -- Fonction mame_action appelée par MPV lors de la réception d'une commande via IPC
 function mame_action(data)
     -- mp.osd_message("mame_action (raw data): " .. data, 3)
     data = data or ""
-    
+    -- Si la donnée reçue est identique à la précédente, l'ignorer
+    if data == last_mame_data then
+        -- mp.osd_message("Duplicate data received, ignoring", 3)
+        return
+    end
+    last_mame_data = data
+	
     -- Découper la chaîne reçue en segments séparés par "|"
     local parts = {}
     for part in string.gmatch(data, "([^|]+)") do
@@ -219,6 +221,13 @@ function mame_action(data)
             if game then
                 current_game_dir = "dof/mame/" .. game
                 -- mp.osd_message("Game directory set to: " .. current_game_dir, 3)
+                -- Supprimer tous les objets existants
+                if gfx_objects then
+                    for name, _ in pairs(gfx_objects) do
+                        remove_object(name)
+                    end
+                    clear_osd(nil)
+                end
                 local layout_path = current_game_dir .. "/default.lay"
                 local f = io.open(layout_path, "r")
                 if f then
@@ -238,36 +247,38 @@ function mame_action(data)
                     else
                         -- mp.osd_message("Reference marquee dimensions not found", 3)
                     end
-                    -- Affichage des images par défaut pour tous les éléments de la vue "Marquee_Only"
+                    -- Création des overlays par défaut pour tous les éléments de la vue "Marquee_Only"
                     local view_mapping = get_view_mapping(layout_cache, "Marquee_Only")
                     if view_mapping then
-                        for key, element_data in pairs(view_mapping) do
-                            local ref = element_data.ref
-                            local children = element_data.children
-                            if children and children.bounds then
-                                local bounds = children.bounds
-                                local image_file = get_base_image_file(layout_cache, ref)
-                                local base_props = get_base_image_properties(layout_cache, ref)
-                                if base_props and base_props.file then
-                                    local full_image_path = current_game_dir .. "/" .. base_props.file
-                                    local show_initial = (base_props.state == "1")
-                                    -- mp.osd_message("Loading default image for " .. key .. " (" .. ref .. ") show:" .. tostring(show_initial) .. " " .. full_image_path, 3)
-                                    local z_index = 30  -- Vous pouvez ajuster le z-index
-                                    create(key, "image", { 
-                                        image_path = full_image_path,
-                                        x = bounds.x,
-                                        y = bounds.y,
-                                        w = bounds.width,
-                                        h = bounds.height,
-                                        show = show_initial,
-                                        opacity_decimal = 1
-                                    }, z_index)
-                                    current_overlay_states[key] = base_props.state
+                        for key, elements in pairs(view_mapping) do
+                            for i, element_data in ipairs(elements) do
+                                local composite_key = key .. "_" .. tostring(i)
+                                local ref = element_data.ref
+                                local children = element_data.children
+                                if children and children.bounds then
+                                    local bounds = children.bounds
+                                    local base_props = get_base_image_properties(layout_cache, ref)
+                                    if base_props and base_props.file then
+                                        local full_image_path = current_game_dir .. "/" .. base_props.file
+                                        local show_initial = (base_props.state == "1")
+                                        -- mp.osd_message("Loading default image for " .. key .. " (" .. ref .. ") as " .. composite_key .. " show:" .. tostring(show_initial) .. " " .. full_image_path, 3)
+                                        local z_index = 30
+                                        create(composite_key, "image", { 
+                                            image_path = full_image_path,
+                                            x = bounds.x,
+                                            y = bounds.y,
+                                            w = bounds.width,
+                                            h = bounds.height,
+                                            show = show_initial,
+                                            opacity_decimal = 1
+                                        }, z_index)
+                                        current_overlay_states[composite_key] = base_props.state
+                                    else
+                                        -- mp.osd_message("Image properties for ref " .. tostring(ref) .. " not found", 3)
+                                    end
                                 else
-                                    -- mp.osd_message("Image file for ref " .. tostring(ref) .. " not found", 3)
+                                    -- mp.osd_message("No bounds found for element " .. key, 3)
                                 end
-                            else
-                                -- mp.osd_message("No bounds found for element " .. key, 3)
                             end
                         end
                     end
@@ -299,18 +310,22 @@ function mame_action(data)
                 scale_y = actual_height / ref_height
                 -- mp.osd_message("Scale factors: " .. scale_x .. " x " .. scale_y, 3)
             end
-			
-		elseif lower_segment:find("mame_stop") then
-            -- Supprime tous les objets existants
+
+        elseif lower_segment:find("mame_stop") then
             if gfx_objects then
-                for name, _ in pairs(gfx_objects) do
-                    remove_object(name)
-                end
+				clear_visible_objects(function()
+					clear_osd(function()
+						for name, _ in pairs(gfx_objects) do
+							remove_object(name)
+						end
+					end)
+				end)
+				
                 -- mp.osd_message("All overlays removed (mame_stop)", 3)
             else
                 -- mp.osd_message("No overlays to remove (gfx_objects is nil)", 3)
-			end
-	
+            end
+
         elseif segment:match("^%S+%s*=%s*%d+") then
             process_control_message(segment)
         end

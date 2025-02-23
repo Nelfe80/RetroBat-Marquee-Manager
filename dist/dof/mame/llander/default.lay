@@ -1,0 +1,87 @@
+<!-- llander.lay -->
+
+<mamelayout version="2">
+
+<!-- Define Elements -->
+
+	<element name="marquee">
+		<image file="lunaroff.png" />
+	</element>
+	<element name="lunarins">
+		<image file="lunarins.png" state="0" />
+	</element>	
+	<element name="lunartrn">
+		<image file="lunartrn.png" state="0" />
+	</element>	
+	<element name="lunarcad">
+		<image file="lunarcad.png" state="0" />
+	</element>	
+	<element name="lunarprm">
+		<image file="lunarprm.png" state="0" />
+	</element>	
+	<element name="lunarcom">
+		<image file="lunarcom.png" state="0" />
+	</element>
+	<element name="button1">
+		<image file="button1.png" state="1" />
+	</element>	
+	<element name="button2">
+		<image file="button2.png" state="1" />
+	</element>
+	<element name="button3">
+		<image file="button3.png" state="0" />
+	</element>	
+	<element name="button4">
+		<image file="button4.png" state="0" />
+	</element>
+	<element name="button5">
+		<image file="button5.png" state="0" />
+	</element>
+	
+<!-- Define Views -->	
+	<view name="Marquee_Only">
+		<element ref="marquee">
+			<bounds x="0" y="0" width="1920" height="360" />
+		</element>
+		<element name="lamp0" ref="lunarins">
+			<bounds x="32" y="48" width="272" height="255" />
+		</element>
+		<element name="lamp1" ref="lunartrn">
+			<bounds x="310" y="48" width="272" height="255" />
+		</element>
+		<element name="lamp2" ref="lunarcad">
+			<bounds x="582" y="49" width="272" height="255" />
+		</element>
+		<element name="lamp3" ref="lunarprm">
+			<bounds x="856" y="49" width="272" height="255" />
+		</element>
+		<element name="lamp4" ref="lunarcom">
+			<bounds x="1124" y="48" width="272" height="255" />
+		</element>
+		<element name="button1" ref="button1">
+			<bounds x="1498" y="176" width="68" height="68" />
+		</element>
+		<element name="button2" ref="button2">
+			<bounds x="1582" y="176" width="68" height="68" />
+		</element>
+		<element name="lamp0" ref="button3">
+			<bounds x="1477" y="58" width="68" height="68" />
+		</element>
+		<element name="button4" ref="button4">
+			<bounds x="1603" y="58" width="68" height="68" />
+		</element>
+		<element name="button5" ref="button5">
+			<bounds x="1749" y="193" width="68" height="68" />
+		</element>
+	</view>	
+</mamelayout>
+
+<!--
+
+- Artwork type: Marquee, Lamps
+- Photographed marquee provided by Nathan Strum
+- Marquee corrected by Nelfe80
+- Lamp effects by Nelfe80
+- Lay file by Nelfe80
+
+-->

@@ -4,11 +4,9 @@ import time
 import configparser
 import subprocess
 import os
-import json
-import urllib.parse
-import shlex
 import logging
 import re
+import select
 
 # --- Début des fonctions issues d'ESEvents.py ---
 
@@ -79,67 +77,114 @@ def push_datas_to_MPV(action, datas):
 
 # --- Fin des fonctions issues d'ESEvents.py ---
 
+def process_message(message, last_states):
+    """Traite un message en comparant l'état et en envoyant à MPV si nécessaire."""
+    print(f"Message traité: {message}")
+    match = re.match(r'\s*(\w+)\s*=\s*(\d+)\s*', message)
+    if match:
+        key = match.group(1)
+        value = match.group(2)
+        if key in last_states and last_states[key] == value:
+            print(f"État inchangé pour {key} : {value}, pas d'envoi.")
+        else:
+            last_states[key] = value
+            push_datas_to_MPV("marquee-mame", message)
+    else:
+        push_datas_to_MPV("marquee-mame", message)
 
-# --- Code de MAMEListenerWS.py ---
+    if message.lower().startswith("mame_start"):
+        dimensions_data = f"width={config['Settings']['MarqueeWidth']}|height={config['Settings']['MarqueeHeight']}"
+        push_datas_to_MPV("marquee-mame", dimensions_data)
+
+def find_repeating_block(messages):
+    """
+    Pour une liste de messages, détermine le bloc minimal qui se répète.
+    Par exemple, si messages == [A, B, C, A, B, C], retourne [A, B, C].
+    Si aucun bloc répétitif n'est détecté, retourne messages.
+    """
+    n = len(messages)
+    if n <= 1:
+        return messages
+    for p in range(1, n + 1):
+        if n % p == 0:
+            block = messages[:p]
+            if block * (n // p) == messages:
+                return block
+    return messages
 
 def main():
-    # Charger la configuration et initialiser les paramètres
     load_config()
-
-    # Constantes de connexion à MAME
     server_address = ('127.0.0.1', 8000)
     reconnection_delay = 5  # secondes avant reconnexion
+    last_states = {}
+    last_sequence = None  # Pour stocker la dernière séquence traitée
+    data_buffer = ""
 
     while True:
         try:
-            # Création d'une socket TCP/IP
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             print("Attempting to connect to MAME server on port 8000...")
             sock.connect(server_address)
             print("Connected to MAME server.")
 
-            # Envoi des commandes pour obtenir des informations de MAME
-            # (Les commandes sont envoyées avec le délimiteur \1 comme attendu par MAME)
             commands = ['send_id = 0\1', 'send_id = 1\1', 'send_id = 2\1']
             for command in commands:
                 print(f"Sending command: {command}")
                 sock.sendall(command.encode('utf-8'))
 
-            # Réception et traitement des réponses de MAME
             while True:
                 data = sock.recv(1024)
                 if data:
-                    # Affichage des données brutes pour le débogage
-                    print("Raw data received:", repr(data))
+                    raw_data = data
+                    # Récupère tous les fragments disponibles
+                    while True:
+                        ready, _, _ = select.select([sock], [], [], 0.01)
+                        if ready:
+                            more = sock.recv(1024)
+                            if not more:
+                                break
+                            raw_data += more
+                        else:
+                            break
 
+                    print("Raw data received:", repr(raw_data))
                     try:
-                        decoded_data = data.decode('utf-8')
-                        print("Decoded data:", decoded_data)
+                        decoded_data = raw_data.decode('utf-8')
                     except UnicodeDecodeError as e:
                         print("Error decoding data:", e)
                         continue
 
-                    # Les messages semblent être terminés par un retour chariot (\r)
-                    messages = decoded_data.split('\r')
-                    for message in messages:
-                        if message:
-                            print(f"Received message: {message}")
-                            # Envoi du message à MPV via push_datas_to_MPV.
-                            # Utilisation de "marquee-mame" pour correspondre à la configuration dans config.ini.
-                            push_datas_to_MPV("marquee-mame", message)
-                        if message.lower().startswith("mame_start"):
-                            # Prépare les données : largeur|hauteur
-                            dimensions_data = f"width={config['Settings']['MarqueeWidth']}|height={config['Settings']['MarqueeHeight']}"
-                            push_datas_to_MPV("marquee-mame", dimensions_data)
+                    data_buffer += decoded_data
+                    # On découpe le buffer sur '\r'
+                    parts = data_buffer.split('\r')
+                    # Tous les éléments sauf le dernier sont complets
+                    complete_messages = [m.strip() for m in parts[:-1] if m.strip()]
+                    # On garde le dernier fragment dans le buffer
+                    data_buffer = parts[-1]
+
+                    if complete_messages:
+                        # Nettoyer les répétitions de séquences : extraire le bloc minimal
+                        unique_block = find_repeating_block(complete_messages)
+                        current_sequence = "\r".join(unique_block)
+                        # Si cette séquence est identique à la précédente, on ne traite rien
+                        if last_sequence is not None and current_sequence == last_sequence:
+                            print("La séquence répétée est identique à la précédente, on l'ignore.")
+                        else:
+                            last_sequence = current_sequence
+                            print("Séquence unique à traiter :")
+                            print(current_sequence)
+                            for message in unique_block:
+                                process_message(message, last_states)
                 else:
                     print("Connection closed by MAME.")
+                    process_message("mame-stop", {})
                     break
 
         except socket.error as e:
             print(f"Socket error: {e}")
-
         finally:
             sock.close()
+            process_message("mame_stop", {})
             print("Disconnected from MAME server.")
 
         print(f"Waiting {reconnection_delay} seconds before reconnecting...")
