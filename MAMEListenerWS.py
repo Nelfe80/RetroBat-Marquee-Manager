@@ -177,7 +177,7 @@ def main():
                                 process_message(message, last_states)
                 else:
                     print("Connection closed by MAME.")
-                    process_message("mame-stop", {})
+                    process_message("mame_stop", {})
                     break
 
         except socket.error as e:

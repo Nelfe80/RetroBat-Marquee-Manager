@@ -1,0 +1,57 @@
+<!-- spyhunt.lay -->
+
+<mamelayout version="2">
+
+<!-- Define Elements -->
+
+	<element name="marquee">
+		<image file="spyhunt_marquee.png" />
+	</element>
+	<element name="lamp1">
+		<image file="lamp1.png" state="0" />
+	</element>
+	<element name="lamp2">
+		<image file="lamp2.png" state="0" />
+	</element>
+	<element name="lamp3">
+		<image file="lamp3.png" state="0" />
+	</element>
+	<element name="lamp4">
+		<image file="lamp4.png" state="0" />
+	</element>
+	<element name="lamp5">
+		<image file="lamp5.png" state="0" />
+	</element>
+
+	
+<!-- Define Views -->	
+	<view name="Marquee_Only">
+		<element ref="marquee">
+			<bounds x="0" y="0" width="1920" height="360" />
+		</element>
+		<element name="lamp0" ref="lamp1">
+			<bounds x="302" y="160" width="218" height="200" />
+		</element>
+		<element name="lamp1" ref="lamp2">
+			<bounds x="596" y="160" width="218" height="200" />
+		</element>
+		<element name="lamp2" ref="lamp3">
+			<bounds x="1004" y="160" width="218" height="200" />
+		</element>
+		<element name="lamp3" ref="lamp4">
+			<bounds x="1406" y="160" width="218" height="200" />
+		</element>
+		<element name="lamp4" ref="lamp5">
+			<bounds x="1690" y="160" width="218" height="200" />
+		</element>		
+	</view>	
+</mamelayout>
+
+<!--
+
+- Artwork type: Marquee, Lamps
+- Marquee corrected by Nelfe80
+- Lamp effects by Nelfe80
+- Lay file by Nelfe80
+
+-->
