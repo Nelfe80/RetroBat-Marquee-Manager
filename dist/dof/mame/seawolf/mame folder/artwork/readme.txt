@@ -1,0 +1,1 @@
+Push the folder seawolf in /emulators/mame/artwork/

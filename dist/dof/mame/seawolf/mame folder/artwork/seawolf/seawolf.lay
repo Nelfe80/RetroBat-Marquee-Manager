@@ -1,0 +1,431 @@
+<!-- seawolf.lay -->
+
+<mamelayout version="2">
+	<element name="redtarget">
+		<image file="redtarget.png" />
+	</element>
+	<element name="redtargetu">
+		<image file="redtargetu.png" />
+	</element>
+	<element name="exp_lamp_a" defstate="0">
+		<image file="exp_lamp_a.png"  state="1" />
+	</element>
+	<element name="exp_lamp_b" defstate="0">
+		<image file="exp_lamp_b.png"  state="1" />
+	</element>
+	<element name="periscope">
+		<image file="periscope.png" />
+	</element>	
+	<element name="ready_lamp" defstate="0">
+		<image file="ready_lamp.png"  state="1" />
+	</element>
+	<element name="reload_lamp" defstate="0">
+		<image file="reload_lamp.png"  state="1" />
+	</element>
+	<element name="torp_1" defstate="0">
+		<image file="torp_1.png"  state="1" />
+	</element>
+	<element name="torp_2" defstate="0">
+		<image file="torp_2.png"  state="1" />
+	</element>
+	<element name="torp_3" defstate="0">
+		<image file="torp_3.png"  state="1" />
+	</element>
+	<element name="torp_4" defstate="0">
+		<image file="torp_4.png"  state="1" />
+	</element>
+	<element name="overlay">
+		<rect>
+			<color red="0.0" green="0.90" blue="0.90" />
+		</rect>
+	</element>
+	<element name="bezel">
+		<image file="seawolf_bezel.png" />
+	</element>
+	<element name="flash" defstate="0">
+		<image file="flash.png"  state="1" />
+	</element>
+	
+	<view name="Periscope_View_CRTCURVED">		
+		<screen index="0">
+			<bounds x="0" y="657" width="4000" height="2500" />
+		</screen>
+		
+		<bezel element="redtargetu" inputtag=":IN0" inputmask="0x1F" inputraw="1" ref="redtargetu">
+			<bounds state="01" xc="250" y="660" width="903" height="2500" /> 
+            <bounds state="03" xc="370" y="660" width="903" height="2500" />
+            <bounds state="02" xc="490" y="660" width="903" height="2500" />
+            <bounds state="06" xc="610" y="660" width="903" height="2500" />
+            <bounds state="07" xc="730" y="660" width="903" height="2500" />
+            <bounds state="05" xc="850" y="660" width="903" height="2500" />
+            <bounds state="04" xc="970" y="660" width="903" height="2500" />
+            <bounds state="12" xc="1090" y="660" width="903" height="2500" />
+            <bounds state="13" xc="1210" y="660" width="903" height="2500" />
+            <bounds state="15" xc="1330" y="660" width="903" height="2500" />
+            <bounds state="14" xc="1450" y="660" width="903" height="2500" />
+            <bounds state="10" xc="1570" y="660" width="903" height="2500" />
+            <bounds state="11" xc="1690" y="660" width="903" height="2500" />
+            <bounds state="09" xc="1810" y="660" width="903" height="2500" />
+            <bounds state="08" xc="1930" y="660" width="903" height="2500" />
+            <bounds state="24" xc="2050" y="660" width="903" height="2500" />
+            <bounds state="25" xc="2170" y="660" width="903" height="2500" />
+            <bounds state="27" xc="2290" y="660" width="903" height="2500" />
+            <bounds state="26" xc="2410" y="660" width="903" height="2500" />
+            <bounds state="30" xc="2530" y="660" width="903" height="2500" />
+            <bounds state="31" xc="2650" y="660" width="903" height="2500" />
+            <bounds state="29" xc="2770" y="660" width="903" height="2500" />
+            <bounds state="28" xc="2890" y="660" width="903" height="2500" />
+            <bounds state="20" xc="3010" y="660" width="903" height="2500" />
+            <bounds state="21" xc="3130" y="660" width="903" height="2500" />
+            <bounds state="23" xc="3250" y="660" width="903" height="2500" />
+            <bounds state="22" xc="3370" y="660" width="903" height="2500" />
+            <bounds state="18" xc="3490" y="660" width="903" height="2500" />
+            <bounds state="19" xc="3610" y="660" width="903" height="2500" />
+            <bounds state="17" xc="3730" y="660" width="903" height="2500" />
+            <bounds state="32" xc="3820" y="660" width="903" height="2500" />
+			<color alpha="1" />
+		</bezel>
+		
+		<element ref="periscope">
+            <bounds x="1045" y="0" width="1910" height="657" />
+			<color alpha="1" />
+		</element>			
+			
+		<overlay element="overlay" index="1">
+			<bounds x="0" y="657" width="4000" height="2500" />
+			<color alpha=".6" />
+		</overlay>	
+				
+		<element name="READY_LAMP" ref="ready_lamp">
+            		<bounds x="1400" y="6" width="554" height="327" />
+		</element>		
+		<element name="RELOAD_LAMP" ref="reload_lamp">
+            		<bounds x="2009" y="6" width="554" height="327" />
+		</element>
+		<element name="TORP_LAMP_1" ref="torp_1">
+            		<bounds x="1414" y="348" width="278" height="275" />
+		</element>
+		<element name="TORP_LAMP_2" ref="torp_2">
+            		<bounds x="1714" y="348" width="278" height="275" />
+		</element>
+		<element name="TORP_LAMP_3" ref="torp_3">
+            		<bounds x="2013" y="348" width="278" height="275" />
+		</element>
+		<element name="TORP_LAMP_4" ref="torp_4">
+            		<bounds x="2312" y="348" width="278" height="275" />
+		</element>		
+		<bezel name="EXP_LAMP_0" element="exp_lamp_b">
+            		<bounds x="201" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_1" element="exp_lamp_b">
+            		<bounds x="665" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_2" element="exp_lamp_a">
+            		<bounds x="1129" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_3" element="exp_lamp_b">
+            		<bounds x="1593" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_4" element="exp_lamp_a">
+            		<bounds x="2057" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_5" element="exp_lamp_b">
+            		<bounds x="2521" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_6" element="exp_lamp_a">
+            		<bounds x="2985" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_7" element="exp_lamp_b">
+            		<bounds x="3449" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_8" element="exp_lamp_b">
+            		<bounds x="201" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_9" element="exp_lamp_a">
+            		<bounds x="665" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_A" element="exp_lamp_a">
+            		<bounds x="1129" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_B" element="exp_lamp_b">
+            		<bounds x="1593" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_C" element="exp_lamp_a">
+            		<bounds x="2057" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_D" element="exp_lamp_b">
+            		<bounds x="2521" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_E" element="exp_lamp_a">
+            		<bounds x="2985" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_F" element="exp_lamp_b">
+            		<bounds x="3449" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		
+	</view>
+	
+	
+	<view name="Periscope_View">		
+		<screen index="0">
+			<bounds x="0" y="657" width="4000" height="2500" />
+		</screen>
+		
+		<bezel element="redtarget" inputtag=":IN0" inputmask="0x1F" inputraw="1" ref="redtarget">
+			<bounds state="01" xc="250" y="660" width="903" height="2500" /> <!-- 1 -->
+            <bounds state="03" xc="370" y="660" width="903" height="2500" /> <!-- 2 -->
+            <bounds state="02" xc="490" y="660" width="903" height="2500" /> <!-- 3 -->
+            <bounds state="06" xc="610" y="660" width="903" height="2500" /> <!-- 4 -->
+            <bounds state="07" xc="730" y="660" width="903" height="2500" /> <!-- 5 -->
+            <bounds state="05" xc="850" y="660" width="903" height="2500" /> <!-- 6 -->
+            <bounds state="04" xc="970" y="660" width="903" height="2500" /> <!-- 7 -->
+            <bounds state="12" xc="1090" y="660" width="903" height="2500" />
+            <bounds state="13" xc="1210" y="660" width="903" height="2500" />
+            <bounds state="15" xc="1330" y="660" width="903" height="2500" />
+            <bounds state="14" xc="1450" y="660" width="903" height="2500" />
+            <bounds state="10" xc="1570" y="660" width="903" height="2500" />
+            <bounds state="11" xc="1690" y="660" width="903" height="2500" />
+            <bounds state="09" xc="1810" y="660" width="903" height="2500" />
+            <bounds state="08" xc="1930" y="660" width="903" height="2500" />
+            <bounds state="24" xc="2050" y="660" width="903" height="2500" />
+            <bounds state="25" xc="2170" y="660" width="903" height="2500" />
+            <bounds state="27" xc="2290" y="660" width="903" height="2500" />
+            <bounds state="26" xc="2410" y="660" width="903" height="2500" />
+            <bounds state="30" xc="2530" y="660" width="903" height="2500" />
+            <bounds state="31" xc="2650" y="660" width="903" height="2500" />
+            <bounds state="29" xc="2770" y="660" width="903" height="2500" />
+            <bounds state="28" xc="2890" y="660" width="903" height="2500" />
+            <bounds state="20" xc="3010" y="660" width="903" height="2500" />
+            <bounds state="21" xc="3130" y="660" width="903" height="2500" />
+            <bounds state="23" xc="3250" y="660" width="903" height="2500" />
+            <bounds state="22" xc="3370" y="660" width="903" height="2500" />
+            <bounds state="18" xc="3490" y="660" width="903" height="2500" />
+            <bounds state="19" xc="3610" y="660" width="903" height="2500" />
+            <bounds state="17" xc="3730" y="660" width="903" height="2500" />
+            <bounds state="32" xc="3820" y="660" width="903" height="2500" />
+			<color alpha="1" />
+		</bezel>
+		
+		<element ref="periscope">
+            <bounds x="1045" y="0" width="1910" height="657" />
+			<color alpha=".6" />
+		</element>			
+			
+		<overlay element="overlay" index="1">
+			<bounds x="0" y="657" width="4000" height="2500" />
+			<color alpha=".6" />
+		</overlay>	
+				
+		<element name="READY_LAMP" ref="ready_lamp">
+            		<bounds x="1400" y="6" width="554" height="327" />
+		</element>		
+		<element name="RELOAD_LAMP" ref="reload_lamp">
+            		<bounds x="2009" y="6" width="554" height="327" />
+		</element>
+		<element name="TORP_LAMP_1" ref="torp_1">
+            		<bounds x="1414" y="348" width="278" height="275" />
+		</element>
+		<element name="TORP_LAMP_2" ref="torp_2">
+            		<bounds x="1714" y="348" width="278" height="275" />
+		</element>
+		<element name="TORP_LAMP_3" ref="torp_3">
+            		<bounds x="2013" y="348" width="278" height="275" />
+		</element>
+		<element name="TORP_LAMP_4" ref="torp_4">
+            		<bounds x="2312" y="348" width="278" height="275" />
+		</element>		
+		<bezel name="EXP_LAMP_0" element="exp_lamp_b">
+            		<bounds x="201" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_1" element="exp_lamp_b">
+            		<bounds x="665" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_2" element="exp_lamp_a">
+            		<bounds x="1129" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_3" element="exp_lamp_b">
+            		<bounds x="1593" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_4" element="exp_lamp_a">
+            		<bounds x="2057" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_5" element="exp_lamp_b">
+            		<bounds x="2521" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_6" element="exp_lamp_a">
+            		<bounds x="2985" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_7" element="exp_lamp_b">
+            		<bounds x="3449" y="1275" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_8" element="exp_lamp_b">
+            		<bounds x="201" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_9" element="exp_lamp_a">
+            		<bounds x="665" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_A" element="exp_lamp_a">
+            		<bounds x="1129" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_B" element="exp_lamp_b">
+            		<bounds x="1593" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_C" element="exp_lamp_a">
+            		<bounds x="2057" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_D" element="exp_lamp_b">
+            		<bounds x="2521" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_E" element="exp_lamp_a">
+            		<bounds x="2985" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_F" element="exp_lamp_b">
+            		<bounds x="3449" y="1040" width="350" height="177" />
+			<color alpha=".6" />
+		</bezel>
+		
+	</view>
+	<view name="Outside_Bezel_View">
+		<screen index="0">
+			<bounds x="1000" y="412" width="2000" height="1500" />
+		</screen>
+		<overlay element="overlay">
+			<bounds x="1000" y="412" width="2000" height="1500" />
+			<color alpha=".6" />
+		</overlay>
+		<bezel element="bezel">
+			<bounds x="0" y="0" width="4000" height="3018" />
+		</bezel>
+		<backdrop element="periscope">
+            		<bounds x="2892" y="412" width="955" height="328.5" />
+			<color alpha=".6" />
+		</backdrop>
+		<backdrop name="READY_LAMP" element="ready_lamp">
+            		<bounds x="3104" y="446" width="225" height="94" />
+		</backdrop>
+		<backdrop name="RELOAD_LAMP" element="reload_lamp">
+            		<bounds x="3409" y="446" width="225" height="94" />
+		</backdrop>
+		<backdrop name="TORP_LAMP_1" element="torp_1">
+            		<bounds x="3097" y="606" width="95.5" height="95" />
+		</backdrop>
+		<backdrop name="TORP_LAMP_2" element="torp_2">
+            		<bounds x="3247" y="606" width="95.5" height="95" />
+		</backdrop>
+		<backdrop name="TORP_LAMP_3" element="torp_3">
+            		<bounds x="3396" y="606" width="95.5" height="95" />
+		</backdrop>
+		<backdrop name="TORP_LAMP_4" element="torp_4">
+            		<bounds x="3546" y="606" width="95.5" height="95" />
+		</backdrop>
+		<bezel name="EXP_LAMP_0" element="exp_lamp_b">
+            		<bounds x="1100" y="764" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_1" element="exp_lamp_b">
+            		<bounds x="1332" y="764" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_2" element="exp_lamp_a">
+            		<bounds x="1564" y="764" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_3" element="exp_lamp_b">
+            		<bounds x="1796" y="764" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_4" element="exp_lamp_a">
+            		<bounds x="2028" y="764" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_5" element="exp_lamp_b">
+            		<bounds x="2260" y="764" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_6" element="exp_lamp_a">
+            		<bounds x="2492" y="764" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_7" element="exp_lamp_b">
+            		<bounds x="2724" y="764" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_8" element="exp_lamp_b">
+            		<bounds x="1100" y="582" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_9" element="exp_lamp_a">
+            		<bounds x="1332" y="582" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_A" element="exp_lamp_a">
+            		<bounds x="1564" y="582" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_B" element="exp_lamp_b">
+            		<bounds x="1796" y="582" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_C" element="exp_lamp_a">
+            		<bounds x="2028" y="582" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_D" element="exp_lamp_b">
+            		<bounds x="2260" y="582" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_E" element="exp_lamp_a">
+            		<bounds x="2492" y="582" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+		<bezel name="EXP_LAMP_F" element="exp_lamp_b">
+            		<bounds x="2724" y="582" width="175" height="88.5" />
+			<color alpha=".6" />
+		</bezel>
+	</view>
+</mamelayout>
+
+<!--
+
+NOTE:  In outside view, if you want to be more authentic and get rid of the torpedo lamps, just turn off backdrops.
+
+- Artwork type: element, Lamps
+- All scanned parts provided by Mr. Do
+- All scanned parts On loan from Gene at www.vintagearcade.net
+- element Converted for MAME by Ad_Enuff
+- Periscope piece converted for MAME by Mr. Do
+- Explosion lamp pieces vectored by jcroach
+- Lay file by Mr. Do
+
+-->
