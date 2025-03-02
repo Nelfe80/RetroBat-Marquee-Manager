@@ -30,24 +30,27 @@ Emulator > MAME64
 Video > Monitor Index : 2
 
 SEA WOLF
-https://youtu.be/IJBu5fGKKpE?t=168
-
 seawolf.zip 
 Artworks layout on the git MarqueeManager 
-Samples sounds here (check authentic) :
-https://samples.mameworld.info/Personal%20Web%20Page.htm
-push seawolf.zip samples in bios/mame/samples/ to have sounds (check authentic sounds)
-push seawolf.zip layout in /emulators/mame/artwork/
+Samples sounds
+push seawolf.zip samples in /bios/mame/samples/
+push seawolf.zip layout in /emulators/mame/artwork/ and unzip
+push seawolf.cfg in bios/mame/cfg/
+Active your joystick in Analog Mode if needed
 Hide Crosshair (in mame menu -> Tab to access)
-
 Advanced game option : 
 Emulator > MAME64
-Video > Monitor Index : 2
 Drivers > Video > BGFX
 Visual Rendering > BGFX Video Filter > CRT Simulation
-Visual Rendering > GLSL Video Filter > CRT MAME PSGS
-Visual Rendering > EFFECT > Scanlines
 
+SKYDIVER
+Artworks layout on the git MarqueeManager 
+push skydiver.zip layout in /emulators/mame/artwork/ and unzip
+push push seawolf.cfg in bios/mame/cfg\.cfg in bios/mame/cfg/
+Advanced game option : 
+Emulator > MAME64
+Drivers > Video > BGFX
+Visual Rendering > BGFX Video Filter > CRT Simulation
 
 
 

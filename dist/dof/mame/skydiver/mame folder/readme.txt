@@ -1,0 +1,1 @@
+Push skydiver.cfg in bios\mame\cfg\

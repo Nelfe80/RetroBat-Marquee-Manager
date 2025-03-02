@@ -1,0 +1,1 @@
+Push the folder skydiver in /emulators/mame/artwork/

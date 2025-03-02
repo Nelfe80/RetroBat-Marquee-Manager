@@ -1,0 +1,74 @@
+<!-- chasehq.lay -->
+
+<mamelayout version="2">
+
+<!-- Define Elements -->
+
+	<element name="marquee">
+		<image file="skydiver_marquee.png" />
+	</element>
+	<element name="sky_s">
+		<image file="skydiver_lamp_s.png" state="1" />
+	</element>	
+	<element name="sky_k">
+		<image file="skydiver_lamp_k.png" state="1" />
+	</element>	
+	<element name="sky_y">
+		<image file="skydiver_lamp_y.png" state="1" />
+	</element>	
+	<element name="sky_d">
+		<image file="skydiver_lamp_d.png" state="1" />
+	</element>	
+	<element name="sky_i">
+		<image file="skydiver_lamp_i.png" state="1" />
+	</element>	
+	<element name="sky_v">
+		<image file="skydiver_lamp_v.png" state="1" />
+	</element>	
+	<element name="sky_e">
+		<image file="skydiver_lamp_e.png" state="1" />
+	</element>	
+	<element name="sky_r">
+		<image file="skydiver_lamp_r.png" state="1" />
+	</element>
+	
+<!-- Define Views -->	
+	<view name="Marquee_Only">
+		<element ref="marquee">
+			<bounds x="0" y="0" width="1920" height="360" />
+		</element>
+		<element ref="sky_s" name="lamps">
+			<bounds x="232" y="24" width="179" height="256" />
+		</element>
+		<element ref="sky_k" name="lampk">
+			<bounds x="411" y="24" width="182" height="256" />
+		</element>
+		<element ref="sky_y" name="lampy">
+			<bounds x="592" y="24" width="197" height="256" />
+		</element>
+		<element ref="sky_d" name="lampd">
+			<bounds x="789" y="24" width="171" height="256" />
+		</element>
+		<element ref="sky_i" name="lampi">
+			<bounds x="960" y="24" width="132" height="256" />
+		</element>
+		<element ref="sky_v" name="lampv">
+			<bounds x="1092" y="24" width="201" height="256" />
+		</element>
+		<element ref="sky_e" name="lampe">
+			<bounds x="1293" y="24" width="167" height="256" />
+		</element>
+		<element ref="sky_r" name="lampr">
+			<bounds x="1459" y="24" width="195" height="256" />
+		</element>
+	</view>	
+</mamelayout>
+
+<!--
+
+- Artwork type: Bezel (Widescreen)
+- Artwork created by Nelfe80
+- Based on graphics in official arcade artwork
+- Lay file by Nelfe80
+
+-->
