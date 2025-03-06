@@ -1,0 +1,1 @@
+Push the folder aburner2 in /emulators/mame/artwork/
