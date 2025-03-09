@@ -450,7 +450,6 @@ function change_img(data)
 end
 mp.register_script_message("change-img", change_img)
 
-
 -- Fonction pour afficher le nom de la touche pressée
 function display_key_binding(name, event)
     local key_name = event["key_name"]
@@ -461,11 +460,11 @@ end
 -- Écouter tous les événements de clavier et de souris
 mp.register_event("key-binding", display_key_binding)
 
-function init()	
+function init()
 	clear_osd(function()
 		update_screen_dimensions(nil)
 		update_display_periodically()
-	end)	
+	end)
 end
 
 -- #####################################
@@ -549,6 +548,7 @@ function process_data(data)
     end
     -- Vérification et traitement des données selon le type
     if data_split[1] == "user_info" then
+		refresh_interval = 0.02
 		achievements_data = {}
 		chrono_mode = false
 		clear_osd(function()
@@ -563,7 +563,7 @@ function process_data(data)
 	elseif data_split[1] == "achievement_info" then
         process_achievement_info(data_split)
 	elseif data_split[1] == "leaderboardtimes" then
-        process_leaderboardtimes(data_split)		
+        process_leaderboardtimes(data_split)
 	elseif data_split[1] == "leaderboard_event_started" then
         process_leaderboard_started(data_split)
 	elseif data_split[1] == "leaderboard_event_canceled" then
@@ -581,17 +581,52 @@ end
 -- ############# REFRESH SCREEN
 -- #####################################
 
+local pending_capture = false
+local pending_push = false
 -- Fonction de mise à jour périodique
 function update_display_periodically()
+	-- Flag global pour indiquer qu'une capture est en attente
+	if pending_capture or pending_push then
+		-- mp.osd_message("pending_capture", 30)
+		-- cache_screen("_marqueerefresh", false, false)
+
+		local path = "dmd/cache/_cache_dmd.png"
+		-- Attendre un court délai pour le rafraîchissement
+		mp.add_timeout(0.2, function()
+			mp.commandv("screenshot-to-file", path)
+		end)
+
+		if pending_capture then
+			pending_capture = false  -- Réinitialisation du flag pending_capture
+		end
+		if pending_push then
+			pending_push = false  -- Réinitialisation du flag pending_push
+		end
+	end
+	-- mp.osd_message("update_display_periodically - pending_capture :" .. tostring(pending_capture), 10)
     gfx_refresh()
     if not is_update_display_running then
         is_update_display_running = true
         mp.add_timeout(refresh_interval, function()
             is_update_display_running = false
-            update_display_periodically()
+			update_display_periodically()
         end)
     end
 end
+
+-- MARQUEE PUSH TO DMD
+function pushtodmd_img(data)
+	mp.osd_message("pushtodmd_img : " .. data, 30)
+	local parts = {}
+	for part in string.gmatch(data, "([^|]+)") do
+		table.insert(parts, part)
+	end
+	local marquee_path = parts[2] or ""
+	mp.commandv("loadfile", marquee_path)
+	pending_push = true
+end
+mp.register_script_message("pushtodmd-img", pushtodmd_img)
+
 
 function update_screen_dimensions(callback)
     local function check_dimensions()
@@ -639,12 +674,13 @@ function gfx_refresh()
         end
 
         local ass_data = ""
-        if obj.type == "shape" then
+        if obj.type == "shape" and obj.updated == true then
             ass_data = generate_ass_shape(obj.properties)
-        elseif obj.type == "text" then
+        elseif obj.type == "text" and obj.updated == true then
             ass_data = generate_ass_text(obj.properties)
-        elseif obj.type == "image" then
+        elseif obj.type == "image" and obj.updated == true then
             gfx_draw_image(obj_name, obj.properties, function()
+				pending_capture = true
                 obj.updated = false
             end)
             -- Pas besoin de mise à jour d'overlay pour les images
@@ -659,6 +695,7 @@ function gfx_refresh()
             obj.overlay.z = obj.z
             -- mp.osd_message("obj_name" .. obj_name .. "z" .. obj.overlay.z, 10)
             obj.overlay:update()
+			pending_capture = true
             obj.updated = false
         end
 
