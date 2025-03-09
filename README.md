@@ -1,5 +1,5 @@
 <img src="https://github.com/Nelfe80/RetroBat-Marquee-Manager/blob/master/dist/images/logo.png" style="width:100%;">
-<h1>RetroBat Marquee Manager (V3.3)</h1>
+<h1>RetroBat Marquee Manager (V3.4)</h1>
 <h2>A Dynamic Marquees for RetroBat with Svg support / Auto-resizing / Dynamic Scraping / RetroAchievements (WIP)</h2>
 <p>This project enables <b>dynamic display of marquees</b> on a secondary topper screen for RetroBat users on Windows 8+, utilizing custom scripts to manage the display based on user interactions.
 </p>
@@ -119,13 +119,13 @@ It is important to note that SVG files may require additional processing time du
 Ensure MPV and IMAGEMAGICK are installed in \RetroBat\plugins\MarqueeManager\ directory.
 Organize your marquee images according to the structure defined in config.ini.
 </p>
-<h2>New Feature: DMD Screen Support</h2>
+<h2>New Feature: Real DMD Screen Support</h2>
 <p>
-With the latest update, DMD screen support is now available only for ZeDMD.<br>
+With the latest update, Real DMD screen support is now available only for 5.1.7 ZeDMD firmware.<br>
 Create DMD : https://www.youtube.com/watch?v=hgdIUG90M0c<br>
 Install fw : https://github.com/PPUC/ZeDMD/releases/ with installer https://github.com/zesinger/ZeDMD_Updater/releases<br>
-Update last dlls : https://github.com/PPUC/libzedmd/releases/<br>
-To enable this, you need to rename `config-dmd.ini` to `config.ini` and adjust the path to `dmd.exe` in your configuration file. Make sure the path correctly points to the location of `dmd.exe` to utilize the new display capabilities.
+(Update last dlls if needed but not necessary : https://github.com/PPUC/libzedmd/releases/ )<br>
+To enable this, you need to change ActiveDMD to true (ActiveDMD = true) in `config.ini' and adjust MarqueeWidth and MarqueeHeight.
 </p>
 
 
