@@ -102,6 +102,7 @@ def launch_media_player():
     subprocess.run(kill_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
     logging.info(f"Execute kill command : {kill_command}")
 
+    # Création de la commande de lancement de mpv
     launch_command = config['Settings']['MPVLaunchCommand'].format(
         MPVPath=config['Settings']['MPVPath'],
         IPCChannel=config['Settings']['IPCChannel'],
@@ -109,8 +110,12 @@ def launch_media_player():
         DefaultImagePath=config['Settings']['DefaultImagePath'],
         MarqueeBackgroundCodeColor=config['Settings']['MarqueeBackgroundCodeColor']
     )
-    #subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
-    #subprocess.Popen(launch_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, creationflags=creation_flags)
+
+    # Si ActiveDMD est à true, ajouter le flag --window-minimized=yes
+    if config['Settings']['ActiveDMD'] == 'true':
+        launch_command += " --window-minimized=yes"
+
+    # Lancement de mpv
     subprocess.Popen(launch_command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=creation_flags)
     logging.info(f"MPV launch command executed : {launch_command}")
 
@@ -952,6 +957,15 @@ def execute_command(action, params, systems_config):
                     IPCChannel=config['Settings']['IPCChannel']
             )
             subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+
+            if config['Settings']['ActiveDMD'] == "true":
+                #push_datas_to_MPV("marquee-pushtodmd", {"marquee": marquee_file})
+                command = config['Commands'].get(action).format(
+                    marquee_file=marquee_file,
+                    IPCChannel=config['Settings']['IPCChannelDMD']
+                )
+                subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+
         logging.info(f"EE Executing the command : {command}")
         logging.info(f"EE Commande brute avant exécution : {repr(command)}")
         last_command_id = current_command_id
@@ -1143,3 +1157,5 @@ if __name__ == '__main__':
        launch_process("VPListenerWS.exe")
     if config['Settings']['MarqueeMameOutput'] == "true":
        launch_process("MAMEListenerWS.exe")
+    if config['Settings']['ActiveDMD'] == "true":
+       launch_process("dmd/dmd.exe")
