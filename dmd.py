@@ -156,20 +156,25 @@ def detect_com_ports_and_baudrates():
                 return port.device, baudrate, width, height
     return None, None, None, None
 
-def resize_and_pad(image, target_width, target_height, limit_height=False, limit_width=None):
-    if limit_width is not None:
-        limit_height = limit_width
-
+def resize_and_pad(image, target_width, target_height, limit_width=False, limit_height=False):
     image_ratio = image.width / image.height
+    target_ratio = target_width / target_height
+
+    # Scale the image to the target height
     new_height = target_height
     new_width = int(new_height * image_ratio)
-    if limit_height and new_width > target_width:
+    if limit_width and new_width > target_width:
         new_width = target_width
         new_height = int(new_width / image_ratio)
-    resized_image = image.resize((new_width, new_height), Image.LANCZOS)
+    resized_image = image.resize((new_width, new_height))
+
+    # Create a new image with transparent background
     new_image = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))
+
+    # Paste the resized image onto the new image
     offset = ((target_width - new_width) // 2, (target_height - new_height) // 2)
     new_image.paste(resized_image, offset)
+
     return new_image
 
 def resize_and_crop(image, target_width, target_height):
@@ -225,8 +230,13 @@ def image_to_rgb565_array(image, target_width, target_height):
 def convert_image_to_gif(image_path, width, height):
     ensure_cache_dir()
     image = Image.open(image_path).convert("RGBA")
-    # On recadre pour couvrir entièrement la zone (crop sur les côtés si nécessaire)
-    image = resize_and_crop(image, width, height)
+
+    # Si le fichier est exactement "_cache_dmd.png", utiliser resize_and_crop, sinon resize_and_pad
+    if os.path.basename(image_path) == "_cache_dmd.png":
+        image = resize_and_crop(image, width, height)
+    else:
+        image = resize_and_pad(image, width, height, True, True)
+
     gif_path = os.path.join(CACHE_DIR, f"{os.path.splitext(os.path.basename(image_path))[0]}.gif")
     image.save(gif_path, format="GIF", save_all=True, duration=100, loop=0, transparency=0)
     print(f"Converted image to GIF and saved to cache: {gif_path}")
@@ -765,7 +775,7 @@ if lib:
         load_config()
         server = DMDServer(r'\\.\pipe\dmd-pipe')
         try:
-            #server.zedmd.enable_debug()  # Activer le mode débogage si besoin
+            server.zedmd.enable_debug()  # Activer le mode débogage si besoin
             server.start()
             threading.Thread(target=server.keep_dmd_alive, daemon=True).start()
 
