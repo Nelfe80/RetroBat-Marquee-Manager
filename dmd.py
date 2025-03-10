@@ -469,22 +469,22 @@ if lib:
                     self.zedmd_open = True
                     self.zedmd.clear_screen()
 
-                    usb_packet_size = 1024 if width == 256 else 512
-                    self.zedmd.set_usb_package_size(usb_packet_size)
-                    self.zedmd.set_udp_delay(0)
-                    self.zedmd.set_panel_clock_phase(1)
-                    self.zedmd.set_panel_i2s_speed(20)
-                    self.zedmd.set_panel_latch_blankting(0)
-                    refresh_rate = 60 if width == 256 else 90
-                    self.zedmd.set_panel_min_refresh_rate(refresh_rate)
-                    self.zedmd.set_transport(0)
-                    self.zedmd.set_panel_driver(0)
+                    #usb_packet_size = 1024 if width == 256 else 512
+                    #self.zedmd.set_usb_package_size(usb_packet_size)
+                    #self.zedmd.set_udp_delay(0)
+                    #self.zedmd.set_panel_clock_phase(1)
+                    #self.zedmd.set_panel_i2s_speed(20)
+                    #self.zedmd.set_panel_latch_blankting(0)
+                    #refresh_rate = 60 if width == 256 else 90
+                    #self.zedmd.set_panel_min_refresh_rate(refresh_rate)
+                    #self.zedmd.set_transport(0)
+                    #self.zedmd.set_panel_driver(0)
                     # Optionnel: si le DMD supporte l'upscaling, activez-le
                     self.zedmd.enable_upscaling()
 
-                    self.zedmd.set_rgb_order(5)
-                    self.zedmd.set_brightness(2)
-                    self.zedmd.set_y_offset(0)
+                    #self.zedmd.set_rgb_order(5)
+                    #self.zedmd.set_brightness(2)
+                    #self.zedmd.set_y_offset(0)
                     self.last_request_time = time.time()
                     self.last_client_activity = time.time()
                     self.display_count = 0
