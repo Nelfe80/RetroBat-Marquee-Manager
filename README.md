@@ -107,7 +107,6 @@ This approach allows you to scrape specific marquee images that are more suited 
 </p>
 <h2>START</h2>
 <h3>Launch Start.bat</h3>
-<br><br>
 <h2>Notes</h2>
 <p>
 For visual pinball, don't forget to update VPinMame
@@ -122,10 +121,12 @@ Organize your marquee images according to the structure defined in config.ini.
 <h2>New Feature: Real DMD Screen Support</h2>
 <p>
 With the latest update, Real DMD screen support is now available only for 5.1.7 ZeDMD firmware.<br>
-Create DMD : https://www.youtube.com/watch?v=hgdIUG90M0c<br>
-Install fw : https://github.com/PPUC/ZeDMD/releases/ with installer https://github.com/zesinger/ZeDMD_Updater/releases<br>
-(Update last dlls if needed but not necessary : https://github.com/PPUC/libzedmd/releases/ )<br>
 To enable this, you need to change ActiveDMD to true (ActiveDMD = true) in `config.ini' and adjust MarqueeWidth and MarqueeHeight.
+Create DMD : https://www.youtube.com/watch?v=hgdIUG90M0c <br>
+Install fw : https://github.com/zesinger/ZeDMD_Updater2/releases ( with fw here https://github.com/PPUC/ZeDMD/releases/ )<br>
+Tips : <br>
+- Set USB Package to 512 and min refresh rate to 60 if 128x32 DMD.<br>
+- If you want to keep gif animation : MarqueeAutoConvert = false , MarqueeCompose = false
 </p>
 
 
