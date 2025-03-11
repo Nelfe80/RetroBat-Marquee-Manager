@@ -21,10 +21,302 @@ CACHE_DIR = 'dmd/cache'
 # Définir le type de callback (ici, le callback attend un c_char_p et ne renvoie rien)
 LOG_CALLBACK_TYPE = ctypes.CFUNCTYPE(None, ctypes.c_char_p)
 
+CONFIG_FILE = os.path.join('dmd', 'config.dmd')
+
+
+def save_dmd_data_to_config(dmd_instance):
+    """
+    Récupère toutes les données 'get' du DMD et les enregistre dans config.dmd.
+    """
+    dmd_folder = os.path.join(os.getcwd(), 'dmd')
+    if not os.path.exists(dmd_folder):
+        os.makedirs(dmd_folder)
+
+    cfg = configparser.ConfigParser()
+    cfg['DMD_DATA'] = {}
+
+    try:
+        # ZeDMD_GetBrightness
+        try:
+            lib.ZeDMD_GetBrightness.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetBrightness.restype = ctypes.c_uint8
+            brightness = lib.ZeDMD_GetBrightness(dmd_instance.obj)
+            cfg['DMD_DATA']['brightness'] = str(brightness)
+            print("ZeDMD_GetBrightness:", brightness)
+        except Exception as e:
+            cfg['DMD_DATA']['brightness'] = f"Erreur: {e}"
+            print("ZeDMD_GetBrightness: Erreur:", e)
+
+        # ZeDMD_GetIdString
+        try:
+            lib.ZeDMD_GetIdString.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetIdString.restype = ctypes.c_char_p
+            idstr = lib.ZeDMD_GetIdString(dmd_instance.obj)
+            idstr_val = idstr.decode('utf-8') if idstr else "None"
+            cfg['DMD_DATA']['id_string'] = idstr_val
+            print("ZeDMD_GetIdString:", idstr_val)
+        except Exception as e:
+            cfg['DMD_DATA']['id_string'] = f"Erreur: {e}"
+            print("ZeDMD_GetIdString: Erreur:", e)
+
+        # ZeDMD_GetDevice
+        try:
+            lib.ZeDMD_GetDevice.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetDevice.restype = ctypes.c_void_p
+            device = lib.ZeDMD_GetDevice(dmd_instance.obj)
+            device_str = hex(device) if device else "None"
+            cfg['DMD_DATA']['device'] = device_str
+            print("ZeDMD_GetDevice:", device_str)
+        except Exception as e:
+            cfg['DMD_DATA']['device'] = f"Erreur: {e}"
+            print("ZeDMD_GetDevice: Erreur:", e)
+
+        # ZeDMD_GetFirmwareVersion
+        try:
+            lib.ZeDMD_GetFirmwareVersion.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetFirmwareVersion.restype = ctypes.c_char_p
+            fw = lib.ZeDMD_GetFirmwareVersion(dmd_instance.obj)
+            fw_str = fw.decode('utf-8') if fw else "None"
+            cfg['DMD_DATA']['firmware_version'] = fw_str
+            print("ZeDMD_GetFirmwareVersion:", fw_str)
+        except Exception as e:
+            cfg['DMD_DATA']['firmware_version'] = f"Erreur: {e}"
+            print("ZeDMD_GetFirmwareVersion: Erreur:", e)
+
+        # ZeDMD_GetHeight
+        try:
+            lib.ZeDMD_GetHeight.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetHeight.restype = ctypes.c_uint16
+            height_val = lib.ZeDMD_GetHeight(dmd_instance.obj)
+            cfg['DMD_DATA']['height'] = str(height_val)
+            print("ZeDMD_GetHeight:", height_val)
+        except Exception as e:
+            cfg['DMD_DATA']['height'] = f"Erreur: {e}"
+            print("ZeDMD_GetHeight: Erreur:", e)
+
+
+        # ZeDMD_GetIp
+        try:
+            lib.ZeDMD_GetIp.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetIp.restype = ctypes.c_char_p
+            ip = lib.ZeDMD_GetIp(dmd_instance.obj)
+            ip_str = ip.decode('utf-8') if ip else "None"
+            cfg['DMD_DATA']['ip'] = ip_str
+            print("ZeDMD_GetIp:", ip_str)
+        except Exception as e:
+            cfg['DMD_DATA']['ip'] = f"Erreur: {e}"
+            print("ZeDMD_GetIp: Erreur:", e)
+
+        # ZeDMD_GetPanelClockPhase
+        try:
+            lib.ZeDMD_GetPanelClockPhase.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetPanelClockPhase.restype = ctypes.c_uint8
+            phase = lib.ZeDMD_GetPanelClockPhase(dmd_instance.obj)
+            cfg['DMD_DATA']['panel_clock_phase'] = str(phase)
+            print("ZeDMD_GetPanelClockPhase:", phase)
+        except Exception as e:
+            cfg['DMD_DATA']['panel_clock_phase'] = f"Erreur: {e}"
+            print("ZeDMD_GetPanelClockPhase: Erreur:", e)
+
+        # ZeDMD_GetPanelDriver
+        try:
+            lib.ZeDMD_GetPanelDriver.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetPanelDriver.restype = ctypes.c_uint8
+            driver = lib.ZeDMD_GetPanelDriver(dmd_instance.obj)
+            cfg['DMD_DATA']['panel_driver'] = str(driver)
+            print("ZeDMD_GetPanelDriver:", driver)
+        except Exception as e:
+            cfg['DMD_DATA']['panel_driver'] = f"Erreur: {e}"
+            print("ZeDMD_GetPanelDriver: Erreur:", e)
+
+        # ZeDMD_GetPanelHeight
+        try:
+            lib.ZeDMD_GetPanelHeight.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetPanelHeight.restype = ctypes.c_uint16
+            ph = lib.ZeDMD_GetPanelHeight(dmd_instance.obj)
+            cfg['DMD_DATA']['panel_height'] = str(ph)
+            print("ZeDMD_GetPanelHeight:", ph)
+        except Exception as e:
+            cfg['DMD_DATA']['panel_height'] = f"Erreur: {e}"
+            print("ZeDMD_GetPanelHeight: Erreur:", e)
+
+        # ZeDMD_GetPanelI2sSpeed
+        try:
+            lib.ZeDMD_GetPanelI2sSpeed.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetPanelI2sSpeed.restype = ctypes.c_uint8
+            speed = lib.ZeDMD_GetPanelI2sSpeed(dmd_instance.obj)
+            cfg['DMD_DATA']['panel_i2s_speed'] = str(speed)
+            print("ZeDMD_GetPanelI2sSpeed:", speed)
+        except Exception as e:
+            cfg['DMD_DATA']['panel_i2s_speed'] = f"Erreur: {e}"
+            print("ZeDMD_GetPanelI2sSpeed: Erreur:", e)
+
+        # ZeDMD_GetPanelLatchBlanking
+        try:
+            lib.ZeDMD_GetPanelLatchBlanking.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetPanelLatchBlanking.restype = ctypes.c_uint8
+            blanking = lib.ZeDMD_GetPanelLatchBlanking(dmd_instance.obj)
+            cfg['DMD_DATA']['panel_latch_blanking'] = str(blanking)
+            print("ZeDMD_GetPanelLatchBlanking:", blanking)
+        except Exception as e:
+            cfg['DMD_DATA']['panel_latch_blanking'] = f"Erreur: {e}"
+            print("ZeDMD_GetPanelLatchBlanking: Erreur:", e)
+
+        # ZeDMD_GetPanelMinRefreshRate
+        try:
+            lib.ZeDMD_GetPanelMinRefreshRate.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetPanelMinRefreshRate.restype = ctypes.c_uint8
+            min_rate = lib.ZeDMD_GetPanelMinRefreshRate(dmd_instance.obj)
+            cfg['DMD_DATA']['panel_min_refresh_rate'] = str(min_rate)
+            print("ZeDMD_GetPanelMinRefreshRate:", min_rate)
+        except Exception as e:
+            cfg['DMD_DATA']['panel_min_refresh_rate'] = f"Erreur: {e}"
+            print("ZeDMD_GetPanelMinRefreshRate: Erreur:", e)
+
+        # ZeDMD_GetPanelWidth
+        try:
+            lib.ZeDMD_GetPanelWidth.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetPanelWidth.restype = ctypes.c_uint16
+            pw = lib.ZeDMD_GetPanelWidth(dmd_instance.obj)
+            cfg['DMD_DATA']['panel_width'] = str(pw)
+            print("ZeDMD_GetPanelWidth:", pw)
+        except Exception as e:
+            cfg['DMD_DATA']['panel_width'] = f"Erreur: {e}"
+            print("ZeDMD_GetPanelWidth: Erreur:", e)
+
+        # ZeDMD_GetRGBOrder
+        try:
+            lib.ZeDMD_GetRGBOrder.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetRGBOrder.restype = ctypes.c_uint8
+            rgb_order = lib.ZeDMD_GetRGBOrder(dmd_instance.obj)
+            cfg['DMD_DATA']['rgb_order'] = str(rgb_order)
+            print("ZeDMD_GetRGBOrder:", rgb_order)
+        except Exception as e:
+            cfg['DMD_DATA']['rgb_order'] = f"Erreur: {e}"
+            print("ZeDMD_GetRGBOrder: Erreur:", e)
+
+        # ZeDMD_GetTransport
+        try:
+            lib.ZeDMD_GetTransport.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetTransport.restype = ctypes.c_uint8
+            transport = lib.ZeDMD_GetTransport(dmd_instance.obj)
+            cfg['DMD_DATA']['transport'] = str(transport)
+            print("ZeDMD_GetTransport:", transport)
+        except Exception as e:
+            cfg['DMD_DATA']['transport'] = f"Erreur: {e}"
+            print("ZeDMD_GetTransport: Erreur:", e)
+
+        # ZeDMD_GetUdpDelay
+        try:
+            lib.ZeDMD_GetUdpDelay.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetUdpDelay.restype = ctypes.c_uint8
+            udp_delay = lib.ZeDMD_GetUdpDelay(dmd_instance.obj)
+            cfg['DMD_DATA']['udp_delay'] = str(udp_delay)
+            print("ZeDMD_GetUdpDelay:", udp_delay)
+        except Exception as e:
+            cfg['DMD_DATA']['udp_delay'] = f"Erreur: {e}"
+            print("ZeDMD_GetUdpDelay: Erreur:", e)
+
+        # ZeDMD_GetUsbPackageSize
+        try:
+            lib.ZeDMD_GetUsbPackageSize.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetUsbPackageSize.restype = ctypes.c_uint16
+            usb_size = lib.ZeDMD_GetUsbPackageSize(dmd_instance.obj)
+            cfg['DMD_DATA']['usb_package_size'] = str(usb_size)
+            print("ZeDMD_GetUsbPackageSize:", usb_size)
+        except Exception as e:
+            cfg['DMD_DATA']['usb_package_size'] = f"Erreur: {e}"
+            print("ZeDMD_GetUsbPackageSize: Erreur:", e)
+
+        # ZeDMD_GetVersion
+        try:
+            lib.ZeDMD_GetVersion.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetVersion.restype = ctypes.c_char_p
+            version = lib.ZeDMD_GetVersion(dmd_instance.obj)
+            version_str = version.decode('utf-8') if version else "None"
+            cfg['DMD_DATA']['version'] = version_str
+            print("ZeDMD_GetVersion:", version_str)
+        except Exception as e:
+            cfg['DMD_DATA']['version'] = f"Erreur: {e}"
+            print("ZeDMD_GetVersion: Erreur:", e)
+
+        # ZeDMD_GetWiFiPort
+        try:
+            lib.ZeDMD_GetWiFiPort.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetWiFiPort.restype = ctypes.c_uint16
+            wifi_port = lib.ZeDMD_GetWiFiPort(dmd_instance.obj)
+            cfg['DMD_DATA']['wifi_port'] = str(wifi_port)
+            print("ZeDMD_GetWiFiPort:", wifi_port)
+        except Exception as e:
+            cfg['DMD_DATA']['wifi_port'] = f"Erreur: {e}"
+            print("ZeDMD_GetWiFiPort: Erreur:", e)
+
+        # ZeDMD_GetWiFiSSID
+        try:
+            lib.ZeDMD_GetWiFiSSID.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetWiFiSSID.restype = ctypes.c_char_p
+            wifi_ssid = lib.ZeDMD_GetWiFiSSID(dmd_instance.obj)
+            wifi_ssid_str = wifi_ssid.decode('utf-8') if wifi_ssid else "None"
+            cfg['DMD_DATA']['wifi_ssid'] = wifi_ssid_str
+            print("ZeDMD_GetWiFiSSID:", wifi_ssid_str)
+        except Exception as e:
+            cfg['DMD_DATA']['wifi_ssid'] = f"Erreur: {e}"
+            print("ZeDMD_GetWiFiSSID: Erreur:", e)
+
+        # ZeDMD_GetWidth
+        try:
+            lib.ZeDMD_GetWidth.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetWidth.restype = ctypes.c_uint16
+            width_val = lib.ZeDMD_GetWidth(dmd_instance.obj)
+            cfg['DMD_DATA']['width'] = str(width_val)
+            print("ZeDMD_GetWidth:", width_val)
+        except Exception as e:
+            cfg['DMD_DATA']['width'] = f"Erreur: {e}"
+            print("ZeDMD_GetWidth: Erreur:", e)
+
+        # ZeDMD_GetYOffset
+        try:
+            lib.ZeDMD_GetYOffset.argtypes = [ZeDMD_ptr]
+            lib.ZeDMD_GetYOffset.restype = ctypes.c_uint16
+            y_offset = lib.ZeDMD_GetYOffset(dmd_instance.obj)
+            cfg['DMD_DATA']['y_offset'] = str(y_offset)
+            print("ZeDMD_GetYOffset:", y_offset)
+        except Exception as e:
+            cfg['DMD_DATA']['y_offset'] = f"Erreur: {e}"
+            print("ZeDMD_GetYOffset: Erreur:", e)
+
+        # Enregistrer dans le fichier de configuration
+        with open(CONFIG_FILE, 'w') as f:
+            cfg.write(f)
+        print(f"Données DMD enregistrées dans {CONFIG_FILE}")
+    except Exception as global_e:
+        print("Erreur lors de la sauvegarde des données DMD :", global_e)
+
+
 def my_log_callback(message):
-    # Convertir le message depuis C en Python (si nécessaire)
     log_message = message.decode('utf-8')
     print("DMD Log:", log_message)
+    # Si on détecte une erreur de type libserialport, on lance la procédure de reset dans un thread séparé
+    if "libserialport error:" in log_message:
+        print("Erreur détectée, lancement de la procédure de reset du DMD.")
+        threading.Thread(target=reset_dmd_procedure, daemon=True).start()
+
+def reset_dmd_procedure():
+    # On peut, par exemple, essayer d'appeler ZeDMD_Reset si elle est disponible
+    try:
+        print("Tentative d'appel à ZeDMD_Reset...")
+        lib.ZeDMD_Reset.argtypes = [ZeDMD_ptr]
+        lib.ZeDMD_Reset.restype = None
+        # Ici, il faut disposer d'une instance du DMD (par exemple via une variable globale ou un singleton)
+        # Supposons que "server" est une instance de DMDServer accessible globalement.
+        #if server and server.zedmd and server.zedmd.obj:
+        server.zedmd.reset()
+        print("Commande reset envoyée via ZeDMD_Reset.")
+        #else:
+        #    print("Aucune instance DMD disponible pour le reset.")
+    except Exception as e:
+        print("Erreur lors de l'appel de ZeDMD_Reset :", e)
+
 
 # Créer une instance du callback
 log_callback_c = LOG_CALLBACK_TYPE(my_log_callback)
@@ -75,6 +367,23 @@ def on_file_modified():
     except Exception as e:
         logging.error(f"Erreur lors de l'actualisation du DMD : {e}")
 
+def demangle(symbol):
+    """
+    Utilise UnDecorateSymbolName de DbgHelp.dll pour démangler un nom de symbole.
+    """
+    try:
+        dbghelp = ctypes.windll.DbgHelp
+        dbghelp.UnDecorateSymbolName.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32, ctypes.c_uint32]
+        dbghelp.UnDecorateSymbolName.restype = ctypes.c_uint32
+        buffer = ctypes.create_string_buffer(1024)
+        result = dbghelp.UnDecorateSymbolName(symbol.encode('utf-8'), buffer, 1024, 0)
+        if result:
+            return buffer.value.decode('utf-8')
+        else:
+            return symbol
+    except Exception as e:
+        return symbol
+
 def load_library():
     lib_dir = 'dmd'
     if platform.architecture()[0] == '64bit':
@@ -85,10 +394,15 @@ def load_library():
         lib = ctypes.CDLL(lib_path)
         print(f"Loaded DLL: {lib_path}")
         functions = list_functions(lib_path)
-        print("Functions exported by the DLL:")
+        # Affichage de la liste brute des fonctions (manglée)
+        print("Liste brute des fonctions retournées par la DLL :")
+        print(functions)
+        # Affichage des fonctions démanglées (formulation lisible)
+        print("Liste démanglée des commandes disponibles depuis la DLL :")
         for func in functions:
-            if not func.startswith('?'):
-                print(func)
+            # On peut filtrer ici ou afficher toutes
+            demangled = demangle(func)
+            print(" -", demangled)
         return lib
     except OSError as e:
         print(f"Failed to load DLL: {e}")
@@ -107,6 +421,31 @@ def open_serial(port, baudrate=921600):
     except serial.SerialException as e:
         print(f"Failed to connect to {port}: {e}")
         return None
+
+def getDMDSizeWithReset(port, baudrate, retries=5):
+    reset_done = False
+    for i in range(retries):
+        if not reset_done:
+            # Tenter de forcer un reset via DTR une seule fois
+            ser = open_serial(port, baudrate)
+            if ser:
+                try:
+                    ser.setDTR(False)
+                    time.sleep(0.2)
+                    ser.setDTR(True)
+                    time.sleep(0.2)
+                    reset_done = True
+                    print("Reset via DTR effectué.")
+                finally:
+                    ser.close()
+        width, height = getDMDSize(port, baudrate)
+        if width and height:
+            return width, height
+        else:
+            print(f"Handshake failed on {port} at {baudrate} baud, attempt {i+1}/{retries}.")
+            # Vous pouvez également appeler ici reset_dmd_procedure() si nécessaire
+            time.sleep(1)
+    return None, None
 
 def getDMDSize(port, baudrate=921600):
     ser = open_serial(port, baudrate)
@@ -128,6 +467,7 @@ def getDMDSize(port, baudrate=921600):
         ser.flush()
         time.sleep(0.5)  # Temps d'attente pour le handshake
         response = ser.read(FRAME_SIZE)
+        print("Response received (raw):", response)
         print("Response received:", response.hex())
         if len(response) < FRAME_SIZE:
             print(f"Handshake failed: incomplete response ({len(response)} bytes received).")
@@ -151,7 +491,7 @@ def detect_com_ports_and_baudrates():
     for port in ports:
         for baudrate in baudrates:
             print(f"Testing {port.device} at {baudrate} baud...")
-            width, height = getDMDSize(port.device, baudrate)
+            width, height = getDMDSizeWithReset(port.device, baudrate)
             if width and height:
                 return port.device, baudrate, width, height
     return None, None, None, None
@@ -489,7 +829,7 @@ if lib:
                     self.last_client_activity = time.time()
                     self.display_count = 0
                     print("ZeDMD opened and configured successfully.")
-
+                    save_dmd_data_to_config(self.zedmd)
                     if self.last_image and self.last_width and self.last_height:
                         self.display_image(self.last_image, self.last_width, self.last_height)
                     else:
