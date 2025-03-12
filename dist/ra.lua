@@ -741,7 +741,7 @@ function cache_screen(name, hide, referer, callback)
         -- Affichage du screenshot en fond
 		mp.add_timeout(0.2, function()
 			mp.commandv("loadfile", path)
-			-- Si hide est true, désactiver tous les objets de type "image"	
+			-- Si hide est true, désactiver tous les objets de type "image"
 		end)
 		if callback then callback() end
     end)
@@ -1000,7 +1000,7 @@ end
 function generate_ass_shape(properties)
 	local decx = -10  -- Décalage en X
 	local decy = -10  -- Décalage en Y
-	
+
 	-- local decx = 0  -- Décalage en X
 	-- local decy = 0  -- Décalage en Y
 
@@ -1015,9 +1015,9 @@ function generate_ass_shape(properties)
 
     return string.format("{\\p1}{\\an7\\bord0\\shad0\\1c&H%s&\\1a&H%s&}%s %d %d l %d %d %d %d %d %d %d %d{\\p0}",
                          properties.color_hex, opacity_hex, draw_command,
-                         x, y, 
-                         x + properties.w, y, 
-                         x + properties.w, y + properties.h, 
+                         x, y,
+                         x + properties.w, y,
+                         x + properties.w, y + properties.h,
                          x, y + properties.h,
                          x, y)
 end
@@ -1342,35 +1342,106 @@ end
 
 local hardcoreMode = "False"
 function process_user_info(data_split)
-	-- Traitement des informations utilisateur
-	local username = data_split[2]
-	local userPicPath = data_split[3]
-	local userLanguage = data_split[4]
-	hardcoreMode = data_split[5]
-	local textColor
-    if hardcoreMode == "True" then
-        textColor = "FFFFFF" -- White si hardcore
-    else
-        textColor = "808080" -- Gris sinon
+    update_screen_dimensions(nil)
+    -- Traitement des informations utilisateur
+    local username = data_split[2]
+    local userPicPath = data_split[3]
+    local userLanguage = data_split[4]
+    hardcoreMode = data_split[5]
+    local textColor = hardcoreMode == "True" and "FFFFFF" or "808080"
+
+    -- Détermination du mode d'affichage : DMD ou écran LCD
+    local isDMD = false
+    if (image_width == 128 or image_width == 256) and (image_height == 32 or image_height == 64) then
+        isDMD = true
     end
-	-- Overlay background
-	create("BlackRectangle", "shape", {x = -128, y = 10, w = 128, h = 128, color_hex = "000000", show = true, opacity_decimal = 0} , 1)
-	create("UserText", "text", {text = username .. " connected", color = textColor, font = "VT323", x = 0, y = 90, border = 3, size = 40, show = true, opacity_decimal = 0}, 2)
-	create("UserImage", "image", {image_path = userPicPath, x = 10, y = 10, w = 128, h = 128, show = false, opacity_decimal = 1}, 3)
-	move("BlackRectangle", 10, 10, 0.2, 0.5, function ()
-		move("UserText", 30, 90, 1, 1, nil)
-		set_object_properties('UserImage', {show = true})
-		mp.add_timeout(3, function()
-			set_object_properties('UserImage', {show = false})
-			move("UserText", -50, 90, 0, 0, nil)
-			move("BlackRectangle", -128, 10, 0, 0.5, function ()
-				remove_object("BlackRectangle", function ()
-					remove_object("UserImage", nil)
-					remove_object("UserText", nil)
-				end)
-			end)
-		end)
-	end)
+
+    -- Définition des paramètres selon le mode
+    local rect_x, rect_y, rect_w, rect_h
+    local text_x, text_y, text_size
+    local userImage_x, userImage_y, userImage_w, userImage_h
+
+    if isDMD then
+        -- Valeurs adaptées pour un DMD (environ la moitié de celles en mode LCD)
+        rect_x = -image_height
+        rect_y = 5
+        rect_w = image_height
+        rect_h = image_height
+
+        text_x = 0
+        text_y = 45
+        text_size = 20
+
+        userImage_x = 5
+        userImage_y = 0
+        userImage_w = image_height
+        userImage_h = image_height
+    else
+        -- Valeurs par défaut pour écran LCD
+        rect_x = -128
+        rect_y = 10
+        rect_w = 128
+        rect_h = 128
+
+        text_x = 0
+        text_y = 90
+        text_size = 40
+
+        userImage_x = 10
+        userImage_y = 10
+        userImage_w = 128
+        userImage_h = 128
+    end
+
+    -- Création des overlays
+    create("BlackRectangle", "shape", {
+        x = rect_x, y = rect_y,
+        w = rect_w, h = rect_h,
+        color_hex = "000000",
+        show = true,
+        opacity_decimal = 0
+    }, 1)
+
+    create("UserText", "text", {
+        text = username .. " connected",
+        color = textColor,
+        font = "VT323",
+        x = text_x,
+        y = text_y,
+        border = 3,
+        size = text_size,
+        show = true,
+        opacity_decimal = 0
+    }, 2)
+
+    create("UserImage", "image", {
+        image_path = userPicPath,
+        x = userImage_x,
+        y = userImage_y,
+        w = userImage_w,
+        h = userImage_h,
+        show = false,
+        opacity_decimal = 1
+    }, 3)
+
+    -- Ajuster le temps de déplacement en fonction du mode
+    local moveTime = isDMD and 0.3 or 0.5
+
+    -- Animation de l'apparition
+    move("BlackRectangle", isDMD and 5 or 10, isDMD and 5 or 10, 0.2, moveTime, function ()
+        move("UserText", (isDMD and 45 or 90) + 30, isDMD and 45 or 90, 1, moveTime, nil)
+        set_object_properties('UserImage', {show = true})
+        mp.add_timeout(3, function()
+            set_object_properties('UserImage', {show = false})
+            move("UserText", isDMD and -30 or -50, isDMD and 45 or 90, 0, 0, nil)
+            move("BlackRectangle", isDMD and -image_height or -128, rect_y, 0, moveTime, function ()
+                remove_object("BlackRectangle", function ()
+                    remove_object("UserImage", nil)
+                    remove_object("UserText", nil)
+                end)
+            end)
+        end)
+    end)
 end
 
 function process_game_info(data_split)
@@ -1467,6 +1538,8 @@ function process_achievement_info(data_split)
     achievements_data[achievementID] = achievementInfo
 end
 
+
+
 function process_achievement(data_split)
 	update_screen_dimensions(nil)
     -- Traitement des informations de succès
@@ -1478,124 +1551,171 @@ function process_achievement(data_split)
     local numAwardedToUser = data_split[6]
     local userCompletion = data_split[7]
 
+    -- Détermination du mode d'affichage : DMD ou écran LCD
+    local isDMD = false
+    if (image_width == 128 or image_width == 256) and (image_height == 32 or image_height == 64) then
+        isDMD = true
+    end
+
+    -- Ajustement de la taille du badge
+    local badgeSize = 64  -- Valeur par défaut pour écran LCD
+    local offsetY = 41     -- Décalage vertical par défaut
+    if isDMD then
+        badgeSize = 32    -- Pour un DMD, chaque badge prend 32 de haut
+        offsetY = 0       -- Centrer verticalement pour un écran étroit
+    end
+
     -- Récupérer des informations supplémentaires depuis achievements_data
     local achievementInfo = achievements_data[achievementId]
-	local points = achievementInfo and tonumber(achievementInfo.Points) or 0
+    local points = achievementInfo and tonumber(achievementInfo.Points) or 0
     local numAwarded = achievementInfo and achievementInfo.NumAwarded or "Inconnu"
     local numAwardedHardcore = achievementInfo and achievementInfo.NumAwardedHardcore or "Inconnu"
     local trueRatio = achievementInfo and achievementInfo.TrueRatio or "Inconnu"
 
-	if achievements_data[achievementId] then
+    if achievements_data[achievementId] then
         achievements_data[achievementId].Unlock = "True"  -- Marquer comme débloqué
         achievements_data[achievementId].NumAwarded = tostring(tonumber(achievements_data[achievementId].NumAwarded or "0") + 1)
     end
 
-	-- Calculer le score total
-	local totalPoints = 0
+    -- Calculer le score total
+    local totalPoints = 0
     for id, ach in pairs(achievements_data) do
 		local achievementName = "AchievementImage" .. id
-		set_object_properties(achievementName, {y = image_height+74})
+		set_object_properties(achievementName, {y = image_height + 74})
         if ach.Unlock == "True" then
             totalPoints = totalPoints + (tonumber(ach.Points) or 0)
         end
     end
 
-    -- Construire et afficher le message
+    -- Construction du message (non utilisé ici directement)
     local message = string.format(
         "Succès débloqué: %s\nID: %s\nBadge: %s\nDescription: %s\nPoints: %s\nDébloqué par: %s utilisateurs\nDébloqué en mode hardcore par: %s utilisateurs\nRatio: %s\nPourcentage de complétion: %s\nTotal des points: %d",
         title, achievementId, badgePath, description, points, numAwarded, numAwardedHardcore, trueRatio, userCompletion, totalPoints
     )
 
-	if chrono_mode == false then
-		-- Créer les éléments graphiques pour l'affichage de l'achievement
+    if chrono_mode == false then
+		-- Création des éléments graphiques pour l'affichage de l'achievement
 		local backgroundShape = "AchievementBackgroundShape"
 		local backgroundName = "AchievementBackground"
 		local cupName = "AchievementCup"
 		local badgeName = "AchievementBadge"
 		local textAchievement = "AchievementTxt"
 
-		-- clear_visible_objects(function()
-			create(backgroundShape, "shape", {x = 0, y = 0, w = image_width, h = image_height, color_hex = "000000", opacity_decimal = 0}, 1)
-			create(badgeName, "image", {
-				image_path = badgePath,
-				x = (image_width - 64) / 2,
-				y = (image_height - 235) / 2 + 41,
-				w = 64,
-				h = 64,
-				show = false,
-				opacity_decimal = 1
-				}, 30)
-			create(cupName, "image", {
-				image_path = 'RA/System/biggoldencup.png',
-				x = (image_width - 238) / 2,
-				y = (image_height - 235) / 2,
-				w = 238,
-				h = 235,
-				show = false,
-				opacity_decimal = 1
-				}, 20)
-			mp.add_timeout(1, function()
-				-- move(name, target_x, target_y, target_opacity, duration, on_complete)
-				create(backgroundName, "image", {image_path = 'RA/System/background.png', x = 0, y = 0, w = image_width, h = image_height, show = false, opacity_decimal = 1}, 2)
-				fade_opacity(backgroundShape,  0.9, 0.4, function()
-					mp.add_timeout(0.6, function()
-						-- Positionnement de l'image du badge
-						set_object_properties(backgroundName, {show = true})
-						mp.add_timeout(0.2, function()
-							fade_opacity(backgroundShape,  0, 0, function()
-								create(textAchievement, "text", {
-									text = title .. "!",
-									color = "FFFFFF",
-									size = 70,
-									font = "VT323",
-									align=2,
-									show = true,
-									border_size = 5,
-									opacity_decimal = 0
-								}, 25)
-								-- move(name, target_x, target_y, target_opacity, duration, on_complete)
-								-- fade_opacity(name, target_opacity, duration, on_complete)
-								--mp.add_timeout(1, function()
-									set_object_properties(cupName, {show = true})
-									set_object_properties(badgeName, {show = true})
-									mp.add_timeout(1, function()
-										cache_screen("_cacheNewAchv", true, false, function()
-											fade_opacity(textAchievement, 1, 0.6, function()
-												mp.add_timeout(1, function()
-													fade_opacity(textAchievement, 0, 0.6, function()
-														set_object_properties(textAchievement, {size = 80})
-														set_object_properties(textAchievement, {text = "(" .. description .. ")"})
-														mp.add_timeout(1, function()
-															fade_opacity(textAchievement, 1, 0.6, function()
-																mp.add_timeout(1, function()
-																	fade_opacity(textAchievement, 0, 0.6, function()
-																		set_object_properties(textAchievement, {size = 140})
-																		set_object_properties(textAchievement, {text = "+" .. points .. "pts"})
-																		mp.add_timeout(1, function()
-																			fade_opacity(textAchievement, 1, 0.6, function()
+		create(backgroundShape, "shape", {
+            x = 0, y = 0,
+            w = image_width,
+            h = image_height,
+            color_hex = "000000",
+            opacity_decimal = 0
+        }, 1)
 
-																				mp.add_timeout(2, function()
-																					fade_opacity(textAchievement, 0, 0.6, function()
-																						remove_object(textAchievement)
-																						fade_opacity(backgroundShape,  1, 0, function()
-																							restore_cache_screen(initscreen)
-																							fade_opacity(backgroundShape,  0, 1, function()
-																								set_object_properties(backgroundShape, {show = false})
-																								set_object_properties(badgeName, {show = false})
-																								set_object_properties(cupName, {show = false})
-																								set_object_properties(backgroundName, {show = false})
-																								show_achievements(function()
-																									print("Animation des achievements terminée")
-																									mp.add_timeout(3, function()
-																										cache_screen("_cacheAchv", true, true, function()
-																											print("Image cache des achievements")
-																											show_score()
-																											remove_object(backgroundShape)
-																											remove_object(badgeName)
-																											remove_object(cupName)            
-																											remove_object(backgroundName)
-																										end)
-																									end)	
+		create(badgeName, "image", {
+			image_path = badgePath,
+			x = (image_width - badgeSize) / 2,
+			y = (image_height - badgeSize) / 2 + offsetY,
+			w = badgeSize,
+			h = badgeSize,
+			show = false,
+			opacity_decimal = 1
+		}, 30)
+
+        -- Utiliser dmd.gif pour un DMD, sinon biggoldencup.png
+        local cupImagePath = 'RA/System/biggoldencup.png'
+		local cupImageWidth = 238
+		local cupImageHeight = 235
+        if isDMD then
+            cupImagePath = 'RA/System/dmd.gif'
+			cupImageWidth = 128
+			cupImageHeight = 32
+        end
+
+		create(cupName, "image", {
+			image_path = cupImagePath,
+			x = (image_width - cupImageWidth) / 2,
+			y = (image_height - cupImageHeight) / 2,
+			w = cupImageWidth,
+			h = cupImageHeight,
+			show = false,
+			opacity_decimal = 1
+		}, 20)
+
+		-- Adapter la taille du texte pour un DMD
+		local textSize = 70
+		if isDMD then
+			textSize = 20
+		end
+
+		mp.add_timeout(1, function()
+			create(backgroundName, "image", {
+                image_path = 'RA/System/background.png',
+                x = 0,
+                y = 0,
+                w = image_width,
+                h = image_height,
+                show = false,
+                opacity_decimal = 1
+            }, 2)
+			fade_opacity(backgroundShape,  0.9, 0.4, function()
+				mp.add_timeout(0.6, function()
+					set_object_properties(backgroundName, {show = true})
+					mp.add_timeout(0.2, function()
+						fade_opacity(backgroundShape,  0, 0, function()
+							create(textAchievement, "text", {
+								text = title .. "!",
+								color = "FFFFFF",
+								size = textSize,
+								font = "VT323",
+								align = 2,
+								show = true,
+								border_size = 5,
+								opacity_decimal = 0
+							}, 25)
+							set_object_properties(cupName, {show = true})
+							set_object_properties(badgeName, {show = true})
+							mp.add_timeout(1, function()
+								cache_screen("_cacheNewAchv", true, false, function()
+									fade_opacity(textAchievement, 1, 0.6, function()
+										mp.add_timeout(1, function()
+											fade_opacity(textAchievement, 0, 0.6, function()
+												-- Adapter la taille du texte dans la suite si besoin
+												local newSize = textSize
+												if isDMD then
+													newSize = textSize - 4
+												end
+												set_object_properties(textAchievement, {size = newSize})
+												set_object_properties(textAchievement, {text = "(" .. description .. ")"})
+												mp.add_timeout(1, function()
+													fade_opacity(textAchievement, 1, 0.6, function()
+														mp.add_timeout(1, function()
+															fade_opacity(textAchievement, 0, 0.6, function()
+																newSize = newSize
+																if isDMD then
+																	newSize = newSize - 4
+																end
+																set_object_properties(textAchievement, {size = newSize})
+																set_object_properties(textAchievement, {text = "+" .. points .. "pts"})
+																mp.add_timeout(1, function()
+																	fade_opacity(textAchievement, 1, 0.6, function()
+																		mp.add_timeout(2, function()
+																			fade_opacity(textAchievement, 0, 0.6, function()
+																				remove_object(textAchievement)
+																				fade_opacity(backgroundShape,  1, 0, function()
+																					restore_cache_screen(initscreen)
+																					fade_opacity(backgroundShape,  0, 1, function()
+																						set_object_properties(backgroundShape, {show = false})
+																						set_object_properties(badgeName, {show = false})
+																						set_object_properties(cupName, {show = false})
+																						set_object_properties(backgroundName, {show = false})
+																						show_achievements(function()
+																							print("Animation des achievements terminée")
+																							mp.add_timeout(3, function()
+																								cache_screen("_cacheAchv", true, true, function()
+																									print("Image cache des achievements")
+																									show_score()
+																									remove_object(backgroundShape)
+																									remove_object(badgeName)
+																									remove_object(cupName)
+																									remove_object(backgroundName)
 																								end)
 																							end)
 																						end)
@@ -1612,129 +1732,134 @@ function process_achievement(data_split)
 											end)
 										end)
 									end)
-								--end)
+								end)
 							end)
 						end)
 					end)
 				end)
 			end)
-		-- end)
+		end)
     end
-
 end
+
+
 
 -- #####################################
 -- ############# SHOW FUNCTIONS
 -- #####################################
 
 function show_achievements(callback)
-	update_screen_dimensions(function()
-		-- mp.osd_message(" screen_height:" .. screen_height .. " image_height:" .. image_height, 15)
-	end)
-	
-	if next(achievements_data) == nil then
-		print("Aucun achievement à afficher.")
-		if callback then callback() end
-		return
-	end
+    update_screen_dimensions(function()
+        -- Les dimensions sont mises à jour ici
+    end)
 
-	-- Compter le nombre d'achievements débloqués
-	local numAchievementsUnlocked = 0
-	for _, ach in pairs(achievements_data) do
-		if ach.Unlock == "True" then
-			numAchievementsUnlocked = numAchievementsUnlocked + 1
-		end
-	end
+    if next(achievements_data) == nil then
+        print("Aucun achievement à afficher.")
+        if callback then callback() end
+        return
+    end
 
-	-- Tri des achievements
-	local sorted_achievements = {}
-	for id, ach in pairs(achievements_data) do
-		table.insert(sorted_achievements, {id = id, data = ach})
-	end
+    -- Filtrer et trier les achievements débloqués
+    local unlocked = {}
+    for id, ach in pairs(achievements_data) do
+        if ach.Unlock == "True" then
+            table.insert(unlocked, {id = id, data = ach})
+        end
+    end
+    table.sort(unlocked, function(a, b)
+        return tonumber(a.data.DisplayOrder) < tonumber(b.data.DisplayOrder)
+    end)
+    local numUnlocked = #unlocked
 
-	table.sort(sorted_achievements, function(a, b)
-		local unlockA = a.data.Unlock == "True"
-		local unlockB = b.data.Unlock == "True"
-		if unlockA == unlockB then
-			return tonumber(a.data.DisplayOrder) < tonumber(b.data.DisplayOrder)
-		else
-			return unlockA and not unlockB
-		end
-	end)
+    -- Détermination du mode d'affichage : DMD ou écran LCD
+    local isDMD = false
+    -- On considère un DMD si la largeur est de 128 et la hauteur est 32 ou 64
+    if (image_width == 128 or image_height == 256) and (image_height == 32 or image_height == 64) then
+        isDMD = true
+    end
 
-	local xPos = 4
-	local yPos = 14
-	local imageWidth = 64
-	local imageHeight = 64
-	local imageSpacing = 4
-	local order = 10	
-	-- Calcul du nombre maximum d'achievements par ligne
-	local maxAchievementsPerLine = math.floor((image_width - xPos) / (imageWidth + imageSpacing))
-	-- Déterminer l'index de départ pour l'affichage
-	local startIndex = math.max(1, numAchievementsUnlocked - 5)
-	local endIndex = math.min(startIndex + maxAchievementsPerLine - 1, #sorted_achievements)
-	-- Affichage des achievements
-	for i = startIndex, endIndex do
-		local achievement = sorted_achievements[i]
-		local achievementName = "AchievementImage" .. achievement.id
+    -- Définition des paramètres d'affichage selon le mode
+    local xPos, yPos, badgeSize, spacing, yPosAdjustment
+    if isDMD then
+        -- Pour un DMD, chaque badge doit mesurer 32 de haut (et on suppose 32 de large pour un rendu carré)
+        xPos = 2
+        yPos = 2  -- marge verticale de départ
+        badgeSize = 28
+        spacing = 2  -- espacement entre badges
+        yPosAdjustment = 0  -- éventuellement à ajuster pour centrer verticalement
+    else
+        -- Paramètres par défaut pour un écran LCD
+        xPos = 4
+        yPos = 14
+        badgeSize = 64
+        spacing = 4
+        yPosAdjustment = 54
+    end
 
-		-- Création et positionnement de l'achievement
-		create(achievementName, "image", {
-			image_path = achievement.data.BadgeURL,
-			x = xPos,
-			y = image_height - yPos,
-			w = imageWidth,
-			h = imageHeight,
-			show = true,
-			opacity_decimal = 1
-		}, order)
-	
-		xPos = xPos + imageWidth + imageSpacing
-		order = order + 1
-	end
-	
-	-- Fonction pour animer les achievements débloqués
-	local index = 1
-	local yPosAdjustment = 54
+    -- Calcul du nombre maximum de badges pouvant tenir horizontalement
+    local maxBadges = math.floor((image_width - xPos) / (badgeSize + spacing))
 
-	local function animate_next_achievement()
-		if index > #sorted_achievements or index > 10 then
-			if callback then callback() end
-			return  -- Arrête la récurrence si tous les achievements ont été traités ou si on a atteint 10
-		end
+    if isDMD then
+        -- Pour le DMD, n'afficher que les derniers achievements débloqués
+        local startIndex = math.max(1, numUnlocked - maxBadges + 1)
+        local order = 10
+        -- Position verticale : placer les badges en bas de l'écran (adaptation possible selon vos besoins)
+        local badgeY = image_height - badgeSize - yPos
+        for i = startIndex, numUnlocked do
+            local achievement = unlocked[i]
+            local achievementName = "AchievementImage" .. achievement.id
+            create(achievementName, "image", {
+                image_path = achievement.data.BadgeURL,
+                x = xPos,
+                y = badgeY,
+                w = badgeSize,
+                h = badgeSize,
+                show = true,
+                opacity_decimal = 1
+            }, order)
+            xPos = xPos + badgeSize + spacing
+            order = order + 1
+        end
+    else
+        -- Pour un écran LCD, on conserve l'affichage habituel (ici, on affiche jusqu'à 5 achievements)
+        local sorted_achievements = {}
+        for id, ach in pairs(achievements_data) do
+            table.insert(sorted_achievements, {id = id, data = ach})
+        end
+        table.sort(sorted_achievements, function(a, b)
+            local unlockA = a.data.Unlock == "True"
+            local unlockB = b.data.Unlock == "True"
+            if unlockA == unlockB then
+                return tonumber(a.data.DisplayOrder) < tonumber(b.data.DisplayOrder)
+            else
+                return unlockA and not unlockB
+            end
+        end)
+        local startIndexLCD = math.max(1, numUnlocked - 5)
+        local endIndexLCD = math.min(startIndexLCD + maxBadges - 1, #sorted_achievements)
+        local order = 10
+        for i = startIndexLCD, endIndexLCD do
+            local achievement = sorted_achievements[i]
+            local achievementName = "AchievementImage" .. achievement.id
+            create(achievementName, "image", {
+                image_path = achievement.data.BadgeURL,
+                x = xPos,
+                y = image_height - yPos,
+                w = badgeSize,
+                h = badgeSize,
+                show = true,
+                opacity_decimal = 1
+            }, order)
+            xPos = xPos + badgeSize + spacing
+            order = order + 1
+        end
+    end
 
-		local achievement = sorted_achievements[index]
-		local achievementName = "AchievementImage" .. achievement.id
+    -- (Optionnel) Animation ou mise à jour supplémentaire des badges peut être ajoutée ici
 
-		if achievement.data.Unlock == "True" then
-			-- Récupérer la position x actuelle de l'image
-			local currentXPos = get_object_property(achievementName, "x")
-			-- mp.osd_message("currentXPos: " .. currentXPos)
-			if currentXPos == nil then
-				print("Impossible de récupérer la position x pour " .. achievementName)
-				index = index + 1
-				animate_next_achievement()
-				return
-			end
-
-			local currentY = image_height - yPos - yPosAdjustment
-			set_object_properties(achievementName, {y = currentY})	
-			index = index + 1
-			animate_next_achievement()
-			--move(achievementName, currentXPos, currentY, 1, 0.5, function()
-			--	index = index + 1
-			--	animate_next_achievement()  -- Appel récursif pour le prochain achievement
-			--end)
-		else
-			index = index + 1
-			animate_next_achievement()  -- Passe directement au prochain si celui-ci n'est pas débloqué
-		end
-	end
-
-	-- Démarrer la séquence d'animation
-	animate_next_achievement()
-	
+    if callback then callback() end
 end
+
 
 local score = 0
 function show_score()
