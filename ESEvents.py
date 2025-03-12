@@ -585,7 +585,7 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
     # Chemin de base pour les images
     base_image_path = os.path.join(config['Settings']['RomsPath'], system_name, "images")
-    roms_path = config['Settings']['RomsPath'] # C:\RetroBat\roms
+    roms_path = config['Settings']['RomsPath']  # Exemple : C:\RetroBat\roms
 
     # Construire les chemins de fichier pour le logo et le fanart
     logo_file_name = f"{game_name}-marquee.png"
@@ -620,9 +620,6 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
                 fanart_file_path = os.path.join(roms_path, system_name, fanart_rel_path.strip('.\\'))
         logging.info(f"autogen_marquee GAMELIST - logo_file_path {logo_file_path} fanart_file_path {fanart_file_path}")
 
-    # Appel de la fonction push_datas_to_MPV
-    # push_datas_to_MPV("marquee_compose", marquee_data)
-
     # Vérifier si le logo et le fanart existent
     if os.path.exists(logo_file_path) and os.path.exists(fanart_file_path):
         marquee_width = int(config['Settings']['MarqueeWidth'])
@@ -633,19 +630,17 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
         if current_logo_align is not None:
             logo_align = current_logo_align
-
-        if logo_align == 'left':
-            logo_gravity = 'West'
-            logo_position = '+50+0'  # n pixels depuis la gauche
-        elif logo_align == 'center':
+        #DMD support format
+        if logo_align == 'center' or (marquee_width in [128, 256] and marquee_height in [32, 64]):
             logo_gravity = 'Center'
-            logo_position = '+0+0'  # Centre
+            logo_position = '+0+0'   # Centré
+        elif logo_align == 'left':
+            logo_gravity = 'West'
+            logo_position = '+50+0'  # Décalage depuis la gauche
         elif logo_align == 'right':
             logo_gravity = 'East'
-            logo_position = '+50+0'  # n pixels depuis la droite
+            logo_position = '+50+0'  # Décalage depuis la droite
 
-        #fanart_gravity = 'North' if vertical_align == 'top' else 'Center' if vertical_align == 'middle' else 'South'
-        # Calculer la demi-hauteur d'une bande
         band_half_height = marquee_height // 2
         if vertical_align == 'top':
             fanart_gravity = 'North'
@@ -661,27 +656,24 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
         intermediate_img_path = target_img_path.replace('.png', '_temp.png')
 
-        #logo_max_height = marquee_height - 100
-        #logo_max_width = marquee_width // 2
-        # Mappage de l'échelle de zoom (1 à 7) à un pourcentage (100% à 200%)
-        zoom_scale = {1: 1.0, 2: 1.2, 3: 1.4, 4: 1.6, 5: 1.8, 6: 2.0, 7: 2.2}
-
-        # Calculer le facteur de zoom
-        zoom_factor = zoom_scale.get(current_logo_zoom, 1.0)  # Par défaut à 100% si non trouvé
-
-        # Calculer les dimensions initiales du logo
-        logo_max_width = int(marquee_width * 2 / 3)
+        # Chargement du logo et récupération de ses dimensions d'origine
         logo_img = Image.open(logo_file_path)
         original_width, original_height = logo_img.size
 
-        # Ajuster la taille selon le facteur de zoom
-        logo_max_width = int(original_width * zoom_factor)
-        logo_max_height = int(original_height * zoom_factor)
+        # Mappage de l'échelle de zoom (1 à 7) à un facteur (exemple 1.0 à 2.2)
+        zoom_scale = {1: 1.0, 2: 1.2, 3: 1.4, 4: 1.6, 5: 1.8, 6: 2.0, 7: 2.2}
+        zoom_factor = zoom_scale.get(current_logo_zoom, 1.0)  # Par défaut 1.0 (100%)
 
-        # Assurer que le logo ne dépasse pas les dimensions du marquee
-        logo_max_width = min(logo_max_width, marquee_width)
-        logo_max_height = min(logo_max_height+50, marquee_height)
+        # Calcul du facteur d'échelle pour le logo en fonction du zoom et des dimensions du marquee
+        # Cela permet de ne pas dépasser le cadre du marquee
+        scale_factor = min(zoom_factor, marquee_width / original_width, marquee_height / original_height)
+        logo_max_width = int(original_width * scale_factor)
+        logo_max_height = int(original_height * scale_factor)
 
+        # Optionnel : vous pouvez ajouter un léger padding si nécessaire
+        # logo_max_height = min(logo_max_height + 10, marquee_height)
+
+        # Gestion du gradient (si utilisé)
         if current_gradient_mode == 2:
             gradient_path = "images/gradient_black.png"
         elif current_gradient_mode == 3:
@@ -691,18 +683,16 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
 
         if logo_align == 'left':
             gradient_gravity = 'West'
-            gradient_center_x = 50 + logo_max_width - (original_width * zoom_factor) # Centre du gradient décalé de la gauche
+            gradient_center_x = 50 + logo_max_width - (original_width * scale_factor)
         elif logo_align == 'center':
             gradient_gravity = 'Center'
-            gradient_center_x = 0  # Centre du gradient au centre du marquee
+            gradient_center_x = 0
         elif logo_align == 'right':
             gradient_gravity = 'East'
-            gradient_center_x = 50 + logo_max_width - (original_width * zoom_factor) # Centre du gradient décalé de la droite
-        #gradient_center_y = marquee_height // 2  # Verticalement au centre
-
+            gradient_center_x = 50 + logo_max_width - (original_width * scale_factor)
         gradient_position = f"+{gradient_center_x}+0"
 
-
+        # Préparation des commandes ImageMagick selon le fichier config.ini
         convert_command_template = config['Settings']['IMConvertCommandMarqueeGen']
         convert_command = convert_command_template.format(
             IMPath=config['Settings']['IMPath'],
@@ -739,6 +729,7 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
             ImgTargetPath=target_img_path
         )
 
+        # Exécution des commandes
         subprocess.run(convert_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
         logging.info(f"autogen_marquee convert_command {convert_command}")
         if current_gradient_mode != 1:
@@ -750,6 +741,7 @@ def autogen_marquee(system_name, game_name, rom_path, target_img_path):
         return target_img_path
     else:
         return None
+
 
 #action=game-start&param1="C:\RetroBatV6\roms\amstradcpc\Back To The Future II (UK) (1990) (Trainer).zip"&param2="Back To The Future II (UK) (1990) (Trainer)"&param3="Back to the Future Part II"
 #action=game-selected&param1="amstradcpc"&param2="C:/RetroBatV6/roms/amstradcpc/007 - Live and Let Die (1988)(Domark).zip"&param3="Live and Let Die" // game
