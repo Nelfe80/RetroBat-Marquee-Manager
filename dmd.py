@@ -422,7 +422,7 @@ def open_serial(port, baudrate=921600):
         print(f"Failed to connect to {port}: {e}")
         return None
 
-def getDMDSizeWithReset(port, baudrate, retries=5):
+def getDMDSizeWithReset(port, baudrate, retries=2):
     reset_done = False
     for i in range(retries):
         if not reset_done:
