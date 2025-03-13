@@ -23,16 +23,48 @@ LOG_CALLBACK_TYPE = ctypes.CFUNCTYPE(None, ctypes.c_char_p)
 
 CONFIG_FILE = os.path.join('dmd', 'config.dmd')
 
+def load_dmd_connection_config():
+    """
+    Charge la configuration de connexion (port et baudrate) depuis config.dmd, s'ils existent.
+    """
+    cfg = configparser.ConfigParser()
+    if os.path.exists(CONFIG_FILE):
+        cfg.read(CONFIG_FILE)
+        if 'CONNECTION' in cfg:
+            return cfg['CONNECTION']
+    return None
+
+def update_dmd_connection_config(port, baudrate):
+    """
+    Met à jour (ou crée) la section CONNECTION dans config.dmd avec les paramètres de connexion.
+    """
+    cfg = configparser.ConfigParser()
+    if os.path.exists(CONFIG_FILE):
+        cfg.read(CONFIG_FILE)
+    if 'CONNECTION' not in cfg:
+        cfg['CONNECTION'] = {}
+    cfg['CONNECTION']['port'] = port
+    cfg['CONNECTION']['baudrate'] = str(baudrate)
+    with open(CONFIG_FILE, 'w') as f:
+        cfg.write(f)
+    print(f"Configuration de connexion mise à jour dans {CONFIG_FILE} : port={port}, baudrate={baudrate}")
+
 
 def save_dmd_data_to_config(dmd_instance):
     """
-    Récupère toutes les données 'get' du DMD et les enregistre dans config.dmd.
+    Récupère toutes les données 'get' du DMD et les enregistre dans config.dmd,
+    en conservant les autres sections (comme CONNECTION) déjà présentes.
     """
     dmd_folder = os.path.join(os.getcwd(), 'dmd')
     if not os.path.exists(dmd_folder):
         os.makedirs(dmd_folder)
 
     cfg = configparser.ConfigParser()
+    # Charger le fichier existant s'il existe pour conserver d'autres sections
+    if os.path.exists(CONFIG_FILE):
+        cfg.read(CONFIG_FILE)
+
+    # Créer ou vider la section DMD_DATA
     cfg['DMD_DATA'] = {}
 
     try:
@@ -425,26 +457,30 @@ def open_serial(port, baudrate=921600):
 def getDMDSizeWithReset(port, baudrate, retries=2):
     reset_done = False
     for i in range(retries):
-        if not reset_done:
-            # Tenter de forcer un reset via DTR une seule fois
-            ser = open_serial(port, baudrate)
-            if ser:
-                try:
-                    ser.setDTR(False)
-                    time.sleep(0.2)
-                    ser.setDTR(True)
-                    time.sleep(0.2)
-                    reset_done = True
-                    print("Reset via DTR effectué.")
-                finally:
-                    ser.close()
-        width, height = getDMDSize(port, baudrate)
+        try:
+            width, height = getDMDSize(port, baudrate)
+        except Exception as e:
+            print(f"Error during getDMDSize on {port} at {baudrate} baud: {e}")
+            width, height = None, None
+
         if width and height:
             return width, height
         else:
             print(f"Handshake failed on {port} at {baudrate} baud, attempt {i+1}/{retries}.")
-            # Vous pouvez également appeler ici reset_dmd_procedure() si nécessaire
-            time.sleep(1)
+            if not reset_done:
+                try:
+                    # Tenter d'ouvrir le port pour effectuer un reset même si on a eu une PermissionError
+                    ser = serial.Serial(port, baudrate, timeout=2)
+                    ser.setDTR(False)
+                    time.sleep(0.2)
+                    ser.setDTR(True)
+                    print("Reset via DTR effectué.")
+                    ser.close()
+                    reset_done = True
+                except Exception as e:
+                    # Si l'ouverture échoue (même avec PermissionError), on affiche l'erreur
+                    print(f"Failed to perform DTR reset on {port}: {e}")
+            time.sleep(1)  # Attendre 1 seconde après le reset
     return None, None
 
 def getDMDSize(port, baudrate=921600):
@@ -1098,10 +1134,31 @@ if lib:
                 time.sleep(10)
 
         def detect_dmd_size(self):
+            conn_config = load_dmd_connection_config()
+            if conn_config:
+                port = conn_config.get("port")
+                try:
+                    baudrate = int(conn_config.get("baudrate"))
+                except (ValueError, TypeError):
+                    baudrate = 921600  # valeur par défaut
+                print(f"Tentative de connexion via config: {port} à {baudrate} baud.")
+                try:
+                    width, height = getDMDSizeWithReset(port, baudrate)
+                except Exception as e:
+                    print(f"Erreur lors de la connexion via config: {e}")
+                    width, height = None, None
+                if width and height:
+                    return port, baudrate, width, height
+                else:
+                    print("Connexion via config échouée, suppression de la config et passage au scan complet.")
+                    # Vous pouvez supprimer ou ignorer la section CONNECTION ici
+            # Scan complet des ports disponibles
             port, baudrate, width, height = detect_com_ports_and_baudrates()
             if port and baudrate:
+                update_dmd_connection_config(port, baudrate)
                 return port, baudrate, width, height
             return None, None, None, None
+
 
         def close(self):
             print("Close server starting...")
