@@ -126,7 +126,7 @@ Create DMD : https://www.youtube.com/watch?v=hgdIUG90M0c <br>
 Install fw : https://github.com/zesinger/ZeDMD_Updater2/releases ( with fw here https://github.com/PPUC/ZeDMD/releases/ )<br>
 Tips : <br>
 - Set USB Package to 512 and min refresh rate to 60 if 128x32 DMD.<br>
-- If you want to keep gif animation : MarqueeAutoConvert = false , MarqueeCompose = false
+- If you want to keep gif animation : MarqueeAutoGeneration = false , MarqueeAutoConvert = false , MarqueeCompose = false
 </p>
 
 
