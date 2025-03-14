@@ -16,6 +16,25 @@ creation_flags = 0
 if sys.platform == "win32":  # Uniquement pour Windows
     creation_flags = subprocess.CREATE_NO_WINDOW
 
+# Variables globales pour éviter des vérifications simultanées de dmd.exe
+dmd_check_lock = threading.Lock()
+dmd_check_in_progress = False
+game_start_occurred = False
+
+def check_and_launch_dmd():
+    global dmd_check_in_progress
+    with dmd_check_lock:
+        if dmd_check_in_progress:
+            # Une vérification est déjà en cours, on annule ce nouvel événement
+            return
+        dmd_check_in_progress = True
+    try:
+        if not is_dmd_running():
+            launch_process("dmd/dmd.exe")
+    finally:
+        with dmd_check_lock:
+            dmd_check_in_progress = False
+
 config = configparser.ConfigParser()
 def load_config():
     global config
@@ -135,6 +154,18 @@ def is_mpv_running():
         logging.info(f"MPV is not currently running. Error: {e}")
         #logging.info(f"Command error output: {e.stderr.decode().strip()}")
         return False
+
+def is_dmd_running():
+    try:
+        # Utilise la commande tasklist sous Windows pour vérifier si dmd.exe est actif
+        result = subprocess.run('tasklist /FI "IMAGENAME eq dmd.exe"', shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
+        output = result.stdout.decode('cp850')
+        if "dmd.exe" in output:
+            logging.info("dmd.exe est déjà actif.")
+            return True
+    except subprocess.CalledProcessError as e:
+        logging.info(f"dmd.exe non actif. Erreur: {e}")
+    return False
 
 def ensure_mpv_running():
     if not is_mpv_running():
@@ -1021,35 +1052,37 @@ def on_file_modified():
     ensure_mpv_running()
     file_path = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'ESEvent.arg')
     logging.info(f"on_file_modified : {file_path}")
-    # Lire et analyser le contenu du fichier
     try:
         with open(file_path, 'r') as file:
             content = file.read().strip()
-        # probleme avec  ' , & +
-        #content = content.replace('|', '!')
-        #content = content.replace('^&', '|')
-
         logging.info(f"on_file_modified content : {content}")
         params = urllib.parse.parse_qs(content)
         action = params.get('event', [''])[0]  # Prend le premier élément ou une chaîne vide
 
         # Nettoyer les paramètres
         params.pop('event', None)
-
-        #cleanvalue = cleanvalue.replace("'", "^'")
-        #cleanvalue = cleanvalue.replace(",", "^,")
-        #cleanvalue = cleanvalue.replace("&", "^&")
-        #cleanvalue = cleanvalue.replace("+", "^+")
-
         for key, value in params.items():
             cleanvalue = value[0].strip(' "')
-            #cleanvalue = cleanvalue.replace("|A", "&")
-            logging.info(f"#>>> params.items key : {key}, value : {value}, value[0] : {value[0]}, cleanvalue : {cleanvalue}")
+            logging.info(f"#>>> params.items key : {key}, value : {value}, cleanvalue : {cleanvalue}")
             params[key] = cleanvalue
 
         logging.info(f"Action received : {action}, Parameters : {params} --")
 
-        # Ici, appeler votre fonction execute_command
+        # Gestion du flag : mémoriser qu'un game-start a eu lieu
+        global game_start_occurred
+        if action == 'game-start' and config['Settings']['ActiveDMD'] == "true":
+            game_start_occurred = True
+        # Lors d'un game-selected, ne lancer la vérification de dmd que si un game-start est intervenu auparavant
+        elif action == 'game-selected' and config['Settings']['ActiveDMD'] == "true":
+            if game_start_occurred and config['Settings']['ActiveDMD'] == "true":
+                threading.Thread(target=check_and_launch_dmd, daemon=True).start()
+            # Une fois géré, on réinitialise le flag pour éviter des déclenchements multiples
+            game_start_occurred = False
+
+        # Vous pouvez aussi, si besoin, réinitialiser le flag pour un éventuel "game-end" :
+        elif action == 'game-end' and config['Settings']['ActiveDMD'] == "true":
+            game_start_occurred = False
+
         return execute_command(action, params, systems_config)
 
     except Exception as e:

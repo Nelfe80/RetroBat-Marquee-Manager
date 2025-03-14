@@ -13,6 +13,8 @@ from queue import Queue, Full, Empty
 import numpy as np
 import configparser
 import logging
+import urllib.parse
+import subprocess
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -398,6 +400,86 @@ def on_file_modified():
         server.display_image(marquee_image_path, width, height)
     except Exception as e:
         logging.error(f"Erreur lors de l'actualisation du DMD : {e}")
+
+# Variables globales pour suivre l'état
+last_selected_system = None
+game_running = False
+server_restarted = False  # Indique si un redémarrage a déjà été effectué pour la fin du jeu
+
+def on_event_file_modified():
+    global last_selected_system, game_running, server_restarted
+    logging.info("ESEvent.arg modifié, lecture du fichier...")
+    file_path = os.path.join(os.getcwd(), 'ESEvent.arg')
+    try:
+        with open(file_path, 'r') as file:
+            content = file.read().strip()
+        logging.info(f"Contenu de ESEvent.arg : {content}")
+        params = urllib.parse.parse_qs(content)
+        event = params.get('event', [''])[0]
+        active_systems = [s.strip().lower() for s in config['Settings']['ActiveSystemsDMD'].split(',')]
+
+        if event == 'game-selected':
+            # Récupération du système à partir de param1 (valeur directe)
+            selected_system = params.get('param1', [''])[0].strip(' "').lower()
+            logging.info(f"Game-selected reçu, système direct : {selected_system}")
+            # Si un jeu était en cours et qu'un redémarrage n'a pas déjà été effectué, cela indique la fin du jeu
+            if game_running and not server_restarted:
+                logging.info("Game-selected détecté après un game-start (ou game-stop) : fin de jeu.")
+                if selected_system in active_systems:
+                    logging.info("Système actif détecté pour redémarrage du serveur DMD...")
+                    time.sleep(2)  # Pause avant redémarrage
+                    try:
+                        server.start()
+                        logging.info("Connexion au serveur DMD redémarrée via game-selected.")
+                    except Exception as e:
+                        logging.error(f"Erreur lors du redémarrage du serveur DMD : {e}")
+                else:
+                    logging.info("Le système sélectionné n'est pas actif, aucun redémarrage effectué.")
+                # On réinitialise les flags
+                game_running = False
+                server_restarted = True
+            else:
+                # Cas initial : mémorisation du système sélectionné
+                last_selected_system = selected_system
+                logging.info(f"Système mémorisé (game-selected initial) : {last_selected_system}")
+
+        elif event == 'game-start':
+            if not last_selected_system:
+                logging.error("Aucun système mémorisé lors du game-start, impossible de traiter l'événement.")
+                return
+            logging.info(f"Game-start détecté, système mémorisé : {last_selected_system}")
+            if last_selected_system in active_systems:
+                logging.info("Système actif détecté pour game-start. Fermeture de la connexion au serveur DMD (mise en attente).")
+                try:
+                    server.close()
+                    logging.info("Connexion au serveur DMD fermée, le process dmd.exe reste en attente.")
+                    game_running = True   # Marque qu'un jeu est en cours
+                    server_restarted = False  # Réinitialiser pour permettre le redémarrage ultérieur
+                except Exception as e:
+                    logging.error(f"Erreur lors de la fermeture du serveur DMD : {e}")
+            else:
+                logging.info("Le système mémorisé n'est pas actif. Aucune action effectuée pour game-start.")
+
+        elif event == 'game-stop':
+            logging.info("Game-stop détecté.")
+            if game_running and (not server_restarted) and (last_selected_system in active_systems):
+                logging.info("Redémarrage de la connexion au serveur DMD via game-stop.")
+                try:
+                    time.sleep(2)  # Pause avant redémarrage
+                    server.start()
+                    logging.info("Connexion au serveur DMD redémarrée via game-stop.")
+                    server_restarted = True
+                except Exception as e:
+                    logging.error(f"Erreur lors du redémarrage du serveur DMD : {e}")
+            else:
+                logging.info("Aucun jeu en cours ou redémarrage déjà effectué, aucune action sur game-stop.")
+            # Dans tous les cas, on réinitialise l'état de jeu
+            game_running = False
+
+        else:
+            logging.info(f"L'événement '{event}' ne déclenche aucune action spécifique.")
+    except Exception as e:
+        logging.error(f"Erreur dans le traitement de ESEvent.arg : {e}")
 
 def demangle(symbol):
     """
@@ -1184,6 +1266,14 @@ if lib:
                 observer = Observer()
                 observer.schedule(event_handler, path=os.path.dirname(marquee_image_path), recursive=False)
                 observer.start()
+
+                # Ajout de la surveillance du fichier ESEvent.arg
+                event_file_path = os.path.join(os.getcwd(), 'ESEvent.arg')
+                logging.info(f"Surveillance du fichier ESEvent.arg : {event_file_path}")
+                event_handler2 = FileWatcher(event_file_path, on_event_file_modified)
+                observer_event = Observer()
+                observer_event.schedule(event_handler2, os.path.dirname(event_file_path), recursive=False)
+                observer_event.start()
             else:
                 logging.info("La surveillance de ActiveDMD est désactivée dans la config.")
 
@@ -1195,6 +1285,8 @@ if lib:
             try:
                 observer.stop()
                 observer.join()
+                observer_event.stop()
+                observer_event.join()
             except Exception:
                 pass
             #server.zedmd.disable_debug()  # Désactiver le mode débogage si besoin
