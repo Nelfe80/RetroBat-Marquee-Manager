@@ -127,6 +127,22 @@ Install fw : https://github.com/zesinger/ZeDMD_Updater2/releases ( with fw here 
 Tips : <br>
 - Set USB Package to 512 and min refresh rate to 60 if 128x32 DMD.<br>
 - If you want to keep gif animation : MarqueeAutoGeneration = false , MarqueeAutoConvert = false , MarqueeCompose = false
+<br><br><br>
+To run a ZeDMD DMD with Visual Pinball, launch the Visual Pinball installation via RetroBat<br>
+1) Retrieve version 10.8 of Visual Pinball (if not yet stable) and place it in the folder emulators/vpinball :<br>
+https://github.com/vpinball/vpinball/releases<br>
+This will install VPinballX64.exe, which will then be launched by RetroBat with authorization (disable for auto launch).<br>
+2) Get dmdext-v2.3.1-x64.zip and dmdext-v2.3.1-x86.zip and unzip the files DmdDevice.ini, DmdDevice.dll and DmdDevice64.dll in emulators/vpinball/VPinMAME/<br>
+https://github.com/freezy/dmd-extensions/releases<br>
+3) Get libzedmd-0.9.6-win-x64.zip and libzedmd-0.9.6-win-x86.zip and unzip the zedmd.dll and zedmd64.dll files in emulators/vpinball/VPinMAME/<br>
+https://github.com/PPUC/libzedmd/releases<br>
+4) Go to DmdDevice.ini in the VPinMAME folder and change to zedmd , enabled = true :<br>
+[zedmd]<br>
+; if false, doesn't bother looking for a ZeDMD<br>
+enabled = true<br>
+-- You can also set the virtual dmd to false to avoid seeing it:<br>
+ [virtualdmd] <br>
+enabled = false <br>
 </p>
 
 
