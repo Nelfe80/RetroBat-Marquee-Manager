@@ -336,117 +336,129 @@ mp.register_script_message("mame-action", mame_action)
 
 -- MARQUEE COMPOSE
 function change_img(data)
-	
-	local backgroundShape = "BGShape"
-	local overlay_name = "CenterOverlay"
-	local background_name = "BackgroundOverlay" 
-	update_screen_dimensions(nil)
-	
-	if not(get_object_property(backgroundShape, "type")) then
-		create(backgroundShape, "shape", {x = -2, y = 0, w = image_width+2, h = image_height, color_hex = "000000", opacity_decimal = 1}, 50)
-	end
+	clear_visible_objects(function()
+		local backgroundShape = "BGShape"
+		local overlay_name = "CenterOverlay"
+		local background_name = "BackgroundOverlay"
 
-	fade_opacity(backgroundShape,  1, 0.01, function()
-		
-		-- mp.commandv("vf", "remove", "@" .. backgroundShape)
-		
-		-- Découper la chaîne reçue par "|" pour obtenir plusieurs segments.
-		local parts = {}
-		for part in string.gmatch(data, "([^|]+)") do
-			table.insert(parts, part)
+		mp.commandv('vf', 'remove', '@' .. backgroundShape)
+		mp.commandv('vf', 'remove', '@' .. overlay_name)
+		mp.commandv('vf', 'remove', '@' .. background_name)
+
+		update_screen_dimensions(nil)
+
+		if not(get_object_property(backgroundShape, "type")) then
+			create(backgroundShape, "shape", {x = -2, y = 0, w = image_width+2, h = image_height, color_hex = "000000", opacity_decimal = 1}, 50)
 		end
 
-		-- Supposons que le premier segment soit une étiquette (ex: "game-selected"),
-		-- le deuxième soit le chemin du marquee et le troisième le chemin du fanart.
-		local cmd = parts[1] or ""
-		local marquee_path = parts[2] or ""
-		local fanart_path = parts[3] or ""
+		fade_opacity(backgroundShape,  1, 0.01, function()
 
-		-- Traitement du marquee
-		marquee_path = marquee_path:gsub("^['\"]", ""):gsub("['\"]$", "")
-		marquee_path = marquee_path:gsub("\\", "/")
-		--mp.osd_message("change_img (marquee): " .. marquee_path, 3)
-		if marquee_path:find(":%/") then
-			marquee_path = marquee_path:gsub("^%a:/[^/]+/", "../../")
-		end
+			-- mp.commandv("vf", "remove", "@" .. backgroundShape)
 
-		-- Traitement du fanart, si fourni
-		if fanart_path and fanart_path ~= "" then
-			fanart_path = fanart_path:gsub("^['\"]", ""):gsub("['\"]$", "")
-			fanart_path = fanart_path:gsub("\\", "/")
-			-- mp.osd_message("change_img (fanart): " .. fanart_path, 3)
-			if fanart_path:find(":%/") then
-				fanart_path = fanart_path:gsub("^%a:/[^/]+/", "../../")
+			-- Découper la chaîne reçue par "|" pour obtenir plusieurs segments.
+			local parts = {}
+			for part in string.gmatch(data, "([^|]+)") do
+				table.insert(parts, part)
 			end
-			-- mp.msg.info("Fanart chemin relatif: " .. fanart_path)
-		else
-			fanart_path = nil
-		end
-		--mp.osd_message("change_img (fanart): " .. fanart_path, 3)
-		-- Mise à jour des dimensions globales (image_width et image_height)
-		
 
-		-- Création de l'arrière-plan (utilise le fanart s'il est fourni, sinon le background par défaut)
-		   
-		local bg_path = fanart_path
+			-- Supposons que le premier segment soit une étiquette (ex: "game-selected"),
+			-- le deuxième soit le chemin du marquee et le troisième le chemin du fanart.
+			local cmd = parts[1] or ""
+			local marquee_path = parts[2] or ""
+			local fanart_path = parts[3] or ""
 
-		-- Vérifier si la chaîne se termine par un point suivi de 3 ou 4 caractères (qui ne sont pas des points)
-		local lower_path = fanart_path:lower()
-		if not (string.match(lower_path, "%.[^%.][^%.][^%.]$") or string.match(lower_path, "%.[^%.][^%.][^%.][^%.]$")) then
-			bg_path = 'RA/System/background.png'
-		end
-		
-		
-		
-		-- Création de l'overlay marquee
-		local overlay_height = image_height  -- L'overlay occupe toute la hauteur
-		local overlay_width = -1  -- -1 indique que ffmpeg calcule la largeur pour préserver le ratio
-		local overlay_x = 0      -- On positionne à 0 (le centrage devra être géré dans le filtre, si besoin)
-		local overlay_y = 0
-		
-		if not(get_object_property(overlay_name, "type")) then
-			create(overlay_name, "image", {
-							image_path = marquee_path,
-							x = overlay_x,
-							y = overlay_y,
-							w = overlay_width,  -- ffmpeg calcule la largeur automatiquement
-							h = overlay_height,
-							logo_align = "center",
-							show = false,
-							opacity_decimal = 1
-						}, 30)	
-		end
+			-- Traitement du marquee
+			marquee_path = marquee_path:gsub("^['\"]", ""):gsub("['\"]$", "")
+			marquee_path = marquee_path:gsub("\\", "/")
+			--mp.osd_message("change_img (marquee): " .. marquee_path, 3)
+			if marquee_path:find(":%/") then
+				marquee_path = marquee_path:gsub("^%a:/[^/]+/", "../../")
+			end
+			if marquee_path:lower():match("%.gif$") then
+				marquee_path = marquee_path .. "?frame=0"
+			end
 
-		if not(get_object_property(background_name, "type")) then
-			mp.add_timeout(0.03, function()	
-				create(background_name, "image", {
-							image_path = bg_path,
-							x = 0,
-							y = 0,
-							w = image_width,
-							h = -1,
-							show = false,
-							opacity_decimal = 1
-						}, 0)
-			end)
-		end
-		set_object_properties(background_name, {image_path = bg_path})
-		set_object_properties(background_name, {show = false})		
-		fade_opacity(backgroundShape,  1, 0.05, function()						
-			set_object_properties(background_name, {show = true})
+			-- Traitement du fanart, si fourni
+			if fanart_path and fanart_path ~= "" then
+				fanart_path = fanart_path:gsub("^['\"]", ""):gsub("['\"]$", "")
+				fanart_path = fanart_path:gsub("\\", "/")
+				-- mp.osd_message("change_img (fanart): " .. fanart_path, 3)
+				if fanart_path:find(":%/") then
+					fanart_path = fanart_path:gsub("^%a:/[^/]+/", "../../")
+				end
+				-- mp.msg.info("Fanart chemin relatif: " .. fanart_path)
+			else
+				fanart_path = nil
+			end
+			--mp.osd_message("change_img (fanart): " .. fanart_path, 3)
+			-- Mise à jour des dimensions globales (image_width et image_height)
+
+
+			-- Création de l'arrière-plan (utilise le fanart s'il est fourni, sinon le background par défaut)
+
+			local bg_path = fanart_path
+
+			-- Vérifier si la chaîne se termine par un point suivi de 3 ou 4 caractères (qui ne sont pas des points)
+			local lower_path = fanart_path:lower()
+			if not (string.match(lower_path, "%.[^%.][^%.][^%.]$") or string.match(lower_path, "%.[^%.][^%.][^%.][^%.]$")) then
+				bg_path = 'RA/System/background.png'
+			end
+
+
+
+			-- Création de l'overlay marquee
+			local overlay_height = image_height  -- L'overlay occupe toute la hauteur
+			local overlay_width = -1  -- -1 indique que ffmpeg calcule la largeur pour préserver le ratio
+			local overlay_x = 0      -- On positionne à 0 (le centrage devra être géré dans le filtre, si besoin)
+			local overlay_y = 0
+
+			if not(get_object_property(overlay_name, "type")) then
+				mp.commandv('vf', 'remove', '@' .. overlay_name)
+				create(overlay_name, "image", {
+								image_path = marquee_path,
+								x = overlay_x,
+								y = overlay_y,
+								w = overlay_width,  -- ffmpeg calcule la largeur automatiquement
+								h = overlay_height,
+								logo_align = "center",
+								show = false,
+								opacity_decimal = 1
+							}, 30)
+			end
+
+			if not(get_object_property(background_name, "type")) then
+				mp.add_timeout(0.03, function()
+					mp.commandv('vf', 'remove', '@' .. background_name)
+					create(background_name, "image", {
+								image_path = bg_path,
+								x = 0,
+								y = 0,
+								w = image_width,
+								h = -1,
+								show = false,
+								opacity_decimal = 1
+							}, 0)
+				end)
+			end
+
+			set_object_properties(background_name, {image_path = bg_path})
 			set_object_properties(overlay_name, {image_path = marquee_path})
-			set_object_properties(overlay_name, {show = false})								
+			set_object_properties(background_name, {show = false})
+			set_object_properties(overlay_name, {show = false})
+
 			fade_opacity(backgroundShape,  1, 0.05, function()
-				set_object_properties(overlay_name, {show = true})							
-				fade_opacity(backgroundShape,  1, 0.05, function()							
-					fade_opacity(backgroundShape,  0, 0.5, function()
+				set_object_properties(background_name, {show = true})
+				fade_opacity(backgroundShape,  1, 0.05, function()
+					set_object_properties(overlay_name, {show = true})
+					fade_opacity(backgroundShape,  1, 0.05, function()
+						fade_opacity(backgroundShape,  0, 0.5, function()
+						end)
 					end)
 				end)
-			end)											
+			end)
+
 		end)
-		
 	end)
-		
 end
 mp.register_script_message("change-img", change_img)
 
@@ -1494,8 +1506,7 @@ function process_marquee_compose(data_split)
 
 	-- Échapper les apostrophes et les deux-points
 	local escapedImagePath = logo_file_path:gsub("'", "\\'"):gsub(":", "\\:")
-	local filter_str = string.format("@%s:lavfi=[movie='%s'[img];[img]scale=%d:%d[scaled];[vid1][scaled]overlay=%d:%d]",
-									 name, escapedImagePath, logo_new_width, -1, x_position, 10)
+	local filter_str = string.format("@%s:lavfi=[movie='%s'[img];[img]scale=%d:%d[scaled];[vid1][scaled]overlay=%d:%d]", name, escapedImagePath, logo_new_width, -1, x_position, 10)
 	mp.commandv('vf', 'add', filter_str)
 	mp.add_timeout(0.5, function()
 		mp.commandv("screenshot-to-file", "_cacheMarquee.png")
@@ -1561,7 +1572,7 @@ function process_achievement(data_split)
     local badgeSize = 64  -- Valeur par défaut pour écran LCD
     local offsetY = 41     -- Décalage vertical par défaut
     if isDMD then
-        badgeSize = 32    -- Pour un DMD, chaque badge prend 32 de haut
+        badgeSize = 28    -- Pour un DMD, chaque badge prend 32 de haut
         offsetY = 0       -- Centrer verticalement pour un écran étroit
     end
 
@@ -1625,8 +1636,8 @@ function process_achievement(data_split)
 		local cupImageHeight = 235
         if isDMD then
             cupImagePath = 'RA/System/dmd.gif'
-			cupImageWidth = 128
-			cupImageHeight = 32
+			cupImageWidth = image_width
+			cupImageHeight = image_height
         end
 
 		create(cupName, "image", {
