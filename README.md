@@ -35,10 +35,11 @@ This parameter specifies which screen the marquee should be displayed on. If you
 Example: ScreenNumber = 2 directs the marquee display to the second monitor connected to your setup.<br>
 You can configure this setting manually by editing the config.ini file or through the BatGui interface, where you can select the appropriate screen number from a dropdown menu.<br>
 
-<h3>AcceptedFormats = mp4, jpg, png</h3>
+<h3>AcceptedFormats = mp4, gif, png, jpg</h3>
 This parameter defines the types of media formats that the Marquee Manager will accept for generating marquees in this priority order.<br>
 
 mp4: Allows video files to be used as part of the marquee display.<br>
+png: Allows GIF image files. (and animated gif)<br>
 jpg: Allows JPEG image files.<br>
 png: Allows PNG image files.<br>
 By listing these formats, you ensure that the Marquee Manager can handle and display media in these file types, providing flexibility in the kinds of content you use for your marquees.<br>
@@ -66,7 +67,7 @@ When set to false, this option disables the integration of RetroAchievements int
 This parameter, when set to false, disables the feature that would allow Visual Pinball DMD (Dot Matrix Display) data to be displayed on a LCD marquee. If you are using the Marquee Manager for pinball games, you would set this to true.
 
 <h3>MarqueeAutoScraping = false</h3>
-When set to false, this option prevents the Marquee Manager from automatically scraping (on ScreenScraper only, don't forget to set your ScreenScraper login and password in RetroBat) new media content to get marquees ("marquee" image or "screenmarquee" image if "marquee" image doesn't exist) from ScreenScraper. Scraping refers to the process of gathering images and logos from the internet. Setting it to true would automate this process.
+When set to false, this option prevents the Marquee Manager from automatically scraping (on ScreenScraper only, don't forget to set your ScreenScraper login and password in RetroBat) new media content to get marquees ("marquee" image but  "screenmarquee" images are not downloaded) from ScreenScraper. Scraping refers to the process of gathering images and logos from the internet. Setting it to true would automate this process.
 
 <h3>MarqueeCompose = false</h3>
 When set to true, enables the automatic generation of a marquee. The marquee is composed using a combination of a fanart image and a scraped logo (Scrap games before the autogen please). This allows you to have a custom marquee display but speed depends of your cpu. No custom options to align logos with MarqueeCompose, sorry.
@@ -91,7 +92,7 @@ Launchbox Games Database : <a href="https://gamesdb.launchbox-app.com/">https://
 Pixelcade Forums : <a href="https://pixelcade.org/forum/art-exchange-lcd/a-few-lcd-marquees-links/#post-2071">https://pixelcade.org/forum/art-exchange-lcd/a-few-lcd-marquees-links/#post-2071</a><br>
 <p></p>
 <h2>Scrapping usage</h2>
-<p>If you're missing any marquee, you can activate <b>dynamic scrapping</b> (MarqueeAutoScraping = true in config.ini file), which allows the system to download marquee image (the real toppers, not the logos) of arcade machines directly if it detects that a marquee is missing, without having to go through the RetroBat scraper "screenscraper" (check your screenscraper id/password in Retrobat). Once scrapping is complete, a small message appears on your marquee's screen like "Metal Slug 3 topper successfully scraped!". If you reselect or play the game again, the marquee will be updated. If you don't see the marquee appear, there may be no marquee image for that game in the screenscraper image database. The "Screenmarquee" images are only downloaded if there is no "Marquee" image. If the scraperfailed option is enabled, failed scraping will be indicated in a scrapfailed.pool file. I encourage you to take part in the screenscraper visual enhancement if you want to see a marquee appear or put it manually in your marquee folder.</p>
+<p>If you're missing any marquee, you can activate <b>dynamic scrapping</b> (MarqueeAutoScraping = true in config.ini file), which allows the system to download marquee image (the real toppers, not the logos) of arcade machines directly if it detects that a marquee is missing, without having to go through the RetroBat scraper "screenscraper" (check your screenscraper id/password in Retrobat). Once scrapping is complete, a small message appears on your marquee's screen like "Metal Slug 3 topper successfully scraped!". If you reselect or play the game again, the marquee will be updated. If you don't see the marquee appear, there may be no marquee image for that game in the screenscraper image database. The "Screenmarquee" images are not downloaded if there is no "Marquee" image. If the scraperfailed option is enabled, failed scraping will be indicated in a scrapfailed.pool file. I encourage you to take part in the screenscraper visual enhancement if you want to see a marquee appear or put it manually in your marquee folder.</p>
 <h3>How to Scrape Marquees from RetroBat</h3>
 <p>
 If you plan to use scraped marquees or incorporate your own custom marquee images into the system, please be aware of an issue in the scraping process. Both logos and marquee images are currently saved with the same suffix <b>-marquee</b> at the end of the file name. This can lead to confusion and potential file conflicts within the system.
@@ -123,7 +124,7 @@ Organize your marquee images according to the structure defined in config.ini.
 With the latest update, Real DMD screen support is now available only for 5.1.7 ZeDMD firmware.<br>
 To enable this, you need to change ActiveDMD to true (ActiveDMD = true) in `config.ini' and adjust MarqueeWidth and MarqueeHeight.
 Create DMD : https://www.youtube.com/watch?v=hgdIUG90M0c <br>
-Install fw : https://github.com/zesinger/ZeDMD_Updater2/releases ( with fw here https://github.com/PPUC/ZeDMD/releases/ )<br>
+Install 5.1.7 fw : https://github.com/zesinger/ZeDMD_Updater2/releases ( with fw here https://github.com/PPUC/ZeDMD/releases/ )<br>
 Tips : <br>
 - Set USB Package to 512 and min refresh rate to 60 if 128x32 DMD.<br>
 - If you want to keep gif animation : MarqueeAutoGeneration = false , MarqueeAutoConvert = false , MarqueeCompose = false
