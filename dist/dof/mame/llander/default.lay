@@ -38,6 +38,22 @@
 		<image file="button5.png" state="0" />
 	</element>
 	
+	<element name="marquee_dmd">
+		<image file="lunaroff_dmd.png" />
+	</element>
+	<element name="lunartrn_dmd">
+		<image file="lunartrn_dmd.png" state="0" />
+	</element>	
+	<element name="lunarcad_dmd">
+		<image file="lunarcad_dmd.png" state="0" />
+	</element>	
+	<element name="lunarprm_dmd">
+		<image file="lunarprm_dmd.png" state="0" />
+	</element>	
+	<element name="lunarcom_dmd">
+		<image file="lunarcom_dmd.png" state="0" />
+	</element>
+	
 <!-- Define Views -->	
 	<view name="Marquee_Only">
 		<element ref="marquee">
@@ -74,6 +90,23 @@
 			<bounds x="1749" y="193" width="68" height="68" />
 		</element>
 	</view>	
+	<view name="DMD_Only">
+		<element ref="marquee_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="lamp1" ref="lunartrn_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="lamp2" ref="lunarcad_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="lamp3" ref="lunarprm_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="lamp4" ref="lunarcom_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+	</view>
 </mamelayout>
 
 <!--

@@ -7,6 +7,9 @@
 	<element name="marquee">
 		<image file="skydiver_marquee.png" />
 	</element>
+	<element name="marquee_dmd">
+		<image file="skydiver_marquee.png" />
+	</element>
 	<element name="sky_s">
 		<image file="skydiver_lamp_s.png" state="1" />
 	</element>	
@@ -62,6 +65,35 @@
 			<bounds x="1459" y="24" width="195" height="256" />
 		</element>
 	</view>	
+	<view name="DMD_Only">
+		<element ref="marquee_dmd">
+			<bounds x="0" y="0" width="1920" height="360" />
+		</element>
+		<element ref="sky_s" name="lamps">
+			<bounds x="232" y="24" width="179" height="256" />
+		</element>
+		<element ref="sky_k" name="lampk">
+			<bounds x="411" y="24" width="182" height="256" />
+		</element>
+		<element ref="sky_y" name="lampy">
+			<bounds x="592" y="24" width="197" height="256" />
+		</element>
+		<element ref="sky_d" name="lampd">
+			<bounds x="789" y="24" width="171" height="256" />
+		</element>
+		<element ref="sky_i" name="lampi">
+			<bounds x="960" y="24" width="132" height="256" />
+		</element>
+		<element ref="sky_v" name="lampv">
+			<bounds x="1092" y="24" width="201" height="256" />
+		</element>
+		<element ref="sky_e" name="lampe">
+			<bounds x="1293" y="24" width="167" height="256" />
+		</element>
+		<element ref="sky_r" name="lampr">
+			<bounds x="1459" y="24" width="195" height="256" />
+		</element>
+	</view>
 </mamelayout>
 
 <!--

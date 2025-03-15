@@ -56,7 +56,7 @@ if config_file then
   for line in config_file:lines() do
     if line:match("ActiveDMD%s*=%s*true") then
       isDMD = true
-	  mp.osd_message("isDMD true", 20)
+	  -- mp.osd_message("isDMD true", 20)
       break
     end
   end
@@ -231,7 +231,7 @@ function mame_action(data)
 		view_marquee = "DMD_Only"
 		bg_marquee = "marquee_dmd"
 	end
-	mp.osd_message("isDMD " .. tostring(isDMD) .. "view" .. view_marquee, 20)
+	-- mp.osd_message("isDMD " .. tostring(isDMD) .. "view" .. view_marquee, 20)
 
     data = data or ""
     -- Si la donnée reçue est identique à la précédente, l'ignorer
@@ -661,7 +661,7 @@ end
 
 -- MARQUEE PUSH TO DMD
 function pushtodmd_img(data)
-	mp.osd_message("pushtodmd_img : " .. data, 30)
+	-- mp.osd_message("pushtodmd_img : " .. data, 30)
 	local parts = {}
 	for part in string.gmatch(data, "([^|]+)") do
 		table.insert(parts, part)

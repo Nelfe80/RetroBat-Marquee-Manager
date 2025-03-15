@@ -13,6 +13,12 @@
 	<element name="light_lockon1">
 		<image file="redlampr.png" state="1" />
 	</element>
+	<element name="marquee_dmd">
+		<image file="aburner2_marquee_dmd.png" />
+	</element>
+	<element name="light_lockon_dmd">
+		<image file="redlamps_dmd.png" state="1" />
+	</element>
 	
 <!-- Define Views -->	
 	<view name="Marquee_Only">
@@ -26,6 +32,14 @@
 			<bounds x="0" y="0" width="953" height="360" />
 		</element>
 	</view>	
+	<view name="DMD_Only">
+		<element ref="marquee">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element ref="light_lockon_dmd" name="lamp2">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+	</view>
 </mamelayout>
 
 <!--

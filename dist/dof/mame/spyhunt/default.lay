@@ -23,6 +23,24 @@
 		<image file="lamp5.png" state="0" />
 	</element>
 
+	<element name="marquee_dmd">
+		<image file="spyhunt_marquee_dmd.png" />
+	</element>
+	<element name="lamp1_dmd">
+		<image file="lamp1_dmd.png" state="0" />
+	</element>
+	<element name="lamp2_dmd">
+		<image file="lamp2_dmd.png" state="0" />
+	</element>
+	<element name="lamp3_dmd">
+		<image file="lamp3_dmd.png" state="0" />
+	</element>
+	<element name="lamp4_dmd">
+		<image file="lamp4_dmd.png" state="0" />
+	</element>
+	<element name="lamp5_dmd">
+		<image file="lamp5_dmd.png" state="0" />
+	</element>
 	
 <!-- Define Views -->	
 	<view name="Marquee_Only">
@@ -45,6 +63,28 @@
 			<bounds x="1690" y="160" width="218" height="200" />
 		</element>		
 	</view>	
+	
+	<view name="DMD_Only">
+		<element ref="marquee_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="lamp0" ref="lamp1_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="lamp1" ref="lamp2_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="lamp2" ref="lamp3_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="lamp3" ref="lamp4_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="lamp4" ref="lamp5_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+	</view>	
+	
 </mamelayout>
 
 <!--
