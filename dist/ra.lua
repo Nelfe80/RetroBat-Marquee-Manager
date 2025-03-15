@@ -50,6 +50,19 @@ mp.register_event("file-loaded", function()
 	end
 end)
 
+local isDMD = false
+local config_file = io.open("config.ini", "r")
+if config_file then
+  for line in config_file:lines() do
+    if line:match("ActiveDMD%s*=%s*true") then
+      isDMD = true
+	  mp.osd_message("isDMD true", 20)
+      break
+    end
+  end
+  config_file:close()
+end
+
 -- MAME OUTPUT SUPPORT
 -- Download artworks and lays files here : https://dragonking.arcadecontrols.com/static.php?page=mhDisplays
 -- MAME OUTPUT SUPPORT
@@ -141,13 +154,22 @@ end
 
 -- Fonction process_control_message pour le traitement générique des messages de contrôle
 function process_control_message(data)
+
     -- mp.osd_message("process_control_message: " .. data, 3)
+	-- mp.osd_message("dimension : " .. screen_width .. " " .. screen_height, 20)
 	refresh_interval = 0.25
+
+	-- Détermination du mode d'affichage : DMD ou écran LCD
+	local view_marquee = "Marquee_Only"
+	if isDMD then
+		view_marquee = "DMD_Only"
+	end
+
     local id, state = data:match("^(%S+)%s*=%s*(%d+)")
     if id and state then
         if not current_game_dir or not layout_cache then return end
         local layout_content = layout_cache
-        local view_mapping = get_view_mapping(layout_content, "Marquee_Only")
+        local view_mapping = get_view_mapping(layout_content, view_marquee)
         if not view_mapping then return end
 
         local lookup_id = trim(id):lower()
@@ -197,9 +219,20 @@ end
 
 -- Variable globale pour stocker la dernière donnée reçue
 last_mame_data = nil
+
 -- Fonction mame_action appelée par MPV lors de la réception d'une commande via IPC
 function mame_action(data)
     -- mp.osd_message("mame_action (raw data): " .. data, 3)
+
+	-- Détermination du mode d'affichage : DMD ou écran LCD
+	local view_marquee = "Marquee_Only"
+	local bg_marquee = "marquee"
+	if isDMD then
+		view_marquee = "DMD_Only"
+		bg_marquee = "marquee_dmd"
+	end
+	mp.osd_message("isDMD " .. tostring(isDMD) .. "view" .. view_marquee, 20)
+
     data = data or ""
     -- Si la donnée reçue est identique à la précédente, l'ignorer
     if data == last_mame_data then
@@ -207,7 +240,7 @@ function mame_action(data)
         return
     end
     last_mame_data = data
-	
+
     -- Découper la chaîne reçue en segments séparés par "|"
     local parts = {}
     for part in string.gmatch(data, "([^|]+)") do
@@ -233,7 +266,7 @@ function mame_action(data)
                 if f then
                     layout_cache = f:read("*a")
                     f:close()
-                    local bg_image = layout_cache:match('<element%s+name%s*=%s*"marquee".-<image%s+file%s*=%s*"([^"]+)"')
+                    local bg_image = layout_cache:match('<element%s+name%s*=%s*"' .. bg_marquee .. '".-<image%s+file%s*=%s*"([^"]+)"')
                     if bg_image then
                         local full_bg_path = current_game_dir .. "/" .. bg_image
                         -- mp.osd_message("Loading background: " .. full_bg_path, 3)
@@ -248,7 +281,7 @@ function mame_action(data)
                         -- mp.osd_message("Reference marquee dimensions not found", 3)
                     end
                     -- Création des overlays par défaut pour tous les éléments de la vue "Marquee_Only"
-                    local view_mapping = get_view_mapping(layout_cache, "Marquee_Only")
+                    local view_mapping = get_view_mapping(layout_cache, view_marquee)
                     if view_mapping then
                         for key, elements in pairs(view_mapping) do
                             for i, element_data in ipairs(elements) do
@@ -263,7 +296,7 @@ function mame_action(data)
                                         local show_initial = (base_props.state == "1")
                                         -- mp.osd_message("Loading default image for " .. key .. " (" .. ref .. ") as " .. composite_key .. " show:" .. tostring(show_initial) .. " " .. full_image_path, 3)
                                         local z_index = 30
-                                        create(composite_key, "image", { 
+                                        create(composite_key, "image", {
                                             image_path = full_image_path,
                                             x = bounds.x,
                                             y = bounds.y,
@@ -320,7 +353,7 @@ function mame_action(data)
 						end
 					end)
 				end)
-				
+
                 -- mp.osd_message("All overlays removed (mame_stop)", 3)
             else
                 -- mp.osd_message("No overlays to remove (gfx_objects is nil)", 3)
@@ -1362,12 +1395,6 @@ function process_user_info(data_split)
     hardcoreMode = data_split[5]
     local textColor = hardcoreMode == "True" and "FFFFFF" or "808080"
 
-    -- Détermination du mode d'affichage : DMD ou écran LCD
-    local isDMD = false
-    if (image_width == 128 or image_width == 256) and (image_height == 32 or image_height == 64) then
-        isDMD = true
-    end
-
     -- Définition des paramètres selon le mode
     local rect_x, rect_y, rect_w, rect_h
     local text_x, text_y, text_size
@@ -1561,12 +1588,6 @@ function process_achievement(data_split)
     local description = data_split[5]
     local numAwardedToUser = data_split[6]
     local userCompletion = data_split[7]
-
-    -- Détermination du mode d'affichage : DMD ou écran LCD
-    local isDMD = false
-    if (image_width == 128 or image_width == 256) and (image_height == 32 or image_height == 64) then
-        isDMD = true
-    end
 
     -- Ajustement de la taille du badge
     local badgeSize = 64  -- Valeur par défaut pour écran LCD
@@ -1781,13 +1802,6 @@ function show_achievements(callback)
         return tonumber(a.data.DisplayOrder) < tonumber(b.data.DisplayOrder)
     end)
     local numUnlocked = #unlocked
-
-    -- Détermination du mode d'affichage : DMD ou écran LCD
-    local isDMD = false
-    -- On considère un DMD si la largeur est de 128 et la hauteur est 32 ou 64
-    if (image_width == 128 or image_height == 256) and (image_height == 32 or image_height == 64) then
-        isDMD = true
-    end
 
     -- Définition des paramètres d'affichage selon le mode
     local xPos, yPos, badgeSize, spacing, yPosAdjustment

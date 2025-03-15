@@ -13,6 +13,15 @@
 	<element name="bluelamp">
 		<image file="bluelamp.png" state="0" />
 	</element>
+	<element name="marquee_dmd">
+		<image file="chasehq_marquee_dmd.png" />
+	</element>
+	<element name="redlamp_dmd">
+		<image file="redlamp_dmd.png" state="0" />
+	</element>
+	<element name="bluelamp_dmd">
+		<image file="bluelamp_dmd.png" state="0" />
+	</element>
 	
 <!-- Define Views -->	
 	<view name="Marquee_Only">
@@ -24,6 +33,17 @@
 		</element>
 		<element name="genout6" ref="bluelamp">
 			<bounds x="0" y="0" width="440" height="360" />
+		</element>
+	</view>
+	<view name="DMD_Only">
+		<element ref="marquee_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="genout5" ref="redlamp_dmd">
+			<bounds x="176" y="0" width="80" height="64" />
+		</element>
+		<element name="genout6" ref="bluelamp_dmd">
+			<bounds x="0" y="0" width="80" height="64" />
 		</element>
 	</view>	
 </mamelayout>
