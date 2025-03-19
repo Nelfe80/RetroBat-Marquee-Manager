@@ -684,7 +684,23 @@ def image_to_rgb565_array(image, target_width, target_height):
     rgb565 = R5 | G6 | B5
     return np.ctypeslib.as_ctypes(rgb565.flatten())
 
-# Pour la conversion en GIF, on conserve vos fonctions d'origine
+# Pour la conversion en PNG, on conserve les fonctions d'origine
+def convert_image_to_png(image_path, width, height):
+    ensure_cache_dir()
+    image = Image.open(image_path).convert("RGBA")
+
+    # Si le fichier est exactement "_cache_dmd.png", utiliser resize_and_crop, sinon resize_and_pad
+    if os.path.basename(image_path) == "_cache_dmd.png":
+        image = resize_and_crop(image, width, height)
+    else:
+        image = resize_and_pad(image, width, height, True, True)
+
+    png_path = os.path.join(CACHE_DIR, f"{os.path.splitext(os.path.basename(image_path))[0]}.png")
+    image.save(png_path, format="PNG")
+    print(f"Converted image to PNG and saved to cache: {png_path}")
+    return png_path
+
+# Pour la conversion en GIF, on conserve les  fonctions d'origine
 def convert_image_to_gif(image_path, width, height):
     ensure_cache_dir()
     image = Image.open(image_path).convert("RGBA")
@@ -1030,105 +1046,96 @@ if lib:
             start_time = time.time()
             self.zedmd.set_frame_size(width, height)
 
-            # Vérifier le cache en mémoire, mais invalider si le fichier a été modifié
-            update_cache = False
-            if image_path in self.image_cache:
-                cache_entry = self.image_cache[image_path]
-                cached_mtime = cache_entry.get('mtime', 0)
-                current_mtime = os.path.getmtime(image_path)
-                if current_mtime > cached_mtime:
-                    print(f"File {image_path} updated on disk; updating in-memory cache.")
-                    update_cache = True
-                else:
-                    print(f"Using in-memory cache for {image_path}")
-                    buffers, durations = cache_entry['buffers'], cache_entry['durations']
-            else:
-                update_cache = True
+            base_name = os.path.splitext(os.path.basename(image_path))[0]
+            png_path = os.path.join(CACHE_DIR, f"{base_name}.png")
+            gif_path = os.path.join(CACHE_DIR, f"{base_name}.gif")
 
-            if update_cache:
-                base = os.path.splitext(os.path.basename(image_path))[0]
-                gif_single_frame_path = os.path.join(CACHE_DIR, f"{base}_single_frame.gif")
-                gif_final_path = os.path.join(CACHE_DIR, f"{base}.gif")
-                gif_temp_path = os.path.join(CACHE_DIR, f"{base}_temp.gif")
+            # Gestion des fichiers GIF animés
+            if image_path.lower().endswith('.gif'):
+                gif_path = image_path
+            elif image_path.lower().endswith('.mp4'):
+                gif_single_frame_path = os.path.join(CACHE_DIR, f"{base_name}_single_frame.gif")
+                gif_final_path = os.path.join(CACHE_DIR, f"{base_name}.gif")
+                gif_temp_path = os.path.join(CACHE_DIR, f"{base_name}_temp.gif")
                 conversion_lock = self.conversion_locks.setdefault(image_path, threading.Lock())
-                # Intégration du bloc oublié :
-                if image_path.lower().endswith('.gif'):
-                    gif_path = image_path
-                else:
-                    if os.path.exists(gif_final_path):
-                        print(f"Loading GIF from cache: {gif_final_path}")
-                        gif_path = gif_final_path
-                    elif os.path.exists(gif_single_frame_path):
-                        print(f"Single-frame GIF already exists: {gif_single_frame_path}")
-                        gif_path = gif_single_frame_path
-                        if not os.path.exists(gif_final_path) and not os.path.exists(gif_temp_path):
-                            print(f"Launching background conversion of MP4 to GIF: {image_path}")
-                            threading.Thread(target=convert_mp4_to_gif,
-                                             args=(image_path, width, height, gif_temp_path, gif_final_path, gif_single_frame_path, conversion_lock),
-                                             daemon=True).start()
-                    else:
-                        if image_path.lower().endswith('.mp4'):
-                            print(f"Creating single-frame GIF from MP4: {image_path}")
-                            create_single_frame_gif(image_path, width, height, gif_single_frame_path)
-                            gif_path = gif_single_frame_path
-                            if not os.path.exists(gif_final_path) and not os.path.exists(gif_temp_path):
-                                print(f"Launching background conversion of MP4 to GIF: {image_path}")
-                                threading.Thread(target=convert_mp4_to_gif,
-                                                 args=(image_path, width, height, gif_temp_path, gif_final_path, gif_single_frame_path, conversion_lock),
-                                                 daemon=True).start()
-                        else:
-                            print(f"Converting image to GIF: {image_path}")
-                            gif_path = convert_image_to_gif(image_path, width, height)
-                if not os.path.exists(gif_path):
-                    print(f"File {gif_path} does not exist.")
-                    return
-                try:
-                    with Image.open(gif_path) as img:
-                        frames = []
-                        durations = []
-                        for frame in ImageSequence.Iterator(img):
-                            frames.append(frame.copy())
-                            durations.append(frame.info.get('duration', 100) / 1000.0)
-                except Exception as e:
-                    print(f"Error opening {gif_path}: {e}")
-                    return
-                if len(frames) == 0:
-                    print("No frames found in GIF, cannot display.")
-                    return
-                buffers = [image_to_rgb565_array(frame, width, height) for frame in frames]
-                # Mettre à jour le cache en mémoire avec le temps de modification actuel
-                self.image_cache[image_path] = {
-                    'buffers': buffers,
-                    'durations': durations,
-                    'mtime': os.path.getmtime(image_path)
-                }
 
-            # Utiliser buffers et durations (cas statique ou animé)
-            if len(buffers) == 1:
-                # Cas d'une image statique
-                new_frame = buffers[0]
-                curr = np.ctypeslib.as_array(new_frame)
-                if hasattr(self, "previous_frame") and np.array_equal(self.previous_frame, curr):
-                    print("No change detected in static frame; skipping update.")
-                    return
+                # Si un GIF a déjà été généré, on l'utilise
+                if os.path.exists(gif_final_path):
+                    gif_path = gif_final_path
+                elif os.path.exists(gif_single_frame_path):
+                    gif_path = gif_single_frame_path
+                    # Lancer la conversion en tâche de fond
+                    if not os.path.exists(gif_final_path) and not os.path.exists(gif_temp_path):
+                        print(f"Lancement de la conversion MP4 -> GIF : {image_path}")
+                        threading.Thread(
+                            target=convert_mp4_to_gif,
+                            args=(image_path, width, height, gif_temp_path, gif_final_path, gif_single_frame_path, conversion_lock),
+                            daemon=True
+                        ).start()
                 else:
-                    print("Static frame changed; updating display.")
-                self.previous_frame = np.copy(curr)
-                self.zedmd.render_rgb565(new_frame)
+                    print(f"Création d'un GIF statique depuis la première frame de {image_path}")
+                    create_single_frame_gif(image_path, width, height, gif_single_frame_path)
+                    gif_path = gif_single_frame_path
+                    # Lancer la conversion en tâche de fond
+                    if not os.path.exists(gif_final_path) and not os.path.exists(gif_temp_path):
+                        threading.Thread(
+                            target=convert_mp4_to_gif,
+                            args=(image_path, width, height, gif_temp_path, gif_final_path, gif_single_frame_path, conversion_lock),
+                            daemon=True
+                        ).start()
+
+            # Gestion des PNG statiques
             else:
-                print("Animated GIF detected; starting animation thread.")
-                # Arrêter l'animation en cours (si existante) avant de lancer la nouvelle
+                if not os.path.exists(png_path):
+                    print(f"Conversion de {image_path} en PNG.")
+                    png_path = convert_image_to_png(image_path, width, height)
+
+                if not os.path.exists(png_path):
+                    print(f"Le fichier {png_path} n'a pas pu être créé.")
+                    return
+
+                # Charger l'image et convertir en RGB565
+                try:
+                    with Image.open(png_path) as img:
+                        buffer = image_to_rgb565_array(img, width, height)
+                except Exception as e:
+                    print(f"Erreur lors de l'ouverture de {png_path} : {e}")
+                    return
+
+                # Vérifier si l'image est identique à la précédente pour éviter un rendu inutile
+                curr = np.ctypeslib.as_array(buffer)
+                if hasattr(self, "previous_frame") and np.array_equal(self.previous_frame, curr):
+                    print("Aucune modification détectée dans l'image statique, mise à jour ignorée.")
+                    return
+
+                # Envoyer l'image au DMD
+                print("Affichage de l'image statique mise à jour.")
+                self.previous_frame = np.copy(curr)
+                self.zedmd.render_rgb565(buffer)
+
+            # Si c'est un GIF, lancer l'animation
+            if gif_path and os.path.exists(gif_path):
+                print("GIF détecté, démarrage de l'animation.")
                 self.stop_animation()
                 with self.gif_lock:
-                    self.cached_rgb565_frames = buffers
-                    self.gif_durations = durations
-                    self.stop_event.clear()  # Réinitialiser le flag d'arrêt pour la nouvelle animation
-                # Lancer le nouveau thread et conserver sa référence
-                self.animation_thread = threading.Thread(target=self.play_gif, args=(width, height), daemon=True)
-                self.animation_thread.start()
+                    try:
+                        with Image.open(gif_path) as img:
+                            frames = [frame.copy() for frame in ImageSequence.Iterator(img)]
+                            durations = [frame.info.get('duration', 100) / 1000.0 for frame in ImageSequence.Iterator(img)]
+                    except Exception as e:
+                        print(f"Erreur lors du chargement du GIF {gif_path} : {e}")
+                        return
+
+                    if len(frames) > 1:
+                        self.cached_rgb565_frames = [image_to_rgb565_array(frame, width, height) for frame in frames]
+                        self.gif_durations = durations
+                        self.stop_event.clear()
+
+                        self.animation_thread = threading.Thread(target=self.play_gif, args=(width, height), daemon=True)
+                        self.animation_thread.start()
 
             end_time = time.time()
-            print(f"Time to process image: {end_time - start_time:.6f} seconds")
+            print(f"Temps de traitement : {end_time - start_time:.6f} secondes")
 
 
         def play_gif(self, width, height):

@@ -31,7 +31,7 @@ seawolf.zip
 Artworks layout on the git MarqueeManager 
 Samples sounds
 push seawolf.zip samples in /bios/mame/samples/
-push seawolf.zip layout in /emulators/mame/artwork/ and unzip
+push seawolf.zip layout in /saves/mame/artwork/
 push seawolf.cfg in bios/mame/cfg/
 Active your joystick in Analog Mode if needed
 Hide Crosshair (in mame menu -> Tab to access)
@@ -42,7 +42,7 @@ Visual Rendering > BGFX Video Filter > CRT Simulation
 
 SKYDIVER
 Artworks layout on the git MarqueeManager 
-push skydiver.zip layout in /emulators/mame/artwork/ and unzip
+push skydiver.zip layout in /saves/mame/artwork/
 push skydiver.cfg in in bios/mame/cfg/
 Advanced game option : 
 Emulator > MAME64
@@ -51,7 +51,7 @@ Visual Rendering > BGFX Video Filter > CRT Simulation
 
 AFTER BURNER 2
 Artworks layout on the git MarqueeManager 
-push aburner2.zip layout in /emulators/mame/artwork/ and unzip
+push aburner2.zip layout in /saves/mame/artwork/
 push aburner2.cfg in bios/mame/cfg/
 Advanced game option : 
 Emulator > MAME64

@@ -183,6 +183,11 @@ def parse_collection_correlation():
     return correlation_dict
 
 def convert_image(img_path, target_img_path):
+    # Exclure les fichiers GIF : ne pas les convertir
+    if img_path.lower().endswith(".gif"):
+        print("Les fichiers GIF sont exclus de la conversion.")
+        return img_path
+
     # Création du dossier parent s'il n'existe pas
     parent_dir = os.path.dirname(target_img_path)
     if not os.path.exists(parent_dir):
