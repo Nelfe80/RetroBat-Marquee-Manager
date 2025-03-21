@@ -684,8 +684,17 @@ def image_to_rgb565_array(image, target_width, target_height):
     rgb565 = R5 | G6 | B5
     return np.ctypeslib.as_ctypes(rgb565.flatten())
 
+def get_image_type(image_path):
+    path_lower = image_path.lower()
+    if "emulationstation\\themes\\" in path_lower:
+        return "system"
+    elif "plugins\\marqueemanager\\images\\" in path_lower or "roms\\" in path_lower:
+        return "game"
+    # Par défaut, on peut retourner "game" ou autre valeur par défaut
+    return "game"
+
 # Pour la conversion en PNG, on conserve les fonctions d'origine
-def convert_image_to_png(image_path, width, height):
+def convert_image_to_png(image_path, width, height, system):
     ensure_cache_dir()
     image = Image.open(image_path).convert("RGBA")
 
@@ -695,7 +704,12 @@ def convert_image_to_png(image_path, width, height):
     else:
         image = resize_and_pad(image, width, height, True, True)
 
-    png_path = os.path.join(CACHE_DIR, f"{os.path.splitext(os.path.basename(image_path))[0]}.png")
+    image_type = get_image_type(image_path)
+    if image_type == "game":
+        png_path = os.path.join(CACHE_DIR, f"{os.path.splitext(os.path.basename(image_path))[0]}_{system}.png")
+    else:
+        png_path = os.path.join(CACHE_DIR, f"{os.path.splitext(os.path.basename(image_path))[0]}.png")
+
     image.save(png_path, format="PNG")
     print(f"Converted image to PNG and saved to cache: {png_path}")
     return png_path
@@ -1047,6 +1061,7 @@ if lib:
             self.zedmd.set_frame_size(width, height)
 
             base_name = os.path.splitext(os.path.basename(image_path))[0]
+            system = last_selected_system if last_selected_system else "default"
             png_path = os.path.join(CACHE_DIR, f"{base_name}.png")
             gif_path = os.path.join(CACHE_DIR, f"{base_name}.gif")
 
@@ -1088,7 +1103,7 @@ if lib:
             else:
                 if not os.path.exists(png_path):
                     print(f"Conversion de {image_path} en PNG.")
-                    png_path = convert_image_to_png(image_path, width, height)
+                    png_path = convert_image_to_png(image_path, width, height, system)
 
                 if not os.path.exists(png_path):
                     print(f"Le fichier {png_path} n'a pas pu être créé.")
