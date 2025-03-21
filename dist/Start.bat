@@ -37,6 +37,9 @@ if not errorlevel 1 taskkill /IM dmd.exe /F
 tasklist | find /I "emulationstation.exe" > NUL
 if not errorlevel 1 taskkill /IM emulationstation.exe /F
 
+:: Supprimer le dossier .temp contenant les anciennes instances du MarqueeManager
+rd /s /q ".\.tmp"
+
 :: Démarrer ESEvents.exe
 start ESEvents.exe
 timeout /t 1 /nobreak >NUL
