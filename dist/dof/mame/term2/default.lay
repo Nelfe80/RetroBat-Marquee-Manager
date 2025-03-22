@@ -1,0 +1,125 @@
+<!-- seawolf.lay -->
+
+<mamelayout version="2">
+
+<!-- Define Elements -->
+
+	<element name="marquee">
+		<image file="term2_marquee.png" />
+	</element>
+	<element name="left_gun_redlamp">
+		<image file="left_gun_redlamp.png" state="0" />
+	</element>
+	<element name="flash_lamp_left">
+		<image file="flash_lamp_left.png" state="0" />
+	</element>
+	<element name="flash_lamp_right">
+		<image file="flash_lamp_right.png" state="0" />
+	</element>
+	
+	<element name="marquee_dmd">
+		<image file="term2_marquee_dmd.png" />
+	</element>
+	<element name="left_gun_redlamp_dmd">
+		<image file="left_gun_redlamp_dmd.png" state="0" />
+	</element>
+	<element name="flash_lamp_left_dmd">
+		<image file="flash_lamp_left_dmd.png" state="0" />
+	</element>
+	<element name="flash_lamp_right_dmd">
+		<image file="flash_lamp_right_dmd.png" state="0" />
+	</element>
+
+<!-- Define Views -->	
+	<view name="Marquee_Only">
+		<element ref="marquee">
+			<bounds x="0" y="0" width="1920" height="360" />
+		</element>
+		<element name="Left_Gun_Red_Led" ref="left_gun_redlamp">
+			<bounds x="1638" y="0" width="282" height="360" />
+		</element>
+		<element name="Right_Gun_Red_Led" ref="left_gun_redlamp">
+			<bounds x="1638" y="0" width="282" height="360" />
+		</element>
+		<element name="Left_Gun_Green_Led" ref="left_gun_redlamp">
+			<bounds x="1638" y="0" width="282" height="360" />
+		</element>
+		<element name="Right_Gun_Green_Led" ref="left_gun_redlamp">
+			<bounds x="1638" y="0" width="282" height="360" />
+		</element>
+		<element name="Left_Flash_1" ref="flash_lamp_lefd">
+			<bounds x="135" y="0" width="587" height="360" />
+		</element>
+		<element name="Right_Flash_1" ref="flash_lamp_right">
+			<bounds x="1121" y="0" width="613" height="360" />
+		</element>
+		<element name="Left_Flash_2" ref="flash_lamp_left">
+			<bounds x="135" y="0" width="587" height="360" />
+		</element>
+		<element name="Right_Flash_2" ref="flash_lamp_right">
+			<bounds x="1121" y="0" width="613" height="360" />
+		</element>
+		<element name="Left_Flash_3" ref="flash_lamp_left">
+			<bounds x="135" y="0" width="587" height="360" />
+		</element>
+		<element name="Right_Flash_3" ref="flash_lamp_right">
+			<bounds x="1121" y="0" width="613" height="360" />
+		</element>
+		<element name="Left_Flash_4" ref="flash_lamp_left">
+			<bounds x="135" y="0" width="587" height="360" />
+		</element>
+		<element name="Right_Flash_4" ref="flash_lamp_right">
+			<bounds x="1121" y="0" width="613" height="360" />
+		</element>
+	</view>	
+	<view name="DMD_Only">
+		<element ref="marquee_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Left_Gun_Red_Led" ref="left_gun_redlamp_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>		
+		<element name="Right_Gun_Red_Led" ref="left_gun_redlamp_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Left_Gun_Green_Led" ref="left_gun_redlamp_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>		
+		<element name="Right_Gun_Green_Led" ref="left_gun_redlamp_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Left_Flash_1" ref="flash_lamp_left_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Right_Flash_1" ref="flash_lamp_right_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Left_Flash_2" ref="flash_lamp_left_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Right_Flash_2" ref="flash_lamp_right_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Left_Flash_3" ref="flash_lamp_left_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Right_Flash_3" ref="flash_lamp_right_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Left_Flash_4" ref="flash_lamp_left_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+		<element name="Right_Flash_4" ref="flash_lamp_right_dmd">
+			<bounds x="0" y="0" width="256" height="64" />
+		</element>
+	</view>
+</mamelayout>
+
+<!--
+
+- Artwork type: Marquee, Lamps
+- Marquee corrected by Nelfe80
+- Lamp effects by Nelfe80
+- Lay file by Nelfe80
+
+-->

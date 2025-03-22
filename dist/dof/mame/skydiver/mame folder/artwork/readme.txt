@@ -1,1 +1,1 @@
-Push the folder skydiver in /emulators/mame/artwork/
+Push the zip skydiver in /saves/mame/artwork/

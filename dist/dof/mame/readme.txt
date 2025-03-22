@@ -2,7 +2,6 @@ In the Mame bios file "\bios\mame\ini\mame.ini" :
 output                    network
 
 In Retrobat Mame
-
 Config system : 
 > Advanced System Options > Emulation > Read Ini File : YES
 > Advanced System Options > Emulation > Output Game Data > To Network
@@ -58,6 +57,12 @@ Emulator > MAME64
 Drivers > Video > BGFX
 Visual Rendering > BGFX Video Filter > CRT Simulation
 
+TERMINATOR 2
+Artworks layout on the git MarqueeManager 
+push aburner2.zip layout in /saves/mame/artwork/
+Emulator > MAME64
+Drivers > Video > BGFX
+Visual Rendering > BGFX Video Filter > CRT Simulation
 
 NB : (Get inputtag : mame -lx game_name)
 

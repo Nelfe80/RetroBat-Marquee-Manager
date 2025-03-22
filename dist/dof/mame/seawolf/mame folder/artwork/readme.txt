@@ -1,1 +1,1 @@
-Push the folder seawolf in /emulators/mame/artwork/
+Push the zip seawolf in /saves/mame/artwork/
