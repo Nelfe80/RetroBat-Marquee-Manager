@@ -1187,5 +1187,7 @@ if __name__ == '__main__':
        launch_process("VPListenerWS.exe")
     if config['Settings']['MarqueeMameOutput'] == "true":
        launch_process("MAMEListenerWS.exe")
+    if config['Settings']['MarqueeSupermodelOutput'] == "true":
+       launch_process("SUPERMODELListenerWS.exe")
     if config['Settings']['ActiveDMD'] == "true":
        launch_process("dmd/dmd.exe")

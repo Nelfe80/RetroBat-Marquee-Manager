@@ -95,6 +95,7 @@ def process_message(message, last_states):
     if message.lower().startswith("mame_start"):
         dimensions_data = f"width={config['Settings']['MarqueeWidth']}|height={config['Settings']['MarqueeHeight']}"
         push_datas_to_MPV("marquee-mame", dimensions_data)
+        push_datas_to_MPV("marquee-mame", dimensions_data)
 
 def find_repeating_block(messages):
     """
@@ -177,14 +178,14 @@ def main():
                                 process_message(message, last_states)
                 else:
                     print("Connection closed by MAME.")
-                    process_message("mame_stop", {})
+                    # process_message("mame_stop", {})
                     break
 
         except socket.error as e:
             print(f"Socket error: {e}")
         finally:
             sock.close()
-            process_message("mame_stop", {})
+            # process_message("mame_stop", {})
             print("Disconnected from MAME server.")
 
         print(f"Waiting {reconnection_delay} seconds before reconnecting...")

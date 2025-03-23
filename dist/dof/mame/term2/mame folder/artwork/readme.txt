@@ -1,1 +1,0 @@
-Push the zip term2 in /saves/mame/artwork/
