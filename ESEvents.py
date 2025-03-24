@@ -40,8 +40,8 @@ def load_config():
     global config
     config.read('config.ini')
     if config['Settings']['logFile'] == "true":
-        #logging.basicConfig(level=logging.INFO)
-        logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
+        logging.basicConfig(level=logging.INFO)
+        #logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
         logging.getLogger('werkzeug').setLevel(logging.INFO)
         logging.info("Start logging")
 
@@ -1161,6 +1161,57 @@ def keyboard_listener():
     keyboard.on_press(on_pressed)
     keyboard.wait()
 
+def monitor_emulationstation():
+    """Surveille le processus emulationstation.exe et exécute Stop.bat à sa fermeture."""
+    logging.info("Démarrage du thread de surveillance pour emulationstation.exe")
+    not_found_logged = False
+    # Attendre l'apparition de emulationstation.exe
+    while True:
+        try:
+            result = subprocess.run('tasklist /FI "IMAGENAME eq emulationstation.exe"',
+                                     shell=True, check=True,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                     creationflags=creation_flags)
+            output = result.stdout.decode('cp850', errors='ignore')
+            if "emulationstation.exe" in output:
+                logging.info("emulationstation.exe détecté, début de la surveillance.")
+                break  # processus trouvé, sortir de la boucle d'attente
+            else:
+                if not not_found_logged:
+                    logging.info("Attente du lancement de emulationstation.exe...")
+                    not_found_logged = True
+        except subprocess.CalledProcessError:
+            # La commande tasklist peut renvoyer une erreur si aucun processus trouvé
+            if not not_found_logged:
+                logging.info("Attente du lancement de emulationstation.exe...")
+                not_found_logged = True
+        time.sleep(1)
+
+    # Surveillance tant que le processus est actif
+    while True:
+        try:
+            result = subprocess.run('tasklist /FI "IMAGENAME eq emulationstation.exe"',
+                                     shell=True, check=True,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                     creationflags=creation_flags)
+            output = result.stdout.decode('cp850', errors='ignore')
+            if "emulationstation.exe" not in output:
+                logging.info("emulationstation.exe a été fermé.")
+                break  # processus fermé, sortir de la boucle de surveillance
+        except subprocess.CalledProcessError:
+            # Si la commande échoue, considérer que le processus n'est plus là
+            logging.info("emulationstation.exe a été fermé.")
+            break
+        time.sleep(5)
+
+    # Exécuter Stop.bat pour arrêter tous les processus associés
+    stop_bat_path = os.path.join(config['Settings']['RetroBatPath'], 'plugins', 'MarqueeManager', 'Stop.bat')
+    logging.info("Exécution de Stop.bat suite à l'arrêt de emulationstation.exe")
+    try:
+        subprocess.Popen(f'"{stop_bat_path}"', shell=True, creationflags=creation_flags)
+    except Exception as e:
+        logging.error(f"Erreur lors de l'exécution de Stop.bat : {e}")
+
 if __name__ == '__main__':
     load_config()
     #systems_config = load_systems_config(os.path.join(config['Settings']['RetroBatPath'], 'emulationstation', '.emulationstation', 'es_systems.cfg'))
@@ -1191,3 +1242,9 @@ if __name__ == '__main__':
        launch_process("SUPERMODELListenerWS.exe")
     if config['Settings']['ActiveDMD'] == "true":
        launch_process("dmd/dmd.exe")
+
+    # Démarrer le thread de surveillance d'EmulationStation si l'option est activée
+    if config['Settings']['ESCloseAllIfStop'] == "true":
+        es_thread = threading.Thread(target=monitor_emulationstation)
+        es_thread.start()
+        logging.info(f"EmulationStation monitoring thread started: {es_thread.is_alive()}")
