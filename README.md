@@ -127,7 +127,7 @@ Create DMD : https://www.youtube.com/watch?v=hgdIUG90M0c <br>
 Install 5.1.7 fw : https://github.com/zesinger/ZeDMD_Updater2/releases ( with fw here https://github.com/PPUC/ZeDMD/releases/ )<br>
 Tips : <br>
 - Set USB Package to 512 and min refresh rate to 60 if 128x32 DMD.<br>
-- If you want to keep gif animation : MarqueeAutoGeneration = false , MarqueeAutoConvert = false , MarqueeCompose = false
+- If you want to keep gif animation : MarqueeAutoGeneration = false, MarqueeCompose = false
 <br><br><br>
 To run a ZeDMD DMD with Visual Pinball, launch the Visual Pinball installation via RetroBat<br>
 1) Retrieve version 10.8 of Visual Pinball (if not yet stable) and place it in the folder emulators/vpinball :<br>
