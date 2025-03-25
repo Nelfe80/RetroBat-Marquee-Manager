@@ -669,6 +669,31 @@ def resize_and_crop(image, target_width, target_height):
     image_cropped = image_resized.crop((left, top, right, bottom))
     return image_cropped
 
+RGB_CACHE_DIR = os.path.join(CACHE_DIR, '.rgbcache')
+def ensure_rgb_cache_dir():
+    if not os.path.exists(RGB_CACHE_DIR):
+        os.makedirs(RGB_CACHE_DIR)
+
+def image_to_rgb888_array(image, target_width, target_height):
+    """
+    Convertit une image PIL en tableau RGB888 (3 octets par pixel), aligné sur 32 bits.
+    """
+    if image.size != (target_width, target_height):
+        image = image.resize((target_width, target_height), Image.LANCZOS)
+
+    data = np.asarray(image.convert("RGB"), dtype=np.uint8)
+    aligned_data = np.ascontiguousarray(data, dtype=np.uint8)
+    return np.ctypeslib.as_ctypes(aligned_data.flatten())
+
+def save_rgb888_buffer(buffer, path):
+    with open(path, 'wb') as f:
+        f.write(buffer)
+
+def load_rgb888_buffer(path):
+    with open(path, 'rb') as f:
+        data = f.read()
+        return (ctypes.c_uint8 * len(data)).from_buffer_copy(data)
+
 def image_to_rgb565_array(image, target_width, target_height):
     """
     Convertit l'image en RGB565 de façon rapide.
@@ -696,9 +721,9 @@ def get_image_type(image_path):
 # Pour la conversion en PNG, on conserve les fonctions d'origine
 def convert_image_to_png(image_path, width, height, system):
     ensure_cache_dir()
+    ensure_rgb_cache_dir()
     image = Image.open(image_path).convert("RGBA")
 
-    # Si le fichier est exactement "_cache_dmd.png", utiliser resize_and_crop, sinon resize_and_pad
     if os.path.basename(image_path) == "_cache_dmd.png":
         image = resize_and_crop(image, width, height)
     else:
@@ -706,12 +731,23 @@ def convert_image_to_png(image_path, width, height, system):
 
     image_type = get_image_type(image_path)
     if image_type == "game":
-        png_path = os.path.join(CACHE_DIR, f"{os.path.splitext(os.path.basename(image_path))[0]}_{system}.png")
+        png_filename = f"{os.path.splitext(os.path.basename(image_path))[0]}_{system}.png"
     else:
-        png_path = os.path.join(CACHE_DIR, f"{os.path.splitext(os.path.basename(image_path))[0]}.png")
+        png_filename = f"{os.path.splitext(os.path.basename(image_path))[0]}.png"
+
+    png_path = os.path.join(CACHE_DIR, png_filename)
+    rgb_path = os.path.join(RGB_CACHE_DIR, os.path.splitext(png_filename)[0] + '.rgb888')
 
     image.save(png_path, format="PNG")
     print(f"Converted image to PNG and saved to cache: {png_path}")
+
+    try:
+        buffer = image_to_rgb888_array(image, width, height)
+        save_rgb888_buffer(buffer, rgb_path)
+        print(f"Pré-génération du buffer RGB888 enregistrée : {rgb_path}")
+    except Exception as e:
+        print(f"Erreur lors de la génération du buffer RGB888 : {e}")
+
     return png_path
 
 # Pour la conversion en GIF, on conserve les  fonctions d'origine
@@ -1101,32 +1137,71 @@ if lib:
 
             # Gestion des PNG statiques
             else:
+
+                # Générer le PNG si manquant
                 if not os.path.exists(png_path):
-                    print(f"Conversion de {image_path} en PNG.")
+                    print(f"{png_path} manquant. Génération depuis {image_path}...")
                     png_path = convert_image_to_png(image_path, width, height, system)
 
-                if not os.path.exists(png_path):
-                    print(f"Le fichier {png_path} n'a pas pu être créé.")
+                ensure_rgb_cache_dir()
+                png_filename = os.path.basename(png_path)
+                base_rgb_path = os.path.join(RGB_CACHE_DIR, os.path.splitext(png_filename)[0] + '.rgb888')
+
+                # Cas spécial : _cache_dmd.png → toujours recharger et convertir à la volée (pas de cache RGB888)
+                if os.path.basename(image_path) == '_cache_dmd.png':
+                    print("_cache_dmd.png détecté – lecture directe sans cache RGB888.")
+                    try:
+                        with Image.open(png_path) as img:
+                            buffer = image_to_rgb888_array(img, width, height)
+                    except Exception as e:
+                        print(f"Erreur lors du traitement de _cache_dmd.png : {e}")
+                        return
+
+                    curr = np.ctypeslib.as_array(buffer)
+                    self.previous_frame = np.copy(curr)
+                    print("Affichage direct de _cache_dmd.png en RGB888.")
+                    self.zedmd.render_rgb24(buffer)
                     return
 
-                # Charger l'image et convertir en RGB565
-                try:
-                    with Image.open(png_path) as img:
-                        buffer = image_to_rgb565_array(img, width, height)
-                except Exception as e:
-                    print(f"Erreur lors de l'ouverture de {png_path} : {e}")
-                    return
+                # Vérification à la volée : l'image source est-elle plus récente que le buffer RGB888 ?
+                if os.path.exists(image_path) and os.path.exists(base_rgb_path):
+                    if os.path.getmtime(image_path) > os.path.getmtime(base_rgb_path):
+                        print("L'image source est plus récente que le buffer RGB888. Régénération en cours.")
+                        try:
+                            with Image.open(png_path) as img:
+                                buffer = image_to_rgb888_array(img, width, height)
+                                save_rgb888_buffer(buffer, base_rgb_path)
+                        except Exception as e:
+                            print(f"Erreur de régénération du buffer RGB888 : {e}")
 
-                # Vérifier si l'image est identique à la précédente pour éviter un rendu inutile
+                # Tentative de chargement depuis le cache mémoire
+                buffer = server.image_cache.get(png_path)
+
+                if not buffer:
+                    # Tentative de lecture depuis fichier .rgb888
+                    if os.path.exists(base_rgb_path):
+                        print("Chargement du buffer RGB888 depuis le cache disque.")
+                        buffer = load_rgb888_buffer(base_rgb_path)
+                    else:
+                        try:
+                            with Image.open(png_path) as img:
+                                buffer = image_to_rgb888_array(img, width, height)
+                                save_rgb888_buffer(buffer, base_rgb_path)
+                                print("Buffer RGB888 généré et sauvegardé.")
+                        except Exception as e:
+                            print(f"Erreur lors de l'ouverture de {png_path} : {e}")
+                            return
+                    # Mise en cache mémoire
+                    server.image_cache[png_path] = buffer
+
                 curr = np.ctypeslib.as_array(buffer)
                 if hasattr(self, "previous_frame") and np.array_equal(self.previous_frame, curr):
                     print("Aucune modification détectée dans l'image statique, mise à jour ignorée.")
                     return
 
-                # Envoyer l'image au DMD
-                print("Affichage de l'image statique mise à jour.")
+                print("Affichage de l'image statique RGB888 mise à jour.")
                 self.previous_frame = np.copy(curr)
-                self.zedmd.render_rgb565(buffer)
+                self.zedmd.render_rgb24(buffer)
 
             # Si c'est un GIF, lancer l'animation
             if gif_path and os.path.exists(gif_path):
@@ -1278,7 +1353,7 @@ if lib:
         try:
             server.zedmd.enable_debug()  # Activer le mode débogage si besoin
             server.start()
-            threading.Thread(target=server.keep_dmd_alive, daemon=True).start()
+            #threading.Thread(target=server.keep_dmd_alive, daemon=True).start()
 
             # Lancer la surveillance du fichier si ActiveDMD est activé dans la config
             if config['Settings'].getboolean('ActiveDMD'):
