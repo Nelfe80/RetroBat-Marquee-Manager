@@ -1353,7 +1353,7 @@ if lib:
         try:
             server.zedmd.enable_debug()  # Activer le mode débogage si besoin
             server.start()
-            #threading.Thread(target=server.keep_dmd_alive, daemon=True).start()
+            threading.Thread(target=server.keep_dmd_alive, daemon=True).start()
 
             # Lancer la surveillance du fichier si ActiveDMD est activé dans la config
             if config['Settings'].getboolean('ActiveDMD'):

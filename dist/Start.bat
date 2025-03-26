@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+cd /d %~dp0
 
 :: Vérifier et fermer ESEvents.exe si en cours d'exécution
 tasklist | find /I "ESEvents.exe" > NUL

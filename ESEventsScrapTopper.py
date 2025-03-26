@@ -159,8 +159,8 @@ def scrape_marquee(game_system, game_title, game_name, marquee_path, full_marque
 
     # Préparation des paramètres pour l'appel API
     api_params = {
-        'devid': '',
-        'devpassword': '',
+        'devid': 'Nelfe',
+        'devpassword': 'y8dI5PyYsyM',
         'softname': 'Retrobat-Marquee-Manager-v.3.0',
         'output': 'json',
         'ssid': es_settings['ScreenScraperUser'],
