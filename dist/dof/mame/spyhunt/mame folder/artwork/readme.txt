@@ -1,0 +1,1 @@
+Push the zip spyhunt in /saves/mame/artwork/
