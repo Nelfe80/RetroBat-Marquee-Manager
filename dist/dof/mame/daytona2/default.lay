@@ -7,45 +7,21 @@
 	<element name="marquee">
 		<image file="daytona2_marquee.png" />
 	</element>
-	<element name="lamp_start">
-		<image file="lamp_start.png" state="0" />
-	</element>
 	<element name="lamp_leader">
-		<image file="lamp_raceleader" state="0" />
+		<image file="lamp_raceleader.png" state="0" />
 	</element>
-	<element name="lamp_1">
-		<image file="lamp_1.png" state="0" />
+	<element name="lamp_left">
+		<image file="lamp_left.png" state="0" />
 	</element>
-	<element name="lamp_2">
-		<image file="lamp_2.png" state="0" />
-	</element>
-	<element name="lamp_3">
-		<image file="lamp_3.png" state="0" />
-	</element>
-	<element name="lamp_4">
-		<image file="lamp_4.png" state="0" />
+	<element name="lamp_right">
+		<image file="lamp_right.png" state="0" />
 	</element>
 	
 	<element name="marquee_dmd">
 		<image file="daytona2_marquee_dmd.png" />
 	</element>
-	<element name="lamp_start_dmd">
-		<image file="lamp_start_dmd.png" state="0" />
-	</element>
 	<element name="lamp_leader_dmd">
 		<image file="lamp_leader_dmd.png" state="0" />
-	</element>
-	<element name="lamp_1_dmd">
-		<image file="lamp_1_dmd.png" state="0" />
-	</element>
-	<element name="lamp_2_dmd">
-		<image file="lamp_2_dmd.png" state="0" />
-	</element>
-	<element name="lamp_3_dmd">
-		<image file="lamp_3_dmd.png" state="0" />
-	</element>
-	<element name="lamp_4_dmd">
-		<image file="lamp_4_dmd.png" state="0" />
 	</element>
 
 <!-- Define Views -->	
@@ -53,23 +29,14 @@
 		<element ref="marquee">
 			<bounds x="0" y="0" width="1920" height="360" />
 		</element>
-		<element name="LampStart" ref="lamp_start">
-			<bounds x="1335" y="241" width="73" height="88" />
-		</element>
-		<element name="LampView1" ref="lamp_1">
-			<bounds x="1411" y="243" width="57" height="87" />
-		</element>
-		<element name="LampView2" ref="lamp_2">
-			<bounds x="1469" y="242" width="54" height="89" />
-		</element>
-		<element name="LampView3" ref="lamp_3">
-			<bounds x="1523" y="243" width="52" height="88" />
-		</element>
-		<element name="LampView4" ref="lamp_4">
-			<bounds x="1575" y="243" width="55" height="87" />
-		</element>		
 		<element name="LampLeader" ref="lamp_leader">
-			<bounds x="0" y="225" width="762" height="133" />
+			<bounds x="0" y="0" width="1920" height="360" />
+		</element>
+		<element name="LampLeader" ref="lamp_left">
+			<bounds x="0" y="0" width="239" height="360" />
+		</element>
+		<element name="LampLeader" ref="lamp_right">
+			<bounds x="1681" y="0" width="239" height="360" />
 		</element>
 	</view>
 	
@@ -77,21 +44,6 @@
 		<element ref="marquee_dmd">
 			<bounds x="0" y="0" width="256" height="64" />
 		</element>
-		<element name="LampStart" ref="lamp_start_dmd">
-			<bounds x="0" y="0" width="52" height="64" />
-		</element>
-		<element name="LampView1" ref="lamp_1_dmd">
-			<bounds x="52" y="0" width="35" height="64" />
-		</element>
-		<element name="LampView2" ref="lamp_2_dmd">
-			<bounds x="87" y="0" width="32" height="64" />
-		</element>
-		<element name="LampView3" ref="lamp_3_dmd">
-			<bounds x="119" y="0" width="32" height="64" />
-		</element>
-		<element name="LampView4" ref="lamp_4_dmd">
-			<bounds x="151" y="0" width="34" height="64" />
-		</element>		
 		<element name="LampLeader" ref="lamp_leader_dmd">
 			<bounds x="0" y="0" width="256" height="64" />
 		</element>

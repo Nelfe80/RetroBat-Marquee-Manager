@@ -67,7 +67,7 @@ Visual Rendering > BGFX Video Filter > CRT Simulation
 
 TERMINATOR 2
 Artworks layout on the git MarqueeManager 
-push aburner2.zip layout in /saves/mame/artwork/
+push term2.zip layout in /saves/mame/artwork/
 Emulator > MAME64
 Drivers > Video > BGFX
 Visual Rendering > Disable Artwork > No
