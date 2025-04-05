@@ -11,9 +11,13 @@ Config by game :
 
 CHASEHQ
 chasehq.zip rev 2 rom 
+push chasehq.zip layout in /saves/mame/artwork/
+push chasehq.cfg in bios/mame/cfg/
 Advanced game option : 
 Emulator > Libreto MAME or MAME64
 Visual Rendering > Disable Artwork > No
+Drivers > Video > BGFX
+Visual Rendering > BGFX Video Filter > CRT Simulation
 
 LUNAR LANDER
 llander.zip
