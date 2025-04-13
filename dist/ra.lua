@@ -1781,8 +1781,9 @@ end
 -- #####################################
 
 function show_achievements(callback)
+    -- Mise à jour des dimensions d'affichage
     update_screen_dimensions(function()
-        -- Les dimensions sont mises à jour ici
+        -- Les dimensions (image_width, image_height, etc.) sont mises à jour ici
     end)
 
     if next(achievements_data) == nil then
@@ -1791,47 +1792,43 @@ function show_achievements(callback)
         return
     end
 
-    -- Filtrer et trier les achievements débloqués
-    local unlocked = {}
-    for id, ach in pairs(achievements_data) do
+    -- Comptage du nombre d'achievements débloqués
+    local numAchievementsUnlocked = 0
+    for _, ach in pairs(achievements_data) do
         if ach.Unlock == "True" then
-            table.insert(unlocked, {id = id, data = ach})
+            numAchievementsUnlocked = numAchievementsUnlocked + 1
         end
     end
-    table.sort(unlocked, function(a, b)
-        return tonumber(a.data.DisplayOrder) < tonumber(b.data.DisplayOrder)
-    end)
-    local numUnlocked = #unlocked
 
-    -- Définition des paramètres d'affichage selon le mode
-    local xPos, yPos, badgeSize, spacing, yPosAdjustment
-    if isDMD then
-        -- Pour un DMD, chaque badge doit mesurer 32 de haut (et on suppose 32 de large pour un rendu carré)
-        xPos = 2
-        yPos = 2  -- marge verticale de départ
-        badgeSize = 28
-        spacing = 2  -- espacement entre badges
-        yPosAdjustment = 0  -- éventuellement à ajuster pour centrer verticalement
-    else
-        -- Paramètres par défaut pour un écran LCD
-        xPos = 4
-        yPos = 14
-        badgeSize = 64
-        spacing = 4
-        yPosAdjustment = 54
+    -- Construction d'une liste complète des achievements
+    local sorted_achievements = {}
+    for id, ach in pairs(achievements_data) do
+        table.insert(sorted_achievements, {id = id, data = ach})
     end
 
-    -- Calcul du nombre maximum de badges pouvant tenir horizontalement
-    local maxBadges = math.floor((image_width - xPos) / (badgeSize + spacing))
+    -- Tri des achievements : on place en premier les achievements débloqués
+    table.sort(sorted_achievements, function(a, b)
+        local unlockA = a.data.Unlock == "True"
+        local unlockB = b.data.Unlock == "True"
+        if unlockA == unlockB then
+            return tonumber(a.data.DisplayOrder) < tonumber(b.data.DisplayOrder)
+        else
+            return unlockA and not unlockB
+        end
+    end)
 
     if isDMD then
-        -- Pour le DMD, n'afficher que les derniers achievements débloqués
-        local startIndex = math.max(1, numUnlocked - maxBadges + 1)
+        -- Affichage pour le DMD
+        local xPos = 2
+        local yPos = 2           -- marge verticale de départ
+        local badgeSize = 28     -- badge approximativement carré
+        local spacing = 2        -- espacement entre badges
         local order = 10
-        -- Position verticale : placer les badges en bas de l'écran (adaptation possible selon vos besoins)
+        local maxBadges = math.floor((image_width - xPos) / (badgeSize + spacing))
+        local startIndex = math.max(1, numAchievementsUnlocked - maxBadges + 1)
         local badgeY = image_height - badgeSize - yPos
-        for i = startIndex, numUnlocked do
-            local achievement = unlocked[i]
+        for i = startIndex, numAchievementsUnlocked do
+            local achievement = sorted_achievements[i]
             local achievementName = "AchievementImage" .. achievement.id
             create(achievementName, "image", {
                 image_path = achievement.data.BadgeURL,
@@ -1845,45 +1842,70 @@ function show_achievements(callback)
             xPos = xPos + badgeSize + spacing
             order = order + 1
         end
+        if callback then callback() end
     else
-        -- Pour un écran LCD, on conserve l'affichage habituel (ici, on affiche jusqu'à 5 achievements)
-        local sorted_achievements = {}
-        for id, ach in pairs(achievements_data) do
-            table.insert(sorted_achievements, {id = id, data = ach})
-        end
-        table.sort(sorted_achievements, function(a, b)
-            local unlockA = a.data.Unlock == "True"
-            local unlockB = b.data.Unlock == "True"
-            if unlockA == unlockB then
-                return tonumber(a.data.DisplayOrder) < tonumber(b.data.DisplayOrder)
-            else
-                return unlockA and not unlockB
-            end
-        end)
-        local startIndexLCD = math.max(1, numUnlocked - 5)
-        local endIndexLCD = math.min(startIndexLCD + maxBadges - 1, #sorted_achievements)
+        -- Affichage pour l'écran LCD (comportement originel)
+        local xPos = 4
+        local yPos = 14       -- position de base en Y pour les achievements verrouillés
+        local imageWidth = 64
+        local imageHeight = 64
+        local imageSpacing = 4
         local order = 10
-        for i = startIndexLCD, endIndexLCD do
+        local maxAchievementsPerLine = math.floor((image_width - xPos) / (imageWidth + imageSpacing))
+        local startIndex = math.max(1, numAchievementsUnlocked - 5)
+        local endIndex = math.min(startIndex + maxAchievementsPerLine - 1, #sorted_achievements)
+        
+        -- Affichage des achievements
+        for i = startIndex, endIndex do
             local achievement = sorted_achievements[i]
             local achievementName = "AchievementImage" .. achievement.id
+            -- Les achievements verrouillés restent à la position basse (image_height - yPos)
             create(achievementName, "image", {
                 image_path = achievement.data.BadgeURL,
                 x = xPos,
                 y = image_height - yPos,
-                w = badgeSize,
-                h = badgeSize,
+                w = imageWidth,
+                h = imageHeight,
                 show = true,
                 opacity_decimal = 1
             }, order)
-            xPos = xPos + badgeSize + spacing
+            xPos = xPos + imageWidth + imageSpacing
             order = order + 1
         end
+
+        -- Animation : déplacer vers le haut uniquement les achievements débloqués
+        local index = 1
+        local yPosAdjustment = 54  -- décalage vertical pour l'animation
+        local function animate_next_achievement()
+            if index > #sorted_achievements or index > 10 then
+                if callback then callback() end
+                return  -- Fin de l'animation après 10 itérations ou lorsque tous les achievements ont été traités
+            end
+
+            local achievement = sorted_achievements[index]
+            local achievementName = "AchievementImage" .. achievement.id
+
+            if achievement.data.Unlock == "True" then
+                local currentXPos = get_object_property(achievementName, "x")
+                if currentXPos == nil then
+                    print("Impossible de récupérer la position x pour " .. achievementName)
+                    index = index + 1
+                    animate_next_achievement()
+                    return
+                end
+
+                -- Animation : déplacement vertical vers une position plus haute
+                local newY = image_height - yPos - yPosAdjustment
+                set_object_properties(achievementName, {y = newY})
+            end
+
+            index = index + 1
+            animate_next_achievement()
+        end
+        animate_next_achievement()
     end
-
-    -- (Optionnel) Animation ou mise à jour supplémentaire des badges peut être ajoutée ici
-
-    if callback then callback() end
 end
+
 
 
 local score = 0
