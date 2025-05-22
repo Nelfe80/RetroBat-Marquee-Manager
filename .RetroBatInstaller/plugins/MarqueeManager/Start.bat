@@ -1,5 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
+:: force good folder
+cd /d %~dp0
 
 :: Vérifier et fermer ESEvents.exe si en cours d'exécution
 tasklist | find /I "ESEvents.exe" > NUL
@@ -17,6 +19,14 @@ if not errorlevel 1 taskkill /IM ESRetroAchievements.exe /F
 tasklist | find /I "VPListenerWS.exe" > NUL
 if not errorlevel 1 taskkill /IM VPListenerWS.exe /F
 
+:: Vérifier et fermer MAMEListenerWS.exe si en cours d'exécution
+tasklist | find /I "MAMEListenerWS.exe" > NUL
+if not errorlevel 1 taskkill /IM MAMEListenerWS.exe /F
+
+:: Vérifier et fermer SUPERMODELListenerWS.exe si en cours d'exécution
+tasklist | find /I "SUPERMODELListenerWS.exe" > NUL
+if not errorlevel 1 taskkill /IM SUPERMODELListenerWS.exe /F
+
 :: Vérifier et fermer ESRetroAchievements.exe si en cours d'exécution
 tasklist | find /I "retroarch.exe" > NUL
 if not errorlevel 1 taskkill /IM retroarch.exe /F
@@ -32,6 +42,9 @@ if not errorlevel 1 taskkill /IM dmd.exe /F
 :: Vérifier et fermer emulationstation.exe si en cours d'exécution
 tasklist | find /I "emulationstation.exe" > NUL
 if not errorlevel 1 taskkill /IM emulationstation.exe /F
+
+:: Supprimer le dossier .temp contenant les anciennes instances du MarqueeManager
+rd /s /q ".\.tmp"
 
 :: Démarrer ESEvents.exe
 start ESEvents.exe
