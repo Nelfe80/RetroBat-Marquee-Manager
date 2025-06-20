@@ -39,19 +39,27 @@ config = configparser.ConfigParser()
 def load_config():
     global config
     config.read('config.ini')
+
     if config['Settings']['logFile'] == "true":
-        logging.basicConfig(level=logging.INFO)
-        #logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
+        #logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(filename="ESEvents.log", level=logging.INFO)
         logging.getLogger('werkzeug').setLevel(logging.INFO)
         logging.info("Start logging")
 
+    logging.info(f"Clés Settings lues : {list(config['Settings'].keys())}")
     current_working_dir = os.getcwd()  # C:\RetroBat\plugins\MarqueeManager\
 
     def update_path(setting, default_path):
-        logging.info(f"update_path {setting} {default_path}")
-        # Vérifier si la variable n'existe pas ou n'est pas un lien absolu
-        if setting not in config['Settings'] or not os.path.isabs(config['Settings'].get(setting, '')):
+        logging.info(f"update_path {setting} (défaut) {default_path}")
+        # Récupère la valeur existante, ou chaîne vide si absente
+        current = config['Settings'].get(setting, '').strip()
+        # Si pas de valeur, ou pas un chemin absolu, on force la valeur par défaut
+        if not current:
             config['Settings'][setting] = default_path
+            logging.info(f"    {setting} défini à {default_path}")
+        else:
+            config['Settings'][setting] = current
+            logging.info(f"    {setting} conservé ({current})")
 
     logging.info(f"{current_working_dir}")
     if config['Settings']['logFile'] == "true":
@@ -897,7 +905,7 @@ def parse_path(action, params, systems_config):
 
     # SYSTEM / COLLECTION
     elif action == 'system-selected' :
-        if system_folder == True and system_essystems == True:
+        if system_folder or system_essystems:
             system_name = param1
             logging.info(f"PP system : {system_name}, system_folder : {system_folder}, system_essystems {system_essystems}")
             return 'system', system_name, system_folder, system_essystems, ''
