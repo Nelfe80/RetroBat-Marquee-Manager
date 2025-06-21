@@ -11,6 +11,7 @@ import logging
 import re
 import threading
 import time
+from functools import lru_cache
 
 creation_flags = 0
 if sys.platform == "win32":  # Uniquement pour Windows
@@ -36,6 +37,7 @@ def check_and_launch_dmd():
             dmd_check_in_progress = False
 
 config = configparser.ConfigParser()
+@lru_cache(maxsize=2048)
 def load_config():
     global config
     config.read('config.ini')
@@ -80,6 +82,7 @@ def load_config():
 
 
 systems_config = None
+@lru_cache(maxsize=2048)
 def load_systems_config(xml_relative_path):
     script_dir = os.path.dirname(os.path.realpath(__file__))
     xml_path = os.path.join(script_dir, xml_relative_path)
@@ -113,6 +116,7 @@ def load_systems_config(xml_relative_path):
 
     return system_folders
 
+@lru_cache(maxsize=2048)
 def load_all_systems_configs(config_directory):
     all_system_folders = {}
 
@@ -225,6 +229,7 @@ def convert_image(img_path, target_img_path):
     subprocess.run(convert_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation_flags)
     return target_img_path
 
+@lru_cache(maxsize=2048)
 def find_marquee_for_collection(game_name):
     logging.info(f"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
     logging.info(f"FMF find_marquee_for_collection")
@@ -262,7 +267,9 @@ def find_marquee_for_collection(game_name):
     return None
 
 full_marquee_path = None
-def find_system_marquee(system_name, folder_rom_name, systems_config):
+@lru_cache(maxsize=2048)
+def find_system_marquee(system_name, folder_rom_name):
+    global systems_config
     logging.info(f"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     logging.info(f"FMF find_system_marquee")
     marquee_structure = config['Settings']['SystemFilePath']
@@ -294,7 +301,9 @@ current_system_name = None
 current_game_name = None
 current_game_title = None
 current_rom_path = None
-def find_marquee_file(type, param1, param2, param3, param4, systems_config):
+@lru_cache(maxsize=2048)
+def find_marquee_file(type, param1, param2, param3, param4):
+    global systems_config
     global current_system_name, current_game_name, current_game_title, current_rom_path
 
     logging.info(f"##################################################")
@@ -310,7 +319,7 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
         marquee_file = find_marquee_for_collection(param1)
         if not marquee_file:
             folder_rom_name = systems_config.get(param1, param1)
-            marquee_file = find_system_marquee(param1, folder_rom_name, systems_config)
+            marquee_file = find_system_marquee(param1, folder_rom_name)
         if marquee_file:
             logging.info(f"FMF Found collection : {marquee_file}")
             return marquee_file
@@ -318,7 +327,7 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
     elif type == 'system':
         logging.info(f"############# SYSTEM ###############")
         folder_rom_name = systems_config.get(param1, param1)
-        marquee_file = find_system_marquee(param1, folder_rom_name, systems_config)
+        marquee_file = find_system_marquee(param1, folder_rom_name)
         if marquee_file:
             #system_name = {param1}
             logging.info(f"FMF Found system : {marquee_file}")
@@ -389,7 +398,7 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
 
         # Affichage system si aucun marquee trouvé pour le jeu
         folder_rom_name = systems_config.get(param1, param1)
-        marquee_file = find_system_marquee(param1, folder_rom_name, systems_config)
+        marquee_file = find_system_marquee(param1, folder_rom_name)
         if marquee_file:
             logging.info(f"FMF Found system : {marquee_file}")
             return marquee_file
@@ -398,7 +407,9 @@ def find_marquee_file(type, param1, param2, param3, param4, systems_config):
     logging.info(f"FMF Using the default image : {config['Settings']['DefaultImagePath']}")
     return config['Settings']['DefaultImagePath']
 
-def find_fanart_file(file_type, param1, param2, param3, param4, systems_config):
+@lru_cache(maxsize=2048)
+def find_fanart_file(file_type, param1, param2, param3, param4):
+    global systems_config
     """
     Renvoie le chemin du fanart en fonction du type.
 
@@ -476,6 +487,7 @@ def clean_rom_name(rom_name):
     cleaned_name = re.sub(r'\s*\d+-in-\d+', '', cleaned_name)
     return cleaned_name
 
+@lru_cache(maxsize=2048)
 def find_file(base_path):
     logging.info(f"#########################################>>>>>")
     logging.info(f"#####>>>> FF FIND FILE TEST : {base_path}")
@@ -597,6 +609,7 @@ def analyze_image(image_path):
 
     return horizontal_region, vertical_region
 
+@lru_cache(maxsize=2048)
 def find_game_info_in_gamelist(game_name, system_name, roms_path):
     gamelist_path = os.path.join(roms_path, system_name, "gamelist.xml")
     if not os.path.exists(gamelist_path):
@@ -948,8 +961,8 @@ def execute_command(action, params, systems_config):
 
         logging.info(f"EE find_marquee_file type {type}, param1 {param1} ,param2 {param2}, param3 {param3} ,param4 {param4}")
         logging.info(f"EE find_fanart_file type {type}, param1 {param1} ,param2 {param2}, param3 {param3} ,param4 {param4}")
-        marquee_file = find_marquee_file(type, param1, param2, param3, param4, systems_config)
-        fanart_file = find_fanart_file(type, param1, param2, param3, param4, systems_config)
+        marquee_file = find_marquee_file(type, param1, param2, param3, param4)
+        fanart_file = find_fanart_file(type, param1, param2, param3, param4)
         #if marquee_file == 'marquee_compose':
         #    return json.dumps({"status": "success", "message": "marquee_compose"})
         #escaped_marquee_file = escape_file_path(marquee_file)
