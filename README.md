@@ -30,7 +30,7 @@ Configure config.ini ( in the folder /RetroBat/plugins/MarqueeManager/ ) to spec
 </p>
 <p>
 <h3>ScreenNumber = 2</h3>
-This parameter specifies which screen the marquee should be displayed on. If you have multiple monitors connected to your system, you can assign the marquee to a particular screen by setting this parameter.<br>
+This parameter specifies which screen the marquee should be displayed on. If you have multiple monitors connected to your system, you can assign the marquee to a particular screen by setting this parameter (0 -> n).<br>
 
 Example: ScreenNumber = 2 directs the marquee display to the second monitor connected to your setup.<br>
 You can configure this setting manually by editing the config.ini file or through the BatGui interface, where you can select the appropriate screen number from a dropdown menu.<br>
@@ -145,5 +145,6 @@ enabled = true<br>
  [virtualdmd] <br>
 enabled = false <br>
 </p>
+
 
 
