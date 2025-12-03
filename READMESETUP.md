@@ -118,8 +118,8 @@ You can also create a Windows startup shortcut to launch StartRetrobatMarquees.b
 Compile Python Scripts: <br>
 Use PyInstaller to compile ESEvents.py and ESEventPush.py into executables. This ensures that EmulationStation does not lose focus when these scripts are executed. Use the command:
 </p>
-<codepyinstaller --onefile --runtime-tmpdir ".tmp" --noconsole ESEvents.py</code>
-<codepyinstaller --onefile --runtime-tmpdir ".tmp" --noconsole ESEventPush.py</code>
+<code>pyinstaller --onefile --runtime-tmpdir ".tmp" --noconsole ESEvents.py</code>
+<code>pyinstaller --onefile --runtime-tmpdir ".tmp" --noconsole ESEventPush.py</code>
 <h4>Placement of Compiled Scripts:</h4>
 <p>
 Place ESEventPush.exe in each script folder within EmulationStation where you want to trigger marquee changes. Common folders include game-start, game-select or game-selected, system-select or system-selected.
