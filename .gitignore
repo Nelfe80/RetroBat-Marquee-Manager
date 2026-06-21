@@ -1,0 +1,26 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+.vs/
+*.code-workspace
+
+# Common build outputs
+**/bin/
+**/obj/
+**/artifacts/
+
+# Logs / temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.old
+logs/
+temp/
+cache/
+
+# Zip files
+*.zip
