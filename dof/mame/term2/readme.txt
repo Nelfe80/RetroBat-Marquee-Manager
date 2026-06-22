@@ -1,0 +1,1 @@
+Push term2.zip (in mame/artwork folder) in saves\mame\artwork\

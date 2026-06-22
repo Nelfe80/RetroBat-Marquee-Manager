@@ -1,0 +1,1 @@
+Push the zip skydiver in /saves/mame/artwork/

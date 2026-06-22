@@ -1,0 +1,138 @@
+[Settings]
+; Core Paths (Uncomment to override Registry detection)
+;RetroBatPath=C:\RetroBat
+;RomsPath=C:\RetroBat\roms
+IMPath=tools\imagemagick\convert.exe
+; Marquee Settings
+MarqueeBackgroundColor=Black
+MarqueeBackgroundCodeColor=#000000
+MarqueeCompose=true
+; Options: fanart | image (boxart/screenshot)
+ComposeMedia=fanart
+; Options: standard | gradient-left | gradient-right | gradient-standard
+MarqueeLayout=gradient-standard
+MarqueeAutoConvert=true
+MarqueeVideoGeneration=false
+GenerateMarqueeVideoFolder=generated_videos
+; FFmpeg Hardware Encoding (empty=software, h264_nvenc, h264_amf, h264_qsv)
+FfmpegHwEncoding=
+; RetroAchievements
+MarqueeRetroAchievements=false
+; Options: both | mpv | dmd
+MarqueeRetroAchievementsDisplayTarget=both
+; Options: score,badges,count,items,challenge
+MarqueeRetroAchievementsOverlays=score,badges,count,items,challenge
+; Specific overlays for MPV/DMD (if empty, uses MarqueeRetroAchievementsOverlays)
+MpvRetroAchievementsOverlays=
+DmdRetroAchievementsOverlays=
+; Display Achievements/Challenges popups on MPV or DMD
+MpvRetroAchievementsNotifications=true
+DmdRetroAchievementsNotifications=true
+; Generate your Web API Key at: https://retroachievements.org/settings
+RetroAchievementsWebApiKey=
+RAFontFamily=
+MinimizeToTray=true
+; AutoStart mode: false (disabled) | windows (Windows Startup) | retrobat (RetroBat start script)
+AutoStart=false
+AcceptedFormats=png,jpg,jpeg,svg,mp4,gif
+; Logging
+LogToFile=true
+LogFilePath=logs\debug.log
+; Advanced
+CollectionCorrelation=all:allgames,favorites:favorites,windowsgames:windows,2players:auto-at2players,4players:auto-at4players,zsegastv:segastv,ztaito:taito,zgaelco:gaelco,recent:auto-lastplayed,vertical:auto-verticalarcade,zmodel2:model2,zmodel3:model3,zcps1:cps1,zsega:sega
+SystemAliases=gamecube:gc,gw:gameandwatch,segamegadrive:megadrive,atarijaguargroup:atarijaguar,dos:pc
+
+[ScrapersSource]
+; Master switch for scraping (true/false)
+MarqueeAutoScraping=false
+; Order of usage for scrapers (ScreenScraper, arcadeitalia)
+PrioritySource=
+
+[arcadeitalia]
+ArcadeItaliaUrl=http://adb.arcadeitalia.net
+; Options: marquee, snapshot, title, cabinet
+ArcadeItaliaMediaType=marquee
+
+[ScreenScraper]
+MarqueeGlobalScraping=false
+; ScreenScraper Media Types (Keys are case-sensitive!)
+; Common Marquees: screenmarquee, screenmarqueesmall, wheel, wheel-carbon, wheel-steel, steamgrid
+; Others: box-2D, box-3D, sstitle, fanart, video
+; Default: empty (MPV disabled), screenmarqueesmall (DMD)
+MPVScrapMediaType=
+DMDScrapMediaType=
+ScreenScraperUser=
+ScreenScraperPass=
+; Dev Credentials (Required for API access if generic keys are blocked/invalid)
+ScreenScraperDevId=
+ScreenScraperDevPassword=
+; Number of concurrent scraping threads (Premium accounts)
+ScreenScraperThreads=1
+; EN: Max games in download queue (0=unlimited) / FR: Nombre max de jeux en file d'attente (0=illimité)
+ScreenScraperQueueLimit=5
+; EN: Games to keep when queue is full / FR: Jeux à conserver quand la file est pleine
+ScreenScraperQueueKeep=3
+
+[DMD]
+DmdEnabled=true
+; Options: virtual, virtualdmd, pin2dmd, zedmd, zedmdhd, zedmdwifi, zedmdhdwifi, pindmdv1, pindmdv2, pindmdv3, pixelcade, alphanumeric, pinup, video, rawoutput, networkstream, browserstream, vpdbstream
+DmdModel=zedmd
+DmdExePath=tools\dmd\dmdext.exe
+DmdMediaPath=medias\customs\games
+SystemCustomDMDPath=medias\customs\systems
+DmdGameStartMediaPath=medias\customs\games-start
+DmdCompose=true
+; Frame format (rgb24 [default], gray2, gray4, coloredgray2, coloredgray4, coloredgray6)
+DmdFormat=rgb24
+;DmdArguments=--virtual-position 0 0 --virtual-stay-on-top
+DmdWidth=128
+DmdHeight=32
+; Virtual DMD dot size (pixel scaling factor, default: 8)
+DmdDotSize=8
+
+; ── ZeDMD hardware calibration (applied at startup via zedmd64.dll + SaveSettings + Reset) ──
+; These values are saved to the ZeDMD firmware EEPROM and persist across power cycles.
+; Leave empty to skip the setting (firmware keeps its current value).
+; ZeDmd COM port (e.g. COM3) — empty = auto-detect (slower but works without config)
+ZeDmdPort=
+; Brightness 0-15 (empty = no change, firmware default is 6)
+DmdBrightness=
+; USB packet size in bytes — firmware default is 64, 512 recommended for 128x32 (reduces sweep)
+; ZeDMD HD: use 1024. Standard 128x32: use 512. Leave empty to use auto.
+;ZeDmdUsbPackageSize=512
+; Panel minimum refresh rate — firmware default is 0 (auto), 90 for 128x32, 60 for HD
+;ZeDmdPanelMinRefreshRate=90
+
+[ScreenMPV]
+MPVPath=tools\mpv\mpv.exe
+MarqueeWidth=1920
+MarqueeHeight=360
+SystemCustomMarqueePath=medias\customs\systems
+GameCustomMarqueePath=medias\customs\games
+GameStartMediaPath=medias\customs\games-start
+; MPV Screen Index (0=Primary, 1=Secondary, etc.)
+ScreenNumber=1
+MarqueeScreen=2
+TopperScreen=-1
+IcCardScreen=-1
+DmdScreen=-1
+LcdScreen=-1
+; Hardware Decoding (auto, d3d11va, dxva2, no)
+HwDecoding=no
+
+[Pinball]
+; Pinball System Commands
+; 
+; Special case: system=True → External app handles everything (e.g., PinballFX uses DLL)
+; Standard format: system=command;handleDMD;suspendMPV
+;   - handleDMD=True → Internal DMD stopped (external app expected)
+;   - suspendMPV=True → MPV marquee temporarily stopped during game
+;   - Both parameters are optional, default=False
+; 
+pinballfx=True
+pinballfx2=dmdext.exe mirror --source=pinballfx2 -d {DmdModel} --quit-when-done
+pinballfx3=dmdext.exe mirror --source=pinballfx3 -d {DmdModel} --colorize --quit-when-done
+fpinball=dmdext.exe mirror --source=futurepinball -d {DmdModel} --colorize --quit-when-done
+zaccariapinball=dmdext.exe mirror --source=screen --position !POSITION! -d {DmdModel};False;True
+; Define your own:
+custom1=

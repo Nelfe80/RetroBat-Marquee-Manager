@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>RetroBatMarqueeManager</AssemblyName>
+    <ApplicationIcon>..\RetroBatMarqueeManager\Resources\icon.ico</ApplicationIcon>
+    <LangVersion>7.3</LangVersion>
+    <Version>1.1.3-beta</Version>
+    <FileVersion>1.1.3.0</FileVersion>
+    <AssemblyVersion>1.1.3.0</AssemblyVersion>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <OutputPath>..\..\RetroBatMarqueeManager\bin\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+
+
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="10.0.1" />
+  </ItemGroup>
+</Project>

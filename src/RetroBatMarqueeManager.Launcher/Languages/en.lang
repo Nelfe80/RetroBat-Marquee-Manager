@@ -1,0 +1,157 @@
+# English Translation File
+# Format: KEY=Translation
+
+# Menu Bar
+menu_file=File
+menu_file_save=Save
+menu_file_reload=Reload
+menu_file_exit=Exit
+menu_tools=Tools
+menu_tools_clear_cache=Clear Cache
+menu_tools_open_logs=Open Logs Folder
+menu_tools_restart_app=Restart Application
+menu_help=Help
+menu_help_documentation=Documentation
+menu_help_about=About
+
+# Tabs
+tab_general=General
+tab_scraping=Scraping
+tab_dmd=DMD Display
+tab_screen=Screen & MPV
+tab_pinball=Pinball
+tab_advanced=Advanced
+
+# Buttons
+btn_save=Save
+btn_cancel=Cancel
+btn_browse=Browse...
+btn_add=Add
+btn_edit=Edit
+btn_delete=Delete
+btn_test=Test
+
+# General Tab
+group_paths=Core Paths
+lbl_retrobat_path=RetroBat Path
+lbl_roms_path=ROMs Path
+lbl_im_path=ImageMagick Path
+
+group_marquee=Marquee Settings
+lbl_background_color=Background Color
+lbl_background_code=Background Code Color
+lbl_compose=Enable Composition
+lbl_compose_media=Compose Media Type
+lbl_layout=Marquee Layout
+lbl_auto_convert=Auto Convert Images
+lbl_video_generation=Video Generation
+lbl_video_folder=Video Generation Folder
+lbl_ffmpeg_hw_encoding=FFmpeg HW Encoding
+
+group_retroachievements=RetroAchievements
+lbl_ra_enable=Enable RetroAchievements
+lbl_ra_api_key=Web API Key
+lbl_ra_display_target=Display Target
+lbl_ra_overlays=Overlay Types
+lbl_ra_mpv_overlays=MPV Overlays (optional)
+lbl_ra_dmd_overlays=DMD Overlays (optional)
+chk_ra_mpv_notifs=Show Unlocks (MPV)
+chk_ra_dmd_notifs=Show Unlocks (DMD)
+
+group_ui=User Interface
+lbl_minimize_tray=Minimize to System Tray
+lbl_autostart=Auto Start Mode
+lbl_accepted_formats=Accepted File Formats
+
+group_logging=Logging
+lbl_log_to_file=Enable File Logging
+lbl_log_path=Log File Path
+
+# Scraping Tab
+group_scraping_general=General Scraping Settings
+lbl_auto_scraping=Enable Auto Scraping
+lbl_priority_source=Scraper Priority
+
+group_arcadeitalia=ArcadeItalia Settings
+lbl_ai_url=ArcadeItalia URL
+lbl_ai_media_type=Media Type
+
+group_screenscraper=ScreenScraper Settings
+lbl_ss_user=Username
+lbl_ss_pass=Password
+lbl_ss_dev_id=Developer ID
+lbl_ss_dev_pass=Developer Password
+lbl_ss_threads=Concurrent Threads
+lbl_ss_global=Global Scraping
+lbl_mpv_scrap_type=MPV Media Type
+lbl_dmd_scrap_type=DMD Media Type
+
+# DMD Tab
+group_dmd_general=DMD General Settings
+lbl_dmd_enabled=Enable DMD
+lbl_dmd_model=DMD Model
+lbl_dmd_exe_path=DMDExt.exe Path
+lbl_dmd_media_path=Media Path
+lbl_dmd_system_path=System Custom Path
+lbl_dmd_gamestart_path=Game Start Media Path
+
+group_dmd_display=Display Settings
+lbl_dmd_compose=Enable Composition
+lbl_dmd_format=Frame Format
+lbl_dmd_width=Width
+lbl_dmd_height=Height
+lbl_dmd_dot_size=Dot Size (Virtual DMD)
+lbl_dmd_arguments=Additional Arguments
+
+# Screen/MPV Tab
+group_screen_general=Screen & MPV Settings
+lbl_mpv_path=MPV Path
+lbl_marquee_width=Marquee Width
+lbl_marquee_height=Marquee Height
+lbl_screen_number=Screen Number
+lbl_screen_system_path=System Custom Marquee Path
+lbl_screen_game_path=Game Custom Marquee Path
+lbl_screen_gamestart_path=Game Start Media Path
+lbl_hw_decoding=Hardware Decoding
+
+# Pinball Tab
+group_pinball=Pinball System Commands
+lbl_pinball_system=System
+lbl_pinball_command=Command
+lbl_pinball_help=Format: system=command;handleDMD;suspendMPV
+
+# Advanced Tab
+group_advanced_collections=Collections & Systems
+lbl_collection_correlation=Collection Correlation
+lbl_system_aliases=System Aliases
+
+# Tooltips
+tip_retrobat_path=Path to RetroBat installation (auto-detected if empty)
+tip_roms_path=Path to ROMs folder (auto-detected if empty)
+tip_background_color=Color name (Black, White, etc.) or hex code
+tip_compose_media=fanart or image (boxart/screenshot)
+tip_layout=standard, gradient-left, gradient-right, or gradient-standard
+tip_autostart=false (disabled), windows (Windows Startup), or retrobat (RetroBat script)
+tip_ffmpeg_hw_encoding=Acceleration for video generation (empty=software, nvenc=Nvidia, amf=AMD, qsv=Intel)
+tip_ra_api_key=Get your API key from https://retroachievements.org/settings
+tip_ra_display_target=both, mpv, or dmd
+tip_ra_overlays=Comma-separated: score,badges,count
+tip_ss_threads=Number of concurrent scraping threads (1 for basic accounts)
+tip_dmd_model=virtual, virtualdmd, pin2dmd, zedmd, etc.
+tip_dmd_format=rgb24, gray2, gray4, coloredgray2, coloredgray4, coloredgray6
+tip_screen_number=0=Primary, 1=Secondary, etc.
+tip_hw_decoding=Acceleration for video playback (auto, d3d11va, dxva2, no)
+
+# Messages
+msg_save_success=Configuration saved successfully!
+msg_save_error=Error saving configuration: {0}
+msg_load_error=Error loading configuration: {0}
+msg_validation_error=Please correct the following errors:\n{0}
+msg_unsaved_changes=You have unsaved changes. Do you want to save before closing?
+msg_restart_required=Changes will take effect after restarting the application.
+
+# Validation Messages
+val_path_not_found=Path not found: {0}
+val_required_field=This field is required
+val_invalid_number=Invalid number format
+val_invalid_color=Invalid color (use name or hex code like #000000)

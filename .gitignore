@@ -7,10 +7,10 @@ Desktop.ini
 .vs/
 *.code-workspace
 
-# Common build outputs
-**/bin/
-**/obj/
-**/artifacts/
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Logs / temporary files
 *.log
@@ -21,6 +21,19 @@ Desktop.ini
 logs/
 temp/
 cache/
+state/
 
-# Zip files
+# C# Build outputs
+**/bin/
+**/obj/
+**/artifacts/
+
+# Ignore zip files at root, but allow executables
 *.zip
+!MarqueeManager.exe
+
+# Local configurations / scripts (ignored to prevent credentials leak or local path pollution)
+config.ini
+build.bat
+git-push.bat
+debug_checkpoint.txt
