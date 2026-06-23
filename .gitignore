@@ -37,6 +37,3 @@ config.ini
 build.bat
 git-push.bat
 debug_checkpoint.txt
-null
-.graceful_exit
-tray_error.txt
