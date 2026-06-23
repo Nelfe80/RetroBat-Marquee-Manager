@@ -40,3 +40,5 @@ null
 .graceful_exit
 tray_error.txt
 !config.ini
+media/
+medias/
