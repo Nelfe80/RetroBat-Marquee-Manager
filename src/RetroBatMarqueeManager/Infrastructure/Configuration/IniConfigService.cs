@@ -50,54 +50,69 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         public string RomsPath => GetAbsolutePath(GetValue("RomsPath", Path.Combine(RetroBatPath, "roms")));
         public string IMPath => GetAbsolutePath(GetValue("IMPath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "imagemagick", "convert.exe")));
         public string MPVPath => GetAbsolutePath(GetValue("MPVPath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "mpv", "mpv.exe")));
-        public string MarqueeImagePath => GetAbsolutePath(GetValue("MarqueeImagePath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "medias")));
-        public string MarqueeImagePathDefault => GetAbsolutePath(GetValue("MarqueeImagePathDefault", Path.Combine(RetroBatPath, "roms")));
-        public string CachePath => Path.Combine(MarqueeImagePath, "_cache");
-        public string DefaultImagePath 
+        // MarqueeManager is a pure WS consumer — no local media store.
+        // MarqueeImagePath is optional; only used if user explicitly sets it in config.
+        public string MarqueeImagePath => GetAbsolutePath(GetValue("MarqueeImagePath", ""));
+        public string MarqueeImagePathDefault => GetAbsolutePath(GetValue("MarqueeImagePathDefault", ""));
+        public string CachePath => string.IsNullOrEmpty(MarqueeImagePath)
+            ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "_cache")
+            : Path.Combine(MarqueeImagePath, "_cache");
+
+        public string DefaultImagePath
         {
             get
             {
-                // 1. Check explicit config
+                // 1. Explicit config key
                 var explicitPath = GetValue("DefaultImagePath", "");
                 if (!string.IsNullOrEmpty(explicitPath)) return GetAbsolutePath(explicitPath);
 
-                // 2. Search for 'default.*' in medias folder
-                var mediaDir = MarqueeImagePath; // defaults to .../medias
-                if (Directory.Exists(mediaDir))
+                // 2. Search in plugin root directory (no sub-folder created)
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                var extensions = new[] { ".mp4", ".gif", ".png", ".jpg", ".jpeg" };
+                foreach (var ext in extensions)
                 {
-                    var extensions = new[] { ".mp4", ".gif", ".png", ".jpg", ".jpeg" };
+                    var path = Path.Combine(baseDir, "default" + ext);
+                    if (File.Exists(path)) return path;
+                }
+
+                // 3. Search in medias sub-folder if explicitly configured
+                if (!string.IsNullOrEmpty(MarqueeImagePath) && Directory.Exists(MarqueeImagePath))
+                {
                     foreach (var ext in extensions)
                     {
-                        var path = Path.Combine(mediaDir, "default" + ext);
+                        var path = Path.Combine(MarqueeImagePath, "default" + ext);
                         if (File.Exists(path)) return path;
                     }
                 }
 
-                // 3. Fallback
-                return Path.Combine(MarqueeImagePath, "default.png");
+                return ""; // No default image — show black screen until WS event arrives
             }
         }
-        
-        public string DefaultDmdPath 
+
+        public string DefaultDmdPath
         {
             get
             {
-                // Search for 'default-dmd.*' in medias folder
-                var mediaDir = MarqueeImagePath;
-                if (Directory.Exists(mediaDir))
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                var extensions = new[] { ".mp4", ".gif", ".png", ".jpg", ".jpeg" };
+                foreach (var ext in extensions)
                 {
-                    var extensions = new[] { ".mp4", ".gif", ".png", ".jpg", ".jpeg" };
+                    var path = Path.Combine(baseDir, "default-dmd" + ext);
+                    if (File.Exists(path)) return path;
+                }
+                if (!string.IsNullOrEmpty(MarqueeImagePath) && Directory.Exists(MarqueeImagePath))
+                {
                     foreach (var ext in extensions)
                     {
-                        var path = Path.Combine(mediaDir, "default-dmd" + ext);
+                        var path = Path.Combine(MarqueeImagePath, "default-dmd" + ext);
                         if (File.Exists(path)) return path;
                     }
                 }
-                return ""; // No default DMD found
+                return "";
             }
         }
 
-        public string DefaultFanartPath => GetAbsolutePath(GetValue("DefaultFanartPath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "medias", "defaultfanart.png")));
+        public string DefaultFanartPath => GetAbsolutePath(GetValue("DefaultFanartPath", ""));
         
         // PCSX2 Paths
         public string Pcsx2LogPath => Path.Combine(RetroBatPath, "emulators", "pcsx2", "logs", "emulog.txt");

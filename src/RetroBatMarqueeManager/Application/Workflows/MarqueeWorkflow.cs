@@ -80,8 +80,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             VideoOffsetStorageService videoOffsetStorage,
             IScraperManager scraperManager,
             IOverlayTemplateService templateService,
-            ILogger<MarqueeWorkflow> logger,
-            RetroAchievementsService? raService = null)
+            ILogger<MarqueeWorkflow> logger)
         {
             _config = config;
             _imageService = imageService;
@@ -94,7 +93,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             _videoOffsetStorage = videoOffsetStorage;
             _scraperManager = scraperManager;
             _templateService = templateService;
-            _raService = raService;
+            _raService = null; // RA is managed by APIExpose, not this plugin
             _logger = logger;
             
             _scraperManager.OnScrapeCompleted += (sys, game, path) =>

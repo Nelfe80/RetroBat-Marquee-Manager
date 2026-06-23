@@ -39,19 +39,13 @@ namespace RetroBatMarqueeManager.Infrastructure.Api
             _esSettings = esSettings;
             _logger = logger;
 
-            // EN: Setup persistent RA data directories (NOT in cache to prevent deletion)
-            // FR: Configurer dossiers données RA persistants (PAS dans cache pour éviter suppression)
-            var mediasPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "medias");
-            _cacheBaseDir = Path.Combine(mediasPath, "retroachievements");
+            // RA cache lives inside _cache (not a separate medias folder) and is created lazily
+            _cacheBaseDir = Path.Combine(config.CachePath, "retroachievements");
             _apiCacheDir = Path.Combine(_cacheBaseDir, "api");
             _badgesCacheDir = Path.Combine(_cacheBaseDir, "badges");
             _gameImagesCacheDir = Path.Combine(_cacheBaseDir, "game_images");
             _userImagesCacheDir = Path.Combine(_cacheBaseDir, "user_images");
-
-            Directory.CreateDirectory(_apiCacheDir);
-            Directory.CreateDirectory(_badgesCacheDir);
-            Directory.CreateDirectory(_gameImagesCacheDir);
-            Directory.CreateDirectory(_userImagesCacheDir);
+            // Directories are created on first use, not at construction time
         }
 
         /// <summary>
@@ -190,6 +184,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Api
             var cachePath = Path.Combine(_apiCacheDir, $"{cacheKey}.json");
             try
             {
+                Directory.CreateDirectory(_apiCacheDir); // lazy — only created when RA is actually used
                 var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
                 {
                     WriteIndented = true

@@ -160,44 +160,26 @@ public class Program
                     services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Native.DmdDeviceWrapper>(); // Native DMD Wrapper
                     
                     // Application / Services
+                    // MarqueeManager is a pure WS consumer — APIExpose provides all media paths.
                     services.AddSingleton<IDmdService, DmdService>();
-                    services.AddSingleton<IMarqueeFileFinder, MarqueeFileFinderService>();
-                    services.AddSingleton<ImageConversionService>();
+                    services.AddSingleton<IMarqueeFileFinder, MarqueeFileFinderService>(); // Required by MarqueeWorkflow (DMD lifecycle)
+                    services.AddSingleton<ImageConversionService>(); // Required for DMD frame processing (GetRawDmdBytes)
                     services.AddSingleton<MarqueeWorkflow>();
-                    services.AddSingleton<OffsetStorageService>(); // Persistence (Images composées / Composed Images)
-                    services.AddSingleton<VideoOffsetStorageService>(); // Persistence (Vidéos / Videos)
+                    services.AddSingleton<OffsetStorageService>();
+                    services.AddSingleton<VideoOffsetStorageService>();
                     services.AddSingleton<IOverlayTemplateService, OverlayTemplateService>();
-                    services.AddSingleton<VideoMarqueeService>(); // Video Generation Service
-                    services.AddSingleton<IInputService, RetroBatMarqueeManager.Infrastructure.Input.KeyboardInputService>(); // Input
-                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.ScriptInstallerService>();
-                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.AutoStartService>(); // Auto-Start Management
-                    // Scrapers registration
-                    services.AddSingleton<ScreenScraperService>(); // Concrete for TrayIcon
-                    services.AddSingleton<IScraperService>(sp => sp.GetRequiredService<ScreenScraperService>()); // Interface map
-                    
+                    services.AddSingleton<VideoMarqueeService>();
+                    services.AddSingleton<IInputService, RetroBatMarqueeManager.Infrastructure.Input.KeyboardInputService>();
+                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.ScriptInstallerService>(); // Removes legacy ES hooks on startup
+                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.AutoStartService>();
+                    // Scrapers — registered as no-ops (WS consumer does not scrape locally)
+                    services.AddSingleton<ScreenScraperService>();
+                    services.AddSingleton<IScraperService>(sp => sp.GetRequiredService<ScreenScraperService>());
                     services.AddSingleton<ArcadeItaliaScraperService>();
                     services.AddSingleton<IScraperService>(sp => sp.GetRequiredService<ArcadeItaliaScraperService>());
-
                     services.AddSingleton<IScraperManager, ScraperManager>();
 
-                    // EN: RetroAchievements (API Client + Service) / FR: RetroAchievements (Client API + Service)
-                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Api.RetroAchievementsApiClient>(sp =>
-                    {
-                        var httpClient = new HttpClient();
-                        var config = sp.GetRequiredService<IConfigService>();
-                        var esSettings = sp.GetRequiredService<IEsSettingsService>();
-                        var logger = sp.GetRequiredService<ILogger<RetroBatMarqueeManager.Infrastructure.Api.RetroAchievementsApiClient>>();
-                        return new RetroBatMarqueeManager.Infrastructure.Api.RetroAchievementsApiClient(httpClient, config, esSettings, logger);
-                    });
-                    
-                    // EN: Register as Singleton first so it can be injected into MarqueeWorkflow
-                    // FR: Enregistrer comme Singleton d'abord pour qu'il puisse être injecté dans MarqueeWorkflow
-                    services.AddSingleton<RetroBatMarqueeManager.Application.Services.RetroAchievementsService>();
-                    
-                    // EN: Then register as HostedService (same instance)
-                    // FR: Puis enregistrer comme HostedService (même instance)
-                    services.AddHostedService<RetroBatMarqueeManager.Application.Services.RetroAchievementsService>(sp => 
-                        sp.GetRequiredService<RetroBatMarqueeManager.Application.Services.RetroAchievementsService>());
+                    // RetroAchievements: fully removed — this plugin makes no HTTP connections
 
                     
                     // EN: Only register TrayIconService if explorer.exe is running (not in custom shell)
