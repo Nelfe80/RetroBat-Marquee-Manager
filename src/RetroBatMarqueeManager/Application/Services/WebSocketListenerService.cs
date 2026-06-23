@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Diagnostics;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RetroBatMarqueeManager.Core.Interfaces;
@@ -26,12 +27,14 @@ namespace RetroBatMarqueeManager.Application.Services
         private readonly string _apiExposeBasePath;
 
         // Latest-wins channels (capacity=1, DropOldest) — always shows the most recent snapshot
-        private readonly Channel<string> _marqueeChannel = Channel.CreateBounded<string>(
+        private readonly Channel<MarqueeRequest> _marqueeChannel = Channel.CreateBounded<MarqueeRequest>(
             new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest, SingleReader = true });
+        private long _latestMarqueeRequestId;
 
         // Dedicated DMD channel — decoupled from LCD/marquee so both update simultaneously
-        private readonly Channel<string> _dmdChannel = Channel.CreateBounded<string>(
+        private readonly Channel<DmdRequest> _dmdChannel = Channel.CreateBounded<DmdRequest>(
             new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest, SingleReader = true });
+        private long _latestDmdRequestId;
 
         // Routing table: contentSource → list of window targets that display it
         // e.g. "iccard" → ["iccard", "dmd"] if DmdContent=iccard in config
@@ -141,19 +144,57 @@ namespace RetroBatMarqueeManager.Application.Services
         // Single worker loop — always processes the LATEST marquee snapshot, skips older ones
         private async Task RunMarqueeWorkerAsync(CancellationToken ct)
         {
-            await foreach (var json in _marqueeChannel.Reader.ReadAllAsync(ct))
+            await foreach (var request in _marqueeChannel.Reader.ReadAllAsync(ct))
             {
-                await ProcessMarqueeSnapshotAsync(json, ct);
+                if (ct.IsCancellationRequested) break;
+
+                var latest = request;
+                while (_marqueeChannel.Reader.TryRead(out var newer))
+                    latest = newer;
+
+                if (IsStaleMarqueeRequest(latest.Id))
+                    continue;
+
+                await ProcessMarqueeSnapshotAsync(latest, ct);
             }
         }
 
         // Dedicated DMD worker — independent from marquee worker, no delay between LCD and DMD
         private async Task RunDmdWorkerAsync(CancellationToken ct)
         {
-            await foreach (var path in _dmdChannel.Reader.ReadAllAsync(ct))
+            await foreach (var request in _dmdChannel.Reader.ReadAllAsync(ct))
             {
                 if (ct.IsCancellationRequested) break;
-                try { await _dmdService.PlayAsync(path); }
+
+                var latest = request;
+                while (_dmdChannel.Reader.TryRead(out var newer))
+                    latest = newer;
+
+                try
+                {
+                    await Task.Delay(90, ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+
+                while (_dmdChannel.Reader.TryRead(out var newer))
+                    latest = newer;
+
+                if (latest.Id != Interlocked.Read(ref _latestDmdRequestId))
+                    continue;
+
+                try
+                {
+                    var started = Stopwatch.GetTimestamp();
+                    await _dmdService.PlayAsync(latest.Path);
+                    _logger.LogInformation(
+                        "[Timing] DMD request={RequestId} completed elapsedMs={ElapsedMs:F1} path={Path}",
+                        latest.Id,
+                        Stopwatch.GetElapsedTime(started).TotalMilliseconds,
+                        latest.Path);
+                }
                 catch (Exception ex) { _logger.LogError($"[DMD Worker] Error: {ex.Message}"); }
             }
         }
@@ -371,18 +412,26 @@ namespace RetroBatMarqueeManager.Application.Services
         // Receives new snapshot — just drops it in the latest-wins slot (non-blocking)
         private void HandleMarqueeSnapshot(string json)
         {
-            _marqueeChannel.Writer.TryWrite(json); // DropOldest: silently replaces any pending
+            var request = new MarqueeRequest(
+                Interlocked.Increment(ref _latestMarqueeRequestId),
+                json,
+                Stopwatch.GetTimestamp());
+            _marqueeChannel.Writer.TryWrite(request); // DropOldest: silently replaces any pending
         }
 
         // Called by the single worker loop — processes the latest snapshot
-        private async Task ProcessMarqueeSnapshotAsync(string json, CancellationToken ct)
+        private async Task ProcessMarqueeSnapshotAsync(MarqueeRequest request, CancellationToken ct)
         {
-            _logger.LogInformation("[WebSocket] Processing marquee snapshot...");
+            _logger.LogInformation(
+                "[Timing] Marquee request={RequestId} processing queueMs={QueueMs:F1}",
+                request.Id,
+                Stopwatch.GetElapsedTime(request.ReceivedTimestamp).TotalMilliseconds);
 
             // /ws/marquee: extract only marquee and dmd content
             // Topper → /ws/topper, IC card → /ws/instruction-card (dedicated streams)
             string? marqueePath = null;
             string? dmdPath     = null;
+            var json = request.Json;
 
             try
             {
@@ -434,7 +483,7 @@ namespace RetroBatMarqueeManager.Application.Services
                 return;
             }
 
-            if (ct.IsCancellationRequested) return;
+            if (ct.IsCancellationRequested || IsStaleMarqueeRequest(request.Id)) return;
 
             // /ws/marquee drives the marquee screen and dmd screen only.
             // Topper, IC card and fanart have their own dedicated WS streams.
@@ -444,26 +493,46 @@ namespace RetroBatMarqueeManager.Application.Services
                 if (File.Exists(abs))
                     foreach (var t in TargetsFor("marquee"))
                     {
+                        if (ct.IsCancellationRequested || IsStaleMarqueeRequest(request.Id)) return;
                         _logger.LogInformation($"[WebSocket] Routing Marquee → '{t}': {abs}");
                         await _mpv.DisplayImageToTarget(abs, t);
+                        _logger.LogInformation(
+                            "[Timing] LCD request={RequestId} target={Target} totalMs={TotalMs:F1}",
+                            request.Id,
+                            t,
+                            Stopwatch.GetElapsedTime(request.ReceivedTimestamp).TotalMilliseconds);
                     }
             }
 
-            if (!string.IsNullOrEmpty(dmdPath) && !ct.IsCancellationRequested)
+            if (!string.IsNullOrEmpty(dmdPath) && !ct.IsCancellationRequested && !IsStaleMarqueeRequest(request.Id))
             {
                 var abs = ResolveAbsolutePath(dmdPath);
                 if (File.Exists(abs))
                 {
                     // Push to physical DMD via dedicated worker (non-blocking — no delay on LCD)
                     if (_config.DmdEnabled)
-                        _dmdChannel.Writer.TryWrite(abs);
+                    {
+                        var dmdRequest = new DmdRequest(Interlocked.Increment(ref _latestDmdRequestId), abs);
+                        _dmdChannel.Writer.TryWrite(dmdRequest);
+                        _logger.LogInformation(
+                            "[Timing] DMD request={DmdRequestId} queued fromMarqueeRequest={MarqueeRequestId} totalMs={TotalMs:F1}",
+                            dmdRequest.Id,
+                            request.Id,
+                            Stopwatch.GetElapsedTime(request.ReceivedTimestamp).TotalMilliseconds);
+                    }
 
                     // Display on any configured DMD screen target
                     foreach (var t in TargetsFor("dmd"))
+                    {
+                        if (ct.IsCancellationRequested || IsStaleMarqueeRequest(request.Id)) return;
                         await _mpv.DisplayImageToTarget(abs, t);
+                    }
                 }
             }
         }
+
+        private bool IsStaleMarqueeRequest(long requestId)
+            => requestId != Interlocked.Read(ref _latestMarqueeRequestId);
 
         private async Task HandleTopperSnapshot(string json)
         {
@@ -636,58 +705,13 @@ namespace RetroBatMarqueeManager.Application.Services
             }
         }
 
-        private async Task HandleFrontendEvent(ApiExposeEvent ev)
+        private Task HandleFrontendEvent(ApiExposeEvent ev)
         {
-            var type = ev.Type.ToLowerInvariant();
-
-            if (type == "ui.game.started" || type == "ui.game.started.raw")
-            {
-                // Extract full game info from payload.context.ui.selected + launch
-                ev.Root.TryGetProperty("payload", out var payload);
-                var (system, gamePath, gameName) = ExtractGameStartInfo(payload);
-
-                if (!string.IsNullOrEmpty(gamePath))
-                {
-                    var romFileName = System.IO.Path.GetFileNameWithoutExtension(gamePath);
-                    await _workflow.ProcessEventAsync("game-start", system, gamePath, gameName ?? romFileName, gamePath);
-                }
-                else if (!string.IsNullOrEmpty(ev.Rom))
-                {
-                    await _workflow.ProcessEventAsync("game-start", ev.System ?? "", ev.Rom, ev.Text ?? ev.Rom, ev.Rom);
-                }
-            }
-            else if (type == "ui.game.ended" || type == "ui.game.ended.raw")
-            {
-                await _workflow.ProcessEventAsync("game-end", "", "", "", "");
-            }
-            else if (type == "ui.game.selected" || type == "ui.game.selected.raw")
-            {
-                ev.Root.TryGetProperty("payload", out var payload);
-                var (system, gamePath, gameName) = ExtractGameStartInfo(payload);
-
-                if (!string.IsNullOrEmpty(gamePath))
-                {
-                    await _workflow.ProcessEventAsync("game-selected", system, gamePath, gameName ?? System.IO.Path.GetFileNameWithoutExtension(gamePath), gamePath);
-                }
-                else if (!string.IsNullOrEmpty(ev.Rom))
-                {
-                    await _workflow.ProcessEventAsync("game-selected", ev.System ?? "", ev.Rom, ev.Text ?? ev.Rom, ev.Rom);
-                }
-            }
-            else if (type == "ui.system.selected" || type == "ui.system.selected.raw")
-            {
-                var systemId = ev.System;
-                if (string.IsNullOrEmpty(systemId))
-                {
-                    ev.Root.TryGetProperty("payload", out var pl);
-                    systemId = TryGetNestedString(pl, "context", "ui", "selectedSystem", "name")
-                            ?? TryGetNestedString(pl, "selection", "systemId");
-                }
-                if (!string.IsNullOrEmpty(systemId))
-                {
-                    await _workflow.ProcessEventAsync("system-selected", systemId, "", "", "");
-                }
-            }
+            // APIExpose owns media resolution and generation. MarqueeManager only consumes
+            // /ws/marquee, /ws/topper and /ws/instruction-card snapshots so fast navigation
+            // cannot queue the legacy composer/scraper workflow.
+            _logger.LogDebug($"[WebSocket] Frontend event consumed by APIExpose snapshots only: {ev.Type}");
+            return Task.CompletedTask;
         }
 
         // Extract system + gamePath + gameName from APIExpose payload.context.ui.selected
@@ -777,7 +801,7 @@ namespace RetroBatMarqueeManager.Application.Services
             return val.ValueKind == JsonValueKind.String ? val.GetString() : null;
         }
 
-        private async Task HandleMameSessionStarted(string json)
+        private Task HandleMameSessionStarted(string json)
         {
             string machineName = "";
             try
@@ -789,10 +813,10 @@ namespace RetroBatMarqueeManager.Application.Services
                 machineName = ReadStringProperty(payload, "MachineName") ?? ReadStringProperty(payload, "machineName") ?? "";
             }
             catch { }
-            if (string.IsNullOrEmpty(machineName)) return;
+            if (string.IsNullOrEmpty(machineName)) return Task.CompletedTask;
 
             _logger.LogInformation($"[WebSocket] MAME session started: {machineName}");
-            await _workflow.ProcessEventAsync("game-start", "mame", machineName, machineName, machineName);
+            return Task.CompletedTask;
         }
 
         private async Task HandleIngameEvent(ApiExposeEvent ev)
@@ -858,5 +882,8 @@ namespace RetroBatMarqueeManager.Application.Services
                 }
             }
         }
+
+        private sealed record MarqueeRequest(long Id, string Json, long ReceivedTimestamp);
+        private sealed record DmdRequest(long Id, string Path);
     }
 }

@@ -3,8 +3,8 @@ using RetroBatMarqueeManager.Core.Interfaces;
 namespace RetroBatMarqueeManager.Infrastructure.Installation
 {
     /// <summary>
-    /// EN: Service to auto-install EmulationStation script hooks on first launch
-    /// FR: Service pour installer automatiquement les scripts EmulationStation au premier lancement
+    /// Removes legacy direct EmulationStation hooks. APIExpose owns ES events and
+    /// MarqueeManager consumes the resulting WebSocket snapshots.
     /// </summary>
     public class ScriptInstallerService
     {
@@ -29,59 +29,33 @@ namespace RetroBatMarqueeManager.Infrastructure.Installation
                     return;
                 }
 
-                // Define script types and their target directories
-                var scriptDef = new[]
+                var eventFolders = new[]
                 {
-                    ("game-selected", "-game-selected"),
-                    ("game-start", "-game-start"),
-                    ("game-end", "-game-end"),
-                    ("system-selected", "-system-selected")
+                    "game-selected",
+                    "game-start",
+                    "game-end",
+                    "system-selected"
                 };
 
-                foreach (var (folder, cmdArg) in scriptDef)
+                foreach (var folder in eventFolders)
                 {
-                    var targetDir = Path.Combine(esScriptsPath, folder);
-                    Directory.CreateDirectory(targetDir); // Ensure directory exists
-
-                    var batPath = Path.Combine(targetDir, "ESEventRetroBatMarqueeManager.bat");
-
-                    // Only create if it doesn't exist (non-destructive)
-                    var batContent = GenerateBatScript(cmdArg);
-                    
-                    // Check if update is needed
-                    bool needsUpdate = true;
+                    var batPath = Path.Combine(
+                        esScriptsPath,
+                        folder,
+                        "ESEventRetroBatMarqueeManager.bat");
                     if (File.Exists(batPath))
                     {
-                        var existingContent = File.ReadAllText(batPath);
-                        if (existingContent == batContent) needsUpdate = false;
-                    }
-
-                    if (needsUpdate)
-                    {
-                        File.WriteAllText(batPath, batContent);
-                        _logger.LogInformation($"Updated/Created script: {batPath}");
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"Script already exists: {batPath}");
+                        File.Delete(batPath);
+                        _logger.LogInformation(
+                            "Removed legacy direct ES hook; WebSocket snapshots are authoritative: {Path}",
+                            batPath);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to install scripts: {ex.Message}");
+                _logger.LogError($"Failed to remove legacy ES scripts: {ex.Message}");
             }
-        }
-
-        private string GenerateBatScript(string commandArg)
-        {
-            // Path relative to script location: scripts\{event}\ESEventRetroBatMarqueeManager.bat
-            // To RetroBat root: ..\..\..\..\
-            // Then to plugin: plugins\RetroBatMarqueeManager\RetroBatMarqueeManager.exe
-            return "@echo off\r\n" +
-                   "chcp 65001 > nul\r\n" +
-                   ":: Direct App Entry Point (No Launcher Overhead)\r\n" +
-                   $"\"%~dp0..\\..\\..\\..\\plugins\\RetroBatMarqueeManager\\RetroBatMarqueeManager.App.exe\" {commandArg} %*\r\n";
         }
     }
 }

@@ -139,6 +139,9 @@ public class Program
                 .UseWindowsService()
                 .ConfigureLogging((hostContext, logging) => 
                 {
+                    // Hooks and portable plugin launches must not depend on the Windows
+                    // Event Log source, which may require elevated registration rights.
+                    logging.ClearProviders();
                     if (configService.LogToFile)
                     {
                         var logPath = configService.LogFilePath;
@@ -166,8 +169,7 @@ public class Program
                     services.AddSingleton<IOverlayTemplateService, OverlayTemplateService>();
                     services.AddSingleton<VideoMarqueeService>(); // Video Generation Service
                     services.AddSingleton<IInputService, RetroBatMarqueeManager.Infrastructure.Input.KeyboardInputService>(); // Input
-                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.ScriptInstallerService>(); // Auto-Install Scripts
-                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.ScriptInstallerService>(); // Auto-Install Scripts
+                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.ScriptInstallerService>();
                     services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.AutoStartService>(); // Auto-Start Management
                     // Scrapers registration
                     services.AddSingleton<ScreenScraperService>(); // Concrete for TrayIcon

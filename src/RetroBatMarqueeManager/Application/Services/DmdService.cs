@@ -26,6 +26,9 @@ namespace RetroBatMarqueeManager.Application.Services
         private Task? _rpLoopTask = null;
         private List<byte[]>? _rpFrames = null;
         private bool _isExternalControlActive = false;
+        private readonly object _rawFrameCacheLock = new();
+        private readonly Dictionary<string, byte[]> _rawFrameCache = new(StringComparer.OrdinalIgnoreCase);
+        private const int RawFrameCacheLimit = 96;
 
         public DmdService(
             IConfigService config, 
@@ -73,13 +76,7 @@ namespace RetroBatMarqueeManager.Application.Services
                  }
             }
             
-            // Play Default Media on Startup
-            if (!string.IsNullOrEmpty(_config.DefaultDmdPath) && File.Exists(_config.DefaultDmdPath))
-            {
-                _logger.LogInformation($"Playing Default DMD Media: {_config.DefaultDmdPath}");
-                // Await default playback
-                await PlayAsync(_config.DefaultDmdPath);
-            }
+            _logger.LogInformation("DMD ready. Startup default media playback is disabled; APIExpose snapshots drive DMD content.");
         }
 
         public string PrepareConfig()
@@ -211,8 +208,21 @@ namespace RetroBatMarqueeManager.Application.Services
                 // CRITICAL: Set Variable in USER scope so external processes (PinballFX, etc.) can see it!
                 // EN: External game processes need to find DmdDevice.ini via this env variable
                 // FR: Les processus de jeux externes ont besoin de trouver DmdDevice.ini via cette variable
-                Environment.SetEnvironmentVariable("DMDDEVICE_CONFIG", _dmdDeviceIniPath, EnvironmentVariableTarget.User);
-                _logger.LogInformation($"Set DMDDEVICE_CONFIG environment variable (User scope): {_dmdDeviceIniPath}");
+                var currentUserConfig = Environment.GetEnvironmentVariable(
+                    "DMDDEVICE_CONFIG",
+                    EnvironmentVariableTarget.User);
+                if (!string.Equals(currentUserConfig, _dmdDeviceIniPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    Environment.SetEnvironmentVariable(
+                        "DMDDEVICE_CONFIG",
+                        _dmdDeviceIniPath,
+                        EnvironmentVariableTarget.User);
+                    _logger.LogInformation($"Set DMDDEVICE_CONFIG environment variable (User scope): {_dmdDeviceIniPath}");
+                }
+                else
+                {
+                    _logger.LogInformation("DMDDEVICE_CONFIG already current; user environment update skipped.");
+                }
             }
             catch (Exception ex)
             {
@@ -232,25 +242,57 @@ namespace RetroBatMarqueeManager.Application.Services
 
             // ── ZeDMD pre-boot calibration via zedmd64.dll ──────────────────
             // Open → SaveSettings + Reset → close → DmdDevice64.dll opens calibrated firmware
-            if (_dmdWrapper.IsZeDmdDllLoaded &&
-                _config.DmdModel.StartsWith("zedmd", StringComparison.OrdinalIgnoreCase))
+            var modelIsZeDmd = _dmdWrapper.IsZeDmdDllLoaded &&
+                _config.DmdModel.StartsWith("zedmd", StringComparison.OrdinalIgnoreCase);
+            var configuredIsHd = _config.DmdWidth >= 256 ||
+                _config.DmdModel.Contains("hd", StringComparison.OrdinalIgnoreCase);
+            var cachedPort = _config.GetSetting("ZeDmdPort", "");
+            if (string.IsNullOrWhiteSpace(cachedPort)) cachedPort = "";
+            int brightness = int.TryParse(_config.GetSetting("DmdBrightness", ""), out int bv) ? bv : -1;
+            int usbPkgOverride = int.TryParse(_config.GetSetting("ZeDmdUsbPackageSize", ""), out int uv) ? uv : -1;
+            int refreshOverride = int.TryParse(_config.GetSetting("ZeDmdPanelMinRefreshRate", ""), out int rv) ? rv : -1;
+            var requestedCalibration = BuildZeDmdCalibrationSignature(
+                configuredIsHd,
+                brightness,
+                usbPkgOverride,
+                refreshOverride,
+                cachedPort);
+
+            if (modelIsZeDmd && IsZeDmdHardwareCalibrationCurrent(requestedCalibration))
+            {
+                _logger.LogInformation("[ZeDMD] Hardware calibration signature already current; skipping pre-boot calibration.");
+            }
+            else if (modelIsZeDmd)
             {
                 _logger.LogInformation("[ZeDMD] Pre-boot calibration (SaveSettings + Reset)...");
-                string? cachedPort = _config.GetSetting("ZeDmdPort", "");
-                if (string.IsNullOrWhiteSpace(cachedPort)) cachedPort = null;
 
-                if (_dmdWrapper.HwOpen(cachedPort))
+                if (_dmdWrapper.HwOpen(string.IsNullOrEmpty(cachedPort) ? null : cachedPort))
                 {
                     bool isHd = _dmdWrapper.ZeDmdWidth >= 256 ||
                                 _config.DmdModel.Contains("hd", StringComparison.OrdinalIgnoreCase);
-                    int brightness      = int.TryParse(_config.GetSetting("DmdBrightness", ""),            out int bv) ? bv : -1;
-                    int usbPkgOverride  = int.TryParse(_config.GetSetting("ZeDmdUsbPackageSize", ""),      out int uv) ? uv : -1;
-                    int refreshOverride = int.TryParse(_config.GetSetting("ZeDmdPanelMinRefreshRate", ""), out int rv) ? rv : -1;
-                    _dmdWrapper.PushHardwareCalibration(isHd, brightness, usbPkgOverride, refreshOverride);
+                    var appliedCalibration = BuildZeDmdCalibrationSignature(
+                        isHd,
+                        brightness,
+                        usbPkgOverride,
+                        refreshOverride,
+                        cachedPort);
+                    var calibrationChanged = _dmdWrapper.PushHardwareCalibration(
+                        isHd,
+                        brightness,
+                        usbPkgOverride,
+                        refreshOverride);
                     _dmdWrapper.HwClose();
-                    // Wait for ZeDMD firmware to fully restart after Reset
-                    _logger.LogInformation("[ZeDMD] Waiting 2s for firmware restart...");
-                    await Task.Delay(2000);
+                    StoreZeDmdHardwareCalibration(appliedCalibration);
+                    if (calibrationChanged)
+                    {
+                        // Wait for ZeDMD firmware to fully restart after Reset
+                        _logger.LogInformation("[ZeDMD] Waiting 2s for firmware restart...");
+                        await Task.Delay(2000);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("[ZeDMD] Calibration unchanged; stored signature for faster next startup.");
+                    }
                 }
                 else
                 {
@@ -283,6 +325,82 @@ namespace RetroBatMarqueeManager.Application.Services
             }
         }
 
+        private string BuildZeDmdCalibrationSignature(bool isHd, int brightness, int usbPackageSizeOverride, int refreshRateOverride, string? port)
+        {
+            var usbPackage = usbPackageSizeOverride > 0
+                ? usbPackageSizeOverride
+                : (isHd ? 1024 : 512);
+            var normalizedPort = string.IsNullOrWhiteSpace(port) ? "auto" : port.Trim().ToUpperInvariant();
+            return string.Join("|", new[]
+            {
+                "v1",
+                _config.DmdModel.Trim().ToLowerInvariant(),
+                isHd ? "hd" : "std",
+                $"w={_config.DmdWidth}",
+                $"h={_config.DmdHeight}",
+                $"brightness={brightness}",
+                $"usb={usbPackage}",
+                $"refresh={refreshRateOverride}",
+                $"port={normalizedPort}"
+            });
+        }
+
+        private bool IsZeDmdHardwareCalibrationCurrent(string signature)
+        {
+            return string.Equals(
+                _config.GetSetting("ZeDmdCalibrationSignature", ""),
+                signature,
+                StringComparison.Ordinal);
+        }
+
+        private void StoreZeDmdHardwareCalibration(string signature)
+        {
+            try
+            {
+                UpdateIniKey(_config.ConfigPath, "DMD", "ZeDmdCalibrationSignature", signature);
+                _logger.LogInformation("[ZeDMD] Stored hardware calibration signature.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"[ZeDMD] Failed to store hardware calibration signature: {ex.Message}");
+            }
+        }
+
+        private static void UpdateIniKey(string path, string section, string key, string value)
+        {
+            var lines = File.Exists(path)
+                ? File.ReadAllLines(path).ToList()
+                : new List<string>();
+            var sectionHeader = $"[{section}]";
+            var sectionIndex = lines.FindIndex(line => line.Trim().Equals(sectionHeader, StringComparison.OrdinalIgnoreCase));
+            if (sectionIndex < 0)
+            {
+                if (lines.Count > 0 && !string.IsNullOrWhiteSpace(lines[^1])) lines.Add("");
+                lines.Add(sectionHeader);
+                lines.Add($"{key}={value}");
+                File.WriteAllLines(path, lines);
+                return;
+            }
+
+            var insertIndex = sectionIndex + 1;
+            for (var i = sectionIndex + 1; i < lines.Count; i++)
+            {
+                var trimmed = lines[i].Trim();
+                if (trimmed.StartsWith("[")) break;
+                insertIndex = i + 1;
+                if (trimmed.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase) ||
+                    trimmed.StartsWith(key + " =", StringComparison.OrdinalIgnoreCase))
+                {
+                    lines[i] = $"{key}={value}";
+                    File.WriteAllLines(path, lines);
+                    return;
+                }
+            }
+
+            lines.Insert(insertIndex, $"{key}={value}");
+            File.WriteAllLines(path, lines);
+        }
+
         private void EnsureNativeClosed()
         {
             if (_isNativeOpen)
@@ -293,7 +411,7 @@ namespace RetroBatMarqueeManager.Application.Services
             }
         }
 
-        private void StopCliProcess()
+        private void StopCliProcess(bool killStrayDmdExt = false)
         {
             if (_currentDmdProcess != null && !_currentDmdProcess.HasExited)
             {
@@ -311,8 +429,10 @@ namespace RetroBatMarqueeManager.Application.Services
                     _currentDmdProcess = null;
                 }
             }
-             // Ensure stray dmdext fallback
-            try { _processService.KillProcess("dmdext"); } catch {}
+            if (killStrayDmdExt)
+            {
+                try { _processService.KillProcess("dmdext"); } catch {}
+            }
         }
 
         public async Task PlayAsync(string mediaPath, string? system = null, string? gameName = null)
@@ -393,11 +513,12 @@ namespace RetroBatMarqueeManager.Application.Services
                     await EnsureNativeOpenAsync();
                     try
                     {
-                        var bytes = await _imageService.GetRawDmdBytes(mediaPath, _config.DmdWidth, _config.DmdHeight, useGrayscale);
-                        if (bytes != null && bytes.Length > 0)
-                        {
-                            if (useGrayscale && (_dmdWrapper.RenderMethodName?.Contains("16_Shades") == true))
-                                for (int i = 0; i < bytes.Length; i++) bytes[i] = (byte)(bytes[i] >> 4);
+                            var rawBytes = await GetCachedRawDmdBytesAsync(mediaPath, useGrayscale);
+                            if (rawBytes != null && rawBytes.Length > 0)
+                            {
+                                var bytes = rawBytes.ToArray();
+                                if (useGrayscale && (_dmdWrapper.RenderMethodName?.Contains("16_Shades") == true))
+                                    for (int i = 0; i < bytes.Length; i++) bytes[i] = (byte)(bytes[i] >> 4);
                             _currentStaticBytes = bytes;
                             RenderStaticWithOverlay(useGrayscale);
                         }
@@ -410,6 +531,64 @@ namespace RetroBatMarqueeManager.Application.Services
             // CLI PATH (Fallback for video or if native failed)
             EnsureNativeClosed();
             StartCliProcess(mediaPath);
+        }
+
+        private async Task<byte[]?> GetCachedRawDmdBytesAsync(string mediaPath, bool useGrayscale)
+        {
+            var key = BuildRawFrameCacheKey(mediaPath, useGrayscale);
+            if (!string.IsNullOrEmpty(key))
+            {
+                lock (_rawFrameCacheLock)
+                {
+                    if (_rawFrameCache.TryGetValue(key, out var cached))
+                    {
+                        return cached;
+                    }
+                }
+            }
+
+            var bytes = await _imageService.GetRawDmdBytes(mediaPath, _config.DmdWidth, _config.DmdHeight, useGrayscale);
+            if (bytes == null || bytes.Length == 0 || string.IsNullOrEmpty(key))
+            {
+                return bytes;
+            }
+
+            lock (_rawFrameCacheLock)
+            {
+                if (_rawFrameCache.Count >= RawFrameCacheLimit)
+                {
+                    _rawFrameCache.Remove(_rawFrameCache.Keys.First());
+                }
+
+                _rawFrameCache[key] = bytes;
+            }
+
+            return bytes;
+        }
+
+        private string BuildRawFrameCacheKey(string mediaPath, bool useGrayscale)
+        {
+            try
+            {
+                var info = new FileInfo(mediaPath);
+                if (!info.Exists)
+                {
+                    return string.Empty;
+                }
+
+                return string.Join(
+                    "|",
+                    info.FullName,
+                    info.Length,
+                    info.LastWriteTimeUtc.Ticks,
+                    _config.DmdWidth,
+                    _config.DmdHeight,
+                    useGrayscale);
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         public async Task<(bool handled, bool suspendMPV)> CheckAndRunPinballAsync(string system, string gameName)
@@ -731,7 +910,7 @@ namespace RetroBatMarqueeManager.Application.Services
             if (_isExternalControlActive)
             {
                  _logger.LogWarning("[DMD] Timeout waiting for external control release. Forcing takeover.");
-                 StopCliProcess(); // Kill any stuck process
+                 StopCliProcess(killStrayDmdExt: true); // Kill any stuck process
                  _isExternalControlActive = false;
                  await EnsureNativeOpenAsync();
             }
@@ -747,14 +926,14 @@ namespace RetroBatMarqueeManager.Application.Services
         public void Stop()
         {
             _isExternalControlActive = false; // Reset protection on explicit Stop()
-            StopCliProcess();
+            StopCliProcess(killStrayDmdExt: true);
             StopAnimation();
             EnsureNativeClosed(); // EN: Also close native driver to fully release DMD device / FR: Fermer aussi le driver natif pour libérer complètement le périphérique DMD
         }
 
         public void Dispose()
         {
-            StopCliProcess();
+            StopCliProcess(killStrayDmdExt: true);
             StopAnimation();
             EnsureNativeClosed();
             _dmdWrapper.Dispose();

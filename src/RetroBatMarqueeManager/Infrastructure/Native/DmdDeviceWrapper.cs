@@ -226,9 +226,9 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
         /// Calls SaveSettings + Reset — firmware restarts with new settings.
         /// Caller must wait ~2s after this before DmdDevice.Open().
         /// </summary>
-        public void PushHardwareCalibration(bool isHd, int brightness = -1, int usbPackageSizeOverride = -1, int refreshRateOverride = -1)
+        public bool PushHardwareCalibration(bool isHd, int brightness = -1, int usbPackageSizeOverride = -1, int refreshRateOverride = -1)
         {
-            if (_zedmdInstance == IntPtr.Zero) return;
+            if (_zedmdInstance == IntPtr.Zero) return false;
             try
             {
                 // Clear screen (reset display state)
@@ -240,13 +240,24 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
                 ushort usbPkg = usbPackageSizeOverride > 0
                     ? (ushort)usbPackageSizeOverride
                     : (ushort)(isHd ? 1024 : 512);
-                _zSetUsbPkg?.Invoke(_zedmdInstance, usbPkg);
-                _logger.LogInformation($"[ZeDMD] SetUsbPackageSize = {usbPkg}");
+                var changed = false;
+                ushort? currentUsbPkg = _zGetUsbPkg != null ? _zGetUsbPkg(_zedmdInstance) : null;
+                if (currentUsbPkg.HasValue && currentUsbPkg.Value == usbPkg)
+                {
+                    _logger.LogInformation($"[ZeDMD] UsbPackageSize already {usbPkg}; no update needed.");
+                }
+                else
+                {
+                    _zSetUsbPkg?.Invoke(_zedmdInstance, usbPkg);
+                    changed = true;
+                    _logger.LogInformation($"[ZeDMD] SetUsbPackageSize = {usbPkg}");
+                }
 
                 // Panel min refresh rate (config override or skip)
                 if (refreshRateOverride > 0)
                 {
                     _zSetRefreshRate?.Invoke(_zedmdInstance, (byte)refreshRateOverride);
+                    changed = true;
                     _logger.LogInformation($"[ZeDMD] SetPanelMinRefreshRate = {refreshRateOverride}Hz");
                 }
 
@@ -255,6 +266,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
                 if (isHd)
                 {
                     _zEnableUpscaling?.Invoke(_zedmdInstance);
+                    changed = true;
                     _logger.LogInformation("[ZeDMD] EnableUpscaling (HD panel).");
                 }
 
@@ -262,18 +274,26 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
                 if (brightness >= 0 && brightness <= 15)
                 {
                     _zSetBrightness?.Invoke(_zedmdInstance, (byte)brightness);
+                    changed = true;
                     _logger.LogInformation($"[ZeDMD] Brightness = {brightness}");
                 }
 
                 // SAVE to firmware EEPROM (persistent across power cycles)
+                if (!changed)
+                {
+                    _logger.LogInformation("[ZeDMD] Hardware calibration already current; skipping SaveSettings/Reset.");
+                    return false;
+                }
+
                 _zSaveSettings?.Invoke(_zedmdInstance);
                 _logger.LogInformation("[ZeDMD] SaveSettings → firmware EEPROM updated.");
 
                 // RESET firmware to apply new settings
                 _zReset?.Invoke(_zedmdInstance);
                 _logger.LogInformation("[ZeDMD] Reset sent — firmware restarting with new settings...");
+                return true;
             }
-            catch (Exception ex) { _logger.LogError($"[ZeDMD] PushHardwareCalibration error: {ex.Message}"); }
+            catch (Exception ex) { _logger.LogError($"[ZeDMD] PushHardwareCalibration error: {ex.Message}"); return false; }
         }
 
         public void HwClose()

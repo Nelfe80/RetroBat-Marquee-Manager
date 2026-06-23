@@ -50,7 +50,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         public string RomsPath => GetAbsolutePath(GetValue("RomsPath", Path.Combine(RetroBatPath, "roms")));
         public string IMPath => GetAbsolutePath(GetValue("IMPath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "imagemagick", "convert.exe")));
         public string MPVPath => GetAbsolutePath(GetValue("MPVPath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "mpv", "mpv.exe")));
-        public string MarqueeImagePath => GetAbsolutePath(GetValue("MarqueeImagePath", Path.Combine(RetroBatPath, "plugins", "RetroBatMarqueeManager", "medias")));
+        public string MarqueeImagePath => GetAbsolutePath(GetValue("MarqueeImagePath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "medias")));
         public string MarqueeImagePathDefault => GetAbsolutePath(GetValue("MarqueeImagePathDefault", Path.Combine(RetroBatPath, "roms")));
         public string CachePath => Path.Combine(MarqueeImagePath, "_cache");
         public string DefaultImagePath 
@@ -363,12 +363,12 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         }
         // Logic Flags
         // MarqueeAutoGeneration moved to alias below
-        public bool MarqueeAutoConvert => GetValue("MarqueeAutoConvert", "true").Equals("true", StringComparison.OrdinalIgnoreCase);
+        public bool MarqueeAutoConvert => GetValue("MarqueeAutoConvert", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
         public bool MarqueeVideoGeneration => GetValue("MarqueeVideoGeneration", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
 
         public string GenerateMarqueeVideoFolder => GetValue("GenerateMarqueeVideoFolder", "generated_videos");
         public string FfmpegHwEncoding => GetValue("FfmpegHwEncoding", ""); // Default: empty (software/x264)
-        public bool MarqueeCompose => GetValue("MarqueeCompose", "true").Equals("true", StringComparison.OrdinalIgnoreCase);
+        public bool MarqueeCompose => GetValue("MarqueeCompose", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
         // Alias for backward compatibility if code used it, or mapped to same key
         public bool MarqueeAutoGeneration => MarqueeCompose;
         
@@ -401,7 +401,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
             }
         }
         
-        public string MarqueeComposeVal => GetValue("MarqueeCompose", "true");
+        public string MarqueeComposeVal => GetValue("MarqueeCompose", "false");
         public int MarqueeHeight => int.TryParse(GetValue("MarqueeHeight", "360"), out var h) ? h : 360;
         public int MarqueeBorder => int.TryParse(GetValue("MarqueeBorder", "0"), out var b) ? b : 0;
 
@@ -611,10 +611,10 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
                 { "MarqueeHeight", "360" },
                 { "MarqueeBackgroundColor", "Black" },
                 { "MarqueeBackgroundCodeColor", "#000000" },
-                { "MarqueeCompose", "true" },
+                { "MarqueeCompose", "false" },
                 { "ComposeMedia", "fanart" },
                 { "MarqueeLayout", "gradient-standard" },
-                { "MarqueeAutoConvert", "true" },
+                { "MarqueeAutoConvert", "false" },
                 { "MarqueeVideoGeneration", "false" },
                 { "MarqueeAutoScraping", "false" },
                 { "MPVScrapMediaType", "" },
@@ -721,10 +721,10 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
                 _settings["MarqueeHeight"] = "360";
                 _settings["MarqueeBackgroundColor"] = "Black";
                 _settings["MarqueeBackgroundCodeColor"] = "#000000";
-                _settings["MarqueeCompose"] = "true";
+                _settings["MarqueeCompose"] = "false";
                 _settings["ComposeMedia"] = "fanart";
                 _settings["MarqueeLayout"] = "gradient-standard";
-                _settings["MarqueeAutoConvert"] = "true";
+                _settings["MarqueeAutoConvert"] = "false";
                 _settings["MarqueeVideoGeneration"] = "false"; // Added
                 _settings["GenerateMarqueeVideoFolder"] = "generated_videos"; // Added
                 _settings["FfmpegHwEncoding"] = ""; // Added
@@ -809,14 +809,14 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
                 sb.AppendLine("; Marquee Settings");
                 WriteKey(sb, "MarqueeBackgroundColor", "Black");
                 WriteKey(sb, "MarqueeBackgroundCodeColor", "#000000");
-                WriteKey(sb, "MarqueeCompose", "true");
+                WriteKey(sb, "MarqueeCompose", "false");
                 
                 sb.AppendLine("; Options: fanart | image (boxart/screenshot)");
                 WriteKey(sb, "ComposeMedia", "fanart");
                 
                 sb.AppendLine("; Options: standard | gradient-left | gradient-right | gradient-standard");
                 WriteKey(sb, "MarqueeLayout", "gradient-standard");
-                WriteKey(sb, "MarqueeAutoConvert", "true");
+                WriteKey(sb, "MarqueeAutoConvert", "false");
                 WriteKey(sb, "MarqueeVideoGeneration", "false"); // Added
 
                 WriteKey(sb, "GenerateMarqueeVideoFolder", "generated_videos"); // Added
@@ -1023,4 +1023,3 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         }
     }
 }
-
