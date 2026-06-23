@@ -444,22 +444,15 @@ namespace RetroBatMarqueeManager.Application.Services
 
                 if (payload.TryGetProperty("Media", out var media) || payload.TryGetProperty("media", out media))
                 {
-                    // Marquee for LCD — strict quality filter: never display DMD-sized images
-                    // (files with "dmd" in name are 256x64 or 128x32 — too low quality for LCD)
+                    // Marquee for LCD — quality filter: never display DMD-sized images
+                    // Priority: Marquee → GeneratedMarquee → Logo (wheel) → nothing
                     if (media.TryGetProperty("Marquee", out var mq) && mq.ValueKind == JsonValueKind.Object)
                         marqueePath = FilterMarqueePath(ReadStringProperty(mq, "Path"));
                     if (string.IsNullOrEmpty(marqueePath) && media.TryGetProperty("GeneratedMarquee", out mq) && mq.ValueKind == JsonValueKind.Object)
                         marqueePath = FilterMarqueePath(ReadStringProperty(mq, "Path"));
-                    if (string.IsNullOrEmpty(marqueePath))
-                    {
-                        if (payload.TryGetProperty("Selection", out var sel) || payload.TryGetProperty("selection", out sel))
-                        {
-                            var sys = ReadStringProperty(sel, "FrontendSystem") ?? ReadStringProperty(sel, "frontendSystem")
-                                   ?? ReadStringProperty(sel, "System") ?? ReadStringProperty(sel, "system");
-                            if (!string.IsNullOrEmpty(sys))
-                                marqueePath = $"media/systems/{sys}/artwork/marquee/generated-system-marquee.png";
-                        }
-                    }
+                    // Fallback: system Logo (wheel) provided by APIExpose — acceptable quality for LCD
+                    if (string.IsNullOrEmpty(marqueePath) && media.TryGetProperty("Logo", out mq) && mq.ValueKind == JsonValueKind.Object)
+                        marqueePath = FilterMarqueePath(ReadStringProperty(mq, "Path"));
 
                     // DMD content
                     if (media.TryGetProperty("Dmd", out var dmd) && dmd.ValueKind == JsonValueKind.Object)

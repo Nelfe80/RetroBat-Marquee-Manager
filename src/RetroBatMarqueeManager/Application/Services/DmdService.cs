@@ -268,6 +268,15 @@ namespace RetroBatMarqueeManager.Application.Services
 
                 if (_dmdWrapper.HwOpen(string.IsNullOrEmpty(cachedPort) ? null : cachedPort))
                 {
+                    // Auto-save discovered port for faster reconnect next time
+                    var discoveredPort = _dmdWrapper.DiscoveredPort;
+                    if (!string.IsNullOrEmpty(discoveredPort) && discoveredPort != cachedPort &&
+                        _config is Infrastructure.Configuration.IniConfigService iniCfg)
+                    {
+                        iniCfg.SetValue("ZeDmdPort", discoveredPort);
+                        _logger.LogInformation($"[ZeDMD] Port auto-saved: {discoveredPort}");
+                    }
+
                     bool isHd = _dmdWrapper.ZeDmdWidth >= 256 ||
                                 _config.DmdModel.Contains("hd", StringComparison.OrdinalIgnoreCase);
                     var appliedCalibration = BuildZeDmdCalibrationSignature(

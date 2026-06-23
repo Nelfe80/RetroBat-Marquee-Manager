@@ -38,9 +38,35 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
             }
         }
 
-        public string GetSetting(string key, string defaultValue = "") 
+        public string GetSetting(string key, string defaultValue = "")
         {
             return _settings.TryGetValue(key, out var val) ? val : defaultValue;
+        }
+
+        /// <summary>Updates a value in memory and persists it to config.ini immediately.</summary>
+        public void SetValue(string key, string value)
+        {
+            _settings[key] = value;
+            try
+            {
+                if (!File.Exists(_iniPath)) return;
+                var lines = File.ReadAllLines(_iniPath).ToList();
+                bool found = false;
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    var trimmed = lines[i].TrimStart();
+                    if (trimmed.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase) ||
+                        trimmed.StartsWith(key + " =", StringComparison.OrdinalIgnoreCase))
+                    {
+                        lines[i] = $"{key}={value}";
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) lines.Add($"{key}={value}");
+                File.WriteAllLines(_iniPath, lines, System.Text.Encoding.UTF8);
+            }
+            catch { }
         }
 
         // Paths
@@ -49,7 +75,6 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         public string RetroBatPath => GetRetroBatPath();
         public string RomsPath => GetAbsolutePath(GetValue("RomsPath", Path.Combine(RetroBatPath, "roms")));
         public string IMPath => GetAbsolutePath(GetValue("IMPath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "imagemagick", "convert.exe")));
-        public string MPVPath => GetAbsolutePath(GetValue("MPVPath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "mpv", "mpv.exe")));
         // MarqueeManager is a pure WS consumer — no local media store.
         // MarqueeImagePath is optional; only used if user explicitly sets it in config.
         public string MarqueeImagePath => GetAbsolutePath(GetValue("MarqueeImagePath", ""));
@@ -404,9 +429,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         public int IcCardScreen => int.TryParse(GetValue("IcCardScreen", "-1"), out var s) ? s : -1;
         public int LcdScreen => int.TryParse(GetValue("LcdScreen", "-1"), out var s) ? s : -1;
 
-        public string MpvHwDecoding => GetValue("HwDecoding", "no");
-        
-        public bool IsMpvEnabled 
+        public bool IsMpvEnabled
         {
             get
             {
@@ -792,9 +815,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
                 _settings["DmdHeight"] = "32";
                 // DmdArguments removed from here so it falls back to WriteKey's "commented default" logic
                 
-                // ScreenMPV
-                _settings["ScreenNumber"] = "1";
-                _settings["HwDecoding"] = "no";
+                // Screens (was ScreenMPV)
                 
                 // Pinball
                 _settings["pinballfx"] = "True";
@@ -941,25 +962,16 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
                 sb.AppendLine("; Virtual DMD dot size (pixel scaling factor, default: 8)");
                 WriteKey(sb, "DmdDotSize", "8");
 
-                // --- [ScreenMPV] ---
+                // --- [Screens] ---
                 sb.AppendLine();
-                sb.AppendLine("[ScreenMPV]");
-                WriteKey(sb, "MPVPath", @"tools\mpv\mpv.exe");
-                WriteKey(sb, "MarqueeWidth", "1920");
-                WriteKey(sb, "MarqueeHeight", "360");
-                WriteKey(sb, "SystemCustomMarqueePath", "");
-                WriteKey(sb, "GameCustomMarqueePath", "");
-                WriteKey(sb, "GameStartMediaPath", "");
-                sb.AppendLine("; MPV Screen Index (0=Primary, 1=Secondary, etc.)");
-
-                WriteKey(sb, "ScreenNumber", "1");
+                sb.AppendLine("[Screens]");
+                sb.AppendLine("; Screen index (Windows display index: 0=primary, 1=first secondary, etc. ; -1 = disabled)");
+                sb.AppendLine("; Comma-separated for multiple screens on the same target: MarqueeScreen=1,3");
                 WriteKey(sb, "MarqueeScreen", "2");
                 WriteKey(sb, "TopperScreen", "-1");
                 WriteKey(sb, "IcCardScreen", "-1");
                 WriteKey(sb, "DmdScreen", "-1");
                 WriteKey(sb, "LcdScreen", "-1");
-                sb.AppendLine("; Hardware Decoding (auto, d3d11va, dxva2, no)");
-                WriteKey(sb, "HwDecoding", "no");
 
                 // --- [Pinball] ---
                 sb.AppendLine();

@@ -1,4 +1,4 @@
-using RetroBatMarqueeManager.Core.Interfaces;
+﻿using RetroBatMarqueeManager.Core.Interfaces;
 using RetroBatMarqueeManager.Application.Services;
 using RetroBatMarqueeManager.Core.Models.RetroAchievements;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
         private string? _currentGameSystem; // System of currently running game
         private string? _currentGameName; // Name of currently running game
         private string? _currentGameRom; // ROM path of currently running game
-        private bool _mpvSuspendedForPinball = false; // EN: True if MPV was stopped for pinball / FR: Vrai si MPV a été arrêté pour pinball
+        private bool _mpvSuspendedForPinball = false; // EN: True if MPV was stopped for pinball / FR: Vrai si MPV a Ã©tÃ© arrÃªtÃ© pour pinball
         private readonly IScraperManager _scraperManager;
         private readonly IOverlayTemplateService _templateService;
 
@@ -37,26 +37,26 @@ namespace RetroBatMarqueeManager.Application.Workflows
         private readonly IProcessService _processService;
         
         // EN: Video Offset Management (new services)
-        // FR: Gestion des offsets vidéo (nouveaux services)
+        // FR: Gestion des offsets vidÃ©o (nouveaux services)
         private readonly VideoMarqueeService _videoService;
         private readonly VideoOffsetStorageService _videoOffsetStorage;
         private readonly RetroAchievementsService? _raService; // EN: RetroAchievements Service / FR: Service RetroAchievements
         
         // EN: Video adjustment mode state
-        // FR: État du mode ajustement vidéo
+        // FR: Ã‰tat du mode ajustement vidÃ©o
         private bool _isVideoAdjustmentMode = false;
         private string? _currentVideoPath = null;
         private string? _currentVideoPreviewFrame = null;
         private VideoOffsetData _currentVideoOffsets = new VideoOffsetData();
-        private string? _lastPlayedVideoPath = null; // EN: Track last played video to avoid reloading in loop / FR: Suivre dernière vidéo pour éviter rechargement en boucle
+        private string? _lastPlayedVideoPath = null; // EN: Track last played video to avoid reloading in loop / FR: Suivre derniÃ¨re vidÃ©o pour Ã©viter rechargement en boucle
         private CancellationTokenSource? _badgeCycleCts; // EN: For DMD badge cycling / FR: Pour cycle badges DMD
         private CancellationTokenSource? _mpvBadgeCycleCts; // EN: For MPV badge cycling / FR: Pour cycle badges MPV
         private CancellationTokenSource? _dmdChallengeCycleCts; // EN: For DMD challenge cycling / FR: Pour cycle challenges DMD
         private CancellationTokenSource? _dmdRpStatRotationCts; // EN: For DMD RP stat rotation / FR: Pour rotation stats RP DMD
         private int _dmdRpStatIndex = 0; // EN: Current index for RP stat rotation / FR: Index actuel pour rotation stats RP
-        private Dictionary<string, string> _currentDmdRpStats = new(); // EN: Stored stats for rotation / FR: Stats stockées pour la rotation
-        private readonly ConcurrentDictionary<int, CancellationTokenSource> _challengeRefreshCts = new(); // EN: For real-time timer refresh / FR: Pour rafraîchissement temps réel timer
-        private ConcurrentDictionary<int, ChallengeState> _activeChallenges = new(); // EN: Storage for all active challenges / FR: Stockage pour tous les défis actifs (Now ConcurrentDictionary)
+        private Dictionary<string, string> _currentDmdRpStats = new(); // EN: Stored stats for rotation / FR: Stats stockÃ©es pour la rotation
+        private readonly ConcurrentDictionary<int, CancellationTokenSource> _challengeRefreshCts = new(); // EN: For real-time timer refresh / FR: Pour rafraÃ®chissement temps rÃ©el timer
+        private ConcurrentDictionary<int, ChallengeState> _activeChallenges = new(); // EN: Storage for all active challenges / FR: Stockage pour tous les dÃ©fis actifs (Now ConcurrentDictionary)
         private CancellationTokenSource? _mpvChallengeCycleCts; // EN: For MPV challenge cycling / FR: Pour cycle challenges MPV        
         private CancellationTokenSource? _narrationCts;
         private Guid _currentNarrationId = Guid.Empty;
@@ -99,7 +99,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             _scraperManager.OnScrapeCompleted += (sys, game, path) =>
             {
                 // EN: Check if the scraped game matches current game
-                // FR: Vérifier si le jeu scrapé correspond au jeu en cours
+                // FR: VÃ©rifier si le jeu scrapÃ© correspond au jeu en cours
                 if (!string.IsNullOrEmpty(_currentGameName) && 
                     !string.IsNullOrEmpty(_currentGameSystem) && 
                     _currentGameSystem.Equals(sys, StringComparison.OrdinalIgnoreCase))
@@ -125,7 +125,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             _inputService.OnTrimStart += () => HandleTrimCommand(true);
             _inputService.OnTrimEnd += () => HandleTrimCommand(false);
             
-            // EN: Subscribe to RetroAchievements events / FR: S'abonner aux événements RetroAchievements
+            // EN: Subscribe to RetroAchievements events / FR: S'abonner aux Ã©vÃ©nements RetroAchievements
             if (_raService != null)
             {
                 _raService.AchievementUnlocked += OnAchievementUnlocked;
@@ -134,15 +134,15 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 // EN: Subscribe to Rich Presence
                 _raService.RichPresenceUpdated += OnRichPresenceUpdated;
                 _raService.ChallengeUpdated += OnChallengeUpdated;
-                _raService.AchievementDetected += OnAchievementDetected; // EN: Subscribe to immediate detection / FR: S'abonner à la détection immédiate
-                _raService.SetImageConversionService(_imageService); // EN: For grayscale badge generation / FR: Pour génération badge niveaux de gris
+                _raService.AchievementDetected += OnAchievementDetected; // EN: Subscribe to immediate detection / FR: S'abonner Ã  la dÃ©tection immÃ©diate
+                _raService.SetImageConversionService(_imageService); // EN: For grayscale badge generation / FR: Pour gÃ©nÃ©ration badge niveaux de gris
                 _logger.LogInformation("[RA Workflow] Subscribed to RetroAchievements events");
             }
         }
 
-        private bool _isProcessingAchievement = false; // EN: Flag to suppress RP during achievement sequences / FR: Flag pour supprimer RP pendant séquences succès
-        private int _activeAchievementCount = 0; // EN: Track number of achievements being processed / FR: Suivre le nombre de succès en cours de traitement
-        private readonly SemaphoreSlim _dmdNotificationSemaphore = new(1, 1); // EN: Serialize DMD achievment overlays / FR: Sérialiser les overlays de succès DMD
+        private bool _isProcessingAchievement = false; // EN: Flag to suppress RP during achievement sequences / FR: Flag pour supprimer RP pendant sÃ©quences succÃ¨s
+        private int _activeAchievementCount = 0; // EN: Track number of achievements being processed / FR: Suivre le nombre de succÃ¨s en cours de traitement
+        private readonly SemaphoreSlim _dmdNotificationSemaphore = new(1, 1); // EN: Serialize DMD achievment overlays / FR: SÃ©rialiser les overlays de succÃ¨s DMD
 
         private void OnAchievementDetected(object? sender, EventArgs e)
         {
@@ -153,7 +153,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 _isProcessingAchievement = true;
                 
                 // EN: Safety timeout to reset flag in case event/sequence fails
-                // FR: Timeout de sécurité pour reset le flag si l'événement/la séquence échoue
+                // FR: Timeout de sÃ©curitÃ© pour reset le flag si l'Ã©vÃ©nement/la sÃ©quence Ã©choue
                 _ = Task.Delay(20000).ContinueWith(_ => 
                 {
                     if (_isProcessingAchievement && _activeAchievementCount == 0)
@@ -173,16 +173,16 @@ namespace RetroBatMarqueeManager.Application.Workflows
         private int _pendingLogoY = 0;
         private double _pendingFanartScale = 0.0;
         private double _pendingLogoScale = 0.0;
-        private bool _isVideoPlaybackMode = false; // EN: True if playing source video for trimming / FR: Vrai si lecture vidéo source pour découpe
-        private RichPresenceState? _lastRpState; // EN: Track last RP state / FR: Suivre dernier état RP
-        private DateTime _lastDmdRpUpdate = DateTime.MinValue; // EN: Debounce for DMD RP / FR: Limitation fréquence DMD RP
+        private bool _isVideoPlaybackMode = false; // EN: True if playing source video for trimming / FR: Vrai si lecture vidÃ©o source pour dÃ©coupe
+        private RichPresenceState? _lastRpState; // EN: Track last RP state / FR: Suivre dernier Ã©tat RP
+        private DateTime _lastDmdRpUpdate = DateTime.MinValue; // EN: Debounce for DMD RP / FR: Limitation frÃ©quence DMD RP
         private DateTime _dmdRpDisplayExpiry = DateTime.MinValue; // EN: Expiry for showing RP on DMD / FR: Expiration de l'affichage RP sur DMD
-        private string _lastDmdText = string.Empty; // EN: Track last text sent to DMD / FR: Suivre dernier texte envoyé au DMD
+        private string _lastDmdText = string.Empty; // EN: Track last text sent to DMD / FR: Suivre dernier texte envoyÃ© au DMD
 
         private void HandleMoveCommand(int dx, int dy, bool isLogo)
         {
             // EN: Check if in video adjustment mode
-            // FR: Vérifier si en mode ajustement vidéo
+            // FR: VÃ©rifier si en mode ajustement vidÃ©o
             if (_isVideoAdjustmentMode)
             {
                 HandleVideoMove(dx, dy, isLogo);
@@ -208,7 +208,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
         private void HandleScaleCommand(double delta, bool isLogo)
         {
             // EN: Check if in video adjustment mode
-            // FR: Vérifier si en mode ajustement vidéo
+            // FR: VÃ©rifier si en mode ajustement vidÃ©o
             if (_isVideoAdjustmentMode)
             {
                 HandleVideoScale(delta, isLogo);
@@ -282,11 +282,11 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
                     if (!string.IsNullOrEmpty(newPath))
                     {
-                        _currentMarqueePath = newPath; // EN: Update stored path for refresh / FR: Mettre à jour le chemin stocké pour le rafraîchissement
+                        _currentMarqueePath = newPath; // EN: Update stored path for refresh / FR: Mettre Ã  jour le chemin stockÃ© pour le rafraÃ®chissement
                         await _mpv.DisplayImage(newPath);
 
                         // EN: Also refresh DMD if Composition is enabled
-                        // FR: Rafraîchir aussi le DMD si la composition est activée
+                        // FR: RafraÃ®chir aussi le DMD si la composition est activÃ©e
                         if (_config.DmdEnabled && _config.DmdCompose && !string.IsNullOrEmpty(_currentGameSystem) && !string.IsNullOrEmpty(_currentGameName))
                         {
                             var romName = !string.IsNullOrEmpty(_currentGameRom) ? Path.GetFileNameWithoutExtension(_currentGameRom) : "";
@@ -316,12 +316,12 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Handle Ctrl+V to enter video adjustment mode
-        /// FR: Gérer Ctrl+V pour entrer en mode ajustement vidéo
+        /// FR: GÃ©rer Ctrl+V pour entrer en mode ajustement vidÃ©o
         /// </summary>
         private async void HandleVideoAdjustmentMode()
         {
             // EN: Can only adjust if game is running and video is being displayed
-            // FR: Ajustement possible uniquement si jeu en cours et vidéo affichée
+            // FR: Ajustement possible uniquement si jeu en cours et vidÃ©o affichÃ©e
             if (!_gameRunning || string.IsNullOrEmpty(_currentVideoPath))
             {
                 _logger.LogWarning("[VideoAdjustment] Cannot enter video adjustment mode: No game running or video playing");
@@ -329,7 +329,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             }
 
             // EN: Verify system and game name are available
-            // FR: Vérifier que system et nom du jeu sont disponibles
+            // FR: VÃ©rifier que system et nom du jeu sont disponibles
             if (string.IsNullOrEmpty(_currentGameSystem) || string.IsNullOrEmpty(_currentGameName))
             {
                 _logger.LogWarning("[VideoAdjustment] Cannot enter video adjustment mode: Missing system or game name");
@@ -337,7 +337,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             }
 
             // EN: Check if current video is a generated marquee video
-            // FR: Vérifier si la vidéo actuelle est une marquee générée
+            // FR: VÃ©rifier si la vidÃ©o actuelle est une marquee gÃ©nÃ©rÃ©e
             if (!_videoService.IsGeneratedVideo(_currentVideoPath))
             {
                 _logger.LogWarning($"[VideoAdjustment] Current video is not a generated marquee: {_currentVideoPath}");
@@ -350,11 +350,11 @@ namespace RetroBatMarqueeManager.Application.Workflows
             _lastPlayedVideoPath = null; // Reset playback state
 
             // EN: Load global offsets as starting point (or initialize with video generation defaults)
-            // FR: Charger les offsets globaux comme point de départ (ou initialiser avec valeurs par défaut de génération vidéo)
+            // FR: Charger les offsets globaux comme point de dÃ©part (ou initialiser avec valeurs par dÃ©faut de gÃ©nÃ©ration vidÃ©o)
             _currentVideoOffsets = _videoOffsetStorage.GetGlobalOffsets(_currentGameSystem, _currentGameName);
             
             // EN: IMPORTANT: If logo position is 0,0, set to default 10,10 (video generation default)
-            // FR: IMPORTANT: Si position logo est 0,0, définir à 10,10 par défaut (défaut génération vidéo)
+            // FR: IMPORTANT: Si position logo est 0,0, dÃ©finir Ã  10,10 par dÃ©faut (dÃ©faut gÃ©nÃ©ration vidÃ©o)
             // This ensures the logo appears in the same position as when the video was originally generated
             if (_currentVideoOffsets.LogoX == 0 && _currentVideoOffsets.LogoY == 0)
             {
@@ -364,9 +364,9 @@ namespace RetroBatMarqueeManager.Application.Workflows
             }
 
             // EN: Find SOURCE video (not the generated one) to capture full-size frame
-            // FR: Trouver la vidéo SOURCE (pas celle générée) pour capturer frame plein format
+            // FR: Trouver la vidÃ©o SOURCE (pas celle gÃ©nÃ©rÃ©e) pour capturer frame plein format
             // EN: Find SOURCE video (not the generated one) to capture full-size frame
-            // FR: Trouver la vidéo SOURCE (pas celle générée) pour capturer frame plein format
+            // FR: Trouver la vidÃ©o SOURCE (pas celle gÃ©nÃ©rÃ©e) pour capturer frame plein format
             var romFileName = Path.GetFileNameWithoutExtension(_currentVideoPath);
             var videoSourcePath = FindSourceVideo(_currentGameSystem, romFileName);
             
@@ -387,7 +387,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             }
 
             // EN: Capture frame from SOURCE video for preview
-            // FR: Capturer une frame de la vidéo SOURCE pour l'aperçu
+            // FR: Capturer une frame de la vidÃ©o SOURCE pour l'aperÃ§u
             _currentVideoPreviewFrame = _videoService.CaptureVideoFrame(videoSourcePath, 5.0);
             
             if (string.IsNullOrEmpty(_currentVideoPreviewFrame))
@@ -398,7 +398,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             }
 
             // EN: Generate preview with logo overlay
-            // FR: Générer l'aperçu avec overlay du logo
+            // FR: GÃ©nÃ©rer l'aperÃ§u avec overlay du logo
             await RefreshVideoPreview();
 
             // EN: Display OSD Helper for Shortcuts
@@ -415,7 +415,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Handle move command in video adjustment mode
-        /// FR: Gérer la commande de déplacement en mode ajustement vidéo
+        /// FR: GÃ©rer la commande de dÃ©placement en mode ajustement vidÃ©o
         /// </summary>
         private async void HandleVideoMove(int dx, int dy, bool isLogo)
         {
@@ -434,20 +434,20 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
 
             // EN: Update global offsets storage
-            // FR: Mettre à jour le stockage des offsets globaux
+            // FR: Mettre Ã  jour le stockage des offsets globaux
             if (!string.IsNullOrEmpty(_currentGameSystem) && !string.IsNullOrEmpty(_currentGameName))
             {
                 _videoOffsetStorage.UpdateGlobalOffsets(_currentGameSystem, _currentGameName, _currentVideoOffsets);
             }
 
             // EN: Refresh preview
-            // FR: Rafraîchir l'aperçu
+            // FR: RafraÃ®chir l'aperÃ§u
             await RefreshVideoPreview();
         }
 
         /// <summary>
         /// EN: Handle scale command in video adjustment mode
-        /// FR: Gérer la commande de zoom en mode ajustement vidéo
+        /// FR: GÃ©rer la commande de zoom en mode ajustement vidÃ©o
         /// </summary>
         private async void HandleVideoScale(double delta, bool isLogo)
         {
@@ -463,20 +463,20 @@ namespace RetroBatMarqueeManager.Application.Workflows
             }
 
             // EN: Update global offsets storage
-            // FR: Mettre à jour le stockage des offsets globaux
+            // FR: Mettre Ã  jour le stockage des offsets globaux
             if (!string.IsNullOrEmpty(_currentGameSystem) && !string.IsNullOrEmpty(_currentGameName))
             {
                 _videoOffsetStorage.UpdateGlobalOffsets(_currentGameSystem, _currentGameName, _currentVideoOffsets);
             }
 
             // EN: Refresh preview
-            // FR: Rafraîchir l'aperçu
+            // FR: RafraÃ®chir l'aperÃ§u
             await RefreshVideoPreview();
         }
 
         /// <summary>
         /// EN: Refresh video preview with current offsets applied to frame + logo overlay
-        /// FR: Rafraîchir l'aperçu vidéo avec offsets appliqués à la frame + overlay logo
+        /// FR: RafraÃ®chir l'aperÃ§u vidÃ©o avec offsets appliquÃ©s Ã  la frame + overlay logo
         /// </summary>
         private async Task RefreshVideoPreview()
         {
@@ -487,7 +487,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             }
 
             // EN: If in Playback Mode, play the SOURCE video directly
-            // FR: Si en Mode Lecture, jouer la vidéo SOURCE directement
+            // FR: Si en Mode Lecture, jouer la vidÃ©o SOURCE directement
             if (_isVideoPlaybackMode)
             {
                 var romFileName = Path.GetFileNameWithoutExtension(_currentVideoPath) ?? "";
@@ -502,14 +502,14 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 if (!string.IsNullOrEmpty(videoSourcePath))
                 {
                      // EN: Optimization: If already playing this video, do nothing
-                     // FR: Optimisation: Si cette vidéo est déjà en lecture, ne rien faire
+                     // FR: Optimisation: Si cette vidÃ©o est dÃ©jÃ  en lecture, ne rien faire
                      if (videoSourcePath == _lastPlayedVideoPath)
                      {
                          return;
                      }
 
                      // Play source video looping
-                     _currentMarqueePath = videoSourcePath; // EN: Update stored path / FR: Mettre à jour le chemin stocké
+                     _currentMarqueePath = videoSourcePath; // EN: Update stored path / FR: Mettre Ã  jour le chemin stockÃ©
                      await _mpv.DisplayImage(videoSourcePath, loop: true);
                      _lastPlayedVideoPath = videoSourcePath; // Update state
 
@@ -522,7 +522,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             else
             {
                 _lastPlayedVideoPath = null; // Reset state when exiting playback mode
-                // FR: Désactiver l'OSC si on quitte le mode lecture
+                // FR: DÃ©sactiver l'OSC si on quitte le mode lecture
                 await _mpv.SendCommandAsync($"{{\"command\":[\"script-message\", \"osc-visibility\", \"never\", \"no-osd\"]}}");
             }
 
@@ -531,14 +531,14 @@ namespace RetroBatMarqueeManager.Application.Workflows
             try
             {
                 // EN: Find logo using MarqueeFinder's logic (same as all other media)
-                // FR: Trouver le logo en utilisant la logique de MarqueeFinder (comme tous les autres médias)
+                // FR: Trouver le logo en utilisant la logique de MarqueeFinder (comme tous les autres mÃ©dias)
                 var romFileName = Path.GetFileNameWithoutExtension(_currentVideoPath) ?? "";
                 var logoPath = _marqueeFinder.FindGameLogo(_currentGameSystem, _currentGameName, romFileName, raw: true);
 
                 if (string.IsNullOrEmpty(logoPath))
                 {
                     _logger.LogWarning($"[VideoAdjustment] Logo not found for {romFileName}, displaying frame only");
-                    _currentMarqueePath = _currentVideoPreviewFrame; // EN: Update stored path / FR: Mettre à jour le chemin stocké
+                    _currentMarqueePath = _currentVideoPreviewFrame; // EN: Update stored path / FR: Mettre Ã  jour le chemin stockÃ©
                     await _mpv.DisplayImage(_currentVideoPreviewFrame);
                     return;
                 }
@@ -562,9 +562,9 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
                 if (!string.IsNullOrEmpty(composedPath) && File.Exists(composedPath))
                 {
-                    _currentMarqueePath = composedPath; // EN: Update stored path / FR: Mettre à jour le chemin stocké
+                    _currentMarqueePath = composedPath; // EN: Update stored path / FR: Mettre Ã  jour le chemin stockÃ©
                     await _mpv.DisplayImage(composedPath);
-                    _logger.LogInformation($"[VideoAdjustment] ✓ Preview refreshed successfully");
+                    _logger.LogInformation($"[VideoAdjustment] âœ“ Preview refreshed successfully");
                 }
                 else
                 {
@@ -582,7 +582,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Helper to find the original source video for a game
-        /// FR: Aide pour trouver la vidéo source originale d'un jeu
+        /// FR: Aide pour trouver la vidÃ©o source originale d'un jeu
         /// </summary>
         private string? FindSourceVideo(string system, string romFileName)
         {
@@ -609,18 +609,18 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Check if video offsets exist and trigger regeneration if needed
-        /// FR: Vérifier si des offsets vidéo existent et déclencher la régénération si nécessaire
+        /// FR: VÃ©rifier si des offsets vidÃ©o existent et dÃ©clencher la rÃ©gÃ©nÃ©ration si nÃ©cessaire
         /// </summary>
         private void CheckAndTriggerVideoRegeneration(string system, string gameName)
         {
             try
             {
                 // EN: Check if global video offsets exist for this game
-                // FR: Vérifier si des offsets vidéo globaux existent pour ce jeu
+                // FR: VÃ©rifier si des offsets vidÃ©o globaux existent pour ce jeu
                 var offsets = _videoOffsetStorage.GetGlobalOffsets(system, gameName);
                 
                 // EN: Check if any offset is non-default (not all zeros and zoom=1)
-                // FR: Vérifier si un offset est non-par-défaut (pas tous zeros et zoom=1)
+                // FR: VÃ©rifier si un offset est non-par-dÃ©faut (pas tous zeros et zoom=1)
                 bool hasCustomOffsets = offsets.CropX != 0 || offsets.CropY != 0 || 
                                        Math.Abs(offsets.Zoom - 1.0) > 0.01 ||
                                        offsets.LogoX != 10 || offsets.LogoY != 10 ||
@@ -635,12 +635,12 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 _logger.LogInformation($"[VideoRegen] Custom offsets detected for {gameName}");
                 
                 // EN: Check if individual offset marker exists and compare with current offsets
-                // FR: Vérifier si le marqueur d'offset individuel existe et comparer avec offsets actuels
+                // FR: VÃ©rifier si le marqueur d'offset individuel existe et comparer avec offsets actuels
                 var individualOffsets = _videoOffsetStorage.GetIndividualOffsets(system, gameName);
                 if (individualOffsets != null)
                 {
                     // EN: Compare individual (last regenerated) with global (current desired)
-                    // FR: Comparer individuels (dernière régénération) avec globaux (actuels désirés)
+                    // FR: Comparer individuels (derniÃ¨re rÃ©gÃ©nÃ©ration) avec globaux (actuels dÃ©sirÃ©s)
                     bool offsetsMatch = individualOffsets.CropX == offsets.CropX &&
                                        individualOffsets.CropY == offsets.CropY &&
                                        Math.Abs(individualOffsets.Zoom - offsets.Zoom) < 0.01 &&
@@ -662,7 +662,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 }
                 
                 // EN: Find and delete the generated video to force regeneration
-                // FR: Trouver et supprimer la vidéo générée pour forcer la régénération
+                // FR: Trouver et supprimer la vidÃ©o gÃ©nÃ©rÃ©e pour forcer la rÃ©gÃ©nÃ©ration
                 var subFolder = _config.GenerateMarqueeVideoFolder;
                 if (string.IsNullOrWhiteSpace(subFolder)) subFolder = "generated_videos";
                 
@@ -670,7 +670,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 if (parentDir == null) return;
                 
                 // EN: IMPORTANT: Use exact ROM filename to match video generation logic
-                // FR: IMPORTANT: Utiliser le nom exact du fichier ROM pour correspondre à la logique de génération vidéo
+                // FR: IMPORTANT: Utiliser le nom exact du fichier ROM pour correspondre Ã  la logique de gÃ©nÃ©ration vidÃ©o
                 // Use _currentGameRom if available to ensure we match the file system naming (spaces vs underscores)
                 var romFileName = !string.IsNullOrEmpty(_currentGameRom) 
                     ? Path.GetFileNameWithoutExtension(_currentGameRom) 
@@ -688,7 +688,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 }
                 
                 // EN: Find source video and logo to regenerate with new offsets
-                // FR: Trouver vidéo source et logo pour régénérer avec nouveaux offsets
+                // FR: Trouver vidÃ©o source et logo pour rÃ©gÃ©nÃ©rer avec nouveaux offsets
                 // romFileName is used for output, but for finding source we might need both patterns
                 var videoSource = FindSourceVideo(system, romFileName);
                 
@@ -707,7 +707,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 }
                 
                 // EN: Delete old video and regenerate with custom offsets
-                // FR: Supprimer ancienne vidéo et régénérer avec offsets personnalisés
+                // FR: Supprimer ancienne vidÃ©o et rÃ©gÃ©nÃ©rer avec offsets personnalisÃ©s
                 var videoPath = Path.Combine(systemVideoDir, $"{sanitizedFileName}.mp4");
                 if (File.Exists(videoPath))
                 {
@@ -727,7 +727,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 {
                     _logger.LogInformation($"[VideoRegen] Successfully regenerated: {result}");
                     // EN: Create individual offset marker to prevent future regenerations
-                    // FR: Créer marqueur d'offset individuel pour éviter futures régénérations
+                    // FR: CrÃ©er marqueur d'offset individuel pour Ã©viter futures rÃ©gÃ©nÃ©rations
                     _videoOffsetStorage.SaveIndividualOffsets(system, gameName, offsets);
                     _logger.LogInformation($"[VideoRegen] Created individual offset marker");
                 }
@@ -744,7 +744,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Toggle between Static Preview and Source Video Playback for Trimming
-        /// FR: Basculer entre Aperçu Statique et Lecture Vidéo Source pour la Découpe
+        /// FR: Basculer entre AperÃ§u Statique et Lecture VidÃ©o Source pour la DÃ©coupe
         /// </summary>
         private async void HandleTogglePlayback()
         {
@@ -763,14 +763,14 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Handle Trim Start/End commands
-        /// FR: Gérer les commandes de début/fin de découpe
+        /// FR: GÃ©rer les commandes de dÃ©but/fin de dÃ©coupe
         /// </summary>
         private async void HandleTrimCommand(bool isStart)
         {
             if (!_isVideoAdjustmentMode || !_isVideoPlaybackMode)
             {
                 // Can only trim while playing
-                // FR: Découpe possible uniquement en lecture
+                // FR: DÃ©coupe possible uniquement en lecture
                 return;
             }
 
@@ -783,7 +783,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 await _mpv.SendCommandAsync($"{{\"command\":[\"show-text\", \"Start Time: {currentTime:F2}s\", 2000]}}");
 
                 // EN: Capture new preview frame at this timestamp so static mode shows the new start
-                // FR: Capturer nouvelle frame d'aperçu à ce timestamp pour que le mode statique montre le nouveau début
+                // FR: Capturer nouvelle frame d'aperÃ§u Ã  ce timestamp pour que le mode statique montre le nouveau dÃ©but
                 var romFileName = Path.GetFileNameWithoutExtension(_currentVideoPath) ?? "";
                 var sourcePath = FindSourceVideo(_currentGameSystem ?? "", romFileName);
                 if (!string.IsNullOrEmpty(sourcePath))
@@ -818,7 +818,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             }
             
              // EN: Update global offsets storage
-             // FR: Mettre à jour le stockage des offsets globaux
+             // FR: Mettre Ã  jour le stockage des offsets globaux
              if (!string.IsNullOrEmpty(_currentGameSystem) && !string.IsNullOrEmpty(_currentGameName))
              {
                  _videoOffsetStorage.UpdateGlobalOffsets(_currentGameSystem, _currentGameName, _currentVideoOffsets);
@@ -852,7 +852,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 case "stop-preview":
                     _logger.LogInformation("Stopping preview mode (IPC command received).");
                     // EN: Cancel running preview task to prevent it from overlaying after cleanup
-                    // FR: Annuler la tâche de preview en cours pour éviter qu'elle n'affiche après le nettoyage
+                    // FR: Annuler la tÃ¢che de preview en cours pour Ã©viter qu'elle n'affiche aprÃ¨s le nettoyage
                     if (_previewCts != null) { _previewCts.Cancel(); }
                     
                     if (_bgPreviewTask != null)
@@ -867,16 +867,16 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     _gameRunning = false; // EN: Set game running flag to false to prevent delayed RA overlays
 
                     // EN: Explicitly reset RA state on game end
-                    // FR: Réinitialiser explicitement l'état RA à la fin du jeu
+                    // FR: RÃ©initialiser explicitement l'Ã©tat RA Ã  la fin du jeu
                     _raService?.ResetState();
 
                     // EN: Unified cleanup for all overlays and cycles
-                    // FR: Nettoyage unifié pour tous les overlays et cycles
+                    // FR: Nettoyage unifiÃ© pour tous les overlays et cycles
                     await CleanupAllOverlays();
 
                     // Resume DMD for game or system
                      // EN: Wait for external DMD control (e.g. Pinball FX3) to release before attempting to display
-                     // FR: Attendre la libération du contrôle DMD externe (ex: Pinball FX3) avant d'essayer d'afficher
+                     // FR: Attendre la libÃ©ration du contrÃ´le DMD externe (ex: Pinball FX3) avant d'essayer d'afficher
                      await _dmdService.WaitForExternalReleaseAsync();
                      
                      // Display DMD Game Over if found
@@ -902,7 +902,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                         var composedPath = _marqueeFinder.FindGameOverMarquee();
                         if (!string.IsNullOrEmpty(composedPath) && File.Exists(composedPath))
                         {
-                            _currentMarqueePath = composedPath; // EN: Update stored path / FR: Mettre à jour le chemin stocké
+                            _currentMarqueePath = composedPath; // EN: Update stored path / FR: Mettre Ã  jour le chemin stockÃ©
                             await _mpv.DisplayImage(composedPath);
                             _logger.LogInformation($"Displayed GAME OVER composition: {composedPath}");
                             gameOverDisplayed = true;
@@ -922,7 +922,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                             
                             if (gameMarquee != null)
                             {
-                                _currentMarqueePath = gameMarquee; // EN: Update stored path / FR: Mettre à jour le chemin stocké
+                                _currentMarqueePath = gameMarquee; // EN: Update stored path / FR: Mettre Ã  jour le chemin stockÃ©
                                 await _mpv.DisplayImage(gameMarquee);
                                 _logger.LogInformation($"Restored game marquee (Fallback): {gameMarquee}");
                             }
@@ -938,21 +938,21 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     }
                     
                     // EN: VIDEO REGENERATION - Check if offsets changed and regenerate if needed
-                    // FR: RÉGÉNÉRATION VIDÉO - Vérifier si offsets changés et régénérer si besoin
+                    // FR: RÃ‰GÃ‰NÃ‰RATION VIDÃ‰O - VÃ©rifier si offsets changÃ©s et rÃ©gÃ©nÃ©rer si besoin
                     if (_isVideoAdjustmentMode && !string.IsNullOrEmpty(_currentVideoPath) && 
                         !string.IsNullOrEmpty(_currentGameSystem) && !string.IsNullOrEmpty(_currentGameName))
                     {
                         _logger.LogInformation("[VideoAdjustment] Exiting video adjustment mode - checking for regeneration");
                         
                         // EN: Check if offsets have changed compared to individual file
-                        // FR: Vérifier si les offsets ont changé par rapport au fichier individuel
+                        // FR: VÃ©rifier si les offsets ont changÃ© par rapport au fichier individuel
                         if (_videoService.IsGeneratedVideo(_currentVideoPath) && 
                             _videoOffsetStorage.HasOffsetsChanged(_currentGameSystem, _currentGameName))
                         {
                             _logger.LogInformation($"[VideoRegeneration] Offsets changed for {_currentGameSystem}/{_currentGameName} - regenerating video");
                             
                             // EN: Find source video and logo for regeneration
-                            // FR: Trouver la vidéo source et le logo pour régénération
+                            // FR: Trouver la vidÃ©o source et le logo pour rÃ©gÃ©nÃ©ration
                             // TODO: Store source video path for regeneration (for now, skip regeneration)
                             // User will need to trigger regeneration on next game-start
                             _logger.LogWarning("[VideoRegeneration] Video will be regenerated on next game-start");
@@ -960,7 +960,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     }
                     
                     // EN: Reset video adjustment state
-                    // FR: Réinitialiser l'état d'ajustement vidéo
+                    // FR: RÃ©initialiser l'Ã©tat d'ajustement vidÃ©o
                     _isVideoAdjustmentMode = false;
                     _currentVideoPath = null;
                     _currentVideoPreviewFrame = null;
@@ -972,7 +972,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     _currentGameRom = null;
                     
                     // EN: Restart MPV if it was suspended for pinball
-                    // FR: Redémarrer MPV s'il a été suspendu pour le pinball
+                    // FR: RedÃ©marrer MPV s'il a Ã©tÃ© suspendu pour le pinball
                     if (_mpvSuspendedForPinball)
                     {
                         _logger.LogInformation("[Pinball] Restarting MPV after pinball game...");
@@ -1077,7 +1077,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
             _currentGameSystem = system;
             // EN: IMPORTANT: Use romFileName (full name with region) for video offsets, not gameName (ES display name)
-            // FR: IMPORTANT: Utiliser romFileName (nom complet avec région) pour offsets vidéo, pas gameName (nom affichage ES)
+            // FR: IMPORTANT: Utiliser romFileName (nom complet avec rÃ©gion) pour offsets vidÃ©o, pas gameName (nom affichage ES)
             // romFileName = "After Burner Complete (Europe)" - matches video/image files
             // gameName = "After Burner Complete" - ES display name, might be truncated
             _currentGameName = romFileName; // Use full ROM name for consistency with file names
@@ -1092,12 +1092,12 @@ namespace RetroBatMarqueeManager.Application.Workflows
             var (pinballHandled, suspendMPV) = await _dmdService.CheckAndRunPinballAsync(system, gameName);
 
             // EN: Suspend MPV if requested by pinball config
-            // FR: Suspendre MPV si demandé par la config pinball
+            // FR: Suspendre MPV si demandÃ© par la config pinball
             if (suspendMPV)
             {
                 _logger.LogInformation($"[Pinball] Suspending MPV for '{system}'.");
                 // EN: Stop internal MPV player and hide window
-                // FR: Arrêter le lecteur MPV interne et cacher la fenêtre
+                // FR: ArrÃªter le lecteur MPV interne et cacher la fenÃªtre
                 await _mpv.Stop();
                 _mpvSuspendedForPinball = true;
             }
@@ -1117,7 +1117,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             if (topperMedia == null)
             {
                 // EN: Before finding marquee, check if we need to regenerate video due to saved offsets
-                // FR: Avant de trouver la marquee, vérifier si on doit régénérer la vidéo à cause d'offsets sauvegardés
+                // FR: Avant de trouver la marquee, vÃ©rifier si on doit rÃ©gÃ©nÃ©rer la vidÃ©o Ã  cause d'offsets sauvegardÃ©s
                 CheckAndTriggerVideoRegeneration(system, gameName);
                 
                 marqueeFile = await _marqueeFinder.FindMarqueeFileAsync("game-start", system, gameName, gameName, romPath);
@@ -1135,7 +1135,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                  _logger.LogInformation($"[Workflow] Playing DMD Start Media: {dmdStartMedia}");
                  await _dmdService.PlayAsync(dmdStartMedia, _currentGameSystem, _currentGameName);
             }
-            else if (!pinballHandled) // EN: Only show DMD logo if pinball isn't handling externally / FR: Afficher le logo DMD seulement si le pinball ne gère pas en externe
+            else if (!pinballHandled) // EN: Only show DMD logo if pinball isn't handling externally / FR: Afficher le logo DMD seulement si le pinball ne gÃ¨re pas en externe
             {
                 // Fallback: If no specific "Loading..." media is defined, play the Game's DMD (Logo)
                 // This ensures the DMD isn't blank during loading.
@@ -1149,7 +1149,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 else
                 {
                     // EN: Fallback to System DMD if Game DMD is not found (Fix for stale media on game-start)
-                    // FR: Fallback vers DMD Système si DMD Jeu non trouvé (Correction média obsolète au lancement)
+                    // FR: Fallback vers DMD SystÃ¨me si DMD Jeu non trouvÃ© (Correction mÃ©dia obsolÃ¨te au lancement)
                     var systemDmd = await _marqueeFinder.FindDmdImageAsync(system, system, "");
                     if (systemDmd != null)
                     {
@@ -1195,19 +1195,19 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 var ext = Path.GetExtension(topperMedia).ToLowerInvariant();
                 bool shouldLoop = new[] { ".gif", ".mp4", ".avi", ".mkv", ".webm", ".mov" }.Contains(ext);
                 
-                _currentMarqueePath = topperMedia; // EN: Update stored path for refresh / FR: Mettre à jour le chemin stocké pour le rafraîchissement
+                _currentMarqueePath = topperMedia; // EN: Update stored path for refresh / FR: Mettre Ã  jour le chemin stockÃ© pour le rafraÃ®chissement
                 tasks.Add(_mpv.DisplayImage(topperMedia, shouldLoop).ContinueWith(t => 
                     _logger.LogInformation($"Displayed game-start topper: {topperMedia} (loop={shouldLoop})")));
             }
             else if (marqueeFile != null && !suspendMPV)
             {
-                _currentMarqueePath = marqueeFile; // EN: Update stored path for refresh / FR: Mettre à jour le chemin stocké pour le rafraîchissement
+                _currentMarqueePath = marqueeFile; // EN: Update stored path for refresh / FR: Mettre Ã  jour le chemin stockÃ© pour le rafraÃ®chissement
                 tasks.Add(_mpv.DisplayImage(marqueeFile).ContinueWith(t => 
                     _logger.LogInformation($"Displayed game marquee: {marqueeFile}")));
             }
             else if (systemMarquee != null && !suspendMPV)
             {
-                 _currentMarqueePath = systemMarquee; // EN: Update stored path for refresh / FR: Mettre à jour le chemin stocké pour le rafraîchissement
+                 _currentMarqueePath = systemMarquee; // EN: Update stored path for refresh / FR: Mettre Ã  jour le chemin stockÃ© pour le rafraÃ®chissement
                  tasks.Add(_mpv.DisplayImage(systemMarquee).ContinueWith(t => 
                     _logger.LogInformation($"Displayed system marquee: {systemMarquee}")));
             }
@@ -1219,7 +1219,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             await Task.WhenAll(tasks);
             
             // EN: Track video path for adjustment mode (if it's a generated video)
-            // FR: Tracker le chemin vidéo pour mode ajustement (si c'est une vidéo générée)
+            // FR: Tracker le chemin vidÃ©o pour mode ajustement (si c'est une vidÃ©o gÃ©nÃ©rÃ©e)
             if (topperMedia != null)
             {
                 _currentVideoPath = topperMedia;
@@ -1252,13 +1252,13 @@ namespace RetroBatMarqueeManager.Application.Workflows
             }
 
             // EN: Pre-emptively reset RA state when browsing new games
-            // FR: Réinitialiser préventivement l'état RA lors de la navigation dans de nouveaux jeux
+            // FR: RÃ©initialiser prÃ©ventivement l'Ã©tat RA lors de la navigation dans de nouveaux jeux
             _raService?.ResetState();
 
             var romFileName = !string.IsNullOrEmpty(romPath) ? Path.GetFileNameWithoutExtension(romPath) : "";
             
             // EN: IMPORTANT: Extract real system from ROM path (not ES alias) for consistency
-            // FR: IMPORTANT: Extraire vrai système depuis chemin ROM (pas alias ES) pour cohérence
+            // FR: IMPORTANT: Extraire vrai systÃ¨me depuis chemin ROM (pas alias ES) pour cohÃ©rence
             // ES sends "gw" but ROM path contains "gameandwatch" - we need the real folder name
             string? realSystem = null;
             if (!string.IsNullOrEmpty(romPath))
@@ -1287,15 +1287,15 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
             _currentGameSystem = realSystem;
             // EN: IMPORTANT: Use ROM filename (full name) for consistency with game-start
-            // FR: IMPORTANT: Utiliser nom fichier ROM (nom complet) pour cohérence avec game-start
+            // FR: IMPORTANT: Utiliser nom fichier ROM (nom complet) pour cohÃ©rence avec game-start
             _currentGameName = romFileName;
             _currentGameRom = romPath;
 
             // EN: Check if we need to regenerate video due to saved offsets
-            // FR: Vérifier si on doit régénérer la vidéo à cause d'offsets sauvegardés
+            // FR: VÃ©rifier si on doit rÃ©gÃ©nÃ©rer la vidÃ©o Ã  cause d'offsets sauvegardÃ©s
             CheckAndTriggerVideoRegeneration(realSystem, romFileName);
 
-            // DMD only — marquee display is handled by WS marquee.snapshot from APIExpose
+            // DMD only â€” marquee display is handled by WS marquee.snapshot from APIExpose
             await DisplayDmdGameAsync(system, gameName, romFileName, romPath, token);
         }
 
@@ -1367,7 +1367,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
         
         /// <summary>
         /// EN: Handle achievement unlocked event - Display badge on MPV and DMD
-        /// FR: Gérer événement succès débloqué - Afficher badge sur MPV et DMD
+        /// FR: GÃ©rer Ã©vÃ©nement succÃ¨s dÃ©bloquÃ© - Afficher badge sur MPV et DMD
         /// </summary>
         private async void OnAchievementUnlocked(object? sender, AchievementUnlockedEventArgs e)
         {
@@ -1481,7 +1481,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     _logger.LogInformation("[RA Workflow] All achievements processed. RP and Cycles restored.");
                     
                     // EN: Restart cycles with updated values now that all achievements are processed
-                    // FR: Redémarre les cycles avec les valeurs mises à jour maintenant que tous les achievements sont traités
+                    // FR: RedÃ©marre les cycles avec les valeurs mises Ã  jour maintenant que tous les achievements sont traitÃ©s
                     if (_gameRunning && _raService != null && _raService.CurrentGameId.HasValue)
                     {
                         var achievements = _raService.CurrentGameAchievements;
@@ -1510,7 +1510,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
         
         /// <summary>
         /// EN: Handle game started event - Log game info
-        /// FR: Gérer événement jeu démarré - Logger infos jeu
+        /// FR: GÃ©rer Ã©vÃ©nement jeu dÃ©marrÃ© - Logger infos jeu
         /// </summary>
         private async void OnHardcoreStatusChanged(object? sender, bool isHardcore)
         {
@@ -1519,7 +1519,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 _logger.LogInformation($"[RA Workflow] Hardcore Mode Changed: {isHardcore}. Refreshing overlays...");
                 
                 // EN: If status changes during a game, we must refresh persistent overlays to update "HC" labels
-                // FR: Si le statut change pendant un jeu, on doit rafraîchir les overlays persistants pour mettre à jour les labels "HC"
+                // FR: Si le statut change pendant un jeu, on doit rafraÃ®chir les overlays persistants pour mettre Ã  jour les labels "HC"
                 if (_gameRunning)
                 {
                     // EN: Unified cleanup before refresh
@@ -1530,7 +1530,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     var dmdOverlaysStr = _config.DmdRetroAchievementsOverlays;
 
                     // EN: Refresh persistent MPV overlays
-                    // FR: Rafraîchir overlays MPV persistants
+                    // FR: RafraÃ®chir overlays MPV persistants
                     if (target != "dmd" && !string.IsNullOrWhiteSpace(mpvOverlaysStr))
                     {
                         await RefreshPersistentMpvOverlays();
@@ -1558,7 +1558,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                                 else
                                 {
                                     // EN: One-shot refresh for DMD if no badges
-                                    // FR: Rafraîchissement unique pour DMD si pas de badges
+                                    // FR: RafraÃ®chissement unique pour DMD si pas de badges
                                     if (dmdOverlaysStr.Contains("count", StringComparison.OrdinalIgnoreCase))
                                     {
                                         var isHc = _raService.IsHardcoreMode;
@@ -1585,7 +1585,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         private async void OnGameStarted(object? sender, GameStartedEventArgs e)
         {
-            _lastRpState = null; // EN: Reset RP state / FR: Réinitialiser l'état RP
+            _lastRpState = null; // EN: Reset RP state / FR: RÃ©initialiser l'Ã©tat RP
             try
             {
                 var gameTitle = e.GameInfo?.Title ?? $"Game ID {e.GameId}";
@@ -1593,18 +1593,18 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 _logger.LogInformation($"[RA Workflow] Game Started: {gameTitle} - {completion} complete");
 
                 // EN: Purge old Hardcore overlays to prevent accumulation
-                // FR: Purger les anciens overlays Hardcore pour éviter l'accumulation
+                // FR: Purger les anciens overlays Hardcore pour Ã©viter l'accumulation
 
                 // EN: Purge old Hardcore overlays to prevent accumulation
-                // FR: Purger les anciens overlays Hardcore pour éviter l'accumulation
+                // FR: Purger les anciens overlays Hardcore pour Ã©viter l'accumulation
                 _imageService.PurgeHardcoreOverlays();
                 _imageService.PurgeSoftcoreOverlays(); // Added softcore purge as requested
 
                 // EN: Ensure clean slate on game start
-                // FR: Garantir un état propre au démarrage du jeu
+                // FR: Garantir un Ã©tat propre au dÃ©marrage du jeu
                 await CleanupAllOverlays();
                 // EN: Check if Overlays are enabled
-                // FR: Vérifier si les overlays sont activés
+                // FR: VÃ©rifier si les overlays sont activÃ©s
                 var target = _config.MarqueeRetroAchievementsDisplayTarget;
                 var mpvOverlaysStr = _config.MpvRetroAchievementsOverlays;
                 var dmdOverlaysStr = _config.DmdRetroAchievementsOverlays;
@@ -1622,7 +1622,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 var dmdOverlays = dmdOverlaysStr.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(o => o.Trim()).ToList();
 
                 // EN: Check if game has achievements
-                // FR: Vérifier si le jeu a des succès
+                // FR: VÃ©rifier si le jeu a des succÃ¨s
                 if (e.UserProgress?.Achievements == null || e.UserProgress.Achievements.Count == 0)
                 {
                     _logger.LogInformation($"[RA Workflow] Game '{gameTitle}' has no achievements. Skipping Overlays.");
@@ -1632,14 +1632,14 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 _logger.LogInformation($"[RA Workflow] Display Target: {target}");
                 
                 // EN: Refresh persistent MPV overlays (Score, Count)
-                // FR: Rafraîchir les overlays persistants MPV (Score, Compteur)
+                // FR: RafraÃ®chir les overlays persistants MPV (Score, Compteur)
                 if (target != "dmd" && mpvOverlays.Any())
                 {
                     await RefreshPersistentMpvOverlays();
                 }
                 
                 // EN: DMD - Show initial sequence (count and score) if enabled
-                // FR: DMD - Afficher la séquence initiale (compteur et score) si activé
+                // FR: DMD - Afficher la sÃ©quence initiale (compteur et score) si activÃ©
                 if (target != "mpv" && dmdOverlays.Any())
                 {
                     if (dmdOverlays.Contains("count", StringComparer.OrdinalIgnoreCase) || dmdOverlays.Contains("score", StringComparer.OrdinalIgnoreCase))
@@ -1675,7 +1675,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                                 if (!_gameRunning) return;
 
                                 // EN: Generate score overlay immediately before use for latest Hardcore status
-                                // FR: Générer score overlay immédiatement avant usage pour dernier statut Hardcore
+                                // FR: GÃ©nÃ©rer score overlay immÃ©diatement avant usage pour dernier statut Hardcore
                                 var isHardcore = _raService?.IsHardcoreMode ?? false;
                                 var dmdScore = _imageService.GenerateScoreOverlay(current, total, isDmd: true, isHardcore: isHardcore);
                                 
@@ -1695,7 +1695,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
                     if (showMpvBadges || showDmdBadges)
                     {
-                        // EN: Check if game has achievements / FR: Vérifier si le jeu a des succès
+                        // EN: Check if game has achievements / FR: VÃ©rifier si le jeu a des succÃ¨s
                         if (e.UserProgress?.Achievements != null && e.UserProgress.Achievements.Count > 0)
                         {
                             if (_raService != null && e.GameId > 0)
@@ -1720,7 +1720,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                                     }
                                     
                                     // EN: Start DMD cycle if badges are enabled
-                                    // FR: Démarrer cycle DMD si les badges sont activés
+                                    // FR: DÃ©marrer cycle DMD si les badges sont activÃ©s
                                     if (target != "mpv" && dmdOverlaysStr.Contains("badges", StringComparison.OrdinalIgnoreCase))
                                     {
                                         StartBadgeRibbonCycle(e.GameId, e.UserProgress.Achievements);
@@ -1761,7 +1761,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
              await Task.Delay(200);
 
              // EN: Restore active narration if any (background reload might have cleared it)
-             // FR: Restaurer la narration active si nécessaire
+             // FR: Restaurer la narration active si nÃ©cessaire
              if (_currentNarrationId != Guid.Empty && !string.IsNullOrEmpty(_activeNarrationPath))
              {
                  await _mpv.OverlayImage(_activeNarrationPath, 4, _activeNarrationPosition ?? "center", loopCount: 0);
@@ -1778,7 +1778,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Refresh persistent MPV overlays (Score and Count) by composing them into a single image
-        /// FR: Rafraîchir les overlays persistants MPV (Score et Compteur) en les composant en une seule image
+        /// FR: RafraÃ®chir les overlays persistants MPV (Score et Compteur) en les composant en une seule image
         /// </summary>
         private async Task RefreshPersistentMpvOverlays()
         {
@@ -1815,13 +1815,13 @@ namespace RetroBatMarqueeManager.Application.Workflows
             if (scoreOverlay != null || countOverlay != null)
             {
                 // EN: Compose them into a single overlay (badges Ribbon is handled separately by the cycle)
-                // FR: Les composer en un seul overlay (le bandeau des badges est géré séparément par le cycle)
+                // FR: Les composer en un seul overlay (le bandeau des badges est gÃ©rÃ© sÃ©parÃ©ment par le cycle)
                 var composed = _imageService.ComposeScoreAndBadges(scoreOverlay, null, countOverlay, _config.MarqueeWidth, _config.MarqueeHeight, isHardcore: _raService.IsHardcoreMode);
                 if (!string.IsNullOrEmpty(composed) && File.Exists(composed))
                 {
                     if (!_gameRunning) return; // Prevent race condition if game ended
                     // EN: Show indefinitely (1h) on persistent slot 1
-                    // FR: Afficher indéfiniment (1h) sur le slot persistant 1
+                    // FR: Afficher indÃ©finiment (1h) sur le slot persistant 1
                     await _mpv.OverlayImage(composed, 1, "top-left");
                     _logger.LogInformation($"[RA Workflow] Refreshed persistent MPV overlays: {Path.GetFileName(composed)}");
                 }
@@ -1831,7 +1831,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Start MPV badge ribbon cycling with score composition (~29 badges per frame)
-        /// FR: Démarrer cycle badges MPV avec composition score (~29 badges par frame)
+        /// FR: DÃ©marrer cycle badges MPV avec composition score (~29 badges par frame)
         /// </summary>
         private void StartMpvBadgeRibbonCycle(int gameId, Dictionary<string, Achievement> achievements, int currentPoints, int totalPoints)
         {
@@ -1849,7 +1849,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     // FR: Calculer badges max par frame selon le template (Largeur et Hauteur du Ruban)
                     var (badgeSize, maxBadgesPerFrame) = _imageService.GetBadgeRibbonCapacity(isDmd: false);
                     
-                    // EN: Group achievements by calculated max / FR: Grouper achievements par max calculé
+                    // EN: Group achievements by calculated max / FR: Grouper achievements par max calculÃ©
                     var sortedAchievements = achievements.Values.OrderBy(a => a.DisplayOrder).ToList();
                     var groups = sortedAchievements
                         .Select((a, i) => new { Achievement = a, Index = i })
@@ -1859,7 +1859,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     
                     _logger.LogInformation($"[RA MPV Cycle] Created {groups.Count} groups of ~{maxBadgesPerFrame} badges (Size: {badgeSize}px, Screen: {_config.MarqueeWidth}x{_config.MarqueeHeight})");
                     
-                    // EN: Generate count overlay if enabled / FR: Générer overlay compteur si activé
+                    // EN: Generate count overlay if enabled / FR: GÃ©nÃ©rer overlay compteur si activÃ©
                     string? countOverlay = null;
                     var overlayConfig = _config.MpvRetroAchievementsOverlays;
                     if (!string.IsNullOrEmpty(overlayConfig) && overlayConfig.Contains("count", StringComparison.OrdinalIgnoreCase))
@@ -1870,7 +1870,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     }
                     
                     // EN: Pre-generate all composed overlays once to avoid file accumulation
-                    // FR: Pré-générer tous les overlays composés une fois pour éviter accumulation de fichiers
+                    // FR: PrÃ©-gÃ©nÃ©rer tous les overlays composÃ©s une fois pour Ã©viter accumulation de fichiers
                     var composedOverlays = new List<string>();
                     
                     foreach (var group in groups)
@@ -1893,7 +1893,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                         }
                     }
                     
-                    // EN: Generate specific overlay for pause / FR: Générer overlay spécifique pour pause
+                    // EN: Generate specific overlay for pause / FR: GÃ©nÃ©rer overlay spÃ©cifique pour pause
                     string? scoreOnly = null;
                     if (overlayConfig.Contains("score", StringComparison.OrdinalIgnoreCase))
                     {
@@ -1913,7 +1913,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                          if (File.Exists(overlayToShow))
                          {
                              // EN: Show for a very long duration on persistent slot 1
-                             // FR: Afficher pour une très longue durée sur le slot persistant 1
+                             // FR: Afficher pour une trÃ¨s longue durÃ©e sur le slot persistant 1
                              await _mpv.OverlayImage(overlayToShow, 1, "top-left");
                              _logger.LogInformation($"[RA MPV Cycle] Single page detected. Showing static overlay: {overlayToShow}");
                          }
@@ -1922,7 +1922,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     
                     while (!token.IsCancellationRequested)
                     {
-                        // EN: Cycle through pre-generated overlays / FR: Cycler à travers overlays pré-générés
+                        // EN: Cycle through pre-generated overlays / FR: Cycler Ã  travers overlays prÃ©-gÃ©nÃ©rÃ©s
                         foreach (var overlay in composedOverlays)
                         {
                             if (token.IsCancellationRequested) break;
@@ -1930,7 +1930,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                             if (File.Exists(overlay))
                             {
                                 // EN: Use persistent slot 1 for cycle updates
-                                // FR: Utiliser le slot persistant 1 pour les mises à jour du cycle
+                                // FR: Utiliser le slot persistant 1 pour les mises Ã  jour du cycle
                                 await _mpv.OverlayImage(overlay, 1, "top-left");
                                 _logger.LogDebug($"[RA MPV Cycle] Showing overlay: {Path.GetFileName(overlay)}");
                             }
@@ -1949,7 +1949,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                         await Task.Delay(2000, token);
                     }
                     
-                    // EN: Cleanup composed overlay files / FR: Nettoyer fichiers overlays composés
+                    // EN: Cleanup composed overlay files / FR: Nettoyer fichiers overlays composÃ©s
                     foreach (var overlay in composedOverlays)
                     {
                         try { if (File.Exists(overlay)) File.Delete(overlay); } catch { }
@@ -1973,11 +1973,11 @@ namespace RetroBatMarqueeManager.Application.Workflows
         
         /// <summary>
         /// EN: Start DMD badge ribbon cycling (4x4 groups, 5s each, 10s pause)
-        /// FR: Démarrer cycle badges DMD (groupes 4x4, 5s chacun, pause 10s)
+        /// FR: DÃ©marrer cycle badges DMD (groupes 4x4, 5s chacun, pause 10s)
         /// </summary>
         /// <summary>
         /// EN: Start DMD badge ribbon cycling provided badges/score/count parity
-        /// FR: Démarrer cycle badges DMD avec parité score/compteur
+        /// FR: DÃ©marrer cycle badges DMD avec paritÃ© score/compteur
         /// </summary>
         private void StartBadgeRibbonCycle(int gameId, Dictionary<string, Achievement> achievements)
         {
@@ -2015,7 +2015,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     }
 
                     // EN: Delay initial start if we just showed post-unlock overlays
-                    // FR: Délai initial si on vient d'afficher les overlays post-déblocage
+                    // FR: DÃ©lai initial si on vient d'afficher les overlays post-dÃ©blocage
                     await Task.Delay(2000, token);
 
                     while (!token.IsCancellationRequested)
@@ -2043,7 +2043,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                                     _currentDmdRibbonPath = ribbonPath; // Store for composition
                                     
                                     // EN: Only set direct overlay if NO challenges are active
-                                    // FR: N'afficher l'overlay direct que si AUCUN défi n'est actif
+                                    // FR: N'afficher l'overlay direct que si AUCUN dÃ©fi n'est actif
                                     if (_activeChallenges.Values.All(c => !c.IsActive))
                                     {
                                         await _dmdService.SetOverlayAsync(ribbonPath, 5000);
@@ -2138,12 +2138,12 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     _activeChallenges.TryRemove(e.State.AchievementId, out _);
 
                 // MPV Overlay (ID 5 for Challenges)
-                if (_config.IsMpvEnabled && showOnMpv)
+                if (true && showOnMpv)
                 {
                     if (e.State.IsActive)
                     {
                         // EN: If it's a timer, the cycle will handle the refresh
-                        // FR: Si c'est un timer, le cycle gérera le rafraîchissement
+                        // FR: Si c'est un timer, le cycle gÃ©rera le rafraÃ®chissement
                     }
                     else
                     {
@@ -2162,7 +2162,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                         StartMpvChallengeCycle();
                     }
                 }
-                else if (_config.IsMpvEnabled && !showOnMpv)
+                else if (true && !showOnMpv)
                 {
                     // Ensure it's cleared if it was shown before config change
                     _mpvChallengeCycleCts?.Cancel();
@@ -2173,11 +2173,11 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 if (_config.DmdEnabled && showOnDmd)
                 {
                     // EN: If any active challenges, ensure cycle is running
-                    // FR: Si des défis sont actifs, s'assurer que le cycle tourne
+                    // FR: Si des dÃ©fis sont actifs, s'assurer que le cycle tourne
                     if (!_activeChallenges.IsEmpty)
                     {
                         // EN: If it's a new Timer, we must immediately interrupt existing Badge Ribbons
-                        // FR: Si c'est un nouveau Timer, on doit interrompre immédiatement les ribbons de badges
+                        // FR: Si c'est un nouveau Timer, on doit interrompre immÃ©diatement les ribbons de badges
                         if (e.State.IsActive && e.State.Type == ChallengeType.Timer)
                         {
                             // _badgeCycleCts?.Cancel(); // No longer cancelling badge cycle, we compose now
@@ -2193,7 +2193,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                                                       // Actually, if challenges gone, Resume Badge Cycle will handle it.
 
                         // EN: If no more challenges, check if we should resume badge ribbons
-                        // FR: Si plus de défis, vérifier si on doit reprendre les ribbons de badges
+                        // FR: Si plus de dÃ©fis, vÃ©rifier si on doit reprendre les ribbons de badges
                         var currentAchievements = _raService?.CurrentGameAchievements;
                         if (currentAchievements != null && currentAchievements.Count > 0)
                         {
@@ -2210,7 +2210,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Start DMD challenge cycling (alternating between all active challenges)
-        /// FR: Démarrer cycle de défis DMD (alternance entre tous les défis actifs)
+        /// FR: DÃ©marrer cycle de dÃ©fis DMD (alternance entre tous les dÃ©fis actifs)
         /// </summary>
         private void StartDmdChallengeCycle()
         {
@@ -2228,7 +2228,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     while (!token.IsCancellationRequested && !_activeChallenges.IsEmpty && _gameRunning)
                     {
                         // EN: Get a snapshot of active challenges
-                        // FR: Prendre une capture des défis actifs
+                        // FR: Prendre une capture des dÃ©fis actifs
                         var challenges = _activeChallenges.Values.ToList();
                         
                         var isHardcore = _raService?.IsHardcoreMode ?? false;
@@ -2238,7 +2238,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                             if (token.IsCancellationRequested) break;
 
                             // EN: Special case: if it's a timer or leaderboard, we refresh more often (1s)
-                            // FR: Cas spécial : si c'est un timer ou leaderboard, on rafraîchit à chaque seconde
+                            // FR: Cas spÃ©cial : si c'est un timer ou leaderboard, on rafraÃ®chit Ã  chaque seconde
                             if (challenge.Type == ChallengeType.Timer || challenge.Type == ChallengeType.Leaderboard)
                             {
                                 int timerDuration = 5; // Show for 5 seconds but update every 1s
@@ -2254,7 +2254,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                             else
                             {
                                 // EN: Progress / Other
-                                // FR: Progrès / Autre
+                                // FR: ProgrÃ¨s / Autre
                                 await _dmdService.PlayChallengeNotificationAsync(challenge, isHardcore, _currentDmdRibbonPath);
                                 await Task.Delay(5000, token);
                             }
@@ -2275,7 +2275,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Start MPV challenge cycling (alternating between all active challenges)
-        /// FR: Démarrer cycle de défis MPV (alternance entre tous les défis actifs)
+        /// FR: DÃ©marrer cycle de dÃ©fis MPV (alternance entre tous les dÃ©fis actifs)
         /// </summary>
         private void StartMpvChallengeCycle()
         {
@@ -2293,7 +2293,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     while (!token.IsCancellationRequested && !_activeChallenges.IsEmpty && _gameRunning)
                     {
                         // EN: Get a snapshot of active challenges (Keys only to re-fetch fresh state)
-                        // FR: Prendre une capture des défis actifs (Clés seulement pour récupérer état frais)
+                        // FR: Prendre une capture des dÃ©fis actifs (ClÃ©s seulement pour rÃ©cupÃ©rer Ã©tat frais)
                         var challengeIds = _activeChallenges.Keys.ToList();
 
                         if (challengeIds.Count == 0) break;
@@ -2361,7 +2361,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Unified cleanup for all RetroAchievements overlays and background task cycles
-        /// FR: Nettoyage unifié pour tous les vidéos RA et cycles de tâches en arrière-plan
+        /// FR: Nettoyage unifiÃ© pour tous les vidÃ©os RA et cycles de tÃ¢ches en arriÃ¨re-plan
         /// </summary>
         private async Task CleanupAllOverlays()
         {
@@ -2408,16 +2408,16 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 }
 
                 // 3. Remove MPV Overlays (All slots used by RA/RP)
-                if (_config.IsMpvEnabled)
+                if (true)
                 {
                     StopMpvRpStatRotation(); // Stop MPV RP Rotation Loop
                     
                     // EN: Clear persistent generic stats
-                    // FR: Effacer les stats génériques persistantes
+                    // FR: Effacer les stats gÃ©nÃ©riques persistantes
                     lock(_currentMpvRpGenericStats) { _currentMpvRpGenericStats.Clear(); }
                     
                     // EN: Clear slots 1-12 to be exhaustive (includes RA notifications, scores, and preview slots)
-                    // FR: Nettoyer les slots 1-12 pour être exhaustif (inclus notifications RA, scores et slots preview)
+                    // FR: Nettoyer les slots 1-12 pour Ãªtre exhaustif (inclus notifications RA, scores et slots preview)
                     for (int i = 1; i <= 12; i++)
                     {
                         await _mpv.RemoveOverlay(i, cancelTimer: (i == 1 || i >= 10)); 
@@ -2428,10 +2428,10 @@ namespace RetroBatMarqueeManager.Application.Workflows
                 // 4. Clear DMD
                 if (_config.DmdEnabled)
                 {
-                    StopDmdRpStatRotation(); // EN: Stop RP rotation first / FR: Arrêter la rotation RP d'abord
+                    StopDmdRpStatRotation(); // EN: Stop RP rotation first / FR: ArrÃªter la rotation RP d'abord
                     
                     // EN: Explicitly clear persistent RP stats to prevent stale data on next game
-                    // FR: Effacer explicitement les stats RP persistantes pour éviter les données obsolètes au prochain jeu
+                    // FR: Effacer explicitement les stats RP persistantes pour Ã©viter les donnÃ©es obsolÃ¨tes au prochain jeu
                     lock(_currentDmdRpStats) { _currentDmdRpStats.Clear(); }
                     
                     _dmdService.ClearOverlay();
@@ -2450,7 +2450,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         private async Task RefreshChallengeMpvOverlay(ChallengeState state)
         {
-            if (!_config.IsMpvEnabled || !_gameRunning) return;
+            if (!true || !_gameRunning) return;
 
             bool isHc = _raService?.IsHardcoreMode ?? false;
             var overlayPath = _imageService.GenerateChallengeOverlay(state, _config.MarqueeWidth, _config.MarqueeHeight, isHc);
@@ -2463,7 +2463,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
         private async void OnRichPresenceUpdated(object? sender, string rpText)
         {
             // EN: If an achievement is being processed, suppress RP updates to avoid visual conflict/race conditions
-            // FR: Si un succès est en cours de traitement, supprimer les MAJ RP pour éviter conflits visuels/race conditions
+            // FR: Si un succÃ¨s est en cours de traitement, supprimer les MAJ RP pour Ã©viter conflits visuels/race conditions
             if (_isProcessingAchievement)
             {
                 _logger.LogInformation($"[RA Workflow] RP Update SUPPRESSED due to active achievement processing: {rpText}");
@@ -2499,9 +2499,9 @@ namespace RetroBatMarqueeManager.Application.Workflows
                             bool isScoreItem = false;
                             bool isGeneric = true;
 
-                            if (key.Contains("score") || key.Contains("💵")) { alignment = "top-right"; slot = 3; isScoreItem = true; isGeneric = false; }
-                            else if (key.Contains("lives") || key.Contains("❤️") || key.Contains("vies")) { alignment = "top-left"; slot = 6; isGeneric = false; }
-                            else if (key.Contains("weapon") || key.Contains("arme") || key.Contains("🔫")) { alignment = "bottom-right"; slot = 7; nudge = 0; isGeneric = false; }
+                            if (key.Contains("score") || key.Contains("ðŸ’µ")) { alignment = "top-right"; slot = 3; isScoreItem = true; isGeneric = false; }
+                            else if (key.Contains("lives") || key.Contains("â¤ï¸") || key.Contains("vies")) { alignment = "top-left"; slot = 6; isGeneric = false; }
+                            else if (key.Contains("weapon") || key.Contains("arme") || key.Contains("ðŸ”«")) { alignment = "bottom-right"; slot = 7; nudge = 0; isGeneric = false; }
                             else if (key.Contains("lap") || key.Contains("tour")) { alignment = "top-left"; slot = 9; isGeneric = false; } 
                             else if (key.Contains("rank") || key.Contains("pos")) { alignment = "top-right"; slot = 10; isGeneric = false; }
 
@@ -2554,7 +2554,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                         if (narrationResult.IsValid && File.Exists(narrationResult.Path))
                         {
                             // EN: Cancel previous narration timeout
-                            // FR: Annuler le timeout de la narration précédente
+                            // FR: Annuler le timeout de la narration prÃ©cÃ©dente
                             _narrationCts?.Cancel();
                             _narrationCts?.Dispose();
                             _narrationCts = new CancellationTokenSource();
@@ -2571,11 +2571,11 @@ namespace RetroBatMarqueeManager.Application.Workflows
                             await _mpv.OverlayImage(mpvPath, 4, _activeNarrationPosition, loopCount: 0);
                             
                             // EN: Return to transparent placeholder after duration to maintain MPV continuity
-                            // FR: Revenir au placeholder transparent après la durée
+                            // FR: Revenir au placeholder transparent aprÃ¨s la durÃ©e
                             int durationMs = narrationResult.DurationMs > 0 ? narrationResult.DurationMs : 10000; // Default 10s if not set
                             
                             // EN: Cleanup narration after duration
-                            // FR: Nettoyer la narration après la durée
+                            // FR: Nettoyer la narration aprÃ¨s la durÃ©e
                             _ = Task.Run(async () =>
                             {
                                 try
@@ -2590,7 +2590,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                                         _logger.LogInformation($"[RA Workflow] Narration expired ({durationMs}ms). Slot 4 removed.");
                                         
                                         // EN: Trigger a refresh of RA overlays to ensure visibility
-                                        // FR: Déclencher un rafraîchissement des overlays RA pour assurer la visibilité
+                                        // FR: DÃ©clencher un rafraÃ®chissement des overlays RA pour assurer la visibilitÃ©
                                         await RefreshMpvOverlays();
                                     }
                                 }
@@ -2613,7 +2613,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                         if (statsChanged || narrativeChanged)
                         {
                             // EN: Always update the stored stats snapshot for the rotation loop
-                            // FR: Toujours mettre à jour le snapshot des stats pour la boucle de rotation
+                            // FR: Toujours mettre Ã  jour le snapshot des stats pour la boucle de rotation
                             lock(_currentDmdRpStats)
                             {
                                 _currentDmdRpStats.Clear();
@@ -2621,10 +2621,10 @@ namespace RetroBatMarqueeManager.Application.Workflows
                             }
 
                             // 1. Handle Stats Rotation
-                            // FR: Gérer la rotation des statistiques
+                            // FR: GÃ©rer la rotation des statistiques
                             var rpStats = currentState.Stats.Where(kvp => {
                                 string lk = kvp.Key.ToLowerInvariant();
-                                return !(lk.Contains("score") || lk.Contains("💵") || lk.Contains("live") || lk.Contains("♥") || lk.Contains("vies") || lk.Contains("weapon") || lk.Contains("arme") || lk.Contains("🔫"));
+                                return !(lk.Contains("score") || lk.Contains("ðŸ’µ") || lk.Contains("live") || lk.Contains("â™¥") || lk.Contains("vies") || lk.Contains("weapon") || lk.Contains("arme") || lk.Contains("ðŸ”«"));
                             }).ToList();
 
                             if (rpStats.Count > 1)
@@ -2646,7 +2646,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                             _dmdRpDisplayExpiry = DateTime.Now.AddSeconds(10);
                             
                             // 2. Handle Narrative (Scrolling Text)
-                            // FR: Gérer la Narration (Texte défilant)
+                            // FR: GÃ©rer la Narration (Texte dÃ©filant)
                             if (narrativeChanged && !string.IsNullOrEmpty(currentState.Narrative))
                             {
                                 string cleanNarrative = _imageService.CleanRichPresenceString(currentState.Narrative, stripEmojis: false);
@@ -2669,7 +2669,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                                      await _dmdService.PlayRichPresenceNotificationAsync(cleanNarrative, 5000, yOverride, hOverride, colorOverride, fontSizeOverride);
 
                                      // EN: Auto-clear DMD notification after duration (only clears notification layer, keeps stats)
-                                     // FR: Effacement auto de la notification DMD après la durée (efface seulement la couche notification)
+                                     // FR: Effacement auto de la notification DMD aprÃ¨s la durÃ©e (efface seulement la couche notification)
                                      _ = Task.Delay(5500).ContinueWith(_ => {
                                          if (DateTime.Now >= _dmdRpDisplayExpiry)
                                          {
@@ -2729,7 +2729,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             _logger.LogInformation($"[Preview] Starting background generation for: {screenType}");
             
             // EN: Force reload of overlay layout to pick up latest editor changes
-            // FR: Force le rechargement de la mise en page d'overlay pour récupérer les derniers changements de l'éditeur
+            // FR: Force le rechargement de la mise en page d'overlay pour rÃ©cupÃ©rer les derniers changements de l'Ã©diteur
             try
             {
                 _templateService.Reload();
@@ -2749,7 +2749,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             // FR: Simuler "System Selected" en rechargeant l'image actuelle
             try
             {
-                if (_config.IsMpvEnabled && !string.IsNullOrEmpty(_currentMarqueePath))
+                if (true && !string.IsNullOrEmpty(_currentMarqueePath))
                 {
                     _logger.LogInformation($"[Preview] Reloading current marquee to force refresh: {_currentMarqueePath}");
                     await _mpv.DisplayImage(_currentMarqueePath, loop: true); // loop=true matches standard display
@@ -2764,7 +2764,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
             // 2. Clear existing overlays immediately (Explicit loop to ensure visual clear)
             try 
             {
-                if (_config.IsMpvEnabled)
+                if (true)
                 {
                     for (int i = 1; i <= 12; i++) await _mpv.RemoveOverlay(i);
                 }
@@ -2794,7 +2794,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     if (token.IsCancellationRequested) return;
 
                     // EN: Display Loading Indicator immediately
-                    // FR: Afficher l'indicateur de chargement immédiatement
+                    // FR: Afficher l'indicateur de chargement immÃ©diatement
                     var loadingPath = _imageService.GeneratePreviewStatusOverlay("Wait preview load...", width, height);
                     if (!string.IsNullOrEmpty(loadingPath) && File.Exists(loadingPath)) 
                     {
@@ -2802,7 +2802,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     }
 
                     // EN: Parallelize image generation
-                    // FR: Paralléliser la génération d'images
+                    // FR: ParallÃ©liser la gÃ©nÃ©ration d'images
                     var dummyAchievements = new Dictionary<string, Achievement>();
                     if (_raService != null)
                     {
@@ -2846,7 +2846,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                         if (token.IsCancellationRequested) return;
                         
                         // EN: Explicitly remove before adding to force refresh in MPV
-                        // FR: Supprimer explicitement avant d'ajouter pour forcer le rafraîchissement dans MPV
+                        // FR: Supprimer explicitement avant d'ajouter pour forcer le rafraÃ®chissement dans MPV
                         await _mpv.RemoveOverlay(slot);
                         await Task.Delay(50, token); // Brief pause to prevent command flooding/race
 
@@ -2881,7 +2881,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                     await SafeOverlay(GetResultOrNull(t13), 10); // Rank (Slot 10)
 
                     // EN: RefreshPlayer removed in favor of Image Reload strategy
-                    // FR: RefreshPlayer supprimé au profit de la stratégie Image Reload
+                    // FR: RefreshPlayer supprimÃ© au profit de la stratÃ©gie Image Reload
                     // await _mpv.RefreshPlayer();
 
                     // Auto-cleanup preview after 30s (cancelled if new preview starts)
@@ -2922,7 +2922,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
 
         /// <summary>
         /// EN: Start rotation for multiple RP statistics on DMD (2s interval)
-        /// FR: Démarrer la rotation des statistiques RP sur DMD (intervalle de 2s)
+        /// FR: DÃ©marrer la rotation des statistiques RP sur DMD (intervalle de 2s)
         /// </summary>
         private void StartDmdRpStatRotation()
         {
@@ -2947,7 +2947,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
                         // Identify rp_stat items to count them for rotation
                         var rpStatsCount = statsClone.Count(kvp => {
                             string lk = kvp.Key.ToLowerInvariant();
-                            return !(lk.Contains("score") || lk.Contains("💵") || lk.Contains("live") || lk.Contains("♥") || lk.Contains("vies") || lk.Contains("weapon") || lk.Contains("arme") || lk.Contains("🔫"));
+                            return !(lk.Contains("score") || lk.Contains("ðŸ’µ") || lk.Contains("live") || lk.Contains("â™¥") || lk.Contains("vies") || lk.Contains("weapon") || lk.Contains("arme") || lk.Contains("ðŸ”«"));
                         });
 
                         if (rpStatsCount <= 1) break; 

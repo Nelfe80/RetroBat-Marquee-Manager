@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using RetroBatMarqueeManager.Core.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -7,7 +7,7 @@ namespace RetroBatMarqueeManager.Application.Services
 {
     /// <summary>
     /// EN: Service dedicated to video marquee generation and manipulation (separated from ImageConversionService)
-    /// FR: Service dédié à la génération et manipulation de vidéos marquee (séparé de ImageConversionService)
+    /// FR: Service dÃ©diÃ© Ã  la gÃ©nÃ©ration et manipulation de vidÃ©os marquee (sÃ©parÃ© de ImageConversionService)
     /// </summary>
     public class VideoMarqueeService
     {
@@ -28,7 +28,7 @@ namespace RetroBatMarqueeManager.Application.Services
             _logger = logger;
             
             // EN: Initialize individual offset base directory
-            // FR: Initialiser le répertoire de base des offsets individuels
+            // FR: Initialiser le rÃ©pertoire de base des offsets individuels
             var parentDir = Directory.GetParent(_config.CachePath);
             if (parentDir != null)
             {
@@ -40,7 +40,7 @@ namespace RetroBatMarqueeManager.Application.Services
 
         /// <summary>
         /// EN: Capture a single frame from a video at specified timestamp
-        /// FR: Capturer une frame unique d'une vidéo à un timestamp spécifié
+        /// FR: Capturer une frame unique d'une vidÃ©o Ã  un timestamp spÃ©cifiÃ©
         /// </summary>
         /// <param name="videoPath">Path to source video</param>
         /// <param name="timestamp">Timestamp in seconds (default: 5.0)</param>
@@ -64,7 +64,7 @@ namespace RetroBatMarqueeManager.Application.Services
                 }
 
                 // EN: Default output to cache directory
-                // FR: Sortie par défaut dans le répertoire cache
+                // FR: Sortie par dÃ©faut dans le rÃ©pertoire cache
                 if (string.IsNullOrEmpty(outputPath))
                 {
                     var cacheDir = Path.Combine(_config.CachePath, "video_preview");
@@ -87,7 +87,7 @@ namespace RetroBatMarqueeManager.Application.Services
                 // FR: Commande FFmpeg : Aller au timestamp, extraire 1 frame
                 startInfo.ArgumentList.Add("-y"); // Overwrite
                 startInfo.ArgumentList.Add("-ss");
-                startInfo.ArgumentList.Add(timestamp.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)); // EN: Use InvariantCulture for decimal point / FR: Utiliser InvariantCulture pour point décimal
+                startInfo.ArgumentList.Add(timestamp.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)); // EN: Use InvariantCulture for decimal point / FR: Utiliser InvariantCulture pour point dÃ©cimal
                 startInfo.ArgumentList.Add("-i");
                 startInfo.ArgumentList.Add(videoPath);
                 startInfo.ArgumentList.Add("-frames:v");
@@ -135,7 +135,7 @@ namespace RetroBatMarqueeManager.Application.Services
 
         /// <summary>
         /// EN: Check if a video path corresponds to a generated marquee video
-        /// FR: Vérifier si un chemin vidéo correspond à une marquee vidéo générée
+        /// FR: VÃ©rifier si un chemin vidÃ©o correspond Ã  une marquee vidÃ©o gÃ©nÃ©rÃ©e
         /// </summary>
         public bool IsGeneratedVideo(string videoPath)
         {
@@ -150,7 +150,7 @@ namespace RetroBatMarqueeManager.Application.Services
 
         /// <summary>
         /// EN: Generate marquee video with custom offsets  
-        /// FR: Générer vidéo marquee avec offsets personnalisés
+        /// FR: GÃ©nÃ©rer vidÃ©o marquee avec offsets personnalisÃ©s
         /// </summary>
         public string? GenerateVideoWithOffsets(
             string sourceVideo,
@@ -175,7 +175,7 @@ namespace RetroBatMarqueeManager.Application.Services
                 }
 
                 // EN: Determine output path
-                // FR: Déterminer le chemin de sortie
+                // FR: DÃ©terminer le chemin de sortie
                 var subFolder = _config.GenerateMarqueeVideoFolder;
                 if (string.IsNullOrWhiteSpace(subFolder)) subFolder = "generated_videos";
 
@@ -255,7 +255,7 @@ namespace RetroBatMarqueeManager.Application.Services
                     _logger.LogInformation($"[VideoGen] Video generated successfully: {targetPath}");
                     
                     // EN: Save individual offsets after successful generation
-                    // FR: Sauvegarder les offsets individuels après génération réussie
+                    // FR: Sauvegarder les offsets individuels aprÃ¨s gÃ©nÃ©ration rÃ©ussie
                     _offsetStorage.SaveIndividualOffsets(system, gameName, offsets);
                     
                     return targetPath;
@@ -272,14 +272,14 @@ namespace RetroBatMarqueeManager.Application.Services
 
         /// <summary>
         /// EN: Build FFmpeg filter string with custom offsets
-        /// FR: Construire la chaîne de filtre FFmpeg avec offsets personnalisés
+        /// FR: Construire la chaÃ®ne de filtre FFmpeg avec offsets personnalisÃ©s
         /// </summary>
         private string BuildFilterWithOffsets(int targetWidth, int targetHeight, VideoOffsetData offsets, bool hasLogo)
         {
             var sb = new StringBuilder();
 
-            // EN: Video processing: crop → scale → format
-            // FR: Traitement vidéo : recadrage → mise à l'échelle → format
+            // EN: Video processing: crop â†’ scale â†’ format
+            // FR: Traitement vidÃ©o : recadrage â†’ mise Ã  l'Ã©chelle â†’ format
             sb.Append("[0:v]");
 
             // Crop (if offsets defined)
@@ -326,7 +326,7 @@ namespace RetroBatMarqueeManager.Application.Services
             var toolsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "ffmpeg", "ffmpeg.exe");
             if (File.Exists(toolsPath)) return toolsPath;
 
-            var mpvDir = Path.GetDirectoryName(_config.MPVPath);
+            var mpvDir = Path.GetDirectoryName(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "mpv", "mpv.exe"));
             if (!string.IsNullOrEmpty(mpvDir))
             {
                 var mpvFfmpeg = Path.Combine(mpvDir, "ffmpeg.exe");

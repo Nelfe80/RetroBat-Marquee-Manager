@@ -323,8 +323,8 @@ namespace RetroBatMarqueeManager.Application.Services
             if (_ffmpegPath != null) return _ffmpegPath;
 
             // 1. Check tools/ffmpeg/ffmpeg.exe (Standard)
-            // _config.MPVPath is .../tools/mpv/mpv.exe
-            var toolsDir = Path.GetDirectoryName(Path.GetDirectoryName(_config.MPVPath));
+            // Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "mpv", "mpv.exe") is .../tools/mpv/mpv.exe
+            var toolsDir = Path.GetDirectoryName(Path.GetDirectoryName(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "mpv", "mpv.exe")));
             if (string.IsNullOrEmpty(toolsDir)) toolsDir = "tools";
 
             var pathsToCheck = new[] {

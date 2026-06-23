@@ -60,6 +60,8 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
         private delegate ushort ZeDMD_GetUsbPackageSizeDelegate(IntPtr h);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr ZeDMD_GetFirmwareVersionDelegate(IntPtr h);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr ZeDMD_GetDeviceDelegate(IntPtr h);
 
         private ZeDMD_GetInstanceDelegate?            _zGet;
         private ZeDMD_OpenDelegate?                   _zOpen;
@@ -76,13 +78,15 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
         private ZeDMD_GetHeightDelegate?              _zGetHeight;
         private ZeDMD_GetUsbPackageSizeDelegate?      _zGetUsbPkg;
         private ZeDMD_GetFirmwareVersionDelegate?     _zGetFw;
+        private ZeDMD_GetDeviceDelegate?              _zGetDevice;
 
         // ── Public state ─────────────────────────────────────────────────────
-        public bool   IsLoaded         => _dmdHandle != IntPtr.Zero;
-        public bool   IsZeDmdDllLoaded => _zedmdHandle != IntPtr.Zero;
-        public string RenderMethodName { get; private set; } = string.Empty;
-        public ushort ZeDmdWidth  { get; private set; }
-        public ushort ZeDmdHeight { get; private set; }
+        public bool    IsLoaded         => _dmdHandle != IntPtr.Zero;
+        public bool    IsZeDmdDllLoaded => _zedmdHandle != IntPtr.Zero;
+        public string  RenderMethodName { get; private set; } = string.Empty;
+        public ushort  ZeDmdWidth       { get; private set; }
+        public ushort  ZeDmdHeight      { get; private set; }
+        public string? DiscoveredPort   { get; private set; } // COM port found by ZeDMD_Open auto-detect
 
         public DmdDeviceWrapper(ILogger<DmdDeviceWrapper> logger) => _logger = logger;
 
@@ -162,6 +166,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
                 _zGetHeight      = Fn<ZeDMD_GetHeightDelegate>(_zedmdHandle, "ZeDMD_GetHeight");
                 _zGetUsbPkg      = Fn<ZeDMD_GetUsbPackageSizeDelegate>(_zedmdHandle, "ZeDMD_GetUsbPackageSize");
                 _zGetFw          = Fn<ZeDMD_GetFirmwareVersionDelegate>(_zedmdHandle, "ZeDMD_GetFirmwareVersion");
+                _zGetDevice      = Fn<ZeDMD_GetDeviceDelegate>(_zedmdHandle, "ZeDMD_GetDevice");
                 _logger.LogInformation($"[ZeDMD] zedmd64.dll loaded — hardware calibration available.");
             }
             catch (Exception ex)
@@ -209,10 +214,13 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
                 if (_zGetWidth  != null) ZeDmdWidth  = _zGetWidth(_zedmdInstance);
                 if (_zGetHeight != null) ZeDmdHeight = _zGetHeight(_zedmdInstance);
 
-                if (_zGetFw != null)
-                    try { var p = _zGetFw(_zedmdInstance); if (p != IntPtr.Zero) _logger.LogInformation($"[ZeDMD] Firmware: {Marshal.PtrToStringAnsi(p)} | Panel: {ZeDmdWidth}x{ZeDmdHeight}"); } catch { }
+                // Read discovered COM port (for caching in config)
+                if (_zGetDevice != null)
+                    try { var p = _zGetDevice(_zedmdInstance); if (p != IntPtr.Zero) DiscoveredPort = Marshal.PtrToStringAnsi(p); } catch { }
 
-                // Log current USB package size
+                if (_zGetFw != null)
+                    try { var p = _zGetFw(_zedmdInstance); if (p != IntPtr.Zero) _logger.LogInformation($"[ZeDMD] Firmware: {Marshal.PtrToStringAnsi(p)} | Panel: {ZeDmdWidth}x{ZeDmdHeight} | Port: {DiscoveredPort ?? "?"}"); } catch { }
+
                 if (_zGetUsbPkg != null)
                     _logger.LogInformation($"[ZeDMD] Current UsbPackageSize: {_zGetUsbPkg(_zedmdInstance)}");
 

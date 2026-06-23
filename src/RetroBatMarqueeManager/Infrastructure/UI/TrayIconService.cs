@@ -208,8 +208,6 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                          }
                          else
                          {
-                             // Ensure it exists if missing
-                             Directory.CreateDirectory(cachePath);
                              var title = "RetroBat Marquee Manager";
                              var msg = IsFrench() ? "Le cache est d\u00e9j\u00e0 vide." : "Cache is already empty.";
                              _trayIcon!.ShowBalloonTip(3000, title, msg, ToolTipIcon.Info);

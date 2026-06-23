@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Processes
         private readonly ILogger<MpvController> _logger;
 
         private Thread? _uiThread;
-        // One target can drive multiple physical screens — e.g. MarqueeScreen=1,3
+        // One target can drive multiple physical screens â€” e.g. MarqueeScreen=1,3
         private readonly Dictionary<string, List<MarqueeWindow>> _windows = new(StringComparer.OrdinalIgnoreCase);
         private bool _isInitialized = false;
 
@@ -29,7 +29,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Processes
             _logger = logger;
         }
 
-        public bool IsMpvEnabled => _config.IsMpvEnabled;
+        public bool IsMpvEnabled => true;
 
         public void StartMpv()
         {
@@ -50,7 +50,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Processes
                 // Each config key can have comma-separated screen indices: MarqueeScreen=1,3
                 var targets = new[]
                 {
-                    ("marquee", "MarqueeScreen", "ScreenNumber", "2"),
+                    ("marquee", "MarqueeScreen", "", "2"),
                     ("topper",  "TopperScreen",  "",             "-1"),
                     ("dmd",     "DmdScreen",     "",             "-1"),
                     ("iccard",  "IcCardScreen",  "",             "-1"),

@@ -9,7 +9,6 @@ namespace RetroBatMarqueeManager.Core.Interfaces
         string RetroBatPath { get; }
         string RomsPath { get; }
         string IMPath { get; }
-        string MPVPath { get; }
         string ConfigPath { get; }
         
         // Marquee Paths
@@ -81,8 +80,6 @@ namespace RetroBatMarqueeManager.Core.Interfaces
         int IcCardScreen { get; }
         int LcdScreen { get; }
         
-        bool IsMpvEnabled { get; } // True if MPV should run, False if ScreenNumber=false
-        
         // Commands (Templates)
         string IMConvertCommand { get; }
         string IMConvertCommandSVG { get; }
@@ -128,7 +125,6 @@ namespace RetroBatMarqueeManager.Core.Interfaces
         Dictionary<string, string> SystemAliases { get; }
         string GetSetting(string key, string defaultValue = "");
 
-        string MpvHwDecoding { get; }
     }
 
     public interface IProcessService
