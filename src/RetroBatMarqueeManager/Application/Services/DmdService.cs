@@ -316,6 +316,15 @@ namespace RetroBatMarqueeManager.Application.Services
 
             // ── Open DmdDevice64.dll (Aynshe-compatible) ────────────────────
             int result = _dmdWrapper.Open();
+            if (result < 0)
+            {
+                _logger.LogWarning($"[DMD] Open() failed (code {result}). Attempting hardware reset...");
+                _dmdWrapper.HwReset(cachedPort);
+                _logger.LogInformation("[DMD] Waiting 3s for firmware restart after reset...");
+                await Task.Delay(3000);
+                result = _dmdWrapper.Open();
+                _logger.LogInformation($"[DMD] Retry Open() returned {result}.");
+            }
             if (result >= 0)
             {
                 _isNativeOpen = true;
@@ -330,7 +339,7 @@ namespace RetroBatMarqueeManager.Application.Services
             }
             else
             {
-                _logger.LogError($"Failed to Open Native DMD Device. Result code: {result}");
+                _logger.LogError($"Failed to Open Native DMD Device after reset. Result code: {result}");
             }
         }
 

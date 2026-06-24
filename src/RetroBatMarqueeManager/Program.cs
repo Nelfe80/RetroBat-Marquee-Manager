@@ -259,8 +259,12 @@ public class Program
                     
                     // Start host services asynchronously (non-blocking)
                     await _host.StartAsync();
-                    File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "debug_checkpoint.txt"), 
+                    File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "debug_checkpoint.txt"),
                         "Host started\n");
+
+                    // Exit WinForms message loop when the host stops (e.g. RetroBatMonitorService kills app)
+                    _host.Services.GetRequiredService<IHostApplicationLifetime>()
+                         .ApplicationStopping.Register(() => System.Windows.Forms.Application.Exit());
 
                     // Initialize System Tray (if available)
                     // EN: In headless mode (no explorer.exe), TrayIconService is not registered

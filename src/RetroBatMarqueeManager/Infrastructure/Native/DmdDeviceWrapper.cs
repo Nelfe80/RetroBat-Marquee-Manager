@@ -314,6 +314,71 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
             }
         }
 
+        /// <summary>
+        /// Recovers a blocked ZeDMD:
+        ///   1. ZeDMD_Reset via zedmd64.dll (preferred — firmware-level reset)
+        ///   2. DTR toggle on the serial port as fallback (low-level MCU reboot)
+        /// Caller must await ~3s after this returns before calling Open() again.
+        /// </summary>
+        public bool HwReset(string? cachedPort = null)
+        {
+            // 1. ZeDMD_Reset via zedmd64.dll
+            if (IsZeDmdDllLoaded && _zGet != null && _zOpen != null && _zReset != null)
+            {
+                try
+                {
+                    var inst = _zGet();
+                    if (inst != IntPtr.Zero)
+                    {
+                        bool opened = false;
+                        if (!string.IsNullOrEmpty(cachedPort) && _zSetDevice != null)
+                        {
+                            _zSetDevice(inst, cachedPort);
+                            opened = _zOpen(inst);
+                        }
+                        if (!opened) opened = _zOpen(inst);
+
+                        if (opened)
+                        {
+                            _zReset(inst);
+                            try { _zClose?.Invoke(inst); } catch { }
+                            _logger.LogInformation("[ZeDMD] HwReset via ZeDMD_Reset sent.");
+                            return true;
+                        }
+                        _logger.LogWarning("[ZeDMD] HwReset: ZeDMD_Open failed, falling back to DTR.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning($"[ZeDMD] HwReset via ZeDMD_Reset failed: {ex.Message} — falling back to DTR.");
+                }
+            }
+
+            // 2. DTR toggle — forces MCU reboot regardless of firmware state
+            var port = cachedPort ?? DiscoveredPort;
+            if (!string.IsNullOrEmpty(port))
+            {
+                try
+                {
+                    using var serial = new System.IO.Ports.SerialPort(port, 921600);
+                    serial.Open();
+                    serial.DtrEnable = false;
+                    Thread.Sleep(200);
+                    serial.DtrEnable = true;
+                    serial.Close();
+                    _logger.LogInformation($"[ZeDMD] HwReset via DTR toggle on {port}.");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning($"[ZeDMD] HwReset DTR fallback failed on {port}: {ex.Message}");
+                }
+            }
+
+            _logger.LogWarning("[ZeDMD] HwReset: no recovery method succeeded.");
+            return false;
+        }
+
         // ─────────────────────────────────────────────────────────────────────
         // DmdDevice standard API (Aynshe-compatible)
         // ─────────────────────────────────────────────────────────────────────
