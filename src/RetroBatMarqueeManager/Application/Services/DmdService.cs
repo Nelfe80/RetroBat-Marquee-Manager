@@ -431,12 +431,15 @@ namespace RetroBatMarqueeManager.Application.Services
 
         private void StopCliProcess(bool killStrayDmdExt = false)
         {
-            if (_currentDmdProcess != null && !_currentDmdProcess.HasExited)
+            if (_currentDmdProcess != null)
             {
                 try
                 {
-                    _currentDmdProcess.Kill();
-                    _currentDmdProcess.Dispose();
+                    if (!_currentDmdProcess.HasExited)
+                    {
+                        _currentDmdProcess.Kill();
+                        _currentDmdProcess.Dispose();
+                    }
                 }
                 catch (Exception ex)
                 {
