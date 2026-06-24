@@ -32,8 +32,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
  $log='%LOG_FILE%'; ^
  function Log([string]$m){ $stamp=(Get-Date).ToString('yyyy-MM-dd HH:mm:ss.fff'); Add-Content -LiteralPath $log -Value ($stamp + ' ' + $m) -Encoding UTF8 }; ^
  Log 'ES start hook entered.'; ^
- $running=Get-Process -Name 'MarqueeManager' -ErrorAction SilentlyContinue | Where-Object { try { [System.IO.Path]::GetFullPath($_.Path) -eq $exe } catch { $false } }; ^
- if ($running) { Log ('MarqueeManager already running PID ' + (($running | Select-Object -First 1).Id)); exit 0 }; ^
+ $running=@(Get-Process -Name 'MarqueeManager' -ErrorAction SilentlyContinue).Where({ try { [System.IO.Path]::GetFullPath($_.Path) -eq $exe } catch { $false } }); ^
+ if ($running) { Log ('MarqueeManager already running PID ' + $running[0].Id); exit 0 }; ^
  Unblock-File -LiteralPath $exe -ErrorAction SilentlyContinue; ^
  try { ^
    $proc=Start-Process -FilePath $exe -WorkingDirectory $wd -WindowStyle Hidden -PassThru -ErrorAction Stop; ^
