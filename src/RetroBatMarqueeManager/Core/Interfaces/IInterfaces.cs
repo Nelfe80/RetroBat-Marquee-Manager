@@ -103,6 +103,12 @@ namespace RetroBatMarqueeManager.Core.Interfaces
         string RAFontFamily { get; }
         string OverlayTemplatePath { get; }
         
+        // DOF / MAME .lay Settings
+        bool LayEnabled { get; }
+        bool LayLcdEnabled { get; }
+        bool LayDmdEnabled { get; }
+        string LayDofPath { get; }
+
         // DMD Settings
         bool DmdEnabled { get; }
         bool DmdCompose { get; }

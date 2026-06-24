@@ -16,7 +16,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
     {
         private readonly IConfigService _config;
         private readonly ImageConversionService _imageService;
-        private readonly Infrastructure.Processes.MpvController _mpv;
+        private readonly Infrastructure.Processes.MarqueeController _mpv;
         private readonly IMarqueeFileFinder _marqueeFinder;
         private readonly IDmdService _dmdService;
         private readonly ILogger<MarqueeWorkflow> _logger;
@@ -30,7 +30,6 @@ namespace RetroBatMarqueeManager.Application.Workflows
         private string? _currentGameName; // Name of currently running game
         private string? _currentGameRom; // ROM path of currently running game
         private bool _mpvSuspendedForPinball = false; // EN: True if MPV was stopped for pinball / FR: Vrai si MPV a Ã©tÃ© arrÃªtÃ© pour pinball
-        private readonly IScraperManager _scraperManager;
         private readonly IOverlayTemplateService _templateService;
 
         private readonly IInputService _inputService;
@@ -40,7 +39,7 @@ namespace RetroBatMarqueeManager.Application.Workflows
         // FR: Gestion des offsets vidÃ©o (nouveaux services)
         private readonly VideoMarqueeService _videoService;
         private readonly VideoOffsetStorageService _videoOffsetStorage;
-        private readonly RetroAchievementsService? _raService; // EN: RetroAchievements Service / FR: Service RetroAchievements
+        private readonly RetroBatMarqueeManager.Core.Interfaces.IRetroAchievementsService? _raService = null; // RA events consumed from APIExpose WS
         
         // EN: Video adjustment mode state
         // FR: Ã‰tat du mode ajustement vidÃ©o
@@ -69,16 +68,15 @@ namespace RetroBatMarqueeManager.Application.Workflows
         private string? _currentDmdRibbonPath; // EN: Track last DMD ribbon for composition / FR: Suivre le dernier ruban DMD pour composition
 
         public MarqueeWorkflow(
-            IConfigService config, 
-            ImageConversionService imageService, 
-            Infrastructure.Processes.MpvController mpv,
+            IConfigService config,
+            ImageConversionService imageService,
+            Infrastructure.Processes.MarqueeController mpv,
             IMarqueeFileFinder marqueeFinder,
             IDmdService dmdService,
             IInputService inputService,
             IProcessService processService,
             VideoMarqueeService videoService,
             VideoOffsetStorageService videoOffsetStorage,
-            IScraperManager scraperManager,
             IOverlayTemplateService templateService,
             ILogger<MarqueeWorkflow> logger)
         {
@@ -91,32 +89,8 @@ namespace RetroBatMarqueeManager.Application.Workflows
             _processService = processService;
             _videoService = videoService;
             _videoOffsetStorage = videoOffsetStorage;
-            _scraperManager = scraperManager;
             _templateService = templateService;
-            _raService = null; // RA is managed by APIExpose, not this plugin
             _logger = logger;
-            
-            _scraperManager.OnScrapeCompleted += (sys, game, path) =>
-            {
-                // EN: Check if the scraped game matches current game
-                // FR: VÃ©rifier si le jeu scrapÃ© correspond au jeu en cours
-                if (!string.IsNullOrEmpty(_currentGameName) && 
-                    !string.IsNullOrEmpty(_currentGameSystem) && 
-                    _currentGameSystem.Equals(sys, StringComparison.OrdinalIgnoreCase))
-                {
-                     // Match against name OR rom name (since scrap uses both)
-                     if (_currentGameName.Equals(game, StringComparison.OrdinalIgnoreCase) || 
-                         (!string.IsNullOrEmpty(_currentGameRom) && _currentGameRom.Contains(game, StringComparison.OrdinalIgnoreCase)))
-                     {
-                         if (path != null)
-                             _logger.LogInformation($"[MarqueeWorkflow] Live scrape SUCCESS for {game}. Refreshing marquee...");
-                         else
-                             _logger.LogInformation($"[MarqueeWorkflow] Live scrape FAILED (or Not Found) for {game}. Triggering fallback refresh...");
-
-                         _ = HandleGameSelected(_currentGameSystem, _currentGameName, _currentGameRom ?? "");
-                     }
-                }
-            };
             
             _inputService.OnMoveCommand += HandleMoveCommand;
             _inputService.OnScaleCommand += HandleScaleCommand;

@@ -2984,7 +2984,7 @@ namespace RetroBatMarqueeManager.Application.Services
         public async Task<string> GenerateBadgeRibbonOverlay(
             Dictionary<string, Achievement> achievements,
             int gameId,
-            RetroAchievementsService raService,
+            RetroBatMarqueeManager.Core.Interfaces.IRaBadgeProvider raService,
             bool isDmd,
             bool isHardcore = false,
             bool forceRegenerate = false)

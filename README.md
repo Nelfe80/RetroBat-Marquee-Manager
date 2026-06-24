@@ -4,6 +4,32 @@ Moteur d'orchestration multi-écrans pour RetroBat. Pilote en temps réel plusie
 
 ---
 
+## Installation
+
+Le dossier doit être installé ici :
+
+```text
+E:\RetroBat\plugins\MarqueeManager
+```
+
+### Scripts disponibles
+
+| Script | Description |
+|--------|-------------|
+| `install-es-start-hook.bat` | Installe le lancement automatique au démarrage d'EmulationStation. |
+| `uninstall-es-start-hook.bat` | Retire uniquement le hook MarqueeManager. Ne touche pas `updatestores.bat`. |
+| `build.bat` | Compile et publie `MarqueeManager.exe` en single-file (`win-x64 Release`). |
+
+Le hook installe ce fichier côté EmulationStation :
+
+```text
+emulationstation\.emulationstation\scripts\start\MarqueeManager-start.bat
+```
+
+MarqueeManager se ferme automatiquement quand EmulationStation quitte (surveillance du process `emulationstation`, délai de grâce 3,5 s).
+
+---
+
 ## Architecture
 
 ```
@@ -123,24 +149,32 @@ Les éléments nommés dans le `.lay` deviennent des lampes dynamiques pilotées
 
 ## DMD physique
 
-Le `DmdService` pilote un DMD physique via `dmdext` (processus externe). Il s'active si `DmdEnabled=True` dans `config.ini`. Le DMD virtuel WPF (cible `dmd`) et le DMD physique fonctionnent en parallèle et indépendamment.
+Le `DmdService` pilote un DMD physique via `DmdDevice64.dll` (dmdext). Il s'active si `DmdEnabled=True` dans `config.ini`. Le DMD virtuel WPF (cible `dmd`) et le DMD physique fonctionnent en parallèle et indépendamment.
 
 Optimisation DMD physique :
-- les frames DMD statiques sont mises en cache en memoire par chemin, taille, date de modification, resolution et mode couleur ;
-- le premier rendu d'une image peut encore payer la conversion, puis les passages suivants sur la meme image sont quasi instantanes ;
-- le nettoyage global `dmdext` est reserve aux arrets explicites, afin de ne pas ralentir chaque changement de selection quand le driver natif est utilise ;
-- la calibration ZeDMD memorise une signature dans `config.ini` (`ZeDmdCalibrationSignature`) et saute la pre-calibration au demarrage quand modele, resolution, luminosite, paquet USB, refresh et port n'ont pas change.
+- les frames DMD statiques sont mises en cache en mémoire par chemin, taille, date de modification, résolution et mode couleur ;
+- le premier rendu d'une image peut encore payer la conversion, puis les passages suivants sur la même image sont quasi instantanés ;
+- le nettoyage global `dmdext` est réservé aux arrêts explicites, afin de ne pas ralentir chaque changement de sélection quand le driver natif est utilisé ;
+- la calibration ZeDMD mémorise une signature dans `config.ini` (`ZeDmdCalibrationSignature`) et saute la pré-calibration au démarrage quand modèle, résolution, luminosité, paquet USB, refresh et port n'ont pas changé.
+
+Récupération DMD bloqué :
+- si `Open()` échoue au démarrage, `DmdDeviceWrapper.HwReset()` tente d'abord un `ZeDMD_Reset` via `zedmd64.dll` ;
+- si la DLL ou le port est indisponible, bascule sur un toggle DTR direct sur le port série (reboot MCU bas niveau) ;
+- après 3 s d'attente, `Open()` est retenté une fois.
 
 ---
 
 ## RetroAchievements
 
-Le `RetroAchievementsService` (HostedService) se connecte à l'API RetroAchievements et émet des événements :
-- `AchievementUnlocked` → badge overlay temporaire sur marquee et DMD
-- `RichPresenceUpdated` → texte RP en rotation sur DMD
-- `ChallengeUpdated` → challenges actifs en cycle sur DMD/marquee
+MarqueeManager **affiche** les événements RetroAchievements mais ne fait **aucun appel API RA** — c'est APIExpose qui détecte et publie ces événements via WebSocket.
 
-Nécessite `RetroAchievementsEnabled=True` et les credentials RA dans `config.ini`.
+| Événement WebSocket APIExpose | Action d'affichage |
+|-------------------------------|-------------------|
+| `ra.achievement.unlocked` | Badge overlay temporaire sur marquee et DMD |
+| `ra.richpresence.updated` | Texte RP en rotation sur DMD |
+| `ra.challenge.updated` | Challenge actif en cycle sur DMD/marquee |
+
+> **Statut développement :** les modèles (`AchievementUnlockedEventArgs`, `ChallengeState`…) et les méthodes de rendu DMD (`PlayAchievementSequenceAsync`, `PlayRichPresenceNotificationAsync`, `PlayChallengeNotificationAsync`) sont implémentés. Le câblage des événements APIExpose → `MarqueeWorkflow` reste à finaliser (les clés d'événements WS RA exactes publiées par APIExpose doivent être mappées dans `WebSocketListenerService`).
 
 ---
 
@@ -190,7 +224,7 @@ RetroAchievementsApiKey=
 
 3. **`RetroAchievementsService`** (HostedService) : polling API RA toutes les 30s pendant un jeu.
 
-4. **`RetroBatMonitorService`** (HostedService) : surveille l'arrêt de RetroBat et déclenche l'arrêt propre.
+4. **`RetroBatMonitorService`** (HostedService) : surveille le process `emulationstation` toutes les secondes. Si absent depuis 3,5 s, appelle `StopApplication()` → le callback `ApplicationStopping` ferme la boucle de messages WinForms → le process se termine proprement.
 
 ---
 

@@ -167,6 +167,12 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         public string ComposeMedia => GetValue("ComposeMedia", "fanart"); // fanart or image
         public string MarqueeLayout => GetValue("MarqueeLayout", "gradient-standard"); // standard, gradient-left, gradient-right, gradient-standard
 
+        // DOF / MAME .lay Settings
+        public bool LayEnabled    => GetValue("LayEnabled",    "true").Equals("true", StringComparison.OrdinalIgnoreCase);
+        public bool LayLcdEnabled => GetValue("LayLcdEnabled", "true").Equals("true", StringComparison.OrdinalIgnoreCase);
+        public bool LayDmdEnabled => GetValue("LayDmdEnabled", "true").Equals("true", StringComparison.OrdinalIgnoreCase);
+        public string LayDofPath  => GetAbsolutePath(GetValue("LayDofPath", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dof", "mame")));
+
         // DMD Settings
         public bool DmdEnabled => GetValue("DmdEnabled", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
         public string DmdModel => GetValue("DmdModel", "virtual");

@@ -12,7 +12,6 @@ namespace RetroBatMarqueeManager.Application.Services
         private readonly IConfigService _config;
         private readonly IEsSettingsService _esSettings;
         private readonly ImageConversionService _imageService;
-        private readonly IScraperManager _scraperManager;
         private readonly OffsetStorageService _offsetService;
         private readonly ILogger<MarqueeFileFinderService> _logger;
         
@@ -29,14 +28,12 @@ namespace RetroBatMarqueeManager.Application.Services
             IEsSettingsService esSettings,
             ImageConversionService imageService,
             OffsetStorageService offsetService,
-            IScraperManager scraperManager,
             ILogger<MarqueeFileFinderService> logger)
         {
             _config = config;
             _esSettings = esSettings;
             _imageService = imageService;
             _offsetService = offsetService;
-            _scraperManager = scraperManager;
             _logger = logger;
         }
 
@@ -349,26 +346,8 @@ namespace RetroBatMarqueeManager.Application.Services
                      effectiveScrapSystem = scrapAlias;
                  }
 
-                 // Try scraping for 'mpv' media type
-                 _logger.LogInformation($"[Scraping Priority] Checking configured scrapers for {gameName} ({effectiveScrapSystem})...");
-                 // Pass effectiveScrapSystem instead of system
-                 var scrapedPath = await _scraperManager.CheckAndScrapeAsync(effectiveScrapSystem, gameName, romPath, "mpv");
-                 if (scrapedPath != null)
-                 {
-                     _logger.LogInformation($"[Scraping Priority] Success: {scrapedPath}");
-                     return _imageService.ProcessImage(scrapedPath, subFolder: system); // Cache still uses original 'system' folder for consistency with ES
-                 }
-
-                 // EN: If scraping is in progress, return placeholder
-                 // FR: Si le scraping est en cours, retourner l'image provisoire
-                 // Fix: Use romFileName for key matching
-                 // Use effectiveScrapSystem for checking progress too
-                 if (_scraperManager.IsScraping(effectiveScrapSystem, gameName, "mpv"))
-                 {
-                     string? scraperName = _scraperManager.GetActiveScraperName(effectiveScrapSystem, gameName, "mpv");
-                     _logger.LogInformation($"[Scraping] {gameName} ({effectiveScrapSystem}) is currently being scraped by {scraperName}. Returning placeholder.");
-                     return _imageService.GetScrapingPlaceholder("mpv", scraperName);
-                 }
+                 // Scraping removed — media provided by APIExpose
+                 _logger.LogInformation($"[Scraping] Skipped — scraping handled by APIExpose for {gameName} ({effectiveScrapSystem}).");
             }
 
 
@@ -1251,24 +1230,7 @@ namespace RetroBatMarqueeManager.Application.Services
 
 
 
-            // --- PRIORITY 1: AUTO-SCRAPING (If Enabled) ---
-            if (_config.MarqueeAutoScraping && !string.IsNullOrEmpty(romPath) && allowScraping)
-            {
-                _logger.LogInformation($"[DMD Scraping Priority] Checking configured scrapers for {gameName} ({system})...");
-                var scrapedPath = await _scraperManager.CheckAndScrapeAsync(system, gameName, romPath, "dmd");
-                if (scrapedPath != null)
-                {
-                    _logger.LogInformation($"[DMD Scraping Priority] Success: {scrapedPath}");
-                    return _imageService.ProcessDmdImage(scrapedPath, subFolder: system);
-                }
-
-                if (_scraperManager.IsScraping(system, gameName, "dmd"))
-                {
-                    string? scraperName = _scraperManager.GetActiveScraperName(system, gameName, "dmd");
-                    _logger.LogInformation($"[DMD Scraping] {gameName} ({system}) is currently being scraped by {scraperName}. Returning placeholder.");
-                    return _imageService.GetScrapingPlaceholder("dmd", scraperName);
-                }
-            }
+            // Scraping removed — DMD media provided by APIExpose
 
             // --- PRIORITY 2: VIDEO GENERATION (If Enabled) ---
             if (_config.MarqueeVideoGeneration)

@@ -19,6 +19,7 @@ namespace RetroBatMarqueeManager.Application.Services
         private Process? _currentDmdProcess;
         private string _dmdDeviceIniPath;
         private bool _isNativeOpen = false;
+        private readonly SemaphoreSlim _openSemaphore = new(1, 1); // prevents concurrent Open() calls
         private string? _lastMediaPath = null;
         private CancellationTokenSource? _animationCts = null;
         private CancellationTokenSource? _overlayAnimationCts = null;
@@ -233,6 +234,22 @@ namespace RetroBatMarqueeManager.Application.Services
         }
 
         private async Task EnsureNativeOpenAsync()
+        {
+            if (!_dmdWrapper.IsLoaded) return;
+            if (_isNativeOpen) return;
+
+            await _openSemaphore.WaitAsync();
+            try
+            {
+            await EnsureNativeOpenLockedAsync();
+            }
+            finally
+            {
+                _openSemaphore.Release();
+            }
+        }
+
+        private async Task EnsureNativeOpenLockedAsync()
         {
             if (!_dmdWrapper.IsLoaded) return;
 

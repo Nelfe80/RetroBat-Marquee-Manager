@@ -156,30 +156,21 @@ public class Program
                     services.AddSingleton<IDmdConfigService, DmdConfigService>();
                     services.AddSingleton<IEsSettingsService>(sp => new EsSettingsService(configService.RetroBatPath, sp.GetRequiredService<ILogger<EsSettingsService>>()));
                     services.AddSingleton<IProcessService, SystemProcessService>();
-                    services.AddSingleton<MpvController>(); // Register MPV Controller
-                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Native.DmdDeviceWrapper>(); // Native DMD Wrapper
-                    
+                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Processes.MarqueeController>();
+                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Native.DmdDeviceWrapper>();
+
                     // Application / Services
-                    // MarqueeManager is a pure WS consumer — APIExpose provides all media paths.
                     services.AddSingleton<IDmdService, DmdService>();
-                    services.AddSingleton<IMarqueeFileFinder, MarqueeFileFinderService>(); // Required by MarqueeWorkflow (DMD lifecycle)
-                    services.AddSingleton<ImageConversionService>(); // Required for DMD frame processing (GetRawDmdBytes)
+                    services.AddSingleton<IMarqueeFileFinder, MarqueeFileFinderService>();
+                    services.AddSingleton<ImageConversionService>();
                     services.AddSingleton<MarqueeWorkflow>();
                     services.AddSingleton<OffsetStorageService>();
                     services.AddSingleton<VideoOffsetStorageService>();
                     services.AddSingleton<IOverlayTemplateService, OverlayTemplateService>();
                     services.AddSingleton<VideoMarqueeService>();
                     services.AddSingleton<IInputService, RetroBatMarqueeManager.Infrastructure.Input.KeyboardInputService>();
-                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.ScriptInstallerService>(); // Removes legacy ES hooks on startup
+                    services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.ScriptInstallerService>();
                     services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.AutoStartService>();
-                    // Scrapers — registered as no-ops (WS consumer does not scrape locally)
-                    services.AddSingleton<ScreenScraperService>();
-                    services.AddSingleton<IScraperService>(sp => sp.GetRequiredService<ScreenScraperService>());
-                    services.AddSingleton<ArcadeItaliaScraperService>();
-                    services.AddSingleton<IScraperService>(sp => sp.GetRequiredService<ArcadeItaliaScraperService>());
-                    services.AddSingleton<IScraperManager, ScraperManager>();
-
-                    // RetroAchievements: fully removed — this plugin makes no HTTP connections
 
                     
                     // EN: Only register TrayIconService if explorer.exe is running (not in custom shell)
@@ -334,12 +325,8 @@ public class Program
     {
         try
         {
-            // Stop MPV gracefully by killing the process
             var processService = _host?.Services.GetService<IProcessService>();
-            if (processService != null)
-            {
-                processService.KillProcess("dmdext");
-            }
+            processService?.KillProcess("dmdext");
         }
         catch (Exception ex)
         {
@@ -404,7 +391,7 @@ public class Program
         {
             // EN: Kill orphaned processes directly using System.Diagnostics
             // FR: Tuer les processus orphelins directement via System.Diagnostics
-            var processesToKill = new[] { "mpv", "dmdext" };
+            var processesToKill = new[] { "dmdext" };
             
             foreach (var processName in processesToKill)
             {

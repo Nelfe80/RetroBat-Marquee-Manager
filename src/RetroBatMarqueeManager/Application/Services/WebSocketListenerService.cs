@@ -19,7 +19,7 @@ namespace RetroBatMarqueeManager.Application.Services
     public class WebSocketListenerService : BackgroundService
     {
         private readonly IConfigService _config;
-        private readonly MpvController _mpv;
+        private readonly MarqueeController _mpv;
         private readonly MarqueeWorkflow _workflow;
         private readonly IDmdService _dmdService;
         private readonly ILogger<WebSocketListenerService> _logger;
@@ -42,7 +42,7 @@ namespace RetroBatMarqueeManager.Application.Services
 
         public WebSocketListenerService(
             IConfigService config,
-            MpvController mpv,
+            MarqueeController mpv,
             MarqueeWorkflow workflow,
             IDmdService dmdService,
             ILogger<WebSocketListenerService> logger)

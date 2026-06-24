@@ -15,15 +15,13 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
     public class TrayIconService : IDisposable
     {
         private readonly IniConfigService _config;
-        private readonly ScreenScraperService _screenScraper;
         private readonly ILogger<TrayIconService> _logger;
         private NotifyIcon? _trayIcon;
         private readonly CancellationTokenSource _cts = new();
 
-        public TrayIconService(IniConfigService config, ScreenScraperService screenScraper, ILogger<TrayIconService> logger)
+        public TrayIconService(IniConfigService config, ILogger<TrayIconService> logger)
         {
             _config = config;
-            _screenScraper = screenScraper;
             _logger = logger;
         }
 
@@ -180,15 +178,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                                   diffCount++;
                               }
 
-                              // Clear persistent failed scraps cache
-                              try
-                              {
-                                  _screenScraper.ClearFailedScraps();
-                              }
-                              catch (Exception ex)
-                              {
-                                  _logger.LogError($"Failed to clear failed scraps cache: {ex.Message}");
-                              }
+                              // Scraping removed — handled by APIExpose
 
                              var title = "RetroBat Marquee Manager";
                              string msg;
