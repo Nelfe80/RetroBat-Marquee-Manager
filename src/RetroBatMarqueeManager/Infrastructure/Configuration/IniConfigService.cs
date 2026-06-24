@@ -239,15 +239,26 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         
         // RetroAchievements Settings
         // EN: Web API Key from https://retroachievements.org/settings / FR: Clé Web API depuis https://retroachievements.org/settings
-        public bool MpvRetroAchievementsNotifications => GetValue("MpvRetroAchievementsNotifications", "true").Equals("true", StringComparison.OrdinalIgnoreCase);
-        public bool DmdRetroAchievementsNotifications => GetValue("DmdRetroAchievementsNotifications", "true").Equals("true", StringComparison.OrdinalIgnoreCase);
-        public string? RetroAchievementsWebApiKey => GetValue("RetroAchievementsWebApiKey", "");
-        public string MarqueeRetroAchievementsOverlays => GetValue("MarqueeRetroAchievementsOverlays", "score,badges,count,items,challenge");
-        public string MpvRetroAchievementsOverlays 
+        // MpvRetroAchievements* → LcdRetroAchievements* (fallback on old key for compatibility)
+        public bool MpvRetroAchievementsNotifications
         {
             get
             {
-                var val = GetValue("MpvRetroAchievementsOverlays", "");
+                var v = GetValue("LcdRetroAchievementsNotifications", "");
+                if (string.IsNullOrEmpty(v)) v = GetValue("MpvRetroAchievementsNotifications", "true");
+                return v.Equals("true", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        public bool DmdRetroAchievementsNotifications => GetValue("DmdRetroAchievementsNotifications", "true").Equals("true", StringComparison.OrdinalIgnoreCase);
+        public string? RetroAchievementsWebApiKey => GetValue("RetroAchievementsWebApiKey", "");
+        public string MarqueeRetroAchievementsOverlays => GetValue("MarqueeRetroAchievementsOverlays", "score,badges,count,items,challenge");
+        public string MpvRetroAchievementsOverlays
+        {
+            get
+            {
+                // Try new key first, then old key, then fallback to global overlays
+                var val = GetValue("LcdRetroAchievementsOverlays", "");
+                if (string.IsNullOrWhiteSpace(val)) val = GetValue("MpvRetroAchievementsOverlays", "");
                 return string.IsNullOrWhiteSpace(val) ? MarqueeRetroAchievementsOverlays : val;
             }
         }

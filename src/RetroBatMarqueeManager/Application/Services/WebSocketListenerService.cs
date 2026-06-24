@@ -22,6 +22,7 @@ namespace RetroBatMarqueeManager.Application.Services
         private readonly MarqueeController _mpv;
         private readonly MarqueeWorkflow _workflow;
         private readonly IDmdService _dmdService;
+        private readonly LayManager _layManager;
         private readonly ILogger<WebSocketListenerService> _logger;
 
         private readonly string _apiExposeBasePath;
@@ -45,12 +46,14 @@ namespace RetroBatMarqueeManager.Application.Services
             MarqueeController mpv,
             MarqueeWorkflow workflow,
             IDmdService dmdService,
+            LayManager layManager,
             ILogger<WebSocketListenerService> logger)
         {
             _config = config;
             _mpv = mpv;
             _workflow = workflow;
             _dmdService = dmdService;
+            _layManager = layManager;
             _logger = logger;
 
             // Resolve APIExpose base path: explicit config > sibling directory auto-detect
@@ -274,19 +277,22 @@ namespace RetroBatMarqueeManager.Application.Services
                 // 1. Arcade stream: mame.output.changed (lamps) + mame.session.started (MAME layout)
                 if (streamName.Equals("arcade", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (root.TryGetProperty("type", out var typeEl))
+                    // Detect type from "type"/"Type" field OR by presence of "Signals" (mame.network format has no type field)
+                    string arcadeType = "";
+                    if (root.TryGetProperty("type", out var typeEl) || root.TryGetProperty("Type", out typeEl))
+                        arcadeType = typeEl.GetString() ?? "";
+
+                    bool hasSignals = root.TryGetProperty("Signals", out _) || root.TryGetProperty("signals", out _);
+
+                    if (arcadeType.Equals("mame.output.changed", StringComparison.OrdinalIgnoreCase) || hasSignals)
                     {
-                        var arcadeType = typeEl.GetString() ?? "";
-                        if (string.Equals(arcadeType, "mame.output.changed", StringComparison.OrdinalIgnoreCase))
-                        {
-                            ProcessArcadeOutput(root);
-                            return;
-                        }
-                        if (string.Equals(arcadeType, "mame.session.started", StringComparison.OrdinalIgnoreCase))
-                        {
-                            _ = HandleMameSessionStarted(json);
-                            return;
-                        }
+                        ProcessArcadeOutput(root);
+                        return;
+                    }
+                    if (arcadeType.Equals("mame.session.started", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _ = HandleMameSessionStarted(json);
+                        return;
                     }
                 }
 
@@ -366,15 +372,15 @@ namespace RetroBatMarqueeManager.Application.Services
 
         private void ProcessArcadeOutput(JsonElement root)
         {
-            if (!root.TryGetProperty("payload", out var payload))
-            {
-                root.TryGetProperty("Payload", out payload);
-            }
+            // Signals may be at root level (mame.network format) or inside a payload wrapper
+            JsonElement payload = root;
+            if (root.TryGetProperty("payload", out var p) || root.TryGetProperty("Payload", out p))
+                payload = p;
 
-            if (payload.ValueKind == JsonValueKind.Object)
             {
                 JsonElement signals;
-                if (payload.TryGetProperty("signals", out signals) || payload.TryGetProperty("Signals", out signals))
+                if (payload.TryGetProperty("signals", out signals) || payload.TryGetProperty("Signals", out signals) ||
+                    root.TryGetProperty("signals", out signals)   || root.TryGetProperty("Signals", out signals))
                 {
                     if (signals.ValueKind == JsonValueKind.Array)
                     {
@@ -401,7 +407,11 @@ namespace RetroBatMarqueeManager.Application.Services
 
                             if (!string.IsNullOrEmpty(key) && val.HasValue)
                             {
-                                _mpv.SetLampState(key, val.Value);
+                                _logger.LogInformation($"[DOF] arcade output: {key}={val.Value}");
+                                if (_config.LayEnabled)
+                                    _layManager.SetLampState(key, val.Value);
+                                else
+                                    _mpv.SetLampState(key, val.Value);
                             }
                         }
                     }
@@ -480,7 +490,10 @@ namespace RetroBatMarqueeManager.Application.Services
 
             // /ws/marquee drives the marquee screen and dmd screen only.
             // Topper, IC card and fanart have their own dedicated WS streams.
-            if (!string.IsNullOrEmpty(marqueePath))
+            // Skip LCD update when a .lay pipeline is active (lay controls the display).
+            bool lcdLayActive = _config.LayEnabled && _layManager.HasActivePipeline("lcd");
+
+            if (!string.IsNullOrEmpty(marqueePath) && !lcdLayActive)
             {
                 var abs = ResolveAbsolutePath(marqueePath);
                 if (File.Exists(abs))
@@ -497,13 +510,16 @@ namespace RetroBatMarqueeManager.Application.Services
                     }
             }
 
+            // Skip physical DMD update when a .lay DMD pipeline is active.
+            bool dmdLayActive = _config.LayEnabled && _layManager.HasActivePipeline("dmd");
+
             if (!string.IsNullOrEmpty(dmdPath) && !ct.IsCancellationRequested && !IsStaleMarqueeRequest(request.Id))
             {
                 var abs = ResolveAbsolutePath(dmdPath);
                 if (File.Exists(abs))
                 {
                     // Push to physical DMD via dedicated worker (non-blocking — no delay on LCD)
-                    if (_config.DmdEnabled)
+                    if (_config.DmdEnabled && !dmdLayActive)
                     {
                         var dmdRequest = new DmdRequest(Interlocked.Increment(ref _latestDmdRequestId), abs);
                         _dmdChannel.Writer.TryWrite(dmdRequest);
@@ -700,10 +716,69 @@ namespace RetroBatMarqueeManager.Application.Services
 
         private Task HandleFrontendEvent(ApiExposeEvent ev)
         {
-            // APIExpose owns media resolution and generation. MarqueeManager only consumes
-            // /ws/marquee, /ws/topper and /ws/instruction-card snapshots so fast navigation
-            // cannot queue the legacy composer/scraper workflow.
-            _logger.LogDebug($"[WebSocket] Frontend event consumed by APIExpose snapshots only: {ev.Type}");
+            var type = ev.Type;
+
+            _logger.LogInformation($"[Frontend] event received: {ev.Type}");
+
+            // .lay load on game-start (raw or enriched)
+            if (type.Equals("ui.game.started", StringComparison.OrdinalIgnoreCase) ||
+                type.Equals("ui.game.started.raw", StringComparison.OrdinalIgnoreCase))
+            {
+                string romName = ev.Rom ?? "";
+
+                // Extract ROM name — payload structure varies between .raw and enriched events
+                if (ev.Root.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    System.Text.Json.JsonElement payload = ev.Root;
+                    if (ev.Root.TryGetProperty("Payload", out var p) || ev.Root.TryGetProperty("payload", out p))
+                        payload = p;
+
+                    string? gamePath = null;
+
+                    // 1. Selection.LongName (.raw only) — "seawolf"
+                    if (payload.TryGetProperty("Selection", out var sel) || payload.TryGetProperty("selection", out sel))
+                    {
+                        romName = ReadStringProperty(sel, "LongName") ?? ReadStringProperty(sel, "longName") ?? "";
+                        gamePath ??= ReadStringProperty(sel, "GamePath") ?? ReadStringProperty(sel, "gamePath");
+                    }
+
+                    // 2. Running.GamePath (present in both events)
+                    if (string.IsNullOrEmpty(romName))
+                    {
+                        if (payload.TryGetProperty("Running", out var running) || payload.TryGetProperty("running", out running))
+                            gamePath ??= ReadStringProperty(running, "GamePath") ?? ReadStringProperty(running, "gamePath");
+                    }
+
+                    // 3. Context.Selected.GamePath (enriched event)
+                    if (string.IsNullOrEmpty(romName))
+                    {
+                        if (payload.TryGetProperty("Context", out var ctx) &&
+                            ctx.TryGetProperty("Selected", out var selCtx))
+                            gamePath ??= ReadStringProperty(selCtx, "GamePath") ?? ReadStringProperty(selCtx, "gamePath");
+                    }
+
+                    // Derive romName from gamePath if not found directly
+                    if (string.IsNullOrEmpty(romName) && !string.IsNullOrEmpty(gamePath))
+                        romName = System.IO.Path.GetFileNameWithoutExtension(gamePath);
+                }
+
+                _logger.LogInformation($"[DOF] game-started → romName='{romName}'");
+
+                if (!string.IsNullOrEmpty(romName))
+                    _ = HandleMameSessionStarted(romName);
+
+                return Task.CompletedTask;
+            }
+
+            // .lay clear on game-end
+            if (type.Equals("ui.game.ended", StringComparison.OrdinalIgnoreCase) ||
+                type.Equals("ui.game.ended.raw", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("[DOF] game-ended → clearing .lay pipelines");
+                _layManager.Clear();
+                return Task.CompletedTask;
+            }
+
             return Task.CompletedTask;
         }
 
@@ -794,22 +869,100 @@ namespace RetroBatMarqueeManager.Application.Services
             return val.ValueKind == JsonValueKind.String ? val.GetString() : null;
         }
 
-        private Task HandleMameSessionStarted(string json)
+        private Task HandleMameSessionStarted(string jsonOrMachineName)
         {
             string machineName = "";
-            try
+
+            // If it looks like JSON, parse it; otherwise treat directly as machine name
+            if (jsonOrMachineName.TrimStart().StartsWith("{"))
             {
-                using var doc = JsonDocument.Parse(json);
-                var root = doc.RootElement;
-                JsonElement payload = root;
-                if (root.TryGetProperty("Payload", out var p) || root.TryGetProperty("payload", out p)) payload = p;
-                machineName = ReadStringProperty(payload, "MachineName") ?? ReadStringProperty(payload, "machineName") ?? "";
+                try
+                {
+                    using var doc = JsonDocument.Parse(jsonOrMachineName);
+                    var root = doc.RootElement;
+                    JsonElement payload = root;
+                    if (root.TryGetProperty("Payload", out var p) || root.TryGetProperty("payload", out p)) payload = p;
+                    machineName = ReadStringProperty(payload, "MachineName")
+                               ?? ReadStringProperty(payload, "machineName")
+                               ?? ReadStringProperty(payload, "RawRom")
+                               ?? ReadStringProperty(payload, "Rom") ?? "";
+                }
+                catch { }
             }
-            catch { }
+            else
+            {
+                machineName = jsonOrMachineName.Trim();
+            }
+
             if (string.IsNullOrEmpty(machineName)) return Task.CompletedTask;
 
             _logger.LogInformation($"[WebSocket] MAME session started: {machineName}");
+
+            if (_config.LayEnabled)
+            {
+                var resolvedFolder = ResolveDofFolder(_config.LayDofPath, machineName);
+                if (resolvedFolder != null)
+                {
+                    var layPath = System.IO.Path.Combine(resolvedFolder, "default.lay");
+                    try
+                    {
+                        var layout = MameLayParser.Parse(layPath);
+                        _layManager.LoadMameLayout(layout, resolvedFolder, machineName);
+                        _logger.LogInformation($"[DOF] .lay loaded for {machineName}: {layPath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"[DOF] Failed to load .lay for {machineName}: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation($"[DOF] No .lay found for '{machineName}' in {_config.LayDofPath}");
+                }
+            }
+
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Resolves the DOF folder for a given ROM name.
+        /// 1. Exact match: LayDofPath/{romName}/default.lay
+        /// 2. Alias lookup: LayDofPath/aliases.json → mapped folder
+        /// Returns the full path to the folder, or null if not found.
+        /// </summary>
+        private string? ResolveDofFolder(string dofBasePath, string romName)
+        {
+            // 1. Exact match
+            var exact = System.IO.Path.Combine(dofBasePath, romName);
+            if (System.IO.File.Exists(System.IO.Path.Combine(exact, "default.lay")))
+                return exact;
+
+            // 2. Alias lookup from aliases.json
+            var aliasFile = System.IO.Path.Combine(dofBasePath, "aliases.json");
+            if (System.IO.File.Exists(aliasFile))
+            {
+                try
+                {
+                    var json = System.IO.File.ReadAllText(aliasFile);
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    if (doc.RootElement.TryGetProperty(romName, out var mapped) ||
+                        doc.RootElement.TryGetProperty(romName.ToLowerInvariant(), out mapped))
+                    {
+                        var aliasFolder = System.IO.Path.Combine(dofBasePath, mapped.GetString() ?? "");
+                        if (System.IO.File.Exists(System.IO.Path.Combine(aliasFolder, "default.lay")))
+                        {
+                            _logger.LogInformation($"[DOF] Alias: '{romName}' → '{mapped.GetString()}'");
+                            return aliasFolder;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning($"[DOF] Failed to parse aliases.json: {ex.Message}");
+                }
+            }
+
+            return null;
         }
 
         private async Task HandleIngameEvent(ApiExposeEvent ev)

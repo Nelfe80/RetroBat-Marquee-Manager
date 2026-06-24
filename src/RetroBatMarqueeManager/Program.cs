@@ -171,6 +171,7 @@ public class Program
                     services.AddSingleton<IInputService, RetroBatMarqueeManager.Infrastructure.Input.KeyboardInputService>();
                     services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.ScriptInstallerService>();
                     services.AddSingleton<RetroBatMarqueeManager.Infrastructure.Installation.AutoStartService>();
+                    services.AddSingleton<LayManager>();
 
                     
                     // EN: Only register TrayIconService if explorer.exe is running (not in custom shell)

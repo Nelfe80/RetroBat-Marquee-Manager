@@ -107,7 +107,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             _layCanvas = new Canvas();
             _layViewbox = new Viewbox
             {
-                Stretch = Stretch.Fill,
+                Stretch = Stretch.Uniform,  // preserve aspect ratio of the .lay reference dimensions
                 Visibility = Visibility.Collapsed,
                 Child = _layCanvas
             };
@@ -353,6 +353,9 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 _layCanvas.Children.Clear();
                 _lampImages.Clear();
                 _layViewbox.Visibility = Visibility.Collapsed;
+                // Restore background image so the window isn't black after lay is cleared
+                if (_backgroundImage.Source != null)
+                    _backgroundImage.Visibility = Visibility.Visible;
             }));
         }
 

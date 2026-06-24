@@ -189,6 +189,8 @@ namespace RetroBatMarqueeManager.Core.Interfaces
         void Stop();
         string PrepareConfig(); // Generates DmdDevice.ini if needed
         Task WaitForExternalReleaseAsync(int timeoutMs = 2000); // Wait for external control to finish
+        /// <summary>Called by LayManager to suspend/resume DmdService while a .lay pipeline is active.</summary>
+        void SetExternalControl(bool active);
     }
 
     public interface IOverlayTemplateService

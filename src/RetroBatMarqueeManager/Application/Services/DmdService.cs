@@ -961,6 +961,9 @@ namespace RetroBatMarqueeManager.Application.Services
             }
         }
 
+        /// <summary>Called by LayManager to suspend/resume DmdService when a .lay pipeline is active.</summary>
+        public void SetExternalControl(bool active) => _isExternalControlActive = active;
+
         public void Stop()
         {
             _isExternalControlActive = false; // Reset protection on explicit Stop()
