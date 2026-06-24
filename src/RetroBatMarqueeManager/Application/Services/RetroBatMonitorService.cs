@@ -9,8 +9,8 @@ namespace RetroBatMarqueeManager.Application.Services
         private readonly ILogger<RetroBatMonitorService> _logger;
         private readonly IHostApplicationLifetime _appLifetime;
         private const string ProcessName = "emulationstation";
-        private const int CheckIntervalMs = 30000; // Check every 30 seconds
-        private const int GracePeriodMinutes = 5;
+        private const int CheckIntervalMs = 1000; // Check every 1 second
+        private const int GracePeriodMs = 3500;   // Grace period of 3.5 seconds
 
         private DateTime? _missingSince = null;
 
@@ -24,8 +24,27 @@ namespace RetroBatMarqueeManager.Application.Services
         {
             _logger.LogInformation("RetroBat Monitor Service started. Monitoring 'emulationstation' process.");
 
-            // Initial delay to let RetroBat start if launched together
-            await Task.Delay(10000, stoppingToken);
+            // Wait until emulationstation is detected for the first time (armed state)
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    var processes = Process.GetProcessesByName(ProcessName);
+                    bool isRunning = processes.Length > 0;
+
+                    if (isRunning)
+                    {
+                        _logger.LogInformation("RetroBat EmulationStation process detected. Lifecycle monitoring armed.");
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error checking RetroBat process on startup: {ex.Message}");
+                }
+
+                await Task.Delay(CheckIntervalMs, stoppingToken);
+            }
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -47,14 +66,14 @@ namespace RetroBatMarqueeManager.Application.Services
                         if (_missingSince == null)
                         {
                             _missingSince = DateTime.Now;
-                            _logger.LogWarning($"RetroBat process not found. Grace period started ({GracePeriodMinutes} min).");
+                            _logger.LogWarning($"RetroBat process not found. Grace period started ({GracePeriodMs} ms).");
                         }
                         else
                         {
                             var timeMissing = DateTime.Now - _missingSince.Value;
-                            if (timeMissing.TotalMinutes >= GracePeriodMinutes)
+                            if (timeMissing.TotalMilliseconds >= GracePeriodMs)
                             {
-                                _logger.LogWarning($"RetroBat has been missing for {timeMissing.TotalMinutes:F1} minutes. Initiating application shutdown.");
+                                _logger.LogWarning($"RetroBat has been missing for {timeMissing.TotalMilliseconds:F0} ms. Initiating application shutdown.");
                                 _appLifetime.StopApplication();
                                 return; // Exit loop
                             }
