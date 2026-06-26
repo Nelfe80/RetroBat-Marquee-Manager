@@ -640,10 +640,14 @@ namespace RetroBatMarqueeManager.Launcher.Forms
             cboArcadeItaliaMediaType.SelectedItem = _configManager.GetValue(_config, "arcadeitalia", "ArcadeItaliaMediaType", "marquee");
             
             // SCRAPING TAB - ScreenScraper
-            txtSSUser.Text = _configManager.GetValue(_config, "ScreenScraper", "ScreenScraperUser", "");
-            txtSSPass.Text = _configManager.GetValue(_config, "ScreenScraper", "ScreenScraperPass", "");
-            txtSSDevId.Text = _configManager.GetValue(_config, "ScreenScraper", "ScreenScraperDevId", "");
-            txtSSDevPass.Text = _configManager.GetValue(_config, "ScreenScraper", "ScreenScraperDevPassword", "");
+            txtSSUser.Text = "";
+            txtSSPass.Text = "";
+            txtSSDevId.Text = "";
+            txtSSDevPass.Text = "";
+            txtSSUser.Enabled = false;
+            txtSSPass.Enabled = false;
+            txtSSDevId.Enabled = false;
+            txtSSDevPass.Enabled = false;
             txtSSThreads.Text = _configManager.GetValue(_config, "ScreenScraper", "ScreenScraperThreads", "1");
             txtSSQueueLimit.Text = _configManager.GetValue(_config, "ScreenScraper", "ScreenScraperQueueLimit", "5");
             txtSSQueueKeep.Text = _configManager.GetValue(_config, "ScreenScraper", "ScreenScraperQueueKeep", "3");
@@ -734,10 +738,10 @@ namespace RetroBatMarqueeManager.Launcher.Forms
             _configManager.SetValue(_config, "arcadeitalia", "ArcadeItaliaMediaType", cboArcadeItaliaMediaType.SelectedItem?.ToString() ?? "marquee");
             
             // SCRAPING TAB - ScreenScraper
-            _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperUser", txtSSUser.Text);
-            _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperPass", txtSSPass.Text);
-            _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperDevId", txtSSDevId.Text);
-            _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperDevPassword", txtSSDevPass.Text);
+            _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperUser", "");
+            _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperPass", "");
+            _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperDevId", "");
+            _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperDevPassword", "");
             _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperThreads", txtSSThreads.Text);
             _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperQueueLimit", txtSSQueueLimit.Text);
             _configManager.SetValue(_config, "ScreenScraper", "ScreenScraperQueueKeep", txtSSQueueKeep.Text);

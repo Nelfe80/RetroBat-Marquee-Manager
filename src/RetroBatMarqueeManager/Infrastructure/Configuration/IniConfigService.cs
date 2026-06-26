@@ -231,11 +231,10 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         public bool MarqueeGlobalScraping => GetValue("MarqueeGlobalScraping", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
         public string MPVScrapMediaType => GetValue("MPVScrapMediaType", "");
         public string DMDScrapMediaType => GetValue("DMDScrapMediaType", "");
-        public string ScreenScraperUser => GetValue("ScreenScraperUser", "");
-        public string ScreenScraperPass => GetValue("ScreenScraperPass", "");
-        // Default to generic or empty logic if user doesn't provide one. "Maca" was invalid.
-        public string ScreenScraperDevId => GetValue("ScreenScraperDevId", "");
-        public string ScreenScraperDevPassword => GetValue("ScreenScraperDevPassword", "");
+        public string ScreenScraperUser => "";
+        public string ScreenScraperPass => "";
+        public string ScreenScraperDevId => "";
+        public string ScreenScraperDevPassword => "";
         
         // RetroAchievements Settings
         // EN: Web API Key from https://retroachievements.org/settings / FR: Clé Web API depuis https://retroachievements.org/settings
@@ -583,70 +582,35 @@ namespace RetroBatMarqueeManager.Infrastructure.Configuration
         
         private void ImportFromEsSettings()
         {
-             // Always try to sync from es_settings.cfg if valid credentials are found there
              try
              {
-                 var retroBatPath = RetroBatPath;
-                 var esSettingsPath = Path.Combine(retroBatPath, "emulationstation", ".emulationstation", "es_settings.cfg");
-                 
-                 if (!File.Exists(esSettingsPath)) return;
-                 
-                 using var stream = new FileStream(esSettingsPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                 var doc = System.Xml.Linq.XDocument.Load(stream);
-                 var root = doc.Root;
-                 if (root == null) return;
-                 
-                 string? user = null;
-                 string? pass = null;
-
-                 foreach (var element in root.Elements())
+                 var legacyKeys = new[]
                  {
-                     var name = element.Attribute("name")?.Value;
-                     var value = element.Attribute("value")?.Value;
-                     
-                     if (name == "ScreenScraperUser") user = value;
-                     if (name == "ScreenScraperPass") pass = value;
-                 }
-                 
-                 _logger?.LogInformation($"[ES Settings Sync] Found in {esSettingsPath}: User='{user}', Pass={(string.IsNullOrEmpty(pass) ? "[Empty]" : "[Set]")}");
+                     "ScreenScraperUser",
+                     "ScreenScraperPass",
+                     "ScreenScraperDevId",
+                     "ScreenScraperDevPassword"
+                 };
 
-                 // Sync logic: Force config.ini to match es_settings.cfg
-                 // If ES has it (or has it empty), we apply it.
-                 // This ensures full synchronization (including clearing credentials).
-                 
-                 bool updated = false;
-                 
-                 var currentUser = GetSetting("ScreenScraperUser");
-                 var currentPass = GetSetting("ScreenScraperPass");
-
-                 // Normalize nulls to empty strings for comparison
-                 user ??= "";
-                 pass ??= "";
-                 currentUser ??= "";
-                 currentPass ??= "";
-
-                 if (user != currentUser)
+                 var updated = false;
+                 foreach (var key in legacyKeys)
                  {
-                     _settings["ScreenScraperUser"] = user;
-                     updated = true;
-                     _logger?.LogInformation($"Synced ScreenScraperUser from ES (Old: '{currentUser}' -> New: '{user}')");
+                     if (!string.IsNullOrWhiteSpace(GetSetting(key)))
+                     {
+                         _settings[key] = "";
+                         updated = true;
+                     }
                  }
-                 
-                 if (pass != currentPass)
-                 {
-                     _settings["ScreenScraperPass"] = pass;
-                     updated = true;
-                     _logger?.LogInformation("Synced ScreenScraperPass from ES (Password updated/cleared)");
-                 }
-                 
+
                  if (updated)
                  {
+                     _logger?.LogInformation("Cleared legacy ScreenScraper credentials from MarqueeManager config; APIExpose owns ScreenScraper access.");
                      RewriteConfig();
                  }
              }
              catch (Exception ex)
              {
-                 _logger?.LogWarning($"Failed to import from ES settings: {ex.Message}");
+                 _logger?.LogWarning($"Failed to clear legacy ScreenScraper credentials: {ex.Message}");
              }
         }
         
