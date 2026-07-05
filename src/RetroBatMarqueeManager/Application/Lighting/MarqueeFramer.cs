@@ -23,11 +23,11 @@ public static class MarqueeFramer
         // system logos: centered, comfortably sized, never cropped
         if (logoMode)
         {
-            var logoScale = Math.Min((double)surfaceWidth / source.Width, (double)surfaceHeight / source.Height) * 0.80;
+            var logoScale = Math.Min((double)surfaceWidth / source.Width, (double)surfaceHeight / source.Height);
             return new Framing(
                 Math.Max(1, (int)Math.Round(source.Width * logoScale)),
                 Math.Max(1, (int)Math.Round(source.Height * logoScale)),
-                null, "logo centered");
+                null, "logo contain");
         }
 
         var widthAtHeightFill = (double)source.Width * surfaceHeight / source.Height;
