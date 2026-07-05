@@ -1,0 +1,1 @@
+Push the zip llander in /saves/mame/artwork/

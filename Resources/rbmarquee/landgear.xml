@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:landgear.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="landgear" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.111" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L1" x="0.222" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L2" x="0.333" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L3" x="0.444" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L4" x="0.556" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L5" x="0.667" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L6" x="0.778" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L7" x="0.889" y="0.42" radius="0.11" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="lamp0" to="lamp:L0" />
+        <map output="lamp1" to="lamp:L1" />
+        <map output="lamp2" to="lamp:L2" />
+        <map output="lamp3" to="lamp:L3" />
+        <map output="lamp4" to="lamp:L4" />
+        <map output="lamp5" to="lamp:L5" />
+        <map output="lamp6" to="lamp:L6" />
+        <map output="lamp7" to="lamp:L7" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

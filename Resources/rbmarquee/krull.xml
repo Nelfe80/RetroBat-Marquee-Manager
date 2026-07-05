@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:krull.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="krull" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.250" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L1" x="0.500" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L2" x="0.750" y="0.42" radius="0.11" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="led0" to="lamp:L0" />
+        <map output="led1" to="lamp:L1" />
+        <map output="led2" to="lamp:L2" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

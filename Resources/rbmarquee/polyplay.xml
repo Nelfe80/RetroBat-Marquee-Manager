@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:polyplay.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="polyplay" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.200" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L1" x="0.400" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L2" x="0.600" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L3" x="0.800" y="0.42" radius="0.11" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="lamp1" to="lamp:L0" />
+        <map output="lamp2" to="lamp:L1" />
+        <map output="lamp3" to="lamp:L2" />
+        <map output="lamp4" to="lamp:L3" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

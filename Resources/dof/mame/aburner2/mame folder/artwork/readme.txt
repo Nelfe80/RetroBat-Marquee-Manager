@@ -1,0 +1,1 @@
+Push the zip aburner2 in /saves/mame/artwork/

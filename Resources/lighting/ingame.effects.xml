@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bibliothèque d'effets ingame du RBMarquee Lighting Engine (CDC §18).
+  Mappe les actions sémantiques des .mem (flux ws/ingame) vers des effets lumineux
+  et des sprites animés (resources/sprites).
+
+  kind       : flash      -> voile coloré plein cadre + creux d'intensité des tubes
+               pulse      -> impulsion lumineuse additive courte
+               tint       -> teinte soutenue douce (color grade temporaire)
+               shake      -> secousse physique du marquee (amplitude = dip)
+               strobe     -> rafale on/off des tubes (profondeur = dip)
+               powerCycle -> extinction puis ré-allumage aléatoire
+               blackout   -> extinction, noir pendant durationMs, puis ré-allumage
+               sprite     -> sprites seuls
+  sprite     : GIF animé de resources/sprites, cumulable avec tout kind
+  count      : nombre d'instances (spawn décalé, trajectoires variées)
+  motion     : pop | fall (chute verticale courte) | rise | cross (horizontal)
+  trail      : trainée lumineuse (coûteux : réservé aux effets rares)
+  dip        : creux d'intensité (flash) / amplitude (shake) / profondeur (strobe)
+  throttleMs : anti-spam par règle
+
+  Perf : privilégier fall/rise (sortent vite du cadre = slot libéré), éviter trail
+  sur les événements fréquents.
+-->
+<ingameEffects version="1.2">
+  <!-- pièce ramassée : chute de pièces verticale, courte -->
+  <effect action="COIN_GAIN" kind="sprite" sprite="coins.gif" count="2" motion="fall" durationMs="1000" throttleMs="200" />
+
+  <!-- dégâts : flash rouge + impact -->
+  <effect action="LOSE_LIFE|KO|DEATH" kind="flash" color="#ff1e12" durationMs="420" dip="0.55" sprite="blood_hit.gif" count="2" motion="pop" throttleMs="500" />
+  <effect action="HIT|DAMAGE|ENEMY_HIT_PLAYER" kind="flash" color="#ff2a18" durationMs="220" dip="0.35" sprite="hit.gif" count="1" motion="pop" throttleMs="350" />
+
+  <!-- chocs physiques : le marquee tremble -->
+  <effect action="CRASH" kind="shake" dip="0.6" durationMs="450" sprite="impact.gif" count="1" motion="pop" throttleMs="600" />
+  <effect action="BOMB|EXPLOSION" kind="shake" dip="0.45" durationMs="400" sprite="bombexplode.gif" count="2" motion="pop" throttleMs="600" />
+
+  <!-- game over : la borne s'éteint, un peu de fumée -->
+  <effect action="GAME_OVER" kind="blackout" durationMs="1600" sprite="smoke.gif" count="2" motion="rise" throttleMs="4000" />
+
+  <!-- vie / soin : impulsions positives -->
+  <effect action="GAIN_LIFE|EXTEND" kind="pulse" color="#46ff6e" durationMs="900" sprite="oneup.gif" count="2" motion="rise" throttleMs="600" />
+  <effect action="HEAL" kind="pulse" color="#46ff6e" durationMs="800" sprite="heart.gif" count="3" motion="rise" throttleMs="600" />
+  <effect action="RECHARGE|ENERGY_GAIN" kind="sprite" sprite="recharging.gif" count="1" motion="pop" durationMs="900" throttleMs="800" />
+
+  <!-- progression -->
+  <effect action="LEVEL_CLEAR|STAGE_CLEAR|NEW_LEVEL" kind="pulse" color="#ffffff" durationMs="1100" sprite="star.gif" count="5" motion="fall" throttleMs="1500" />
+  <effect action="BOSS_DEFEATED|FATALITY" kind="tint" color="#ffd944" durationMs="1800" sprite="championcup.gif" count="1" motion="pop" throttleMs="2000" />
+  <effect action="BATTLE_START|FIGHT" kind="sprite" sprite="fight.gif" count="1" motion="pop" durationMs="1100" throttleMs="1500" />
+
+  <!-- collectibles / score -->
+  <effect action="KEY_GET|OBJECT_GET|POWERUP" kind="sprite" sprite="star.gif" count="2" motion="pop" durationMs="700" throttleMs="450" />
+  <effect action="RESOURCE_GAIN|EXPERIENCE" kind="sprite" sprite="particles.gif" count="2" motion="pop" durationMs="600" throttleMs="500" />
+
+  <!-- états spéciaux : les arcs-en-ciel apparaissent/disparaissent, teinte de fond -->
+  <effect action="INVINCIBILITY_START" kind="tint" color="#b070ff" durationMs="1800" sprite="rainbow.gif" count="3" motion="pop" throttleMs="2000" />
+  <effect action="FIREBALL|PROJECTILE" kind="sprite" sprite="fireball.gif" count="1" motion="rise" durationMs="800" throttleMs="600" />
+
+  <!-- avertissements : rafale strobe des tubes -->
+  <effect action="LOW_HEALTH_WARN" kind="strobe" dip="0.6" durationMs="500" throttleMs="1200" />
+  <effect action="BOMB_TIMER" kind="strobe" dip="0.45" durationMs="350" throttleMs="900" />
+
+  <!-- familles par défaut -->
+  <effect family="resources.lives" kind="flash" color="#ff2a18" durationMs="240" dip="0.30" throttleMs="600" />
+  <effect family="scoring" kind="sprite" sprite="particles.gif" count="1" motion="fall" durationMs="600" throttleMs="800" />
+  <effect family="combat.boss" kind="flash" color="#ff9a1e" durationMs="240" dip="0.15" throttleMs="900" />
+</ingameEffects>

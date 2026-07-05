@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:orunners.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="orunners" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.111" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L1" x="0.222" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L2" x="0.333" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L3" x="0.444" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L4" x="0.556" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L5" x="0.667" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L6" x="0.778" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L7" x="0.889" y="0.42" radius="0.11" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="ma_lamp" to="lamp:L0" />
+        <map output="ma_check_point_lamp" to="lamp:L1" />
+        <map output="ma_dj_music_lamp" to="lamp:L2" />
+        <map output="ma_race_leader_lamp" to="lamp:L3" />
+        <map output="mb_lamp" to="lamp:L4" />
+        <map output="mb_check_point_lamp" to="lamp:L5" />
+        <map output="mb_dj_music_lamp" to="lamp:L6" />
+        <map output="mb_race_leader_lamp" to="lamp:L7" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

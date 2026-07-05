@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="llander" system="mame" generated="true">
+  <scene target="marquee" image="llander.png">
+    <lamps>
+      <lamp id="lamp0" region="0.0167 0.1333 0.1417 0.7083" color="#ffb769" />
+      <lamp id="lamp1" region="0.1615 0.1333 0.1417 0.7083" color="#ffb669" />
+      <lamp id="lamp2" region="0.3031 0.1361 0.1417 0.7083" color="#feb66a" />
+      <lamp id="lamp3" region="0.4458 0.1361 0.1417 0.7083" color="#ffb669" />
+      <lamp id="lamp4" region="0.5854 0.1333 0.1417 0.7083" color="#ffb66a" />
+      <lamp id="button1" region="0.7802 0.4889 0.0354 0.1889" color="#fe6e19" />
+      <lamp id="button2" region="0.8240 0.4889 0.0354 0.1889" color="#ff6e1a" />
+      <lamp id="lamp0" region="0.7693 0.1611 0.0354 0.1889" color="#fe8f51" />
+      <lamp id="button4" region="0.8349 0.1611 0.0354 0.1889" color="#ff8f51" />
+      <lamp id="button5" region="0.9109 0.5361 0.0354 0.1889" color="#ff7a61" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="lamp0" to="lamp:lamp0" />
+        <map output="lamp1" to="lamp:lamp1" />
+        <map output="lamp2" to="lamp:lamp2" />
+        <map output="lamp3" to="lamp:lamp3" />
+        <map output="lamp4" to="lamp:lamp4" />
+        <map output="button1" to="lamp:button1" />
+        <map output="button2" to="lamp:button2" />
+        <map output="lamp0" to="lamp:lamp0" />
+        <map output="button4" to="lamp:button4" />
+        <map output="button5" to="lamp:button5" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="spyhunt" system="mame" generated="true">
+  <scene target="marquee" image="spyhunt.png">
+    <lamps>
+      <lamp id="lamp0" region="0.1573 0.4444 0.1135 0.5556" color="#ffb16a" />
+      <lamp id="lamp1" region="0.3104 0.4444 0.1135 0.5556" color="#ffa982" />
+      <lamp id="lamp2" region="0.5229 0.4444 0.1135 0.5556" color="#ffcd66" />
+      <lamp id="lamp3" region="0.7323 0.4444 0.1135 0.5556" color="#ffa575" />
+      <lamp id="lamp4" region="0.8802 0.4444 0.1135 0.5556" color="#fead63" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="lamp0" to="lamp:lamp0" />
+        <map output="lamp1" to="lamp:lamp1" />
+        <map output="lamp2" to="lamp:lamp2" />
+        <map output="lamp3" to="lamp:lamp3" />
+        <map output="lamp4" to="lamp:lamp4" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:itaten.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="itaten" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.167" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L1" x="0.833" y="0.42" radius="0.11" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="led0" to="lamp:L0" />
+        <map output="led1" to="lamp:L1" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="alternate" />
+  </scene>
+</rbmarquee>

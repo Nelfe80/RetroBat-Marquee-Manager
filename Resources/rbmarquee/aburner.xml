@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="aburner2" system="mame" generated="true">
+  <scene target="marquee" image="aburner2.png">
+    <lamps>
+      <lamp id="LOCKON1" region="0.4964 0.0000 0.5036 1.0000" color="#ff9c57" />
+      <lamp id="LOCKON0" region="0.0000 0.0000 0.4964 1.0000" color="#ff9c57" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="lamp2" to="lamp:LOCKON1" />
+        <map output="lamp2" to="lamp:LOCKON0" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="alternate" />
+  </scene>
+</rbmarquee>

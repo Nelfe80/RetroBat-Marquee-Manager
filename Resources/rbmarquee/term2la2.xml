@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="term2" system="mame" generated="true">
+  <scene target="marquee" image="term2.png">
+    <lamps>
+      <lamp id="REDLAMP" region="0.8531 0.0000 0.1469 1.0000" color="#b1dfff" />
+      <lamp id="REDLAMP" region="0.8531 0.0000 0.1469 1.0000" color="#b1dfff" />
+      <lamp id="REDLAMP" region="0.8531 0.0000 0.1469 1.0000" color="#b1dfff" />
+      <lamp id="REDLAMP" region="0.8531 0.0000 0.1469 1.0000" color="#b1dfff" />
+      <lamp id="LEFD" region="0.0703 0.0000 0.3057 1.0000" color="#ffd6a0" />
+      <lamp id="RIGHT" region="0.5839 0.0000 0.3193 1.0000" color="#fff1b2" />
+      <lamp id="LEFT" region="0.0703 0.0000 0.3057 1.0000" color="#ffeda9" />
+      <lamp id="RIGHT" region="0.5839 0.0000 0.3193 1.0000" color="#fff1b2" />
+      <lamp id="LEFT" region="0.0703 0.0000 0.3057 1.0000" color="#ffeda9" />
+      <lamp id="RIGHT" region="0.5839 0.0000 0.3193 1.0000" color="#fff1b2" />
+      <lamp id="LEFT" region="0.0703 0.0000 0.3057 1.0000" color="#ffeda9" />
+      <lamp id="RIGHT" region="0.5839 0.0000 0.3193 1.0000" color="#fff1b2" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="Left_Gun_Red_Led" to="lamp:REDLAMP" />
+        <map output="Right_Gun_Red_Led" to="lamp:REDLAMP" />
+        <map output="Left_Gun_Green_Led" to="lamp:REDLAMP" />
+        <map output="Right_Gun_Green_Led" to="lamp:REDLAMP" />
+        <map output="Left_Flash_1" to="lamp:LEFD" />
+        <map output="Right_Flash_1" to="lamp:RIGHT" />
+        <map output="Left_Flash_2" to="lamp:LEFT" />
+        <map output="Right_Flash_2" to="lamp:RIGHT" />
+        <map output="Left_Flash_3" to="lamp:LEFT" />
+        <map output="Right_Flash_3" to="lamp:RIGHT" />
+        <map output="Left_Flash_4" to="lamp:LEFT" />
+        <map output="Right_Flash_4" to="lamp:RIGHT" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

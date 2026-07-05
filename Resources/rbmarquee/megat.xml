@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:megat.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="megat" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.125" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L1" x="0.250" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L2" x="0.375" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L3" x="0.500" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L4" x="0.625" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L5" x="0.750" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L6" x="0.875" y="0.42" radius="0.11" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="p1_cancel_lamp" to="lamp:L0" />
+        <map output="p1_disc_1_lamp" to="lamp:L1" />
+        <map output="p1_disc_2_lamp" to="lamp:L2" />
+        <map output="p1_disc_3_lamp" to="lamp:L3" />
+        <map output="p1_disc_4_lamp" to="lamp:L4" />
+        <map output="p1_disc_5_lamp" to="lamp:L5" />
+        <map output="p1_play_lamp" to="lamp:L6" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:crusherm.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="crusherm" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.100" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L1" x="0.200" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L2" x="0.300" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L3" x="0.400" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L4" x="0.500" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L5" x="0.600" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L6" x="0.700" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L7" x="0.800" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L8" x="0.900" y="0.42" radius="0.11" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="led0" to="lamp:L0" />
+        <map output="led1" to="lamp:L1" />
+        <map output="led2" to="lamp:L2" />
+        <map output="led3" to="lamp:L3" />
+        <map output="led4" to="lamp:L4" />
+        <map output="led5" to="lamp:L5" />
+        <map output="led6" to="lamp:L6" />
+        <map output="led7" to="lamp:L7" />
+        <map output="led8" to="lamp:L8" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

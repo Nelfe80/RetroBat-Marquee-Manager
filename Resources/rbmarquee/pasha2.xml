@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:pasha2.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="pasha2" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.100" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L1" x="0.200" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L2" x="0.300" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L3" x="0.400" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L4" x="0.500" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L5" x="0.600" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L6" x="0.700" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L7" x="0.800" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L8" x="0.900" y="0.42" radius="0.11" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="lamp_p1_b" to="lamp:L0" />
+        <map output="lamp_p1_g" to="lamp:L1" />
+        <map output="lamp_p1_r" to="lamp:L2" />
+        <map output="lamp_p2_b" to="lamp:L3" />
+        <map output="lamp_p2_g" to="lamp:L4" />
+        <map output="lamp_p2_r" to="lamp:L5" />
+        <map output="lamp_p3_b" to="lamp:L6" />
+        <map output="lamp_p3_g" to="lamp:L7" />
+        <map output="lamp_p3_r" to="lamp:L8" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

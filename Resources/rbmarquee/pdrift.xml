@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:pdrift.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="pdrift" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.143" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L1" x="0.286" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L2" x="0.429" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L3" x="0.167" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L4" x="0.833" y="0.42" radius="0.11" color="#ffd6a0" />
+      <lamp id="L5" x="0.857" y="0.42" radius="0.11" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="crash_lamp" to="lamp:L0" />
+        <map output="danger_lamp" to="lamp:L1" />
+        <map output="emergency_stop_lamp" to="lamp:L2" />
+        <map output="left_start_lamp" to="lamp:L3" />
+        <map output="right_start_lamp" to="lamp:L4" />
+        <map output="start_lamp" to="lamp:L5" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="daytona2-alter" system="mame" generated="true">
+  <scene target="marquee" image="daytona2-alter.png">
+    <lamps>
+      <lamp id="START" region="0.6953 0.6694 0.0380 0.2444" color="#ffce3f" />
+      <lamp id="1" region="0.7349 0.6750 0.0297 0.2417" color="#ff9fad" />
+      <lamp id="2" region="0.7651 0.6722 0.0281 0.2472" color="#7cd7ff" />
+      <lamp id="3" region="0.7932 0.6750 0.0271 0.2444" color="#ffdd64" />
+      <lamp id="4" region="0.8203 0.6750 0.0286 0.2417" color="#8aff89" />
+      <lamp id="LEADER" region="0.0000 0.6250 0.3969 0.3694" color="#ffd6a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="LampStart" to="lamp:START" />
+        <map output="LampView1" to="lamp:1" />
+        <map output="LampView2" to="lamp:2" />
+        <map output="LampView3" to="lamp:3" />
+        <map output="LampView4" to="lamp:4" />
+        <map output="LampLeader" to="lamp:LEADER" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

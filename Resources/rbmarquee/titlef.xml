@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: mameOutputs:titlef.json. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="titlef" system="mame" generated="true">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.143" y="0.42" radius="0.11" color="#2a5aff" />
+      <lamp id="L1" x="0.286" y="0.42" radius="0.11" color="#2a5aff" />
+      <lamp id="L2" x="0.429" y="0.42" radius="0.11" color="#2a5aff" />
+      <lamp id="L3" x="0.571" y="0.42" radius="0.11" color="#ff2a1a" />
+      <lamp id="L4" x="0.714" y="0.42" radius="0.11" color="#ff2a1a" />
+      <lamp id="L5" x="0.857" y="0.42" radius="0.11" color="#ff2a1a" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="blue_button_1p_lamp" to="lamp:L0" />
+        <map output="blue_button_2p_lamp" to="lamp:L1" />
+        <map output="blue_corner_lamp" to="lamp:L2" />
+        <map output="red_button_1p_lamp" to="lamp:L3" />
+        <map output="red_button_2p_lamp" to="lamp:L4" />
+        <map output="red_corner_lamp" to="lamp:L5" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

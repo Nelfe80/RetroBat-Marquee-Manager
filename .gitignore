@@ -1,0 +1,72 @@
+# Runtime markers and logs
+.graceful_exit
+.log/
+.logs/
+logs/
+*.log
+crash.log
+tray_error.txt
+DmdDevice.log
+debug_checkpoint.txt
+
+# IDE/cache
+.vs/
+.cache/
+_cache/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.user
+*.suo
+
+# Local tools are installed outside Git; keep only the installation note.
+tools/**
+!tools/
+!tools/README.txt
+!tools/**/
+!tools/**/README.txt
+
+# Product specs / cahiers des charges stay local.
+CAHIER_DES_CHARGES*
+*CDC*
+
+# Docs: keep only images and PDFs.
+docs/**
+!docs/**/
+!docs/**/*.pdf
+!docs/**/*.png
+!docs/**/*.jpg
+!docs/**/*.jpeg
+!docs/**/*.gif
+!docs/**/*.webp
+!docs/**/*.bmp
+!docs/**/*.svg
+!docs/**/*.ico
+
+# Legacy/manual snapshots
+.archive/
+**/.archive/
+.versioning/
+
+# Build outputs
+bin/
+obj/
+src/**/bin/
+src/**/obj/
+src/**/.vs/
+src/**/.idea/
+src/**/TestResults/
+src/**/coverage/
+src/**/*.user
+src/**/*.suo
+src/**/*.pdb
+src/**/*.cache
+src/**/GeneratedFiles/
+artifacts/
+.temp/
+temp_publish*/
+
+# Root runtime binaries (shipped via GitHub Releases, not source control)
+/MarqueeManager.exe
+/MarqueeManager.deps.json
+/MarqueeManager.runtimeconfig.json

@@ -1,0 +1,1 @@
+Push chasehq.cfg in bios\mame\cfg\

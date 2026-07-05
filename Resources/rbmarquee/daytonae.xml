@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="daytona2" system="mame" generated="true">
+  <scene target="marquee" image="daytona2.png">
+    <lamps>
+      <lamp id="LEADER" region="0.0000 0.0000 1.0000 1.0000" color="#fed3a1" />
+      <lamp id="LEFT" region="0.0000 0.0000 0.1245 1.0000" color="#ffebb6" />
+      <lamp id="RIGHT" region="0.8755 0.0000 0.1245 1.0000" color="#feeab8" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="LampLeader" to="lamp:LEADER" />
+        <map output="LampLeader" to="lamp:LEFT" />
+        <map output="LampLeader" to="lamp:RIGHT" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>

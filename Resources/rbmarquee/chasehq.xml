@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<rbmarquee version="1.2" game="chasehq" system="mame" generated="true">
+  <scene target="marquee" image="chasehq.png">
+    <lamps>
+      <lamp id="genout5" region="0.7708 0.0000 0.2292 1.0000" color="#ff90a9" />
+      <lamp id="genout6" region="0.0000 0.0000 0.2292 1.0000" color="#60e8ff" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs>
+        <map output="genout5" to="lamp:genout5" />
+        <map output="genout6" to="lamp:genout6" />
+      </arcadeOutputs>
+    </bindings>
+    <attract mode="alternate" />
+  </scene>
+</rbmarquee>

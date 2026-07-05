@@ -1,0 +1,12 @@
+{
+  "_comment": "Mapping MAME ROM names → DOF folder names when exact match doesn't exist",
+  "daytona": "daytona2",
+  "daytonae": "daytona2",
+  "daytonacb": "daytona2",
+  "daytonagtx": "daytona2",
+  "aburner": "aburner2",
+  "abcop": "spyhunt",
+  "term2la": "term2",
+  "term2la2": "term2",
+  "term2la3": "term2"
+}

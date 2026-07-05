@@ -1,0 +1,1 @@
+Push spyhunt.cfg in bios\mame\cfg\
