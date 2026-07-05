@@ -1,49 +1,43 @@
 # RetroBat MarqueeManager
 
-MarqueeManager affiche sur les surfaces physiques les données et médias déjà résolus par APIExpose. Il ne scrape rien, ne contacte aucune API RetroAchievements et ne génère aucun média avec ImageMagick ou FFmpeg.
+**MarqueeManager** affiche sur vos écrans physiques (marquee, topper, carte d'instructions, DMD virtuel ou physique, LCD) les médias et données temps réel fournis par [APIExpose](https://github.com/Nelfe80/RetroBat-APIExpose) : logos, scores live, RetroAchievements, lampes MAME.
 
-## Flux consommés
+## 📖 Documentation
 
-| Flux APIExpose | Utilisation |
-|---|---|
-| `/ws/marquee` | Marquee principal et média du DMD physique/virtuel. |
-| `/ws/topper` | Média topper. |
-| `/ws/instruction-card` | Première carte d'instructions locale disponible. |
-| `/ws/frontend` | Démarrage/fin de jeu et chargement/nettoyage des layouts MAME. |
-| `/ws/arcade` | Signaux MAME pour les lampes `.lay`. |
-| `/ws/retroachievements` | Session, rich presence, unlocks, challenges et leaderboards. |
-| `/ws/score` | Score temps réel normalisé, toutes sources. |
-| `/ws/timer` | Timer temps réel normalisé, toutes sources. |
-| `/ws/hiscore` | Notification de high score. |
+**➡ [Wiki en français](https://nelfe80.github.io/RetroBat-Marquee-Manager/)** · **[English wiki](https://nelfe80.github.io/RetroBat-Marquee-Manager/en/)**
 
-Les reconnexions ont lieu après cinq secondes. Pour RA, APIExpose renvoie d'abord
-le catalogue statique retenu, puis le snapshot léger de session. Score et timer
-conservent leur propre état courant.
+Installation, assignation des écrans, DMD/ZeDMD, RetroAchievements et dépannage.
 
-## Rendu
+## ⬇ Installation rapide
 
-- Cinq surfaces WPF possibles : `marquee`, `topper`, `iccard`, `dmd` virtuel et `lcd`.
-- Le média APIExpose reste la couche de fond ; `.lay`, informations persistantes et notifications sont des couches WPF natives.
-- Le DMD physique utilise les DLL privées de `tools/dmd` et `tools/zedmd`.
-- `dmdext` est utilisé uniquement pour transmettre des médias vidéo compatibles. MarqueeManager arrête seulement les processus qu'il a lui-même lancés.
-- Priorité DMD : notification, challenge/leaderboard, timer/score, état RA, `.lay`, média de base.
+1. Installez d'abord [APIExpose](https://github.com/Nelfe80/RetroBat-APIExpose/releases) (requis) et le [runtime .NET 8 Desktop](https://dotnet.microsoft.com/download/dotnet/8.0).
+2. Téléchargez `MarqueeManager-x.y.z-full.7z` depuis les [Releases](https://github.com/Nelfe80/RetroBat-Marquee-Manager/releases).
+3. Décompressez dans `RetroBat\plugins\` → `RetroBat\plugins\MarqueeManager\`.
+4. RetroBat fermé, double-cliquez `install-es-start-hook.bat`, puis relancez RetroBat.
+5. Assignez vos écrans dans `config.ini`, section `[Screens]` — tout est expliqué dans le wiki.
 
-## Configuration
+## 📄 Licence
 
-La configuration V2 est décrite dans [docs/CONFIGURATION.md](docs/CONFIGURATION.md). Une ancienne configuration est sauvegardée dans `config.ini.v1.bak`, puis migrée une seule fois.
+Usage personnel et non commercial libre ; utilisation commerciale sous licence écrite — voir [LICENSE.md](LICENSE.md) (schéma commun avec APIExpose).
 
-RetroAchievements est désactivé par défaut. APIExpose reste propriétaire des identifiants, appels réseau et médias RA.
-Les familles RA peuvent être activées séparément et leurs durées DMD sont
-réglables en millisecondes ; un unlock dure six secondes par défaut.
+---
 
-## Développement et release
+# RetroBat MarqueeManager
 
-```powershell
-dotnet build src\RetroBatMarqueeManager\RetroBatMarqueeManager.csproj -c Debug --no-restore
-dotnet run --project tests\MarqueeManager.Tests\MarqueeManager.Tests.csproj -c Debug --no-restore
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\release-framework-dependent.ps1 -CopyRoot
-```
+**MarqueeManager** displays on your physical screens (marquee, topper, instruction card, virtual or physical DMD, LCD) the media and real-time data provided by [APIExpose](https://github.com/Nelfe80/RetroBat-APIExpose): logos, live scores, RetroAchievements, MAME lamps.
 
-La release est `win-x64`, single-file et framework-dependent : le runtime .NET 8 Desktop doit être installé. Les DLL natives privées restent dans le dossier du plugin. Le workflow standard remplace aussi l'exécutable racine via `-CopyRoot`, car c'est celui lancé par le hook EmulationStation.
+## 📖 Documentation
 
-Voir aussi [l’architecture](docs/ARCHITECTURE.md), le [contrat WebSocket](docs/WEBSOCKET_CONTRACTS.md) et les [règles de publication](docs/DEVOPS.md).
+**➡ [English wiki](https://nelfe80.github.io/RetroBat-Marquee-Manager/en/)** · **[Wiki en français](https://nelfe80.github.io/RetroBat-Marquee-Manager/)**
+
+## ⬇ Quick install
+
+1. First install [APIExpose](https://github.com/Nelfe80/RetroBat-APIExpose/releases) (required) and the [.NET 8 Desktop runtime](https://dotnet.microsoft.com/download/dotnet/8.0).
+2. Download `MarqueeManager-x.y.z-full.7z` from the [Releases](https://github.com/Nelfe80/RetroBat-Marquee-Manager/releases).
+3. Extract into `RetroBat\plugins\` → `RetroBat\plugins\MarqueeManager\`.
+4. With RetroBat closed, double-click `install-es-start-hook.bat`, then start RetroBat.
+5. Assign your screens in `config.ini`, section `[Screens]` — everything is explained in the wiki.
+
+## 📄 Licensing
+
+Free for personal, non-commercial use; commercial use under written license — see [LICENSE.md](LICENSE.md) (same scheme as APIExpose).
