@@ -1,0 +1,76 @@
+site_name: RetroBat MarqueeManager
+site_description: Marquees, toppers, DMD et écrans dynamiques pour vos jeux RetroBat.
+site_url: https://nelfe80.github.io/RetroBat-Marquee-Manager/
+repo_url: https://github.com/Nelfe80/RetroBat-Marquee-Manager
+repo_name: Nelfe80/RetroBat-Marquee-Manager
+docs_dir: wiki
+edit_uri: ""
+
+theme:
+  name: material
+  language: fr
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Mode sombre
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Mode clair
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: fr
+          default: true
+          name: Français
+          build: true
+        - locale: en
+          name: English
+          build: true
+          site_name: RetroBat MarqueeManager
+          nav_translations:
+            Accueil: Home
+            Premiers pas: Getting started
+            Écrans et surfaces: Screens and surfaces
+            DMD et ZeDMD: DMD and ZeDMD
+            RetroAchievements: RetroAchievements
+            Dépannage: Troubleshooting
+            Licence: License
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Accueil: index.md
+  - Premiers pas: premiers-pas.md
+  - Écrans et surfaces: ecrans.md
+  - DMD et ZeDMD: dmd.md
+  - RetroAchievements: retroachievements.md
+  - Dépannage: depannage.md
+  - Licence: licence.md

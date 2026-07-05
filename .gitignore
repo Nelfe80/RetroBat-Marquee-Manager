@@ -70,3 +70,7 @@ temp_publish*/
 /MarqueeManager.exe
 /MarqueeManager.deps.json
 /MarqueeManager.runtimeconfig.json
+
+# MkDocs build output
+site/
+
