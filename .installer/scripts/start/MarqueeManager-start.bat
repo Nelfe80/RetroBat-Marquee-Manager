@@ -4,6 +4,8 @@ setlocal EnableExtensions DisableDelayedExpansion
 rem EmulationStation start hook for MarqueeManager.
 rem This script is intended to be copied to:
 rem   emulationstation\.emulationstation\scripts\start\MarqueeManager-start.bat
+rem Pure batch on purpose: PowerShell one-liners with hidden windows are
+rem flagged by antivirus heuristics (Trojan:Win32/ClickFix).
 
 for %%I in ("%~dp0..\..\..\..\plugins\MarqueeManager") do set "PLUGIN_DIR=%%~fI"
 set "MARQUEE_EXE=%PLUGIN_DIR%\MarqueeManager.exe"
@@ -12,37 +14,24 @@ set "LOG_DIR=%PLUGIN_DIR%\.log"
 set "LOG_FILE=%LOG_DIR%\es-start-hook.log"
 
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%" >nul 2>&1
+echo %date% %time% ES start hook entered.>> "%LOG_FILE%"
 
 if not exist "%MARQUEE_EXE%" (
-  echo MarqueeManager executable not found:
-  echo   %MARQUEE_EXE%
+  echo %date% %time% ERROR missing executable: %MARQUEE_EXE%>> "%LOG_FILE%"
   exit /b 1
 )
 
 if not exist "%MARQUEE_CONFIG%" (
-  echo MarqueeManager configuration not found:
-  echo   %MARQUEE_CONFIG%
+  echo %date% %time% ERROR missing configuration: %MARQUEE_CONFIG%>> "%LOG_FILE%"
   exit /b 1
 )
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-"$ErrorActionPreference='SilentlyContinue'; ^
- $exe=[System.IO.Path]::GetFullPath('%MARQUEE_EXE%'); ^
- $wd=[System.IO.Path]::GetFullPath('%PLUGIN_DIR%'); ^
- $log='%LOG_FILE%'; ^
- function Log([string]$m){ $stamp=(Get-Date).ToString('yyyy-MM-dd HH:mm:ss.fff'); Add-Content -LiteralPath $log -Value ($stamp + ' ' + $m) -Encoding UTF8 }; ^
- Log 'ES start hook entered.'; ^
- $running=@(Get-Process -Name 'MarqueeManager' -ErrorAction SilentlyContinue).Where({ try { [System.IO.Path]::GetFullPath($_.Path) -eq $exe } catch { $false } }); ^
- if ($running) { Log ('MarqueeManager already running PID ' + $running[0].Id); exit 0 }; ^
- Unblock-File -LiteralPath $exe -ErrorAction SilentlyContinue; ^
- try { ^
-   $proc=Start-Process -FilePath $exe -WorkingDirectory $wd -PassThru -ErrorAction Stop; ^
-   if ($null -eq $proc) { throw 'Start-Process returned no process.' } ^
-   Log ('MarqueeManager started PID ' + $proc.Id); ^
-   exit 0; ^
- } catch { ^
-   Log ('ERROR failed to start MarqueeManager: ' + $_.Exception.Message); ^
-   exit 1; ^
- }"
+tasklist /FI "IMAGENAME eq MarqueeManager.exe" 2>nul | find /I "MarqueeManager.exe" >nul
+if not errorlevel 1 (
+  echo %date% %time% MarqueeManager already running.>> "%LOG_FILE%"
+  exit /b 0
+)
 
-exit /b %ERRORLEVEL%
+start "MarqueeManager" /D "%PLUGIN_DIR%" "%MARQUEE_EXE%"
+echo %date% %time% MarqueeManager started.>> "%LOG_FILE%"
+exit /b 0
