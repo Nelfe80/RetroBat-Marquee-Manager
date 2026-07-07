@@ -28,7 +28,9 @@ Le cœur de l'outil : pour chacune des cinq surfaces (marquee, topper, instructi
 
 - **l'écran** qui l'affiche (ou « Désactivé ») ;
 - **le contenu** : chaque surface peut afficher n'importe quel flux — par exemple l'instruction card sur le topper si vous n'avez pas d'écran dédié ;
-- **la zone** : plein écran, ou un rectangle `x,y,largeur,hauteur` pour partager un grand écran vertical entre topper, marquee et instruction card.
+- **la zone** : plein écran, ou un rectangle `x,y,largeur,hauteur` pour partager un grand écran vertical entre topper, marquee et instruction card :
+
+![Écran vertical partagé](assets/ecran-partage.svg)
 
 **Tester la zone** affiche la mire exactement à l'emplacement configuré, avant d'enregistrer. L'assistant refuse les zones invalides, signale les chevauchements et vous demande confirmation avant d'écrire. Si MarqueeManager tourne encore, il propose de le redémarrer avec la nouvelle configuration.
 
@@ -54,7 +56,9 @@ Si votre écran instruction card est tactile (ou même à la souris), cet onglet
 
 - **Simple** : un tap n'importe où passe à la carte suivante du jeu (how-to-play → moves → …).
 - **Centre → IC2** : un appui au centre affiche la carte secondaire (les coups spéciaux, par exemple), puis revient automatiquement à la carte principale après le délai choisi.
-- **Dual player** : pour un écran partagé entre deux joueurs — la moitié gauche affiche la carte du joueur 1, la moitié droite celle du joueur 2, avec une zone commune optionnelle au centre.
+- **Dual player** : pour un écran partagé entre deux joueurs — la moitié gauche affiche la carte du joueur 1, la moitié droite celle du joueur 2, avec une zone commune optionnelle au centre :
+
+![Zones tactiles dual player](assets/zones-tactiles.svg)
 - **Zones libres** : dessinez vos propres zones directement sur l'aperçu (cliquer-glisser) et choisissez l'action de chacune : carte suivante, carte précise, carte joueur, retour à la carte par défaut.
 
 Le réglage est enregistré dans `state\surfaces.profile.json` et lu par MarqueeManager au démarrage. La souris déclenche les mêmes actions que le tactile — pratique pour tester sans écran tactile.

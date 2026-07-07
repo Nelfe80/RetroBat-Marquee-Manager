@@ -1,5 +1,7 @@
 # Screens and surfaces
 
+![The surfaces on the cabinet](assets/surfaces-borne.svg)
+
 MarqueeManager can animate **five surfaces**, each being a WPF window placed on the Windows screen of your choice:
 
 | Surface | Typical use | APIExpose stream |

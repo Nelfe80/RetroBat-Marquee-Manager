@@ -28,7 +28,9 @@ The heart of the tool: for each of the five surfaces (marquee, topper, instructi
 
 - **the screen** it appears on (or "Disabled");
 - **the content**: any surface can show any stream — for instance the instruction card on the topper when you have no dedicated screen;
-- **the zone**: fullscreen, or an `x,y,width,height` rectangle to share one large vertical display between topper, marquee and instruction card.
+- **the zone**: fullscreen, or an `x,y,width,height` rectangle to share one large vertical display between topper, marquee and instruction card:
+
+![Shared vertical screen](assets/ecran-partage.svg)
 
 **Test the zone** shows the pattern exactly where it will land, before saving. The assistant refuses invalid zones, flags overlaps and asks for confirmation before writing. If MarqueeManager is still running, it offers to restart it with the new configuration.
 
@@ -54,7 +56,9 @@ If your instruction card screen is touch-capable (or even mouse-driven), this ta
 
 - **Simple**: a tap anywhere shows the game's next card (how-to-play → moves → …).
 - **Center → IC2**: pressing the center shows the secondary card (special moves, for instance), then automatically returns to the main card after the chosen delay.
-- **Dual player**: for a screen shared by two players — the left half shows player 1's card, the right half player 2's, with an optional common zone in the middle.
+- **Dual player**: for a screen shared by two players — the left half shows player 1's card, the right half player 2's, with an optional common zone in the middle:
+
+![Dual player touch zones](assets/zones-tactiles.svg)
 - **Free zones**: draw your own zones directly on the preview (click-drag) and pick each one's action: next card, a specific card, a player card, back to the default card.
 
 The setting is saved to `state\surfaces.profile.json` and read by MarqueeManager at startup. The mouse triggers the same actions as touch — handy to test without a touchscreen.

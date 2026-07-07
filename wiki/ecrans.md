@@ -1,5 +1,7 @@
 # Écrans et surfaces
 
+![Les surfaces sur la borne](assets/surfaces-borne.svg)
+
 MarqueeManager peut animer **cinq surfaces**, chacune étant une fenêtre WPF placée sur l'écran Windows de votre choix :
 
 | Surface | Usage typique | Flux APIExpose |

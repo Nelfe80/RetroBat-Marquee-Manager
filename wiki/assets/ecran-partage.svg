@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 560" font-family="Segoe UI, Arial, sans-serif">
+  <text x="180" y="34" text-anchor="middle" fill="#8a8a9a" font-size="14" font-weight="bold" letter-spacing="1">UN ÉCRAN 1080x1920, TROIS SURFACES</text>
+
+  <!-- physical screen -->
+  <rect x="60" y="50" width="240" height="470" rx="10" fill="#10101a" stroke="#3a3a48" stroke-width="3"/>
+
+  <!-- topper zone 0,0,1080,520 -->
+  <rect x="66" y="56" width="228" height="120" rx="4" fill="#2a2440" stroke="#8a2be2" stroke-width="2"/>
+  <text x="180" y="112" text-anchor="middle" fill="#c9a6ff" font-size="15" font-weight="bold">TOPPER</text>
+  <text x="180" y="132" text-anchor="middle" fill="#8a8a9a" font-size="10">0,0,1080,520</text>
+
+  <!-- marquee zone 0,520,1080,360 -->
+  <rect x="66" y="182" width="228" height="84" rx="4" fill="#3d2f10" stroke="#ffb300" stroke-width="2"/>
+  <text x="180" y="220" text-anchor="middle" fill="#ffd97a" font-size="15" font-weight="bold">MARQUEE</text>
+  <text x="180" y="240" text-anchor="middle" fill="#8a8a9a" font-size="10">0,520,1080,360</text>
+
+  <!-- iccard zone 0,880,1080,1040 -->
+  <rect x="66" y="272" width="228" height="242" rx="4" fill="#0f2a1e" stroke="#30e850" stroke-width="2"/>
+  <text x="180" y="390" text-anchor="middle" fill="#8deda2" font-size="15" font-weight="bold">INSTRUCTION CARD</text>
+  <text x="180" y="410" text-anchor="middle" fill="#8a8a9a" font-size="10">0,880,1080,1040</text>
+
+  <!-- ini snippet -->
+  <rect x="340" y="60" width="270" height="300" rx="8" fill="#1d1d2a" stroke="#3a3a48" stroke-width="2"/>
+  <text x="356" y="88" fill="#8a8a9a" font-size="12" font-family="Consolas, monospace">[Screens]</text>
+  <text x="356" y="116" fill="#c9a6ff" font-size="12" font-family="Consolas, monospace">TopperScreen=2</text>
+  <text x="356" y="134" fill="#c9a6ff" font-size="12" font-family="Consolas, monospace">TopperBounds=0,0,1080,520</text>
+  <text x="356" y="170" fill="#ffd97a" font-size="12" font-family="Consolas, monospace">MarqueeScreen=2</text>
+  <text x="356" y="188" fill="#ffd97a" font-size="12" font-family="Consolas, monospace">MarqueeBounds=0,520,1080,360</text>
+  <text x="356" y="224" fill="#8deda2" font-size="12" font-family="Consolas, monospace">IcCardScreen=2</text>
+  <text x="356" y="242" fill="#8deda2" font-size="12" font-family="Consolas, monospace">IcCardBounds=0,880,1080,1040</text>
+  <text x="356" y="286" fill="#55556a" font-size="11" font-family="Consolas, monospace">; x,y,largeur,hauteur</text>
+  <text x="356" y="304" fill="#55556a" font-size="11" font-family="Consolas, monospace">; relatifs à l'écran 2</text>
+  <text x="356" y="322" fill="#55556a" font-size="11" font-family="Consolas, monospace">; x,y,width,height</text>
+  <text x="356" y="340" fill="#55556a" font-size="11" font-family="Consolas, monospace">; relative to screen 2</text>
+
+  <line x1="300" y1="116" x2="340" y2="112" stroke="#8a2be2" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="300" y1="224" x2="340" y2="180" stroke="#ffb300" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="300" y1="393" x2="340" y2="234" stroke="#30e850" stroke-width="1.5" stroke-dasharray="4 3"/>
+</svg>
