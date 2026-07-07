@@ -4,7 +4,12 @@
 
 It offers five tabs in the sidebar.
 
+!!! note "French or English"
+    The assistant follows RetroBat's language (EmulationStation setting), else Windows'. To force it: `MarqueeManagerSetup.exe --lang fr` or `--lang en`.
+
 ## Screens
+
+![Screens tab](assets/setup/setup-screens.png)
 
 The starting tab: every Windows display detected, with its number, resolution, ratio and touch detection.
 
@@ -16,6 +21,8 @@ The starting tab: every Windows display detected, with its number, resolution, r
     The assistant enumerates screens exactly like the runtime: the number displayed is the one used by `MarqueeScreen`, `TopperScreen`, and so on.
 
 ## Surfaces
+
+![Surfaces tab](assets/setup/setup-surfaces.png)
 
 The heart of the tool: for each of the five surfaces (marquee, topper, instruction card, virtual DMD, LCD panel), pick:
 
@@ -30,6 +37,8 @@ The heart of the tool: for each of the five surfaces (marquee, topper, instructi
 
 ## Physical DMD
 
+![Physical DMD tab](assets/setup/setup-dmd.png)
+
 Configuration of the `[DMD]` section: model (ZeDMD, ZeDMD HD, Pin2DMD, PinDMD v3…), resolution, serial port, brightness, USB packet size. The tab also checks that the DMD stack is in place (DmdDevice/ZeDMD DLLs, `dmdext.exe`) and lists detected serial ports.
 
 **Show a pattern on the DMD** sends dmdext's test pattern to the panel — the panel must be powered; the assistant stops MarqueeManager for the duration of the test.
@@ -38,6 +47,8 @@ Configuration of the `[DMD]` section: model (ZeDMD, ZeDMD HD, Pin2DMD, PinDMD v3
     `DmdScreen=-1` in the Surfaces tab only disables the on-screen DMD window. The real panel is configured here.
 
 ## Touch IC card
+
+![Touch IC card tab](assets/setup/setup-touch.png)
 
 If your instruction card screen is touch-capable (or even mouse-driven), this tab makes it interactive. Four modes:
 
@@ -52,6 +63,8 @@ The setting is saved to `state\surfaces.profile.json` and read by MarqueeManager
     In a game's `artwork\ic`: `ic.png` for a single card, or `ic-1.png`, `ic-2.png`… for several cards. The `-left`/`-right` suffixes (e.g. mercs: `ic-1-left.png` … `ic-5-right.png`) are the **two card holders of the panel**: player 1 side and player 2 side. Navigation moves from card to card (ic-1 → ic-2…), and dual player mode shows the side of the player who tapped; `ic2` in an action means logical card #2, regardless of the file count.
 
 ## Options
+
+![Options tab](assets/setup/setup-options.png)
 
 Everything else, presented as simple switches:
 

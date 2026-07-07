@@ -1,5 +1,6 @@
 using System.IO;
 using System.IO.Ports;
+using MarqueeManager.Setup.Localization;
 
 namespace MarqueeManager.Setup.Detection;
 
@@ -14,12 +15,12 @@ public sealed record DmdProbeResult(
     {
         var lines = new List<string>
         {
-            DmdDeviceDllFound ? "DmdDevice.dll : présent" : "DmdDevice.dll : introuvable",
-            ZeDmdDllFound ? "Librairie ZeDMD : présente" : "Librairie ZeDMD : introuvable",
-            DmdExtFound ? "dmdext.exe : présent" : "dmdext.exe : introuvable",
+            DmdDeviceDllFound ? L.T("DmdDevice.dll : présent", "DmdDevice.dll: present") : L.T("DmdDevice.dll : introuvable", "DmdDevice.dll: not found"),
+            ZeDmdDllFound ? L.T("Librairie ZeDMD : présente", "ZeDMD library: present") : L.T("Librairie ZeDMD : introuvable", "ZeDMD library: not found"),
+            DmdExtFound ? L.T("dmdext.exe : présent", "dmdext.exe: present") : L.T("dmdext.exe : introuvable", "dmdext.exe: not found"),
             SerialPorts.Count > 0
-                ? "Ports série : " + string.Join(", ", SerialPorts)
-                : "Ports série : aucun détecté"
+                ? L.T("Ports série : ", "Serial ports: ") + string.Join(", ", SerialPorts)
+                : L.T("Ports série : aucun détecté", "Serial ports: none detected")
         };
         return string.Join(Environment.NewLine, lines);
     }

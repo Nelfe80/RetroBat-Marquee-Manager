@@ -4,7 +4,12 @@
 
 Il propose cinq onglets dans la barre latérale.
 
+!!! note "Français ou anglais"
+    L'assistant s'affiche dans la langue de RetroBat (réglage EmulationStation), sinon celle de Windows. Pour forcer : `MarqueeManagerSetup.exe --lang fr` ou `--lang en`.
+
 ## Écrans
+
+![Onglet Écrans](assets/setup/setup-screens.png)
 
 L'onglet de départ : tous les écrans Windows détectés, avec leur numéro, leur résolution, leur ratio et la détection tactile.
 
@@ -16,6 +21,8 @@ L'onglet de départ : tous les écrans Windows détectés, avec leur numéro, le
     L'assistant énumère les écrans exactement comme le runtime : le numéro affiché est celui à retrouver dans `MarqueeScreen`, `TopperScreen`, etc.
 
 ## Surfaces
+
+![Onglet Surfaces](assets/setup/setup-surfaces.png)
 
 Le cœur de l'outil : pour chacune des cinq surfaces (marquee, topper, instruction card, DMD virtuel, LCD panel), choisissez :
 
@@ -30,6 +37,8 @@ Le cœur de l'outil : pour chacune des cinq surfaces (marquee, topper, instructi
 
 ## DMD physique
 
+![Onglet DMD physique](assets/setup/setup-dmd.png)
+
 Réglage de la section `[DMD]` : modèle (ZeDMD, ZeDMD HD, Pin2DMD, PinDMD v3…), résolution, port série, luminosité, taille des paquets USB. L'onglet vérifie aussi que la pile DMD est en place (DLL DmdDevice/ZeDMD, `dmdext.exe`) et liste les ports série détectés.
 
 **Afficher une mire sur le DMD** envoie le motif de test de dmdext au panneau — panneau allumé requis ; l'assistant arrête MarqueeManager le temps du test.
@@ -38,6 +47,8 @@ Réglage de la section `[DMD]` : modèle (ZeDMD, ZeDMD HD, Pin2DMD, PinDMD v3…
     `DmdScreen=-1` dans l'onglet Surfaces ne coupe que la fenêtre DMD à l'écran. Le vrai panneau se règle ici.
 
 ## IC card tactile
+
+![Onglet IC card tactile](assets/setup/setup-touch.png)
 
 Si votre écran instruction card est tactile (ou même à la souris), cet onglet le rend interactif. Quatre modes :
 
@@ -52,6 +63,8 @@ Le réglage est enregistré dans `state\surfaces.profile.json` et lu par Marquee
     Dans `artwork\ic` d'un jeu : `ic.png` pour une carte unique, ou `ic-1.png`, `ic-2.png`… pour plusieurs cartes. Les suffixes `-left`/`-right` (ex. mercs : `ic-1-left.png` … `ic-5-right.png`) sont les **deux porte-cartes du panel** : côté joueur 1 et côté joueur 2. La navigation passe de carte en carte (ic-1 → ic-2…), et le mode dual player affiche le côté du joueur qui a tapé ; `ic2` dans une action désigne bien la carte n°2, quel que soit le nombre de fichiers.
 
 ## Options
+
+![Onglet Options](assets/setup/setup-options.png)
 
 Tout le reste, présenté en réglages simples :
 

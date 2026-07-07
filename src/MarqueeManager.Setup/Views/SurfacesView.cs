@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
 using MarqueeManager.Setup.Detection;
+using MarqueeManager.Setup.Localization;
 using MarqueeManager.Setup.Processes;
 
 namespace MarqueeManager.Setup.Views;
@@ -20,11 +21,21 @@ public sealed class SurfacesView : UserControl
 
     private static readonly SurfaceDef[] Surfaces =
     {
-        new("Marquee", "Marquee", "Le bandeau lumineux principal au-dessus de l'écran de jeu."),
-        new("Topper", "Topper", "Écran décoratif au sommet de la borne : fanart, visuels promotionnels."),
-        new("IcCard", "Instruction card", "Carte de contrôles / how-to-play, souvent tactile et proche du joueur."),
-        new("Dmd", "DMD virtuel (fenêtre WPF)", "Fenêtre DMD à l'écran. -1 ne désactive PAS le DMD physique (onglet DMD)."),
-        new("Lcd", "LCD panel", "Surface d'appoint : layouts MAME, panel de contrôles, aides.")
+        new("Marquee", "Marquee",
+            L.T("Le bandeau lumineux principal au-dessus de l'écran de jeu.",
+                "The main light strip above the game screen.")),
+        new("Topper", "Topper",
+            L.T("Écran décoratif au sommet de la borne : fanart, visuels promotionnels.",
+                "Decorative screen at the top of the cabinet: fanart, promo visuals.")),
+        new("IcCard", "Instruction card",
+            L.T("Carte de contrôles / how-to-play, souvent tactile et proche du joueur.",
+                "Controls / how-to-play card, often touch-capable and close to the player.")),
+        new("Dmd", L.T("DMD virtuel (fenêtre WPF)", "Virtual DMD (WPF window)"),
+            L.T("Fenêtre DMD à l'écran. -1 ne désactive PAS le DMD physique (onglet DMD).",
+                "On-screen DMD window. -1 does NOT disable the physical DMD (DMD tab).")),
+        new("Lcd", "LCD panel",
+            L.T("Surface d'appoint : layouts MAME, panel de contrôles, aides.",
+                "Extra surface: MAME layouts, control panel, player aids."))
     };
 
     private sealed class SurfaceRow
@@ -70,10 +81,13 @@ public sealed class SurfacesView : UserControl
 
         var page = new StackPanel();
         page.Children.Add(Ui.Title("Surfaces"));
-        page.Children.Add(Ui.Subtitle(
+        page.Children.Add(Ui.Subtitle(L.T(
             "Chaque surface s'affiche sur un écran Windows, montre un flux APIExpose, et peut se limiter à une zone "
             + "de l'écran (plusieurs surfaces peuvent partager un même écran vertical). "
-            + "« Tester la zone » affiche une mire à l'emplacement exact avant d'enregistrer."));
+            + "« Tester la zone » affiche une mire à l'emplacement exact avant d'enregistrer.",
+            "Each surface appears on a Windows screen, shows an APIExpose stream, and can be restricted to a zone "
+            + "of the screen (several surfaces can share one vertical display). "
+            + "\"Test the zone\" shows a pattern at the exact spot before saving.")));
 
         foreach (var def in Surfaces)
         {
@@ -81,8 +95,8 @@ public sealed class SurfacesView : UserControl
         }
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 6) };
-        actions.Children.Add(Ui.Button("Enregistrer dans config.ini", OnSave, primary: true));
-        actions.Children.Add(Ui.Button("Recharger", (_, _) =>
+        actions.Children.Add(Ui.Button(L.T("Enregistrer dans config.ini", "Save to config.ini"), OnSave, primary: true));
+        actions.Children.Add(Ui.Button(L.T("Recharger", "Reload"), (_, _) =>
         {
             _screens = ScreenProbe.Detect();
             Rebuild();
@@ -109,7 +123,7 @@ public sealed class SurfacesView : UserControl
         row.Screen = Ui.ComboBox(280);
         var rawScreen = ini.Get("Screens", def.Key + "Screen", "-1");
         FillScreenCombo(row, rawScreen);
-        panel.Children.Add(Ui.Row("Écran", row.Screen));
+        panel.Children.Add(Ui.Row(L.T("Écran", "Screen"), row.Screen));
 
         // content selector
         row.Content = Ui.ComboBox(280);
@@ -121,16 +135,16 @@ public sealed class SurfacesView : UserControl
 
         row.Content.SelectedIndex = Math.Max(0, Array.FindIndex(Contents,
             c => c.Equals(currentContent, StringComparison.OrdinalIgnoreCase)));
-        panel.Children.Add(Ui.Row("Contenu affiché", row.Content, "flux APIExpose"));
+        panel.Children.Add(Ui.Row(L.T("Contenu affiché", "Displayed content"), row.Content, L.T("flux APIExpose", "APIExpose stream")));
 
         // bounds
         var boundsRaw = ini.Get("Screens", def.Key + "Bounds", "");
-        row.Fullscreen = Ui.CheckBox("Plein écran", string.IsNullOrWhiteSpace(boundsRaw));
+        row.Fullscreen = Ui.CheckBox(L.T("Plein écran", "Fullscreen"), string.IsNullOrWhiteSpace(boundsRaw));
         row.Bounds = Ui.TextBox(boundsRaw, 180);
         var boundsLine = new StackPanel { Orientation = Orientation.Horizontal };
         boundsLine.Children.Add(row.Bounds);
-        boundsLine.Children.Add(Ui.Button("Tester la zone", (_, _) => TestZone(row)));
-        var boundsGrid = Ui.Row("Zone (x,y,largeur,hauteur)", boundsLine, "vide = plein écran");
+        boundsLine.Children.Add(Ui.Button(L.T("Tester la zone", "Test the zone"), (_, _) => TestZone(row)));
+        var boundsGrid = Ui.Row(L.T("Zone (x,y,largeur,hauteur)", "Zone (x,y,width,height)"), boundsLine, L.T("vide = plein écran", "empty = fullscreen"));
         panel.Children.Add(Ui.Row("", row.Fullscreen));
         panel.Children.Add(boundsGrid);
 
@@ -151,14 +165,14 @@ public sealed class SurfacesView : UserControl
     private void FillScreenCombo(SurfaceRow row, string rawValue)
     {
         row.Screen.Items.Clear();
-        row.Screen.Items.Add(new ComboBoxItem { Content = "Désactivé", Tag = -1 });
+        row.Screen.Items.Add(new ComboBoxItem { Content = L.T("Désactivé", "Disabled"), Tag = -1 });
         foreach (var screen in _screens)
         {
             row.Screen.Items.Add(new ComboBoxItem
             {
-                Content = $"ÉCRAN {screen.Index} — {screen.Bounds.Width}x{screen.Bounds.Height}"
-                          + (screen.Primary ? " (principal)" : "")
-                          + (screen.Touch == TouchSupport.Touch ? " (tactile)" : ""),
+                Content = L.T("ÉCRAN", "SCREEN") + $" {screen.Index} — {screen.Bounds.Width}x{screen.Bounds.Height}"
+                          + (screen.Primary ? L.T(" (principal)", " (primary)") : "")
+                          + (screen.Touch == TouchSupport.Touch ? L.T(" (tactile)", " (touch)") : ""),
                 Tag = screen.Index
             });
         }
@@ -167,7 +181,11 @@ public sealed class SurfacesView : UserControl
         if (rawValue.Contains(','))
         {
             row.PreservedMultiValue = rawValue;
-            row.Screen.Items.Add(new ComboBoxItem { Content = $"Multi-écrans : {rawValue} (conservé)", Tag = rawValue });
+            row.Screen.Items.Add(new ComboBoxItem
+            {
+                Content = L.T("Multi-écrans : ", "Multi-screen: ") + rawValue + L.T(" (conservé)", " (kept)"),
+                Tag = rawValue
+            });
             row.Screen.SelectedIndex = row.Screen.Items.Count - 1;
             return;
         }
@@ -178,10 +196,12 @@ public sealed class SurfacesView : UserControl
         if (match < 0 && index >= 0)
         {
             // configured screen currently absent (marquee powered off?): keep the value
-            // instead of silently falling back to "Désactivé" and losing it on save
+            // instead of silently falling back to "Disabled" and losing it on save
             row.Screen.Items.Add(new ComboBoxItem
             {
-                Content = $"ÉCRAN {index} — non détecté actuellement (éteint ?), valeur conservée",
+                Content = L.T("ÉCRAN", "SCREEN") + $" {index} — "
+                          + L.T("non détecté actuellement (éteint ?), valeur conservée",
+                              "not detected right now (powered off?), value kept"),
                 Tag = index
             });
             match = row.Screen.Items.Count - 1;
@@ -192,11 +212,11 @@ public sealed class SurfacesView : UserControl
 
     private static string ContentDisplay(string content) => content switch
     {
-        "marquee" => "marquee — bandeau du jeu",
-        "topper" => "topper — fanart / visuel dédié",
+        "marquee" => L.T("marquee — bandeau du jeu", "marquee — game strip"),
+        "topper" => L.T("topper — fanart / visuel dédié", "topper — fanart / dedicated visual"),
         "iccard" => "iccard — instruction card",
-        "dmd" => "dmd — DMD virtuel",
-        "lcd" => "lcd — panel / layout MAME",
+        "dmd" => L.T("dmd — DMD virtuel", "dmd — virtual DMD"),
+        "lcd" => L.T("lcd — panel / layout MAME", "lcd — panel / MAME layout"),
         _ => content
     };
 
@@ -205,13 +225,14 @@ public sealed class SurfacesView : UserControl
         var screenIndex = row.SelectedScreen();
         if (row.IsMulti)
         {
-            _status.Text = "Zone non testable sur une affectation multi-écrans (modifiez config.ini à la main pour ce cas).";
+            _status.Text = L.T("Zone non testable sur une affectation multi-écrans (modifiez config.ini à la main pour ce cas).",
+                "Zone not testable on a multi-screen assignment (edit config.ini by hand for this case).");
             return;
         }
 
         if (screenIndex < 0 || screenIndex >= _screens.Count)
         {
-            _status.Text = $"{row.Def.Display} : choisissez d'abord un écran.";
+            _status.Text = $"{row.Def.Display}" + L.T(" : choisissez d'abord un écran.", ": pick a screen first.");
             return;
         }
 
@@ -221,7 +242,8 @@ public sealed class SurfacesView : UserControl
         {
             if (!TryParseBounds(row.Bounds.Text, out var b))
             {
-                _status.Text = $"{row.Def.Display} : zone invalide, attendu x,y,largeur,hauteur (ex. 0,0,1920,360).";
+                _status.Text = $"{row.Def.Display}" + L.T(" : zone invalide, attendu x,y,largeur,hauteur (ex. 0,0,1920,360).",
+                    ": invalid zone, expected x,y,width,height (e.g. 0,0,1920,360).");
                 return;
             }
 
@@ -232,7 +254,8 @@ public sealed class SurfacesView : UserControl
         }
 
         new TestPatternWindow(row.Def.Display, x, y, w, h).Show();
-        _status.Text = $"{row.Def.Display} : mire affichée sur l'écran {screenIndex}. Cliquez dessus pour la fermer.";
+        _status.Text = $"{row.Def.Display}" + L.T($" : mire affichée sur l'écran {screenIndex}. Cliquez dessus pour la fermer.",
+            $": pattern shown on screen {screenIndex}. Click it to close.");
     }
 
     private static bool TryParseBounds(string raw, out (int x, int y, int w, int h) bounds)
@@ -284,7 +307,8 @@ public sealed class SurfacesView : UserControl
             if (screenIndex >= _screens.Count)
             {
                 // screen currently absent (powered off): keep the assignment untouched
-                warnings.Add($"{row.Def.Display} : l'écran {screenIndex} n'est pas détecté en ce moment (éteint ?), l'affectation est conservée telle quelle.");
+                warnings.Add($"{row.Def.Display}" + L.T($" : l'écran {screenIndex} n'est pas détecté en ce moment (éteint ?), l'affectation est conservée telle quelle.",
+                    $": screen {screenIndex} is not detected right now (powered off?), the assignment is kept as is."));
                 continue;
             }
 
@@ -294,19 +318,22 @@ public sealed class SurfacesView : UserControl
             {
                 if (!TryParseBounds(row.Bounds.Text, out rect))
                 {
-                    errors.Add($"{row.Def.Display} : zone invalide « {row.Bounds.Text} » (attendu x,y,largeur,hauteur).");
+                    errors.Add($"{row.Def.Display}" + L.T($" : zone invalide « {row.Bounds.Text} » (attendu x,y,largeur,hauteur).",
+                        $": invalid zone \"{row.Bounds.Text}\" (expected x,y,width,height)."));
                     continue;
                 }
 
                 if (rect.x >= screen.Bounds.Width || rect.y >= screen.Bounds.Height)
                 {
-                    errors.Add($"{row.Def.Display} : la zone démarre hors de l'écran {screenIndex} ({screen.Bounds.Width}x{screen.Bounds.Height}).");
+                    errors.Add($"{row.Def.Display}" + L.T($" : la zone démarre hors de l'écran {screenIndex} ({screen.Bounds.Width}x{screen.Bounds.Height}).",
+                        $": the zone starts outside screen {screenIndex} ({screen.Bounds.Width}x{screen.Bounds.Height})."));
                     continue;
                 }
 
                 if (rect.x + rect.w > screen.Bounds.Width || rect.y + rect.h > screen.Bounds.Height)
                 {
-                    warnings.Add($"{row.Def.Display} : la zone dépasse l'écran {screenIndex}, elle sera rognée par le runtime.");
+                    warnings.Add($"{row.Def.Display}" + L.T($" : la zone dépasse l'écran {screenIndex}, elle sera rognée par le runtime.",
+                        $": the zone overflows screen {screenIndex}, the runtime will crop it."));
                 }
             }
 
@@ -314,11 +341,13 @@ public sealed class SurfacesView : UserControl
             {
                 if (other.rect == rect)
                 {
-                    warnings.Add($"{row.Def.Display} et {other.surface} occupent exactement la même zone de l'écran {screenIndex}.");
+                    warnings.Add(L.T($"{row.Def.Display} et {other.surface} occupent exactement la même zone de l'écran {screenIndex}.",
+                        $"{row.Def.Display} and {other.surface} occupy exactly the same zone of screen {screenIndex}."));
                 }
                 else if (Overlaps(other.rect, rect))
                 {
-                    warnings.Add($"{row.Def.Display} chevauche {other.surface} sur l'écran {screenIndex}.");
+                    warnings.Add(L.T($"{row.Def.Display} chevauche {other.surface} sur l'écran {screenIndex}.",
+                        $"{row.Def.Display} overlaps {other.surface} on screen {screenIndex}."));
                 }
             }
 
@@ -327,18 +356,19 @@ public sealed class SurfacesView : UserControl
 
         if (errors.Count > 0)
         {
-            _status.Text = "Rien n'a été écrit :" + Environment.NewLine + string.Join(Environment.NewLine, errors);
+            _status.Text = L.T("Rien n'a été écrit :", "Nothing was written:") + Environment.NewLine + string.Join(Environment.NewLine, errors);
             return;
         }
 
         if (warnings.Count > 0)
         {
             var confirm = MessageBox.Show(
-                string.Join(Environment.NewLine, warnings) + Environment.NewLine + Environment.NewLine + "Enregistrer quand même ?",
+                string.Join(Environment.NewLine, warnings) + Environment.NewLine + Environment.NewLine
+                + L.T("Enregistrer quand même ?", "Save anyway?"),
                 "MarqueeManager Setup", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (confirm != MessageBoxResult.Yes)
             {
-                _status.Text = "Enregistrement annulé.";
+                _status.Text = L.T("Enregistrement annulé.", "Save cancelled.");
                 return;
             }
         }
@@ -366,18 +396,19 @@ public sealed class SurfacesView : UserControl
 
         ini.Save();
 
-        var message = "config.ini enregistré (sauvegarde .bak créée).";
+        var message = L.T("config.ini enregistré (sauvegarde .bak créée).", "config.ini saved (.bak backup created).");
         if (MarqueeManagerProcess.IsRunning())
         {
             var restart = MessageBox.Show(
-                "MarqueeManager tourne encore avec l'ancienne configuration. Le redémarrer maintenant ?",
+                L.T("MarqueeManager tourne encore avec l'ancienne configuration. Le redémarrer maintenant ?",
+                    "MarqueeManager is still running with the old configuration. Restart it now?"),
                 "MarqueeManager Setup", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (restart == MessageBoxResult.Yes)
             {
                 MarqueeManagerProcess.Stop();
                 message += MarqueeManagerProcess.Start(_pluginRoot)
-                    ? " MarqueeManager redémarré."
-                    : " Impossible de relancer MarqueeManager.exe.";
+                    ? L.T(" MarqueeManager redémarré.", " MarqueeManager restarted.")
+                    : L.T(" Impossible de relancer MarqueeManager.exe.", " Could not restart MarqueeManager.exe.");
             }
         }
 

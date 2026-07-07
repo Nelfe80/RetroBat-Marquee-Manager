@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using MarqueeManager.Setup.Localization;
 using WinFormsScreen = System.Windows.Forms.Screen;
 
 namespace MarqueeManager.Setup.Detection;
@@ -25,7 +26,7 @@ public sealed record ScreenInfo(
     public double Ratio => Bounds.Height == 0 ? 0 : Math.Round((double)Bounds.Width / Bounds.Height, 2);
 
     public string Orientation => Bounds.Width >= Bounds.Height
-        ? (Ratio >= 3 ? "bandeau" : "paysage")
+        ? (Ratio >= 3 ? L.T("bandeau", "strip") : L.T("paysage", "landscape"))
         : "portrait";
 
     /// <summary>Suggested surface, following the detection report examples of the spec.</summary>
@@ -35,41 +36,43 @@ public sealed record ScreenInfo(
         {
             if (Primary)
             {
-                return "écran principal RetroBat — à laisser libre";
+                return L.T("écran principal RetroBat — à laisser libre", "RetroBat main screen — leave it free");
             }
 
             if (Ratio >= 3)
             {
-                return "suggéré : marquee";
+                return L.T("suggéré : marquee", "suggests: marquee");
             }
 
-            if (Orientation == "portrait")
+            if (Bounds.Width < Bounds.Height)
             {
-                return "suggéré : écran vertical partagé (topper + marquee + iccard)";
+                return L.T("suggéré : écran vertical partagé (topper + marquee + iccard)",
+                    "suggests: shared vertical screen (topper + marquee + iccard)");
             }
 
             if (Touch == TouchSupport.Touch)
             {
-                return "suggéré : instruction card tactile";
+                return L.T("suggéré : instruction card tactile", "suggests: touch instruction card");
             }
 
             if (Ratio >= 2.2)
             {
-                return "suggéré : marquee ou instruction card";
+                return L.T("suggéré : marquee ou instruction card", "suggests: marquee or instruction card");
             }
 
-            return "suggéré : topper, instruction card ou DMD virtuel";
+            return L.T("suggéré : topper, instruction card ou DMD virtuel",
+                "suggests: topper, instruction card or virtual DMD");
         }
     }
 
     public string Describe()
-        => $"Écran {Index} : {Bounds.Width}x{Bounds.Height}, ratio {Ratio.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}"
-           + (Primary ? ", principal" : "")
+        => L.T("Écran", "Screen") + $" {Index} : {Bounds.Width}x{Bounds.Height}, ratio {Ratio.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}"
+           + (Primary ? L.T(", principal", ", primary") : "")
            + Touch switch
            {
-               TouchSupport.Touch => ", tactile",
+               TouchSupport.Touch => L.T(", tactile", ", touch"),
                TouchSupport.None => "",
-               _ => ", tactile inconnu"
+               _ => L.T(", tactile inconnu", ", touch unknown")
            }
            + $", {Suggestion}.";
 }

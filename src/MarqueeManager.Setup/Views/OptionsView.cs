@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
 using MarqueeManager.Setup.Detection;
+using MarqueeManager.Setup.Localization;
 
 namespace MarqueeManager.Setup.Views;
 
@@ -49,105 +50,118 @@ public sealed class OptionsView : UserControl
 
         var page = new StackPanel();
         page.Children.Add(Ui.Title("Options"));
-        page.Children.Add(Ui.Subtitle(
+        page.Children.Add(Ui.Subtitle(L.T(
             "Connexion APIExpose, rendu lumineux du marquee, layouts MAME, RetroAchievements et données live. "
-            + "Les réglages fins restent éditables dans config.ini — les commentaires y sont préservés."));
+            + "Les réglages fins restent éditables dans config.ini — les commentaires y sont préservés.",
+            "APIExpose connection, marquee lighting, MAME layouts, RetroAchievements and live data. "
+            + "Fine-grained settings remain editable in config.ini — its comments are preserved.")));
 
         // --- connexion ---
-        page.Children.Add(Ui.SectionHeader("Connexion"));
+        page.Children.Add(Ui.SectionHeader(L.T("Connexion", "Connection")));
         var connexion = new StackPanel();
         _apiUrl = Ui.TextBox(ini.Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345"), 260);
         var apiLine = new StackPanel { Orientation = Orientation.Horizontal };
         apiLine.Children.Add(_apiUrl);
-        apiLine.Children.Add(Ui.Button("Tester la connexion", async (_, _) =>
+        apiLine.Children.Add(Ui.Button(L.T("Tester la connexion", "Test the connection"), async (_, _) =>
         {
-            _apiResult.Text = "test en cours…";
+            _apiResult.Text = L.T("test en cours…", "testing…");
             var alive = await ApiExposeProbe.IsAliveAsync(_apiUrl.Text.Trim());
-            _apiResult.Text = alive ? "connecté ✓" : "injoignable (RetroBat/APIExpose lancé ?)";
+            _apiResult.Text = alive
+                ? L.T("connecté ✓", "connected ✓")
+                : L.T("injoignable (RetroBat/APIExpose lancé ?)", "unreachable (RetroBat/APIExpose running?)");
             _apiResult.Foreground = alive ? Ui.Ok : Ui.Error;
         }));
         apiLine.Children.Add(_apiResult);
-        connexion.Children.Add(Ui.Row("Adresse APIExpose", apiLine));
-        _tray = Ui.CheckBox("Réduire dans la zone de notification", ini.GetBool("Settings", "MinimizeToTray", true));
+        connexion.Children.Add(Ui.Row(L.T("Adresse APIExpose", "APIExpose address"), apiLine));
+        _tray = Ui.CheckBox(L.T("Réduire dans la zone de notification", "Minimize to the notification area"), ini.GetBool("Settings", "MinimizeToTray", true));
         connexion.Children.Add(_tray);
-        _logToFile = Ui.CheckBox("Écrire les logs dans .log\\debug.log", ini.GetBool("Settings", "LogToFile", true));
+        _logToFile = Ui.CheckBox(L.T("Écrire les logs dans .log\\debug.log", "Write logs to .log\\debug.log"), ini.GetBool("Settings", "LogToFile", true));
         connexion.Children.Add(_logToFile);
         page.Children.Add(Ui.Card(connexion));
 
         // --- lighting ---
-        page.Children.Add(Ui.SectionHeader("Rendu lumineux du marquee (Lighting Engine)"));
+        page.Children.Add(Ui.SectionHeader(L.T("Rendu lumineux du marquee (Lighting Engine)", "Marquee lighting (Lighting Engine)")));
         var lighting = new StackPanel();
-        _lightingEnabled = Ui.CheckBox("Activer le rendu lumineux (allumage fluorescent, rétroéclairage vivant)",
+        _lightingEnabled = Ui.CheckBox(L.T("Activer le rendu lumineux (allumage fluorescent, rétroéclairage vivant)",
+                "Enable the lighting render (fluorescent ignition, living backlight)"),
             ini.GetBool("Lighting", "Enabled", false));
         lighting.Children.Add(_lightingEnabled);
 
         (_renderScale, var renderLine) = PercentSlider(ini.GetDouble("Lighting", "RenderScale", 0.75), 0.25, 1.0,
-            _renderScaleLabel, v => $"{(int)(v * 100)} % — qualité/performance");
-        lighting.Children.Add(Ui.Row("Résolution interne", renderLine, "baisser si le CPU ne tient pas 60 FPS"));
+            _renderScaleLabel, v => $"{(int)(v * 100)} % — " + L.T("qualité/performance", "quality/performance"));
+        lighting.Children.Add(Ui.Row(L.T("Résolution interne", "Internal resolution"), renderLine,
+            L.T("baisser si le CPU ne tient pas 60 FPS", "lower it if the CPU can't hold 60 FPS")));
 
         (_fillHeight, var fillLine) = PercentSlider(ini.GetDouble("Lighting", "FillHeightMaxCrop", 0.30), 0.0, 0.6,
-            _fillHeightLabel, v => v <= 0 ? "letterbox systématique" : $"rognage max {(int)(v * 100)} %");
-        lighting.Children.Add(Ui.Row("Cadrage (remplir la hauteur)", fillLine));
+            _fillHeightLabel, v => v <= 0
+                ? L.T("letterbox systématique", "always letterbox")
+                : L.T("rognage max ", "max crop ") + $"{(int)(v * 100)} %");
+        lighting.Children.Add(Ui.Row(L.T("Cadrage (remplir la hauteur)", "Framing (fill the height)"), fillLine));
 
         (_glass, var glassLine) = PercentSlider(ini.GetDouble("Lighting", "GlassReflection", 0.06), 0.0, 0.3,
-            _glassLabel, v => v <= 0 ? "pas de vitre" : $"{(v * 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)} %");
-        lighting.Children.Add(Ui.Row("Reflet de la vitre", glassLine));
+            _glassLabel, v => v <= 0
+                ? L.T("pas de vitre", "no glass")
+                : $"{(v * 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)} %");
+        lighting.Children.Add(Ui.Row(L.T("Reflet de la vitre", "Glass reflection"), glassLine));
 
-        _preferGenerated = Ui.CheckBox("Préférer le marquee généré au scan réel",
+        _preferGenerated = Ui.CheckBox(L.T("Préférer le marquee généré au scan réel", "Prefer the generated marquee over the real scan"),
             ini.GetBool("Lighting", "PreferGeneratedMarquee", false));
         lighting.Children.Add(_preferGenerated);
-        _dmdMirror = Ui.CheckBox("Miroir de l'animation lumineuse sur le DMD physique (sinon média dédié, recommandé décoché)",
+        _dmdMirror = Ui.CheckBox(L.T("Miroir de l'animation lumineuse sur le DMD physique (sinon média dédié, recommandé décoché)",
+                "Mirror the lighting animation on the physical DMD (otherwise dedicated media, recommended unchecked)"),
             ini.GetBool("Lighting", "DmdMirror", false));
         lighting.Children.Add(_dmdMirror);
-        _sound = Ui.CheckBox("Sons des tubes fluorescents", ini.GetBool("Lighting", "SoundEnabled", true));
+        _sound = Ui.CheckBox(L.T("Sons des tubes fluorescents", "Fluorescent tube sounds"), ini.GetBool("Lighting", "SoundEnabled", true));
         lighting.Children.Add(_sound);
         page.Children.Add(Ui.Card(lighting));
 
         // --- DOF / layouts MAME ---
-        page.Children.Add(Ui.SectionHeader("Layouts MAME (.lay)"));
+        page.Children.Add(Ui.SectionHeader(L.T("Layouts MAME (.lay)", "MAME layouts (.lay)")));
         var dof = new StackPanel();
-        _dofEnabled = Ui.CheckBox("Lire les fichiers .lay MAME (marquee, topper, iccard, DMD)",
+        _dofEnabled = Ui.CheckBox(L.T("Lire les fichiers .lay MAME (marquee, topper, iccard, DMD)",
+                "Read MAME .lay files (marquee, topper, iccard, DMD)"),
             ini.GetBool("DOF", "Enabled", true));
         dof.Children.Add(_dofEnabled);
-        _dofMarquee = Ui.CheckBox("Autoriser les vues .lay sur les surfaces WPF", ini.GetBool("DOF", "MarqueeEnabled", true));
+        _dofMarquee = Ui.CheckBox(L.T("Autoriser les vues .lay sur les surfaces WPF", "Allow .lay views on the WPF surfaces"), ini.GetBool("DOF", "MarqueeEnabled", true));
         dof.Children.Add(_dofMarquee);
-        _dofDmd = Ui.CheckBox("Autoriser les frames .lay DMD", ini.GetBool("DOF", "DmdEnabled", true));
+        _dofDmd = Ui.CheckBox(L.T("Autoriser les frames .lay DMD", "Allow .lay DMD frames"), ini.GetBool("DOF", "DmdEnabled", true));
         dof.Children.Add(_dofDmd);
         page.Children.Add(Ui.Card(dof));
 
         // --- RetroAchievements ---
         page.Children.Add(Ui.SectionHeader("RetroAchievements"));
         var ra = new StackPanel();
-        _raEnabled = Ui.CheckBox("Afficher les RetroAchievements (via APIExpose, aucune connexion directe)",
+        _raEnabled = Ui.CheckBox(L.T("Afficher les RetroAchievements (via APIExpose, aucune connexion directe)",
+                "Show RetroAchievements (through APIExpose, no direct connection)"),
             ini.GetBool("RetroAchievements", "Enabled", false));
         ra.Children.Add(_raEnabled);
-        _raMarquee = Ui.CheckBox("Sur le marquee", ini.GetBool("RetroAchievements", "MarqueeEnabled", true));
+        _raMarquee = Ui.CheckBox(L.T("Sur le marquee", "On the marquee"), ini.GetBool("RetroAchievements", "MarqueeEnabled", true));
         ra.Children.Add(_raMarquee);
-        _raDmd = Ui.CheckBox("Sur le DMD", ini.GetBool("RetroAchievements", "DmdEnabled", true));
+        _raDmd = Ui.CheckBox(L.T("Sur le DMD", "On the DMD"), ini.GetBool("RetroAchievements", "DmdEnabled", true));
         ra.Children.Add(_raDmd);
-        _raBadgeTray = Ui.CheckBox("Badges d'achievements en bas du marquee",
+        _raBadgeTray = Ui.CheckBox(L.T("Badges d'achievements en bas du marquee", "Achievement badges at the bottom of the marquee"),
             ini.GetBool("RetroAchievements", "BadgeTrayEnabled", true));
         ra.Children.Add(_raBadgeTray);
-        _raTakeover = Ui.CheckBox("Plein écran animé sur un unlock (ignoré en speedrun)",
+        _raTakeover = Ui.CheckBox(L.T("Plein écran animé sur un unlock (ignoré en speedrun)", "Animated fullscreen on an unlock (ignored during speedruns)"),
             ini.GetBool("RetroAchievements", "UnlockTakeoverEnabled", true));
         ra.Children.Add(_raTakeover);
         page.Children.Add(Ui.Card(ra));
 
         // --- LiveData ---
-        page.Children.Add(Ui.SectionHeader("Score et timer live"));
+        page.Children.Add(Ui.SectionHeader(L.T("Score et timer live", "Live score and timer")));
         var live = new StackPanel();
-        _liveScore = Ui.CheckBox("Score live", ini.GetBool("LiveData", "ScoreEnabled", true));
+        _liveScore = Ui.CheckBox(L.T("Score live", "Live score"), ini.GetBool("LiveData", "ScoreEnabled", true));
         live.Children.Add(_liveScore);
-        _liveTimer = Ui.CheckBox("Timer live", ini.GetBool("LiveData", "TimerEnabled", true));
+        _liveTimer = Ui.CheckBox(L.T("Timer live", "Live timer"), ini.GetBool("LiveData", "TimerEnabled", true));
         live.Children.Add(_liveTimer);
-        _liveMarquee = Ui.CheckBox("Sur le marquee", ini.GetBool("LiveData", "MarqueeEnabled", true));
+        _liveMarquee = Ui.CheckBox(L.T("Sur le marquee", "On the marquee"), ini.GetBool("LiveData", "MarqueeEnabled", true));
         live.Children.Add(_liveMarquee);
-        _liveDmd = Ui.CheckBox("Sur le DMD", ini.GetBool("LiveData", "DmdEnabled", true));
+        _liveDmd = Ui.CheckBox(L.T("Sur le DMD", "On the DMD"), ini.GetBool("LiveData", "DmdEnabled", true));
         live.Children.Add(_liveDmd);
         page.Children.Add(Ui.Card(live));
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 6) };
-        actions.Children.Add(Ui.Button("Enregistrer dans config.ini", OnSave, primary: true));
+        actions.Children.Add(Ui.Button(L.T("Enregistrer dans config.ini", "Save to config.ini"), OnSave, primary: true));
         page.Children.Add(actions);
         _status.TextWrapping = TextWrapping.Wrap;
         page.Children.Add(_status);
@@ -187,7 +201,8 @@ public sealed class OptionsView : UserControl
             && !url.StartsWith("wss://", StringComparison.OrdinalIgnoreCase)
             && !url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
         {
-            _status.Text = "Adresse APIExpose invalide : attendu ws://hôte:port (ex. ws://127.0.0.1:12345).";
+            _status.Text = L.T("Adresse APIExpose invalide : attendu ws://hôte:port (ex. ws://127.0.0.1:12345).",
+                "Invalid APIExpose address: expected ws://host:port (e.g. ws://127.0.0.1:12345).");
             return;
         }
 
@@ -220,6 +235,7 @@ public sealed class OptionsView : UserControl
         ini.Set("LiveData", "DmdEnabled", B(_liveDmd));
 
         ini.Save();
-        _status.Text = "Options enregistrées (sauvegarde .bak créée). Redémarrez MarqueeManager pour appliquer.";
+        _status.Text = L.T("Options enregistrées (sauvegarde .bak créée). Redémarrez MarqueeManager pour appliquer.",
+            "Options saved (.bak backup created). Restart MarqueeManager to apply.");
     }
 }

@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
+using MarqueeManager.Setup.Localization;
 using MarqueeManager.Setup.TouchProfile;
 using TouchAction = MarqueeManager.Setup.TouchProfile.TouchAction;
 
@@ -19,18 +20,18 @@ public sealed class TouchView : UserControl
 {
     private static readonly (string Value, string Display)[] Modes =
     {
-        ("simple", "Simple — un tap passe à la carte suivante"),
-        ("center-toggle", "Centre → IC2 — un appui au centre affiche la carte secondaire"),
-        ("dual-player", "Dual player — chaque moitié affiche la carte de son joueur"),
-        ("zones", "Zones libres — dessinez vos propres zones tactiles")
+        ("simple", L.T("Simple — un tap passe à la carte suivante", "Simple — a tap shows the next card")),
+        ("center-toggle", L.T("Centre → IC2 — un appui au centre affiche la carte secondaire", "Center → IC2 — pressing the center shows the secondary card")),
+        ("dual-player", L.T("Dual player — chaque moitié affiche la carte de son joueur", "Dual player — each half shows its player's card")),
+        ("zones", L.T("Zones libres — dessinez vos propres zones tactiles", "Free zones — draw your own touch zones"))
     };
 
     private static readonly (string Value, string Display)[] Actions =
     {
-        ("cycle-card", "Carte suivante"),
-        ("show-card", "Afficher une carte précise"),
-        ("show-player-card", "Carte du joueur"),
-        ("default-card", "Retour à la carte par défaut")
+        ("cycle-card", L.T("Carte suivante", "Next card")),
+        ("show-card", L.T("Afficher une carte précise", "Show a specific card")),
+        ("show-player-card", L.T("Carte du joueur", "Player card")),
+        ("default-card", L.T("Retour à la carte par défaut", "Back to the default card"))
     };
 
     private readonly string _pluginRoot;
@@ -66,13 +67,16 @@ public sealed class TouchView : UserControl
         var touch = profile.Surface("iccard")?.Touch;
 
         var page = new StackPanel();
-        page.Children.Add(Ui.Title("Instruction card tactile"));
-        page.Children.Add(Ui.Subtitle(
+        page.Children.Add(Ui.Title(L.T("Instruction card tactile", "Touch instruction card")));
+        page.Children.Add(Ui.Subtitle(L.T(
             "Rend l'écran instruction card interactif : taper l'écran change de carte (how-to-play, moves, "
             + "carte par joueur…). Le réglage est écrit dans state\\surfaces.profile.json et lu par MarqueeManager "
-            + "au démarrage. La souris fonctionne comme le tactile pour tester sans écran tactile."));
+            + "au démarrage. La souris fonctionne comme le tactile pour tester sans écran tactile.",
+            "Makes the instruction card screen interactive: tapping the screen switches cards (how-to-play, moves, "
+            + "per-player card…). The setting is written to state\\surfaces.profile.json and read by MarqueeManager "
+            + "at startup. The mouse works like touch, so you can test without a touchscreen.")));
 
-        _enabled = Ui.CheckBox("Activer le tactile sur l'instruction card", touch?.Enabled == true);
+        _enabled = Ui.CheckBox(L.T("Activer le tactile sur l'instruction card", "Enable touch on the instruction card"), touch?.Enabled == true);
         page.Children.Add(_enabled);
 
         _mode = Ui.ComboBox(420);
@@ -87,11 +91,13 @@ public sealed class TouchView : UserControl
         page.Children.Add(Ui.Row("Mode", _mode));
 
         _returnMs = Ui.TextBox((touch?.ReturnToDefaultMs ?? 0).ToString(), 80);
-        page.Children.Add(Ui.Row("Retour carte par défaut (ms)", _returnMs, "0 = rester sur la carte affichée"));
+        page.Children.Add(Ui.Row(L.T("Retour carte par défaut (ms)", "Back to default card (ms)"), _returnMs,
+            L.T("0 = rester sur la carte affichée", "0 = stay on the shown card")));
 
         // --- per-mode panels ---
-        _simplePanel.Children.Add(Ui.MutedLabel(
-            "Un tap n'importe où sur l'écran affiche la carte suivante du jeu (ic1 → ic2 → …)."));
+        _simplePanel.Children.Add(Ui.MutedLabel(L.T(
+            "Un tap n'importe où sur l'écran affiche la carte suivante du jeu (ic1 → ic2 → …).",
+            "A tap anywhere on the screen shows the game's next card (ic1 → ic2 → …).")));
 
         _centerWidth = new Slider
         {
@@ -101,27 +107,32 @@ public sealed class TouchView : UserControl
         };
         _centerWidth.ValueChanged += (_, _) =>
         {
-            _centerWidthLabel.Text = $"{(int)_centerWidth.Value} % de la largeur";
+            _centerWidthLabel.Text = $"{(int)_centerWidth.Value} " + L.T("% de la largeur", "% of the width");
             RefreshPreview();
         };
         var widthLine = new StackPanel { Orientation = Orientation.Horizontal };
         widthLine.Children.Add(_centerWidth);
         widthLine.Children.Add(_centerWidthLabel);
-        _centerPanel.Children.Add(Ui.Row("Largeur de la zone centrale", widthLine));
+        _centerPanel.Children.Add(Ui.Row(L.T("Largeur de la zone centrale", "Center zone width"), widthLine));
         _centerCard = Ui.TextBox("ic2", 100);
-        _centerPanel.Children.Add(Ui.Row("Carte affichée au centre", _centerCard, "ic2 = deuxième instruction card"));
+        _centerPanel.Children.Add(Ui.Row(L.T("Carte affichée au centre", "Card shown at the center"), _centerCard,
+            L.T("ic2 = deuxième instruction card", "ic2 = second instruction card")));
         _centerDurationMs = Ui.TextBox("8000", 80);
-        _centerPanel.Children.Add(Ui.Row("Durée d'affichage (ms)", _centerDurationMs, "retour auto à la carte principale"));
+        _centerPanel.Children.Add(Ui.Row(L.T("Durée d'affichage (ms)", "Display duration (ms)"), _centerDurationMs,
+            L.T("retour auto à la carte principale", "auto return to the main card")));
 
-        _dualCenter = Ui.CheckBox("Zone centrale commune (règles générales / move list commune)", false);
+        _dualCenter = Ui.CheckBox(L.T("Zone centrale commune (règles générales / move list commune)",
+            "Common center zone (general rules / shared move list)"), false);
         _dualCenter.Checked += (_, _) => RefreshPreview();
         _dualCenter.Unchecked += (_, _) => RefreshPreview();
-        _dualPanel.Children.Add(Ui.MutedLabel(
-            "Moitié gauche = carte du joueur 1, moitié droite = carte du joueur 2 (VS fighting)."));
+        _dualPanel.Children.Add(Ui.MutedLabel(L.T(
+            "Moitié gauche = carte du joueur 1, moitié droite = carte du joueur 2 (VS fighting).",
+            "Left half = player 1's card, right half = player 2's card (VS fighting).")));
         _dualPanel.Children.Add(_dualCenter);
 
-        _zonesPanel.Children.Add(Ui.MutedLabel(
-            "Dessinez une zone directement sur l'aperçu (cliquer-glisser), puis choisissez son action ci-dessous."));
+        _zonesPanel.Children.Add(Ui.MutedLabel(L.T(
+            "Dessinez une zone directement sur l'aperçu (cliquer-glisser), puis choisissez son action ci-dessous.",
+            "Draw a zone directly on the preview (click-drag), then pick its action below.")));
         _zoneList = new ListBox
         {
             Height = 110,
@@ -154,13 +165,13 @@ public sealed class TouchView : UserControl
         _zoneDurationMs = Ui.TextBox("", 80);
         _zoneDurationMs.TextChanged += (_, _) => ApplyZoneEditor();
 
-        _zonesPanel.Children.Add(Ui.Row("Action au tap", _zoneAction));
-        _zonesPanel.Children.Add(Ui.Row("Carte (si « afficher »)", _zoneCard, "ex. ic2, moves"));
-        _zonesPanel.Children.Add(Ui.Row("Joueur (si carte joueur)", _zonePlayer));
-        _zonesPanel.Children.Add(Ui.Row("Durée (ms, vide = permanent)", _zoneDurationMs));
+        _zonesPanel.Children.Add(Ui.Row(L.T("Action au tap", "Tap action"), _zoneAction));
+        _zonesPanel.Children.Add(Ui.Row(L.T("Carte (si « afficher »)", "Card (if \"show\")"), _zoneCard, L.T("ex. ic2, moves", "e.g. ic2, moves")));
+        _zonesPanel.Children.Add(Ui.Row(L.T("Joueur (si carte joueur)", "Player (if player card)"), _zonePlayer));
+        _zonesPanel.Children.Add(Ui.Row(L.T("Durée (ms, vide = permanent)", "Duration (ms, empty = permanent)"), _zoneDurationMs));
         var zoneButtons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
-        zoneButtons.Children.Add(Ui.Button("Supprimer la zone", (_, _) => DeleteSelectedZone()));
-        zoneButtons.Children.Add(Ui.Button("Tout effacer", (_, _) =>
+        zoneButtons.Children.Add(Ui.Button(L.T("Supprimer la zone", "Delete zone"), (_, _) => DeleteSelectedZone()));
+        zoneButtons.Children.Add(Ui.Button(L.T("Tout effacer", "Clear all"), (_, _) =>
         {
             _freeZones.Clear();
             RefreshZoneList();
@@ -176,7 +187,7 @@ public sealed class TouchView : UserControl
         page.Children.Add(Ui.Card(modeCard));
 
         // --- preview ---
-        page.Children.Add(Ui.SectionHeader("Aperçu des zones tactiles"));
+        page.Children.Add(Ui.SectionHeader(L.T("Aperçu des zones tactiles", "Touch zones preview")));
         _preview = new Canvas
         {
             Width = 560,
@@ -197,7 +208,7 @@ public sealed class TouchView : UserControl
         page.Children.Add(_previewBorder);
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 6) };
-        actions.Children.Add(Ui.Button("Enregistrer le profil tactile", OnSave, primary: true));
+        actions.Children.Add(Ui.Button(L.T("Enregistrer le profil tactile", "Save the touch profile"), OnSave, primary: true));
         page.Children.Add(actions);
         _status.TextWrapping = TextWrapping.Wrap;
         page.Children.Add(_status);
@@ -279,7 +290,7 @@ public sealed class TouchView : UserControl
         _centerPanel.Visibility = SelectedMode == "center-toggle" ? Visibility.Visible : Visibility.Collapsed;
         _dualPanel.Visibility = SelectedMode == "dual-player" ? Visibility.Visible : Visibility.Collapsed;
         _zonesPanel.Visibility = SelectedMode == "zones" ? Visibility.Visible : Visibility.Collapsed;
-        _centerWidthLabel.Text = $"{(int)_centerWidth.Value} % de la largeur";
+        _centerWidthLabel.Text = $"{(int)_centerWidth.Value} " + L.T("% de la largeur", "% of the width");
         RefreshPreview();
     }
 
@@ -293,7 +304,7 @@ public sealed class TouchView : UserControl
                 {
                     new()
                     {
-                        Id = "all", Label = "Carte suivante", Rect = "0,0,100%,100%",
+                        Id = "all", Label = L.T("Carte suivante", "Next card"), Rect = "0,0,100%,100%",
                         Tap = new TouchAction { Action = "cycle-card" }
                     }
                 };
@@ -316,7 +327,7 @@ public sealed class TouchView : UserControl
                     },
                     new()
                     {
-                        Id = "default", Label = "IC principale", Rect = "0,0,100%,100%",
+                        Id = "default", Label = L.T("IC principale", "Main IC"), Rect = "0,0,100%,100%",
                         Tap = new TouchAction { Action = "default-card" }
                     }
                 };
@@ -328,19 +339,19 @@ public sealed class TouchView : UserControl
                 {
                     zones.Add(new TouchZone
                     {
-                        Id = "center", Label = "Commun", Rect = "42,0,16%,100%",
+                        Id = "center", Label = L.T("Commun", "Common"), Rect = "42,0,16%,100%",
                         Tap = new TouchAction { Action = "show-card", Card = "ic2", DurationMs = 8000 }
                     });
                 }
 
                 zones.Add(new TouchZone
                 {
-                    Id = "p1", Label = "Joueur 1", Rect = "0,0,50%,100%",
+                    Id = "p1", Label = L.T("Joueur 1", "Player 1"), Rect = "0,0,50%,100%",
                     Tap = new TouchAction { Action = "show-player-card", Player = 1 }
                 });
                 zones.Add(new TouchZone
                 {
-                    Id = "p2", Label = "Joueur 2", Rect = "50,0,50%,100%",
+                    Id = "p2", Label = L.T("Joueur 2", "Player 2"), Rect = "50,0,50%,100%",
                     Tap = new TouchAction { Action = "show-player-card", Player = 2 }
                 });
                 return zones;
@@ -479,7 +490,7 @@ public sealed class TouchView : UserControl
         var zone = new TouchZone
         {
             Id = "zone" + (_freeZones.Count + 1),
-            Label = "Zone " + (_freeZones.Count + 1),
+            Label = L.T("Zone ", "Zone ") + (_freeZones.Count + 1),
             Rect = TouchZone.RectFromFractions(x, y, width, height),
             Tap = new TouchAction { Action = "cycle-card" }
         };
@@ -494,7 +505,7 @@ public sealed class TouchView : UserControl
         _zoneList.Items.Clear();
         foreach (var zone in _freeZones)
         {
-            _zoneList.Items.Add($"{zone.Label ?? zone.Id} — {zone.Rect} — {zone.Tap?.Describe() ?? "aucune action"}");
+            _zoneList.Items.Add($"{zone.Label ?? zone.Id} — {zone.Rect} — {zone.Tap?.Describe() ?? L.T("aucune action", "no action")}");
         }
 
         if (selected >= 0 && selected < _freeZones.Count)
@@ -557,11 +568,13 @@ public sealed class TouchView : UserControl
         if (!TouchProfileDocument.IsOwnedBySetup(path))
         {
             var confirm = MessageBox.Show(
-                "Un profil avancé existe déjà et n'a pas été créé par cet outil. L'écraser ?",
+                L.T("Un profil avancé existe déjà et n'a pas été créé par cet outil. L'écraser ?",
+                    "An advanced profile already exists and was not created by this tool. Overwrite it?"),
                 "MarqueeManager Setup", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (confirm != MessageBoxResult.Yes)
             {
-                _status.Text = "Enregistrement annulé : le profil existant est conservé.";
+                _status.Text = L.T("Enregistrement annulé : le profil existant est conservé.",
+                    "Save cancelled: the existing profile is kept.");
                 return;
             }
         }
@@ -586,7 +599,10 @@ public sealed class TouchView : UserControl
         };
         profile.Save(path);
 
-        _status.Text = "Profil tactile enregistré dans state\\surfaces.profile.json (sauvegarde .bak créée). "
-                       + "Redémarrez MarqueeManager pour l'appliquer.";
+        _status.Text = L.T(
+            "Profil tactile enregistré dans state\\surfaces.profile.json (sauvegarde .bak créée). "
+            + "Redémarrez MarqueeManager pour l'appliquer.",
+            "Touch profile saved to state\\surfaces.profile.json (.bak backup created). "
+            + "Restart MarqueeManager to apply it.");
     }
 }

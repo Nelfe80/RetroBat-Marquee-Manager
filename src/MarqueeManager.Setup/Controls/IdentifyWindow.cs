@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using MarqueeManager.Setup.Detection;
+using MarqueeManager.Setup.Localization;
 
 namespace MarqueeManager.Setup.Controls;
 
@@ -31,7 +32,7 @@ public sealed class IdentifyWindow : Window
         };
         panel.Children.Add(new TextBlock
         {
-            Text = $"ÉCRAN {screen.Index}",
+            Text = L.T("ÉCRAN", "SCREEN") + $" {screen.Index}",
             Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0xB3, 0x00)),
             FontSize = Math.Max(48, Math.Min(screen.Bounds.Width, screen.Bounds.Height) / 4.0),
             FontWeight = FontWeights.Bold,
@@ -40,8 +41,8 @@ public sealed class IdentifyWindow : Window
         panel.Children.Add(new TextBlock
         {
             Text = $"{screen.Bounds.Width}x{screen.Bounds.Height}"
-                   + (screen.Primary ? " · principal" : "")
-                   + (screen.Touch == TouchSupport.Touch ? " · tactile" : ""),
+                   + (screen.Primary ? L.T(" · principal", " · primary") : "")
+                   + (screen.Touch == TouchSupport.Touch ? L.T(" · tactile", " · touch") : ""),
             Foreground = Brushes.White,
             FontSize = 24,
             HorizontalAlignment = HorizontalAlignment.Center,

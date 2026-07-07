@@ -98,7 +98,7 @@ public sealed class TestPatternWindow : Window
             dc.DrawText(title, new Point((w - title.Width) / 2, h / 2 + 48));
 
             var hint = new FormattedText(
-                "Cliquez pour fermer",
+                Localization.L.T("Cliquez pour fermer", "Click to close"),
                 System.Globalization.CultureInfo.CurrentUICulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Segoe UI"),

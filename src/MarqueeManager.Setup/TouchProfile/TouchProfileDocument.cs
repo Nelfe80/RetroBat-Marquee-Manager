@@ -186,10 +186,10 @@ public sealed class TouchAction
 
     public string Describe() => Action switch
     {
-        "show-card" => $"afficher la carte {Card ?? "?"}",
-        "show-player-card" => $"carte du joueur {Player ?? 0}",
-        "cycle-card" => "carte suivante",
-        "default-card" => "retour carte par défaut",
+        "show-card" => Localization.L.T($"afficher la carte {Card ?? "?"}", $"show card {Card ?? "?"}"),
+        "show-player-card" => Localization.L.T($"carte du joueur {Player ?? 0}", $"player {Player ?? 0} card"),
+        "cycle-card" => Localization.L.T("carte suivante", "next card"),
+        "default-card" => Localization.L.T("retour carte par défaut", "back to default card"),
         _ => Action
     };
 }

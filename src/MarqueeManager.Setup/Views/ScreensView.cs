@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
 using MarqueeManager.Setup.Detection;
+using MarqueeManager.Setup.Localization;
 using MarqueeManager.Setup.Processes;
 
 namespace MarqueeManager.Setup.Views;
@@ -24,19 +25,21 @@ public sealed class ScreensView : UserControl
         _pluginRoot = pluginRoot;
 
         var page = new StackPanel();
-        page.Children.Add(Ui.Title("Écrans détectés"));
-        page.Children.Add(Ui.Subtitle(
+        page.Children.Add(Ui.Title(L.T("Écrans détectés", "Detected screens")));
+        page.Children.Add(Ui.Subtitle(L.T(
             "Les numéros ci-dessous sont les index Windows utilisés par config.ini (MarqueeScreen, TopperScreen…). "
-            + "Utilisez « Identifier » pour afficher le numéro sur chaque écran physique."));
+            + "Utilisez « Identifier » pour afficher le numéro sur chaque écran physique.",
+            "The numbers below are the Windows indices used by config.ini (MarqueeScreen, TopperScreen…). "
+            + "Use \"Identify\" to display the number on each physical screen.")));
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 12) };
-        actions.Children.Add(Ui.Button("Identifier les écrans", (_, _) => IdentifyWindow.ShowAll(_screens), primary: true));
-        actions.Children.Add(Ui.Button("Rafraîchir la détection", (_, _) => Refresh()));
+        actions.Children.Add(Ui.Button(L.T("Identifier les écrans", "Identify screens"), (_, _) => IdentifyWindow.ShowAll(_screens), primary: true));
+        actions.Children.Add(Ui.Button(L.T("Rafraîchir la détection", "Refresh detection"), (_, _) => Refresh()));
         page.Children.Add(actions);
 
         page.Children.Add(_cards);
 
-        page.Children.Add(Ui.SectionHeader("Rapport de détection"));
+        page.Children.Add(Ui.SectionHeader(L.T("Rapport de détection", "Detection report")));
         _report.TextWrapping = TextWrapping.Wrap;
         page.Children.Add(Ui.Card(_report));
 
@@ -64,7 +67,7 @@ public sealed class ScreensView : UserControl
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         var info = new StackPanel();
-        var title = Ui.Label($"ÉCRAN {screen.Index}" + (screen.Primary ? "  ·  principal" : ""), 15);
+        var title = Ui.Label(L.T("ÉCRAN", "SCREEN") + $" {screen.Index}" + (screen.Primary ? L.T("  ·  principal", "  ·  primary") : ""), 15);
         title.FontWeight = FontWeights.Bold;
         info.Children.Add(title);
         info.Children.Add(Ui.MutedLabel(
@@ -74,9 +77,9 @@ public sealed class ScreensView : UserControl
             + $"  ·  position {screen.Bounds.X},{screen.Bounds.Y}"
             + screen.Touch switch
             {
-                TouchSupport.Touch => "  ·  tactile",
+                TouchSupport.Touch => L.T("  ·  tactile", "  ·  touch"),
                 TouchSupport.None => "",
-                _ => "  ·  tactile inconnu"
+                _ => L.T("  ·  tactile inconnu", "  ·  touch unknown")
             }));
         var suggestion = Ui.MutedLabel(screen.Suggestion);
         suggestion.Foreground = Ui.Accent;
@@ -86,8 +89,8 @@ public sealed class ScreensView : UserControl
         grid.Children.Add(info);
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        buttons.Children.Add(Ui.Button("Afficher la mire", (_, _) =>
-            new TestPatternWindow($"ÉCRAN {screen.Index}", screen.Bounds.X, screen.Bounds.Y,
+        buttons.Children.Add(Ui.Button(L.T("Afficher la mire", "Show test pattern"), (_, _) =>
+            new TestPatternWindow(L.T("ÉCRAN", "SCREEN") + $" {screen.Index}", screen.Bounds.X, screen.Bounds.Y,
                 screen.Bounds.Width, screen.Bounds.Height).Show()));
         Grid.SetColumn(buttons, 1);
         grid.Children.Add(buttons);
@@ -103,18 +106,21 @@ public sealed class ScreensView : UserControl
         var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
         lines.Add("");
         lines.Add(dmd.DmdDeviceDllFound
-            ? $"DMD : pile DmdDevice présente ({ini.Get("DMD", "Model", "zedmd")}, {ini.Get("DMD", "Width", "128")}x{ini.Get("DMD", "Height", "32")})."
-            : "DMD : pile DmdDevice introuvable dans tools\\dmd.");
+            ? L.T("DMD : pile DmdDevice présente", "DMD: DmdDevice stack present") + $" ({ini.Get("DMD", "Model", "zedmd")}, {ini.Get("DMD", "Width", "128")}x{ini.Get("DMD", "Height", "32")})."
+            : L.T("DMD : pile DmdDevice introuvable dans tools\\dmd.", "DMD: DmdDevice stack not found in tools\\dmd."));
         lines.Add(dmd.SerialPorts.Count > 0
-            ? "Ports série : " + string.Join(", ", dmd.SerialPorts) + "."
-            : "Ports série : aucun détecté.");
+            ? L.T("Ports série : ", "Serial ports: ") + string.Join(", ", dmd.SerialPorts) + "."
+            : L.T("Ports série : aucun détecté.", "Serial ports: none detected."));
         lines.Add(MarqueeManagerProcess.IsRunning()
-            ? "MarqueeManager : en cours d'exécution."
-            : "MarqueeManager : arrêté.");
-        _report.Text = string.Join(Environment.NewLine, lines) + Environment.NewLine + "APIExpose : test en cours…";
+            ? L.T("MarqueeManager : en cours d'exécution.", "MarqueeManager: running.")
+            : L.T("MarqueeManager : arrêté.", "MarqueeManager: stopped."));
+        _report.Text = string.Join(Environment.NewLine, lines) + Environment.NewLine
+            + L.T("APIExpose : test en cours…", "APIExpose: testing…");
 
         var alive = await ApiExposeProbe.IsAliveAsync(ini.Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345"));
-        lines.Add(alive ? "APIExpose : connecté." : "APIExpose : injoignable (RetroBat/APIExpose arrêté ?).");
+        lines.Add(alive
+            ? L.T("APIExpose : connecté.", "APIExpose: connected.")
+            : L.T("APIExpose : injoignable (RetroBat/APIExpose arrêté ?).", "APIExpose: unreachable (RetroBat/APIExpose not running?)."));
         _report.Text = string.Join(Environment.NewLine, lines);
     }
 }
