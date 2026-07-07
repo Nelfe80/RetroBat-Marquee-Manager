@@ -27,8 +27,9 @@ $ex = @(
     "-x!$name\.archive", "-x!$name\.cache", "-x!$name\.temp",
     "-x!$name\.versioning", "-x!$name\.log", "-x!$name\.graceful_exit",
     "-x!$name\artifacts", "-x!$name\wiki", "-x!$name\mkdocs.yml", "-x!$name\site",
-    "-x!$name\build.bat", "-x!$name\release.ps1",
+    "-x!$name\build.bat", "-x!$name\build-Setup.bat", "-x!$name\release.ps1",
     "-x!$name\RetroBatMarqueeManager.sln", "-x!$name\Directory.Build.props",
+    "-x!$name\MARQUEE_MANAGER_SETUP.md", "-x!$name\state",
     '-xr!CAHIER_DES_CHARGES*', '-xr!*.log', '-xr!__pycache__', '-xr!*.pyc'
 )
 
