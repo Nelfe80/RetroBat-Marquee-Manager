@@ -29,6 +29,7 @@ tools/**
 # Product specs / cahiers des charges stay local.
 CAHIER_DES_CHARGES*
 *CDC*
+MARQUEE_MANAGER_SETUP.md
 
 # Docs: keep only images and PDFs.
 docs/**
@@ -70,6 +71,10 @@ temp_publish*/
 /MarqueeManager.exe
 /MarqueeManager.deps.json
 /MarqueeManager.runtimeconfig.json
+/MarqueeManagerSetup.exe
+
+# Per-machine state written by MarqueeManagerSetup (touch profile, backups)
+state/
 
 # MkDocs build output
 site/

@@ -85,6 +85,15 @@ rmdir /S /Q "%BUILD_TMP%"
 echo   - Done.
 
 echo.
+echo [5/5] Build de MarqueeManagerSetup.exe...
+call "%~dp0build-Setup.bat" --no-pause
+if %ERRORLEVEL% neq 0 (
+    echo [ERROR] Echec du build MarqueeManagerSetup.
+    pause
+    exit /b 1
+)
+
+echo.
 echo ===================================================
 echo  Build termine avec succes !
 echo  Lancez MarqueeManager.exe depuis la racine.

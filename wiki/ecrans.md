@@ -12,13 +12,16 @@ MarqueeManager peut animer **cinq surfaces**, chacune étant une fenêtre WPF pl
 
 ## Assigner les écrans
 
+!!! tip "Le plus simple : l'assistant"
+    [`MarqueeManagerSetup.exe`](assistant.md) fait tout cela visuellement : identification des écrans, affectation des surfaces, test des zones, sans éditer le fichier.
+
 Tout se passe dans `config.ini`, section `[Screens]` : chaque surface reçoit l'**indice de l'écran Windows** qui doit l'afficher.
 
 - `-1` désactive une surface ;
 - plusieurs indices séparés par des virgules dupliquent la surface sur plusieurs écrans.
 
 !!! tip "Trouver l'indice d'un écran"
-    Dans Windows, Paramètres → Affichage → « Identifier » : les numéros affichés correspondent aux indices (attention, l'indice MarqueeManager commence généralement à 0 — si le résultat n'est pas celui attendu, essayez le numéro Windows moins un).
+    Le bouton « Identifier les écrans » de l'assistant affiche le bon numéro sur chaque écran. (Dans Windows, Paramètres → Affichage → « Identifier », l'indice MarqueeManager commence généralement à 0 — si le résultat n'est pas celui attendu, essayez le numéro Windows moins un.)
 
 ## Ce qui s'affiche, couche par couche
 

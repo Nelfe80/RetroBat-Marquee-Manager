@@ -148,6 +148,24 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             InitializeLayers();
 
             this.SourceInitialized += OnSourceInitialized;
+            // Touch is promoted to mouse events by WPF, so a single handler covers
+            // both a finger tap and a mouse click (useful to test without a touchscreen).
+            this.PreviewMouseLeftButtonUp += OnSurfaceTapped;
+        }
+
+        /// <summary>
+        /// Tap/click on the surface, as fractions (0..1) of the window. Wired by
+        /// MarqueeController for the touch-enabled instruction card.
+        /// </summary>
+        public event Action<double, double>? SurfaceTapped;
+
+        private void OnSurfaceTapped(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (SurfaceTapped == null || ActualWidth <= 0 || ActualHeight <= 0) return;
+            var position = e.GetPosition(this);
+            SurfaceTapped.Invoke(
+                Math.Clamp(position.X / ActualWidth, 0, 1),
+                Math.Clamp(position.Y / ActualHeight, 0, 1));
         }
 
         private static System.Windows.Media.FontFamily LoadSpeedrunFont()

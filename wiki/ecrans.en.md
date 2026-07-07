@@ -12,13 +12,16 @@ MarqueeManager can animate **five surfaces**, each being a WPF window placed on 
 
 ## Assigning screens
 
+!!! tip "The easy way: the assistant"
+    [`MarqueeManagerSetup.exe`](assistant.md) does all of this visually: screen identification, surface assignment, zone testing, without editing the file.
+
 Everything happens in `config.ini`, section `[Screens]`: each surface receives the **index of the Windows screen** that should display it.
 
 - `-1` disables a surface;
 - several comma-separated indices duplicate the surface on several screens.
 
 !!! tip "Finding a screen's index"
-    In Windows, Settings → Display → "Identify": the displayed numbers map to the indices (note that MarqueeManager indices usually start at 0 — if the result is unexpected, try the Windows number minus one).
+    The assistant's "Identify screens" button shows the right number on each display. (In Windows, Settings → Display → "Identify", MarqueeManager indices usually start at 0 — if the result is unexpected, try the Windows number minus one.)
 
 ## What displays, layer by layer
 

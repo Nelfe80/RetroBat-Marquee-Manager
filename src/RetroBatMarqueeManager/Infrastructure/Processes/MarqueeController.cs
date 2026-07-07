@@ -15,6 +15,9 @@ public sealed class MarqueeController : IDisposable
     private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private Thread? _uiThread;
 
+    /// <summary>Tap on an iccard surface, as fractions (0..1). Consumed by InstructionCardService.</summary>
+    public event Action<double, double>? IcCardTapped;
+
     public MarqueeController(IConfigService config, IDmdService dmd, ILogger<MarqueeController> logger)
     {
         _config = config;
@@ -55,6 +58,8 @@ public sealed class MarqueeController : IDisposable
                     _config.DmdWidth, _config.DmdHeight);
                 if (!_windows.TryGetValue(target, out var list)) _windows[target] = list = new();
                 list.Add(window);
+                if (target.Equals("iccard", StringComparison.OrdinalIgnoreCase))
+                    window.SurfaceTapped += (fx, fy) => IcCardTapped?.Invoke(fx, fy);
                 window.Show();
                 _logger.LogInformation("Surface {Target} opened on screen {Screen}", target, screen);
             }

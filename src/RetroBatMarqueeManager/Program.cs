@@ -36,6 +36,7 @@ public static class Program
                 services.AddSingleton<IDmdService, DmdService>();
                 services.AddSingleton<LayManager>();
                 services.AddSingleton<SurfacePresentationService>();
+                services.AddSingleton<InstructionCardService>();
                 services.AddSingleton<TrayIconService>();
                 services.AddHostedService<Worker>();
                 services.AddHostedService<RetroBatMonitorService>();

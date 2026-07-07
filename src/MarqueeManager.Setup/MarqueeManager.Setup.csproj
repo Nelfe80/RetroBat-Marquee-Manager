@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Screen.AllScreens : même énumération que le runtime (MarqueeWindow.PositionWindow),
+         les index écrits dans config.ini restent donc cohérents. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>MarqueeManagerSetup</AssemblyName>
+    <RootNamespace>MarqueeManager.Setup</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- Le SDK WinForms injecte ces usings globaux : ils rendent ambigus tous les
+       contrôles WPF (Button, CheckBox, MessageBox...). Le code qualifie WinForms. -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+</Project>

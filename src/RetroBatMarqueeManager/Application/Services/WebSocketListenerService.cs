@@ -19,6 +19,7 @@ public sealed class WebSocketListenerService : BackgroundService
     private readonly IDmdService _dmd;
     private readonly LayManager _lay;
     private readonly SurfacePresentationService _presentation;
+    private readonly InstructionCardService _instructionCards;
     private readonly ILogger<WebSocketListenerService> _logger;
     private string? _selectedSystem;
     private string? _selectedRom;
@@ -32,6 +33,7 @@ public sealed class WebSocketListenerService : BackgroundService
         IDmdService dmd,
         LayManager lay,
         SurfacePresentationService presentation,
+        InstructionCardService instructionCards,
         ILogger<WebSocketListenerService> logger)
     {
         _config = config;
@@ -39,6 +41,7 @@ public sealed class WebSocketListenerService : BackgroundService
         _dmd = dmd;
         _lay = lay;
         _presentation = presentation;
+        _instructionCards = instructionCards;
         _logger = logger;
         _ingameEffects = Application.Lighting.IngameEffectLibrary.Load(
             Path.Combine(config.BaseDirectory, "resources", "lighting"), logger);
@@ -202,13 +205,16 @@ public sealed class WebSocketListenerService : BackgroundService
         var payload = Payload(root);
         var cards = Child(payload, "Cards", "cards");
         if (cards.ValueKind != JsonValueKind.Array) return;
+        // keep the whole catalog: the touch profile can cycle/show any of them
+        var paths = new List<string>();
         foreach (var card in cards.EnumerateArray())
         {
             var path = ResolveLocal(Text(card, "Path", "path"));
-            if (path == null) continue;
-            foreach (var target in _config.GetTargetsForContent("iccard")) await _surfaces.DisplayMediaAsync(path, target, cancellationToken);
-            return;
+            if (path != null) paths.Add(path);
         }
+
+        if (paths.Count == 0) return;
+        await _instructionCards.SetCardsAsync(paths, cancellationToken);
     }
 
     private async Task HandleSimpleMediaAsync(JsonElement root, string defaultTarget, CancellationToken cancellationToken)

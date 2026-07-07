@@ -1,0 +1,43 @@
+<Window x:Class="MarqueeManager.Setup.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MarqueeManager Setup"
+        Width="1060" Height="700"
+        Background="{StaticResource AppBackground}"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="210"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="#12121A">
+            <StackPanel Margin="18,22,18,18">
+                <TextBlock Text="MarqueeManager" Foreground="{StaticResource AppForeground}" FontSize="17" FontWeight="Bold"/>
+                <TextBlock Text="SETUP" Foreground="{StaticResource AppAccent}" FontSize="12" FontWeight="Bold" Margin="0,0,0,24"/>
+
+                <RadioButton x:Name="NavScreens" Content="Écrans" GroupName="nav" IsChecked="True"
+                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
+                             Checked="Nav_Checked"/>
+                <RadioButton x:Name="NavSurfaces" Content="Surfaces" GroupName="nav"
+                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
+                             Checked="Nav_Checked"/>
+                <RadioButton x:Name="NavDmd" Content="DMD physique" GroupName="nav"
+                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
+                             Checked="Nav_Checked"/>
+                <RadioButton x:Name="NavTouch" Content="IC card tactile" GroupName="nav"
+                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
+                             Checked="Nav_Checked"/>
+                <RadioButton x:Name="NavOptions" Content="Options" GroupName="nav"
+                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
+                             Checked="Nav_Checked"/>
+
+                <TextBlock x:Name="FooterInfo" Margin="0,28,0,0" Foreground="{StaticResource AppMuted}"
+                           FontSize="11" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <ContentControl x:Name="ContentHost" Grid.Column="1"/>
+    </Grid>
+</Window>

@@ -1,10 +1,14 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarqueeManager", "src\RetroBatMarqueeManager\RetroBatMarqueeManager.csproj", "{F75ADDC3-2578-4730-94F4-272E9B48A038}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarqueeManager.Tests", "tests\MarqueeManager.Tests\MarqueeManager.Tests.csproj", "{CE6FC50B-05ED-440F-8871-D0643DD83761}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2A43E637-F9C9-4988-93F7-A7F4F10E6380}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarqueeManager.Setup", "src\MarqueeManager.Setup\MarqueeManager.Setup.csproj", "{DF48D1C7-9DFF-4756-A336-10D3AFC8A924}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,5 +24,12 @@ Global
 		{CE6FC50B-05ED-440F-8871-D0643DD83761}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE6FC50B-05ED-440F-8871-D0643DD83761}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE6FC50B-05ED-440F-8871-D0643DD83761}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF48D1C7-9DFF-4756-A336-10D3AFC8A924}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF48D1C7-9DFF-4756-A336-10D3AFC8A924}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF48D1C7-9DFF-4756-A336-10D3AFC8A924}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF48D1C7-9DFF-4756-A336-10D3AFC8A924}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DF48D1C7-9DFF-4756-A336-10D3AFC8A924} = {2A43E637-F9C9-4988-93F7-A7F4F10E6380}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,12 @@
+<Application x:Class="MarqueeManager.Setup.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="AppBackground" Color="#14141C"/>
+        <SolidColorBrush x:Key="PanelBackground" Color="#1D1D2A"/>
+        <SolidColorBrush x:Key="AppForeground" Color="#E8E8F0"/>
+        <SolidColorBrush x:Key="AppMuted" Color="#8A8A9A"/>
+        <SolidColorBrush x:Key="AppAccent" Color="#FFB300"/>
+    </Application.Resources>
+</Application>
