@@ -48,6 +48,9 @@ Si votre écran instruction card est tactile (ou même à la souris), cet onglet
 
 Le réglage est enregistré dans `state\surfaces.profile.json` et lu par MarqueeManager au démarrage. La souris déclenche les mêmes actions que le tactile — pratique pour tester sans écran tactile.
 
+!!! note "Nommage des cartes (médias APIExpose)"
+    Dans `artwork\ic` d'un jeu : `ic.png` pour une carte unique, ou `ic-1.png`, `ic-2.png`… pour plusieurs cartes. Les suffixes `-left`/`-right` (ex. mercs : `ic-1-left.png` … `ic-5-right.png`) sont les **deux porte-cartes du panel** : côté joueur 1 et côté joueur 2. La navigation passe de carte en carte (ic-1 → ic-2…), et le mode dual player affiche le côté du joueur qui a tapé ; `ic2` dans une action désigne bien la carte n°2, quel que soit le nombre de fichiers.
+
 ## Options
 
 Tout le reste, présenté en réglages simples :

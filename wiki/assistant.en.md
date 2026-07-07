@@ -48,6 +48,9 @@ If your instruction card screen is touch-capable (or even mouse-driven), this ta
 
 The setting is saved to `state\surfaces.profile.json` and read by MarqueeManager at startup. The mouse triggers the same actions as touch — handy to test without a touchscreen.
 
+!!! note "Card naming (APIExpose media)"
+    In a game's `artwork\ic`: `ic.png` for a single card, or `ic-1.png`, `ic-2.png`… for several cards. The `-left`/`-right` suffixes (e.g. mercs: `ic-1-left.png` … `ic-5-right.png`) are the **two card holders of the panel**: player 1 side and player 2 side. Navigation moves from card to card (ic-1 → ic-2…), and dual player mode shows the side of the player who tapped; `ic2` in an action means logical card #2, regardless of the file count.
+
 ## Options
 
 Everything else, presented as simple switches:

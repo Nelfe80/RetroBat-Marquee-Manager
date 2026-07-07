@@ -12,6 +12,11 @@ namespace RetroBatMarqueeManager.Application.Services;
 /// only showed the first one) and, when state\surfaces.profile.json enables touch
 /// on the iccard surface, maps taps to zone actions: cycle-card, show-card,
 /// show-player-card, default-card. Written by MarqueeManagerSetup.
+///
+/// Media naming (APIExpose artwork\ic): `ic.png` or `ic-N[-variant].png` — e.g.
+/// mercs ships ic-1-left … ic-5-right. Files sharing the same N are ONE logical
+/// card in two panel positions: left (player 1 side) and right (player 2 side).
+/// Cycling and "icN" ids work on logical cards; show-player-card picks the side.
 /// </summary>
 public sealed class InstructionCardService : IDisposable
 {
@@ -20,8 +25,9 @@ public sealed class InstructionCardService : IDisposable
     private readonly ILogger<InstructionCardService> _logger;
     private readonly object _lock = new();
     private readonly TouchSettings? _touch;
-    private IReadOnlyList<string> _cards = Array.Empty<string>();
-    private int _currentIndex;
+    private List<InstructionCardCatalog.CardGroup> _groups = new();
+    private int _groupIndex;
+    private string? _sidePreference;
     private System.Threading.Timer? _revertTimer;
 
     public InstructionCardService(IConfigService config, MarqueeController surfaces, ILogger<InstructionCardService> logger)
@@ -41,25 +47,26 @@ public sealed class InstructionCardService : IDisposable
     /// <summary>New game selected: replace the catalog and show the default card.</summary>
     public async Task SetCardsAsync(IReadOnlyList<string> cards, CancellationToken cancellationToken)
     {
-        int defaultIndex;
+        string? path;
         lock (_lock)
         {
-            _cards = cards;
-            defaultIndex = DefaultIndex();
-            _currentIndex = defaultIndex;
+            _groups = InstructionCardCatalog.BuildGroups(cards);
+            _groupIndex = DefaultGroupIndex();
+            _sidePreference = null;
             CancelRevert();
+            path = _groups.Count > 0 ? _groups[_groupIndex].PathFor(null) : null;
         }
 
-        if (cards.Count > 0)
+        if (path != null)
         {
-            await DisplayAsync(cards[defaultIndex], cancellationToken);
+            await DisplayAsync(path, cancellationToken);
         }
     }
 
-    private int DefaultIndex()
+    private int DefaultGroupIndex()
     {
-        var byId = _touch?.DefaultCard is { Length: > 0 } id ? ResolveCardIndex(id) : null;
-        return byId is { } index && index >= 0 && index < _cards.Count ? index : 0;
+        var byId = _touch?.DefaultCard is { Length: > 0 } id ? ResolveGroupIndex(id) : null;
+        return byId is { } index && index >= 0 && index < _groups.Count ? index : 0;
     }
 
     private void OnTap(double fx, double fy)
@@ -67,7 +74,7 @@ public sealed class InstructionCardService : IDisposable
         TouchZone? hit = null;
         lock (_lock)
         {
-            if (_touch is not { Enabled: true } || _cards.Count == 0) return;
+            if (_touch is not { Enabled: true } || _groups.Count == 0) return;
             // first matching zone wins: generated profiles list the specific zone
             // (e.g. center) before the catch-all
             foreach (var zone in _touch.Zones)
@@ -92,26 +99,51 @@ public sealed class InstructionCardService : IDisposable
         var revertMs = 0;
         lock (_lock)
         {
-            if (_cards.Count == 0) return;
-            int? target = tap.Action.ToLowerInvariant() switch
+            if (_groups.Count == 0) return;
+            switch (tap.Action.ToLowerInvariant())
             {
-                "cycle-card" => (_currentIndex + 1) % _cards.Count,
-                "show-card" => tap.Card is { Length: > 0 } card ? ResolveCardIndex(card) : null,
-                "show-player-card" => tap.Player is { } player ? ResolvePlayerIndex(player) : null,
-                "default-card" => DefaultIndex(),
-                _ => null
-            };
-            if (target is not { } index || index < 0 || index >= _cards.Count)
-            {
-                _logger.LogDebug("Instruction card action {Action} resolved to no card ({Count} available)", tap.Action, _cards.Count);
-                return;
+                case "cycle-card":
+                    _groupIndex = (_groupIndex + 1) % _groups.Count;
+                    break;
+
+                case "show-card":
+                    if (tap.Card is not { Length: > 0 } card || ResolveGroupIndex(card) is not { } found)
+                    {
+                        _logger.LogDebug("show-card resolved no card for id {Card} ({Count} groups)", tap.Card, _groups.Count);
+                        return;
+                    }
+
+                    _groupIndex = found;
+                    break;
+
+                case "show-player-card":
+                    if (tap.Player is not { } player) return;
+                    // a file explicitly named for the player wins; otherwise the side
+                    // convention: left holder = player 1, right holder = player 2
+                    if (ResolvePlayerGroupIndex(player) is { } playerGroup)
+                    {
+                        _groupIndex = playerGroup;
+                    }
+                    else
+                    {
+                        _sidePreference = player switch { 1 => "left", 2 => "right", _ => null };
+                    }
+
+                    break;
+
+                case "default-card":
+                    _groupIndex = DefaultGroupIndex();
+                    _sidePreference = null;
+                    break;
+
+                default:
+                    return;
             }
 
-            _currentIndex = index;
-            path = _cards[index];
+            path = _groups[_groupIndex].PathFor(_sidePreference);
 
             // temporary card: come back to the default one after the delay
-            var isDefault = index == DefaultIndex();
+            var isDefault = _groupIndex == DefaultGroupIndex() && _sidePreference is null;
             revertMs = !isDefault ? tap.DurationMs ?? _touch!.ReturnToDefaultMs : 0;
             CancelRevert();
             if (revertMs > 0)
@@ -129,11 +161,12 @@ public sealed class InstructionCardService : IDisposable
         lock (_lock)
         {
             CancelRevert();
-            if (_cards.Count == 0) return;
-            var index = DefaultIndex();
-            if (index == _currentIndex) return;
-            _currentIndex = index;
-            path = _cards[index];
+            if (_groups.Count == 0) return;
+            var index = DefaultGroupIndex();
+            if (index == _groupIndex && _sidePreference is null) return;
+            _groupIndex = index;
+            _sidePreference = null;
+            path = _groups[index].PathFor(null);
         }
 
         _ = DisplayAsync(path!, CancellationToken.None);
@@ -153,18 +186,20 @@ public sealed class InstructionCardService : IDisposable
         }
     }
 
-    /// <summary>"ic2" / "2" → second card; otherwise match by file name fragment.</summary>
-    private int? ResolveCardIndex(string card)
+    /// <summary>"ic2" / "2" → logical card n°2; otherwise match by file name fragment.</summary>
+    private int? ResolveGroupIndex(string card)
     {
-        var match = Regex.Match(card, "^(?:ic)?([0-9]+)$", RegexOptions.IgnoreCase);
+        var match = Regex.Match(card, "^(?:ic)?-?([0-9]+)$", RegexOptions.IgnoreCase);
         if (match.Success && int.TryParse(match.Groups[1].Value, out var number) && number >= 1)
         {
-            return number - 1;
+            var byNumber = _groups.FindIndex(g => g.Number == number);
+            return byNumber >= 0 ? byNumber : null;
         }
 
-        for (var i = 0; i < _cards.Count; i++)
+        for (var i = 0; i < _groups.Count; i++)
         {
-            if (Path.GetFileNameWithoutExtension(_cards[i]).Contains(card, StringComparison.OrdinalIgnoreCase))
+            if (_groups[i].Variants.Any(v =>
+                    Path.GetFileNameWithoutExtension(v.Path).Contains(card, StringComparison.OrdinalIgnoreCase)))
             {
                 return i;
             }
@@ -173,19 +208,19 @@ public sealed class InstructionCardService : IDisposable
         return null;
     }
 
-    /// <summary>Player card: name containing p1/player1 wins, otherwise the Nth card.</summary>
-    private int? ResolvePlayerIndex(int player)
+    /// <summary>Group holding a file explicitly named for the player (p1/player1), if any.</summary>
+    private int? ResolvePlayerGroupIndex(int player)
     {
         var pattern = new Regex($@"(?:^|[^a-z0-9])p(?:layer)?{player}(?:[^0-9]|$)", RegexOptions.IgnoreCase);
-        for (var i = 0; i < _cards.Count; i++)
+        for (var i = 0; i < _groups.Count; i++)
         {
-            if (pattern.IsMatch(Path.GetFileNameWithoutExtension(_cards[i])))
+            if (_groups[i].Variants.Any(v => pattern.IsMatch(Path.GetFileNameWithoutExtension(v.Path))))
             {
                 return i;
             }
         }
 
-        return player - 1;
+        return null;
     }
 
     private TouchSettings? LoadTouchProfile()
