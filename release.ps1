@@ -70,4 +70,5 @@ $notesFile = Join-Path $out 'notes.md'
 $notes | Set-Content $notesFile -Encoding utf8
 $draftFlag = if ($Publish) { @() } else { @('--draft') }
 gh release create "v$ver" --repo Nelfe80/RetroBat-Marquee-Manager --target main @draftFlag --title "MarqueeManager $ver" --notes-file $notesFile $full $update
+if ($LASTEXITCODE -ne 0) { throw "gh release create a echoue (exit $LASTEXITCODE)." }
 Write-Host "Release v$ver creee$(if (-not $Publish) { ' (draft, a publier sur GitHub)' })."
