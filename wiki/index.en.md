@@ -24,7 +24,7 @@
 
 ## How it works
 
-![The game lives, so do your screens](assets/flow-game-to-screens.en.svg)
+![The game lives, so do your screens](assets/flow-game-to-screens.svg)
 
 ??? note "Under the hood — the full pipeline"
 
