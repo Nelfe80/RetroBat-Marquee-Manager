@@ -24,11 +24,15 @@
 
 ## Comment ça marche
 
-```text
-APIExpose (médias + données, temps réel)
-   → MarqueeManager (WebSockets /ws/marquee, /ws/topper, /ws/score…)
-      → surfaces WPF (marquee, topper, iccard, dmd virtuel, lcd)
-      → DMD physique optionnel (DLL dmd/zedmd + dmdext pour la vidéo)
-```
+![Le jeu vit, vos écrans aussi](assets/flow-game-to-screens.svg)
+
+??? note "Sous le capot — le pipeline complet"
+
+    ```text
+    APIExpose (médias + données, temps réel)
+       → MarqueeManager (WebSockets /ws/marquee, /ws/topper, /ws/score…)
+          → surfaces WPF (marquee, topper, iccard, dmd virtuel, lcd)
+          → DMD physique optionnel (DLL dmd/zedmd + dmdext pour la vidéo)
+    ```
 
 MarqueeManager fait partie de la famille de plugins RetroBat avec [APIExpose](https://github.com/Nelfe80/RetroBat-APIExpose) (le moteur de données, **requis**) et [LedManager](https://github.com/Nelfe80/RetroBat-Led-Manager) (boutons et panneaux LED).
