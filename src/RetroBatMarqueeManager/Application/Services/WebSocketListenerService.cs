@@ -378,11 +378,21 @@ public sealed class WebSocketListenerService : BackgroundService
         if (family.Length == 0) family = Text(payload, "Family", "family");
         if (family.Length == 0 && signal.ValueKind == JsonValueKind.Object) family = Text(signal, "Family", "family");
 
+        var color = Text(root, "Color", "color");
+        if (color.Length == 0) color = Text(payload, "Color", "color");
+        if (color.Length == 0 && signal.ValueKind == JsonValueKind.Object) color = Text(signal, "Color", "color");
+
         // flow lifecycle changes gate the speedrun leaderboard (no timer during demos)
         _presentation.OnGameplayFlow(action);
 
         var rule = _ingameEffects.Resolve(action, family.Length > 0 ? family : null);
         if (rule == null) return;
+
+        // la couleur portee par l'evenement (deltas score arcade) prime sur la
+        // couleur de la regle : l'effet prend la teinte de la cible du jeu.
+        var eventColor = Application.Lighting.IngameEffectLibrary.TryParseEventColor(color);
+        if (eventColor is { } overrideColor) rule = rule with { Color = overrideColor };
+
         _logger.LogInformation("Ingame action {Action} → lighting effect {Kind} ({Label})", action, rule.Kind, rule.Label);
         _surfaces.TriggerLightingEffect(rule);
     }

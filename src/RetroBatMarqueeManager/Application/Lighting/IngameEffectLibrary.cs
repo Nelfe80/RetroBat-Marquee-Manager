@@ -119,6 +119,28 @@ public sealed class IngameEffectLibrary
             : new SKColor(255, 40, 24);
     }
 
+    /// <summary>
+    /// Couleur d'evenement portee par les .MEM arcade (deltas score : l'avion
+    /// orange de 1944...). Noms simples normalises par le generateur ; null si
+    /// inconnu, l'effet garde alors sa couleur de regle.
+    /// </summary>
+    public static SKColor? TryParseEventColor(string? name)
+    {
+        return (name ?? "").Trim().ToLowerInvariant() switch
+        {
+            "red" => new SKColor(255, 32, 21),
+            "green" => new SKColor(53, 208, 115),
+            "blue" => new SKColor(64, 128, 255),
+            "orange" => new SKColor(255, 150, 30),
+            "yellow" => new SKColor(255, 214, 60),
+            "pink" => new SKColor(255, 63, 164),
+            "cyan" => new SKColor(55, 224, 232),
+            "white" => new SKColor(240, 240, 245),
+            "silver" => new SKColor(190, 195, 205),
+            _ => null,
+        };
+    }
+
     private const string BuiltInXml = @"
 <ingameEffects version='1.0'>
   <effect action='LOSE_LIFE|KO|CRASH|HIT|DAMAGE' kind='flash' color='#ff2015' durationMs='300' dip='0.4' throttleMs='400' />
