@@ -31,7 +31,17 @@ The media provided by APIExpose (logo, game marquee, video) remains the **backgr
 
 - MAME `.lay` views with lamps driven by the `/ws/arcade` stream;
 - persistent information (RA score, game mode);
-- temporary notifications (achievement unlocked, challenge, leaderboard result).
+- temporary notifications (achievement unlocked, challenge, leaderboard result);
+- **ingame light effects**: red flash when you take a hit, blackout on game
+  over, pulse on an extra life… triggered by game moments.
+
+??? note "Under the hood — customizing the light effects"
+    Rules live in an **editable XML**: each rule matches an action
+    (`LOSE_LIFE|KO|CRASH`) or a whole **family** (`family='scoring.'`), with
+    an effect kind (`flash`, `blackout`, `pulse`), color, duration and
+    anti-spam (`throttleMs`) — the first matching rule wins. When the event
+    carries its **own color** (arcade score deltas), it wins over the rule
+    color. During a clean speedrun session, effects are muted automatically.
 
 On the **LCD**, active cards spread across a horizontal grid with equal columns; in speedrun mode, the leaderboard card becomes a full-width bottom banner to stay readable.
 
