@@ -1,41 +1,86 @@
 <Window x:Class="MarqueeManager.Setup.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MarqueeManager Setup"
-        Width="1060" Height="700"
-        Background="{StaticResource AppBackground}"
+        Title="Marquee Manager Setup"
+        Width="1200" Height="720"
+        MinWidth="1000" MinHeight="600"
+        Background="{DynamicResource AppBackground}"
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="210"/>
+            <ColumnDefinition Width="232"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Sidebar -->
-        <Border Grid.Column="0" Background="#12121A">
-            <StackPanel Margin="18,22,18,18">
-                <TextBlock Text="MarqueeManager" Foreground="{StaticResource AppForeground}" FontSize="17" FontWeight="Bold"/>
-                <TextBlock Text="SETUP" Foreground="{StaticResource AppAccent}" FontSize="12" FontWeight="Bold" Margin="0,0,0,24"/>
+        <!-- ======================= sidebar ======================= -->
+        <Border Grid.Column="0" Background="{DynamicResource SidebarBackground}"
+                BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,0,1,0">
+            <Grid Margin="14,18,14,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                <RadioButton x:Name="NavScreens" Content="Écrans" GroupName="nav" IsChecked="True"
-                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
-                             Checked="Nav_Checked"/>
-                <RadioButton x:Name="NavSurfaces" Content="Surfaces" GroupName="nav"
-                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
-                             Checked="Nav_Checked"/>
-                <RadioButton x:Name="NavDmd" Content="DMD physique" GroupName="nav"
-                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
-                             Checked="Nav_Checked"/>
-                <RadioButton x:Name="NavTouch" Content="IC card tactile" GroupName="nav"
-                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
-                             Checked="Nav_Checked"/>
-                <RadioButton x:Name="NavOptions" Content="Options" GroupName="nav"
-                             Margin="0,4" Foreground="{StaticResource AppForeground}" FontSize="14"
-                             Checked="Nav_Checked"/>
+                <!-- brand -->
+                <Grid Margin="8,0,2,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border x:Name="BrandIconHost" Width="36" Height="36" CornerRadius="9"
+                            Margin="0,0,10,0" VerticalAlignment="Center"
+                            Background="{DynamicResource ControlBackground}"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="Marquee Manager" Foreground="{DynamicResource AppForeground}"
+                                   FontSize="13" FontWeight="Bold"/>
+                        <TextBlock Text="SETUP STUDIO" FontSize="9" FontWeight="Bold"
+                                   Foreground="{StaticResource AccentGradient}" Margin="1,1,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="4,0,0,0">
+                        <Button x:Name="ThemeToggle" Width="28" Height="28" Padding="0"
+                                FontFamily="Segoe MDL2 Assets" FontSize="12" Content="&#xE706;"
+                                Click="ThemeToggle_Click"/>
+                        <Button x:Name="LangToggle" Width="28" Height="22" Padding="0"
+                                FontSize="9" FontWeight="Bold" Content="EN" Margin="0,4,0,0"
+                                Click="LangToggle_Click"/>
+                    </StackPanel>
+                </Grid>
 
-                <TextBlock x:Name="FooterInfo" Margin="0,28,0,0" Foreground="{StaticResource AppMuted}"
-                           FontSize="11" TextWrapping="Wrap"/>
-            </StackPanel>
+                <!-- navigation -->
+                <StackPanel Grid.Row="1" Margin="0,26,0,0">
+                    <RadioButton x:Name="NavHome" Style="{StaticResource NavItem}" Tag="&#xE80F;"
+                                 Content="Accueil" GroupName="nav" IsChecked="True"
+                                 Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavScreens" Style="{StaticResource NavItem}" Tag="&#xE7F4;"
+                                 Content="Écrans" GroupName="nav"
+                                 Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavSurfaces" Style="{StaticResource NavItem}" Tag="&#xE8F1;"
+                                 Content="Surfaces" GroupName="nav"
+                                 Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavDmd" Style="{StaticResource NavItem}" Tag="&#xE90F;"
+                                 Content="DMD physique" GroupName="nav"
+                                 Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavTouch" Style="{StaticResource NavItem}" Tag="&#xE815;"
+                                 Content="IC card tactile" GroupName="nav"
+                                 Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavGames" Style="{StaticResource NavItem}" Tag="&#xE7FC;"
+                                 Content="Mes jeux" GroupName="nav"
+                                 Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavOptions" Style="{StaticResource NavItem}" Tag="&#xE713;"
+                                 Content="Options" GroupName="nav"
+                                 Checked="Nav_Checked"/>
+                </StackPanel>
+
+                <!-- status card -->
+                <Border Grid.Row="2" Background="{DynamicResource CardBackground}"
+                        BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1"
+                        CornerRadius="10" Padding="12,11">
+                    <TextBlock x:Name="FooterInfo" Foreground="{DynamicResource AppMuted}"
+                               FontSize="10" LineHeight="15" TextWrapping="Wrap"/>
+                </Border>
+            </Grid>
         </Border>
 
         <ContentControl x:Name="ContentHost" Grid.Column="1"/>

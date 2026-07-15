@@ -137,7 +137,7 @@ public sealed class TouchView : UserControl
         {
             Height = 110,
             Margin = new Thickness(0, 6, 0, 6),
-            Background = new SolidColorBrush(Color.FromRgb(0x10, 0x10, 0x18)),
+            Background = Ui.Brush(Color.FromRgb(0x10, 0x10, 0x18)),
             Foreground = Ui.Foreground,
             BorderBrush = Ui.PanelBorder,
             FontSize = 12
@@ -192,7 +192,8 @@ public sealed class TouchView : UserControl
         {
             Width = 560,
             Height = 200,
-            Background = new SolidColorBrush(Color.FromRgb(0x0C, 0x0C, 0x14))
+            // preview stays a dark viewport in both themes (zones glow on dark)
+            Background = Ui.Viewport
         };
         _preview.MouseLeftButtonDown += Preview_MouseDown;
         _preview.MouseMove += Preview_MouseMove;

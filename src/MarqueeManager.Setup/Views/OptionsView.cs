@@ -30,6 +30,12 @@ public sealed class OptionsView : UserControl
     private readonly CheckBox _preferGenerated;
     private readonly CheckBox _dmdMirror;
     private readonly CheckBox _sound;
+    private readonly Slider _soundVolume;
+    private readonly TextBlock _soundVolumeLabel = Ui.MutedLabel("");
+    private readonly Slider _tubeOpacity;
+    private readonly TextBlock _tubeOpacityLabel = Ui.MutedLabel("");
+    private readonly ComboBox _fpsLimit;
+    private readonly CheckBox _showFps;
     private readonly CheckBox _dofEnabled;
     private readonly CheckBox _dofMarquee;
     private readonly CheckBox _dofDmd;
@@ -38,10 +44,17 @@ public sealed class OptionsView : UserControl
     private readonly CheckBox _raDmd;
     private readonly CheckBox _raBadgeTray;
     private readonly CheckBox _raTakeover;
+    private readonly Dictionary<string, CheckBox> _raEvents = new();
+    private readonly TextBox _raUnlockMs;
+    private readonly TextBox _raScoreMs;
+    private readonly TextBox _raLeaderboardMs;
+    private readonly TextBox _raSpeedrunUsers;
     private readonly CheckBox _liveScore;
     private readonly CheckBox _liveTimer;
     private readonly CheckBox _liveMarquee;
     private readonly CheckBox _liveDmd;
+    private readonly TextBox _liveScoreMs;
+    private readonly TextBox _liveTimerMs;
 
     public OptionsView(string pluginRoot)
     {
@@ -113,6 +126,38 @@ public sealed class OptionsView : UserControl
         lighting.Children.Add(_dmdMirror);
         _sound = Ui.CheckBox(L.T("Sons des tubes fluorescents", "Fluorescent tube sounds"), ini.GetBool("Lighting", "SoundEnabled", true));
         lighting.Children.Add(_sound);
+
+        (_soundVolume, var volumeLine) = PercentSlider(ini.GetDouble("Lighting", "SoundVolume", 0.30), 0.0, 0.5,
+            _soundVolumeLabel, v => $"{(int)(v * 100)} %");
+        lighting.Children.Add(Ui.Row(L.T("Volume des tubes", "Tube volume"), volumeLine,
+            L.T("hum, buzz et claquements d'allumage", "hum, buzz and ignition ticks")));
+
+        (_tubeOpacity, var tubeLine) = PercentSlider(ini.GetDouble("Lighting", "TubeVisualOpacity", 0.0), 0.0, 1.0,
+            _tubeOpacityLabel, v => v <= 0
+                ? L.T("tube invisible (recommandé)", "invisible tube (recommended)")
+                : $"{(int)(v * 100)} %");
+        lighting.Children.Add(Ui.Row(L.T("Tube néon visible", "Visible neon tube"), tubeLine));
+
+        _fpsLimit = Ui.ComboBox(120);
+        foreach (var fps in new[] { 30, 45, 60 })
+        {
+            var item = new ComboBoxItem { Content = $"{fps} FPS", Tag = fps };
+            _fpsLimit.Items.Add(item);
+            if (ini.GetInt("Lighting", "FpsLimit", 60) == fps)
+            {
+                _fpsLimit.SelectedItem = item;
+            }
+        }
+        if (_fpsLimit.SelectedItem == null)
+        {
+            _fpsLimit.SelectedIndex = _fpsLimit.Items.Count - 1;
+        }
+        var fpsLine = new StackPanel { Orientation = Orientation.Horizontal };
+        fpsLine.Children.Add(_fpsLimit);
+        _showFps = Ui.CheckBox(L.T("Afficher le compteur FPS (debug)", "Show the FPS counter (debug)"),
+            ini.GetBool("Lighting", "ShowFps", false));
+        fpsLine.Children.Add(_showFps);
+        lighting.Children.Add(Ui.Row(L.T("Cadence maximale", "Frame rate cap"), fpsLine));
         page.Children.Add(Ui.Card(lighting));
 
         // --- DOF / layouts MAME ---
@@ -145,6 +190,35 @@ public sealed class OptionsView : UserControl
         _raTakeover = Ui.CheckBox(L.T("Plein écran animé sur un unlock (ignoré en speedrun)", "Animated fullscreen on an unlock (ignored during speedruns)"),
             ini.GetBool("RetroAchievements", "UnlockTakeoverEnabled", true));
         ra.Children.Add(_raTakeover);
+
+        ra.Children.Add(Ui.MutedLabel(L.T("Événements affichés :", "Displayed events:")));
+        var raEvents = new WrapPanel { Margin = new Thickness(0, 2, 0, 2) };
+        foreach (var (key, fr, en) in new[]
+                 {
+                     ("ScoreEnabled", "Score RA", "RA score"),
+                     ("UnlockEnabled", "Unlocks", "Unlocks"),
+                     ("WarningEnabled", "Avertissements", "Warnings"),
+                     ("ChallengeEnabled", "Challenges", "Challenges"),
+                     ("LeaderboardEnabled", "Leaderboards / speedrun", "Leaderboards / speedrun"),
+                     ("NotificationsEnabled", "Notifications", "Notifications"),
+                     ("PersistentEnabled", "Infos persistantes", "Persistent info")
+                 })
+        {
+            var box = Ui.CheckBox(L.T(fr, en), ini.GetBool("RetroAchievements", key, true));
+            box.Margin = new Thickness(0, 2, 16, 2);
+            _raEvents[key] = box;
+            raEvents.Children.Add(box);
+        }
+        ra.Children.Add(raEvents);
+
+        ra.Children.Add(Ui.MutedLabel(L.T("Durées d'affichage (ms) :", "Display durations (ms):")));
+        var raDurations = new WrapPanel { Margin = new Thickness(0, 2, 0, 2) };
+        _raUnlockMs = DurationField(raDurations, L.T("Unlock", "Unlock"), ini.Get("RetroAchievements", "UnlockDurationMs", "6000"));
+        _raScoreMs = DurationField(raDurations, L.T("Score", "Score"), ini.Get("RetroAchievements", "ScoreDurationMs", "6000"));
+        _raLeaderboardMs = DurationField(raDurations, L.T("Leaderboard", "Leaderboard"), ini.Get("RetroAchievements", "LeaderboardDurationMs", "6000"));
+        _raSpeedrunUsers = DurationField(raDurations, L.T("Vitesse défilement speedrun (users/s)", "Speedrun scroll speed (users/s)"),
+            ini.Get("RetroAchievements", "SpeedrunUsersPerSecond", "4"));
+        ra.Children.Add(raDurations);
         page.Children.Add(Ui.Card(ra));
 
         // --- LiveData ---
@@ -158,6 +232,10 @@ public sealed class OptionsView : UserControl
         live.Children.Add(_liveMarquee);
         _liveDmd = Ui.CheckBox(L.T("Sur le DMD", "On the DMD"), ini.GetBool("LiveData", "DmdEnabled", true));
         live.Children.Add(_liveDmd);
+        var liveDurations = new WrapPanel { Margin = new Thickness(0, 2, 0, 2) };
+        _liveScoreMs = DurationField(liveDurations, L.T("Score visible (ms)", "Score visible (ms)"), ini.Get("LiveData", "ScoreDurationMs", "4000"));
+        _liveTimerMs = DurationField(liveDurations, L.T("Timer visible (ms)", "Timer visible (ms)"), ini.Get("LiveData", "TimerDurationMs", "4000"));
+        live.Children.Add(liveDurations);
         page.Children.Add(Ui.Card(live));
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 6) };
@@ -167,6 +245,29 @@ public sealed class OptionsView : UserControl
         page.Children.Add(_status);
 
         Content = Ui.Page(page);
+    }
+
+    /// <summary>Writes the key only when the field holds a valid positive number —
+    /// a typo must not corrupt a working config.ini value.</summary>
+    private static void SetIfNumeric(IniFile ini, string section, string key, TextBox box)
+    {
+        if (int.TryParse(box.Text.Trim(), out var value) && value >= 0)
+        {
+            ini.Set(section, key, value.ToString());
+        }
+    }
+
+    /// <summary>Small labelled numeric field appended to a WrapPanel.</summary>
+    private static TextBox DurationField(WrapPanel host, string label, string value)
+    {
+        var line = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 16, 2) };
+        var text = Ui.MutedLabel(label);
+        text.Margin = new Thickness(0, 0, 6, 0);
+        line.Children.Add(text);
+        var box = Ui.TextBox(value, 70);
+        line.Children.Add(box);
+        host.Children.Add(line);
+        return box;
     }
 
     private static (Slider slider, StackPanel line) PercentSlider(
@@ -218,6 +319,13 @@ public sealed class OptionsView : UserControl
         ini.Set("Lighting", "PreferGeneratedMarquee", B(_preferGenerated));
         ini.Set("Lighting", "DmdMirror", B(_dmdMirror));
         ini.Set("Lighting", "SoundEnabled", B(_sound));
+        ini.Set("Lighting", "SoundVolume", D(_soundVolume));
+        ini.Set("Lighting", "TubeVisualOpacity", D(_tubeOpacity));
+        if ((_fpsLimit.SelectedItem as ComboBoxItem)?.Tag is int fps)
+        {
+            ini.Set("Lighting", "FpsLimit", fps.ToString());
+        }
+        ini.Set("Lighting", "ShowFps", B(_showFps));
 
         ini.Set("DOF", "Enabled", B(_dofEnabled));
         ini.Set("DOF", "MarqueeEnabled", B(_dofMarquee));
@@ -228,11 +336,21 @@ public sealed class OptionsView : UserControl
         ini.Set("RetroAchievements", "DmdEnabled", B(_raDmd));
         ini.Set("RetroAchievements", "BadgeTrayEnabled", B(_raBadgeTray));
         ini.Set("RetroAchievements", "UnlockTakeoverEnabled", B(_raTakeover));
+        foreach (var (key, box) in _raEvents)
+        {
+            ini.Set("RetroAchievements", key, B(box));
+        }
+        SetIfNumeric(ini, "RetroAchievements", "UnlockDurationMs", _raUnlockMs);
+        SetIfNumeric(ini, "RetroAchievements", "ScoreDurationMs", _raScoreMs);
+        SetIfNumeric(ini, "RetroAchievements", "LeaderboardDurationMs", _raLeaderboardMs);
+        SetIfNumeric(ini, "RetroAchievements", "SpeedrunUsersPerSecond", _raSpeedrunUsers);
 
         ini.Set("LiveData", "ScoreEnabled", B(_liveScore));
         ini.Set("LiveData", "TimerEnabled", B(_liveTimer));
         ini.Set("LiveData", "MarqueeEnabled", B(_liveMarquee));
         ini.Set("LiveData", "DmdEnabled", B(_liveDmd));
+        SetIfNumeric(ini, "LiveData", "ScoreDurationMs", _liveScoreMs);
+        SetIfNumeric(ini, "LiveData", "TimerDurationMs", _liveTimerMs);
 
         ini.Save();
         _status.Text = L.T("Options enregistrées (sauvegarde .bak créée). Redémarrez MarqueeManager pour appliquer.",

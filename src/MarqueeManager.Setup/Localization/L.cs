@@ -4,15 +4,43 @@ using System.Text.RegularExpressions;
 namespace MarqueeManager.Setup.Localization;
 
 /// <summary>
-/// Two-language UI strings, chosen once at startup: `--lang fr|en` argument, then
-/// the RetroBat/EmulationStation language (es_settings.cfg), then the Windows UI
+/// Two-language UI strings: `--lang fr|en` argument, then the persisted choice
+/// (state\setup.ini [Setup] Language, written by the sidebar toggle), then the
+/// RetroBat/EmulationStation language (es_settings.cfg), then the Windows UI
 /// culture. Call sites keep both texts inline: L.T("texte", "text").
 /// </summary>
 public static class L
 {
-    public static bool French { get; } = ResolveFrench();
+    public static bool French { get; private set; } = ResolveFrench();
 
     public static string T(string fr, string en) => French ? fr : en;
+
+    /// <summary>Applies the persisted language once the plugin root is known
+    /// (the CLI argument still wins — it drives the wiki screenshot runs).</summary>
+    public static void Initialize(string? pluginRoot)
+    {
+        if (HasLangArgument())
+        {
+            return;
+        }
+
+        var saved = Config.SetupPrefs.Read(pluginRoot, "Language", "");
+        if (saved.Length > 0)
+        {
+            French = saved.StartsWith("fr", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    public static void Toggle(string? pluginRoot)
+    {
+        French = !French;
+        Config.SetupPrefs.Write(pluginRoot, "Language", French ? "fr" : "en");
+    }
+
+    private static bool HasLangArgument()
+        => Environment.GetCommandLineArgs().Any(arg =>
+            arg.Equals("--lang", StringComparison.OrdinalIgnoreCase) ||
+            arg.StartsWith("--lang=", StringComparison.OrdinalIgnoreCase));
 
     private static bool ResolveFrench()
     {
