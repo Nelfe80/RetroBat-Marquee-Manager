@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace RetroBatMarqueeManager.Application.Lighting;
 
 /// <summary>Metadata received with the marquee (WS Selection), input of the profile resolver.</summary>
-public sealed record LightingSceneMeta(int? Year, string? Developer, string? Publisher, string? GameName, string? System, string? Rom = null);
+public sealed record LightingSceneMeta(int? Year, string? Developer, string? Publisher, string? GameName, string? System, string? Rom = null, string? Genre = null, string? GenreIds = null);
 
 public enum BulbTechnology { Incandescent, Fluorescent, Neon, Led, El, Lcd }
 
@@ -68,11 +68,16 @@ public sealed class LightingLibraries
             logger.LogWarning("No cabinet profiles loaded from {Dir}; using built-in defaults", directory);
             libraries.LoadCabinetRulesFromXml(XDocument.Parse(BuiltInCabinetsXml), "builtin", logger);
         }
+        // per-game user profile lives beside the effect overrides (Setup, "Mes jeux")
+        libraries._overridesRoot = Path.GetFullPath(Path.Combine(directory, "..", "..", "overrides", "effects"));
         return libraries;
     }
 
     public ResolvedLightProfile Resolve(LightingSceneMeta? meta, bool composited)
     {
+        if (TryUserProfile(meta) is { } user)
+            return user;
+
         var developer = Normalize(meta?.Developer);
         var publisher = Normalize(meta?.Publisher);
         var gameName = Normalize(meta?.GameName);
@@ -96,6 +101,76 @@ public sealed class LightingLibraries
             return new ResolvedLightProfile(_defaultBulb, 0.15, "default");
         var bulb = _bulbs.TryGetValue(best.BulbId, out var found) ? found : _defaultBulb;
         return new ResolvedLightProfile(bulb, best.Aging, best.Label);
+    }
+
+    private string? _overridesRoot;
+    private (string Key, DateTime Stamp, string? Bulb, string? Cabinet) _userCache;
+
+    /// <summary>
+    /// The user pinned a bulb/cabinet for this game in the Setup ("Mes jeux"):
+    /// overrides\effects\&lt;system&gt;\&lt;rom&gt;.json section "lighting" {bulb, cabinet}.
+    /// It beats the grammar entirely. Cached on the file timestamp — Resolve runs
+    /// at every scene load.
+    /// </summary>
+    private ResolvedLightProfile? TryUserProfile(LightingSceneMeta? meta)
+    {
+        if (_overridesRoot == null || meta?.System is not { Length: > 0 } || meta.Rom is not { Length: > 0 })
+            return null;
+
+        try
+        {
+            var systems = meta.System.Equals("mame", StringComparison.OrdinalIgnoreCase)
+                ? new[] { meta.System, "arcade" }
+                : meta.System.Equals("arcade", StringComparison.OrdinalIgnoreCase)
+                    ? new[] { meta.System, "mame" }
+                    : new[] { meta.System };
+            foreach (var system in systems)
+            {
+                var path = Path.Combine(_overridesRoot, SafeFileName(system), SafeFileName(meta.Rom) + ".json");
+                if (!File.Exists(path)) continue;
+
+                var stamp = File.GetLastWriteTimeUtc(path);
+                var key = path.ToLowerInvariant();
+                if (_userCache.Key != key || _userCache.Stamp != stamp)
+                {
+                    string? bulbId = null, cabinetId = null;
+                    using (var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path)))
+                    {
+                        if (doc.RootElement.TryGetProperty("lighting", out var lighting)
+                            && lighting.ValueKind == System.Text.Json.JsonValueKind.Object)
+                        {
+                            if (lighting.TryGetProperty("bulb", out var b) && b.ValueKind == System.Text.Json.JsonValueKind.String)
+                                bulbId = b.GetString();
+                            if (lighting.TryGetProperty("cabinet", out var c) && c.ValueKind == System.Text.Json.JsonValueKind.String)
+                                cabinetId = c.GetString();
+                        }
+                    }
+                    _userCache = (key, stamp, bulbId, cabinetId);
+                }
+
+                if (_userCache.Bulb == null && _userCache.Cabinet == null)
+                    return null;
+
+                var rule = _userCache.Cabinet != null
+                    ? _rules.FirstOrDefault(r => r.Label.Equals(_userCache.Cabinet, StringComparison.OrdinalIgnoreCase))
+                    : null;
+                var bulb = _userCache.Bulb != null && _bulbs.TryGetValue(_userCache.Bulb, out var forced)
+                    ? forced
+                    : rule != null && _bulbs.TryGetValue(rule.BulbId, out var fromRule) ? fromRule : _defaultBulb;
+                return new ResolvedLightProfile(bulb, rule?.Aging ?? 0.15, $"user:{meta.Rom}");
+            }
+        }
+        catch
+        {
+            // unreadable override: the grammar decides, never fatal
+        }
+        return null;
+    }
+
+    private static string SafeFileName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return new string(name.ToLowerInvariant().Where(c => !invalid.Contains(c)).ToArray());
     }
 
     /// <summary>Normalized substring match: any alternative contained in the field.</summary>

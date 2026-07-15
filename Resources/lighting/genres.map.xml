@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Normalisation des genres scrapes vers les slugs des regles d'effets genrees
+  (ingame.effects.xml attribut genre= et overrides\effects\genres\<slug>.json).
+
+  ids    : identifiants numeriques ScreenScraper (champ Fields.genres des
+           metadata — independants de la langue, source preferee)
+  labels : morceaux de libelles (contains, insensible a la casse) en secours,
+           FR et EN separes par |
+
+  L'ordre du fichier = ordre de priorite quand un jeu cumule plusieurs genres
+  (mslug est "Shooter / Run and Gun" : run-and-gun passe avant shooter).
+-->
+<genreMap version="1.0">
+  <genre slug="run-and-gun" ids="3026" labels="run and gun|run'n gun" />
+  <genre slug="shmup" ids="79,2851,2870,2955" labels="shoot'em up|shootem up|shmup" />
+  <genre slug="beatemup" ids="1" labels="beat'em up|beatem up|beat 'em" />
+  <genre slug="fighting" ids="14,3034,2885" labels="fighting|combat|versus" />
+  <genre slug="racing" ids="28" labels="racing|course|driving|conduite" />
+  <genre slug="platformer" ids="7,2887,2896" labels="platform|plateforme" />
+  <genre slug="puzzle" ids="26,2864,2891" labels="puzzle|reflexion" />
+  <genre slug="maze" ids="2937" labels="labyrinth|labyrinthe|maze" />
+  <genre slug="sports" ids="685,2846,2852,2853,2861,2875,2901,2913,3028" labels="sports|sport" />
+  <genre slug="pinball" ids="2954" labels="pinball|flipper" />
+  <genre slug="horror" ids="20680" labels="survival horror|horreur" />
+  <genre slug="rpg" ids="8" labels="role playing|jeu de role|rpg" />
+  <genre slug="shooter" ids="2646" labels="shooter|tir" />
+</genreMap>

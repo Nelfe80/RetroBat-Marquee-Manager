@@ -22,7 +22,30 @@
   Perf : privilégier fall/rise (sortent vite du cadre = slot libéré), éviter trail
   sur les événements fréquents.
 -->
-<ingameEffects version="1.2">
+<ingameEffects version="1.3">
+  <!-- ============ règles GENRÉES (attribut genre=, slugs de genres.map.xml) ============
+       Le genre du jeu pilote le STYLE de l'effet : un HIT dans 1943 (shmup) fait
+       exploser des bombes, le même HIT dans Streets of Rage (beat'em up) est une
+       gerbe d'impact. Une règle genrée qui matche bat la règle générique. -->
+
+  <!-- shmup / run-and-gun : tout est explosion et DCA -->
+  <effect genre="shmup|run-and-gun" action="HIT|DAMAGE|ENEMY_HIT_PLAYER" kind="flash" color="#ff5a18" durationMs="260" dip="0.35" sprite="bombexplode.gif" count="3" motion="pop" throttleMs="350" />
+  <effect genre="shmup|run-and-gun" action="LOSE_LIFE|KO|DEATH" kind="flash" color="#ff3a10" durationMs="450" dip="0.55" sprite="explode.gif" count="3" motion="pop" throttleMs="500" />
+  <effect genre="shmup|run-and-gun" action="OBJECT_DESTROYED|ENEMY_DOWN" kind="sprite" sprite="explode.gif" count="2" motion="pop" durationMs="700" throttleMs="450" />
+
+  <!-- beat'em up / fighting : impacts charnels, gerbes rouges -->
+  <effect genre="beatemup|fighting" action="HIT|DAMAGE|ENEMY_HIT_PLAYER" kind="flash" color="#ff1e2a" durationMs="200" dip="0.30" sprite="blood_hit.gif" count="2" motion="pop" throttleMs="300" />
+  <effect genre="beatemup|fighting" action="LOSE_LIFE|KO|DEATH" kind="flash" color="#c01020" durationMs="500" dip="0.60" sprite="blood.gif" count="3" motion="fall" throttleMs="600" />
+
+  <!-- racing : chocs mécaniques, le marquee encaisse -->
+  <effect genre="racing" action="HIT|DAMAGE|CRASH" kind="shake" dip="0.55" durationMs="450" sprite="impact.gif" count="2" motion="pop" throttleMs="500" />
+  <effect genre="racing" action="LOSE_LIFE|KO|DEATH" kind="shake" dip="0.7" durationMs="600" sprite="smoke.gif" count="2" motion="rise" throttleMs="800" />
+
+  <!-- horror : les tubes flanchent au lieu de flasher -->
+  <effect genre="horror" action="HIT|DAMAGE|ENEMY_HIT_PLAYER" kind="strobe" dip="0.5" durationMs="400" sprite="blood_hit.gif" count="1" motion="pop" throttleMs="500" />
+  <effect genre="horror" action="LOSE_LIFE|KO|DEATH" kind="blackout" durationMs="900" sprite="blood.gif" count="2" motion="fall" throttleMs="1000" />
+
+  <!-- ============ règles GÉNÉRIQUES ============ -->
   <!-- pièce ramassée : chute de pièces verticale, courte -->
   <effect action="COIN_GAIN" kind="sprite" sprite="coins.gif" count="2" motion="fall" durationMs="1000" throttleMs="200" />
 

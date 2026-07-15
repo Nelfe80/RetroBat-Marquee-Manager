@@ -1,0 +1,616 @@
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using System.Xml.Linq;
+using MarqueeManager.Setup.Localization;
+using Path = System.IO.Path;
+
+namespace MarqueeManager.Setup.Controls;
+
+/// <summary>
+/// Editor for the game's rbmarquee scene lamps (resources\rbmarquee\&lt;rom&gt;.xml):
+/// drag a lamp on the marquee image, resize it with the wheel, recolor it, and
+/// rewire it to a MAME output. Handles both lamp shapes of the format — circles
+/// (x/y/radius) and rectangles (region="x y w h"), fractional coordinates.
+/// Saving stamps generated="false": the scene is curated, the generator will
+/// never overwrite it again (.bak kept).
+/// </summary>
+public sealed class SceneLampsCard : UserControl
+{
+    private const double ViewWidth = 620;
+
+    private sealed class Lamp
+    {
+        public string Id = "";
+        public string Color = "#ffd9a0";
+        public bool IsRegion;
+        public double X = 0.5, Y = 0.5, Radius = 0.12;          // circle
+        public double RX, RY, RW = 0.2, RH = 1.0;               // region
+        public string Output = "";
+    }
+
+    private readonly string _pluginRoot;
+    private readonly string _rom;
+    private readonly string _scenePath;
+    private readonly List<Lamp> _lamps = new();
+    private readonly List<string> _knownOutputs = new();
+    private string _attractMode = "none";
+    private string? _imageAttr;
+    private string? _backgroundPath;
+    private double _viewHeight = ViewWidth / 4;
+
+    private readonly Canvas _canvas = new() { ClipToBounds = true };
+    private readonly StackPanel _inspector = new() { Margin = new Thickness(0, 8, 0, 0), Visibility = Visibility.Collapsed };
+    private readonly TextBlock _status = Ui.MutedLabel("", 12);
+    private Lamp? _selected;
+    private bool _dragging;
+    private Point _dragStart;
+    private (double X, double Y) _dragOrigin;
+
+    public SceneLampsCard(string pluginRoot, string system, string rom, string? marqueeFallbackImage)
+    {
+        _pluginRoot = pluginRoot;
+        _rom = rom;
+        _scenePath = Path.Combine(pluginRoot, "resources", "rbmarquee", rom + ".xml");
+
+        var card = new StackPanel();
+        card.Children.Add(Ui.SectionHeader(L.T("Scène & lampes (rbmarquee)", "Scene & lamps (rbmarquee)")));
+
+        LoadKnownOutputs(system, rom);
+        var exists = File.Exists(_scenePath);
+        if (exists)
+        {
+            try
+            {
+                LoadScene();
+            }
+            catch (Exception ex)
+            {
+                card.Children.Add(Ui.Label(L.T($"Scène illisible : {ex.Message}", $"Unreadable scene: {ex.Message}")));
+                Content = card;
+                return;
+            }
+        }
+
+        _backgroundPath = ResolveBackground(marqueeFallbackImage);
+        if (!exists)
+        {
+            card.Children.Add(Ui.MutedLabel(L.T(
+                "Ce jeu n'a pas de scène lumineuse. Créez-en une pour poser des lampes pilotées par les outputs MAME.",
+                "This game has no light scene yet. Create one to place lamps driven by the MAME outputs.")));
+            var create = Ui.Button(L.T("Créer une scène", "Create a scene"), (_, _) =>
+            {
+                _lamps.Add(NewLamp());
+                RebuildAsEditor();
+            }, primary: true);
+            var host = new WrapPanel();
+            host.Children.Add(create);
+            card.Children.Add(host);
+            card.Children.Add(_status);
+            Content = card;
+            return;
+        }
+
+        BuildEditor(card);
+        Content = card;
+    }
+
+    private void RebuildAsEditor()
+    {
+        var card = new StackPanel();
+        card.Children.Add(Ui.SectionHeader(L.T("Scène & lampes (rbmarquee)", "Scene & lamps (rbmarquee)")));
+        BuildEditor(card);
+        Content = card;
+    }
+
+    private void BuildEditor(StackPanel card)
+    {
+        card.Children.Add(Ui.MutedLabel(L.T(
+            "Cliquer = sélectionner, glisser = déplacer, molette = taille. Les couleurs et le câblage output se règlent sous l'aperçu.",
+            "Click = select, drag = move, wheel = resize. Colors and output wiring live under the preview.")));
+
+        SizeCanvasToBackground();
+        _canvas.Width = ViewWidth;
+        _canvas.Height = _viewHeight;
+        _canvas.Background = Ui.Viewport;
+        _canvas.MouseLeftButtonDown += Canvas_MouseDown;
+        _canvas.MouseMove += Canvas_MouseMove;
+        _canvas.MouseLeftButtonUp += (_, _) => EndDrag();
+        _canvas.MouseLeave += (_, _) => EndDrag();
+        _canvas.MouseWheel += Canvas_MouseWheel;
+
+        card.Children.Add(new Border
+        {
+            Background = Ui.Viewport,
+            BorderBrush = Ui.PanelBorder,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(8),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Child = _canvas
+        });
+
+        card.Children.Add(_inspector);
+
+        var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+        actions.Children.Add(Ui.Button(L.T("Ajouter une lampe", "Add a lamp"), (_, _) =>
+        {
+            var lamp = NewLamp();
+            _lamps.Add(lamp);
+            Select(lamp);
+            Render();
+        }));
+
+        var attractLabel = Ui.MutedLabel(L.T("Mode attract :", "Attract mode:"));
+        attractLabel.Margin = new Thickness(8, 0, 6, 0);
+        actions.Children.Add(attractLabel);
+        var attract = Ui.ComboBox(130);
+        foreach (var (key, fr, en) in new[]
+                 {
+                     ("none", "Aucun", "None"),
+                     ("chase", "Chenillard", "Chase"),
+                     ("alternate", "Alterné", "Alternate")
+                 })
+        {
+            var item = new ComboBoxItem { Content = L.T(fr, en), Tag = key };
+            attract.Items.Add(item);
+            if (key.Equals(_attractMode, StringComparison.OrdinalIgnoreCase)) attract.SelectedItem = item;
+        }
+        if (attract.SelectedItem == null) attract.SelectedIndex = 0;
+        attract.SelectionChanged += (_, _) =>
+        {
+            if ((attract.SelectedItem as ComboBoxItem)?.Tag is string mode) _attractMode = mode;
+        };
+        actions.Children.Add(attract);
+        actions.Children.Add(Ui.Button(L.T("Enregistrer la scène (curée)", "Save the scene (curated)"), (_, _) => SaveScene(), primary: true));
+        card.Children.Add(actions);
+        card.Children.Add(Ui.MutedLabel(L.T(
+            "Enregistrer marque la scène generated=\"false\" : le générateur rbmarquee ne l'écrasera plus.",
+            "Saving stamps the scene generated=\"false\": the rbmarquee generator will never overwrite it again.")));
+        _status.TextWrapping = TextWrapping.Wrap;
+        card.Children.Add(_status);
+
+        Render();
+    }
+
+    private Lamp NewLamp() => new()
+    {
+        Id = "L" + _lamps.Count,
+        Output = _knownOutputs.FirstOrDefault() ?? "",
+        X = 0.2 + 0.15 * _lamps.Count % 0.8
+    };
+
+    // ================= scene I/O =================
+
+    private void LoadScene()
+    {
+        var doc = XDocument.Load(_scenePath);
+        var scene = doc.Root?.Element("scene");
+        if (scene == null) return;
+        _imageAttr = (string?)scene.Attribute("image");
+        _attractMode = (string?)scene.Element("attract")?.Attribute("mode") ?? "none";
+
+        var bindings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var map in scene.Element("bindings")?.Element("arcadeOutputs")?.Elements("map") ?? Enumerable.Empty<XElement>())
+        {
+            var to = (string?)map.Attribute("to") ?? "";
+            if (to.StartsWith("lamp:", StringComparison.OrdinalIgnoreCase))
+            {
+                bindings[to["lamp:".Length..]] = (string?)map.Attribute("output") ?? "";
+            }
+        }
+
+        foreach (var element in scene.Element("lamps")?.Elements("lamp") ?? Enumerable.Empty<XElement>())
+        {
+            var lamp = new Lamp
+            {
+                Id = (string?)element.Attribute("id") ?? "L" + _lamps.Count,
+                Color = (string?)element.Attribute("color") ?? "#ffd9a0"
+            };
+            var region = (string?)element.Attribute("region");
+            if (region != null)
+            {
+                var parts = region.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 4)
+                {
+                    lamp.IsRegion = true;
+                    lamp.RX = Fraction(parts[0]);
+                    lamp.RY = Fraction(parts[1]);
+                    lamp.RW = Fraction(parts[2]);
+                    lamp.RH = Fraction(parts[3]);
+                }
+            }
+            else
+            {
+                lamp.X = Fraction((string?)element.Attribute("x") ?? "0.5");
+                lamp.Y = Fraction((string?)element.Attribute("y") ?? "0.5");
+                lamp.Radius = Fraction((string?)element.Attribute("radius") ?? "0.1");
+            }
+            lamp.Output = bindings.TryGetValue(lamp.Id, out var output) ? output : "";
+            _lamps.Add(lamp);
+        }
+    }
+
+    public void SaveScene()
+    {
+        try
+        {
+            var system = "mame";
+            if (File.Exists(_scenePath))
+            {
+                try
+                {
+                    File.Copy(_scenePath, _scenePath + ".bak", overwrite: true);
+                    system = (string?)XDocument.Load(_scenePath).Root?.Attribute("system") ?? "mame";
+                }
+                catch
+                {
+                    // backup/system best effort
+                }
+            }
+
+            var lamps = new XElement("lamps");
+            var maps = new XElement("arcadeOutputs");
+            foreach (var lamp in _lamps)
+            {
+                var element = new XElement("lamp", new XAttribute("id", lamp.Id));
+                if (lamp.IsRegion)
+                {
+                    element.Add(new XAttribute("region",
+                        string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                            $"{lamp.RX:0.0000} {lamp.RY:0.0000} {lamp.RW:0.0000} {lamp.RH:0.0000}")));
+                }
+                else
+                {
+                    element.Add(new XAttribute("x", Frac(lamp.X)), new XAttribute("y", Frac(lamp.Y)),
+                        new XAttribute("radius", Frac(lamp.Radius)));
+                }
+                element.Add(new XAttribute("color", lamp.Color));
+                lamps.Add(element);
+                if (lamp.Output.Length > 0)
+                {
+                    maps.Add(new XElement("map", new XAttribute("output", lamp.Output),
+                        new XAttribute("to", "lamp:" + lamp.Id)));
+                }
+            }
+
+            var scene = new XElement("scene", new XAttribute("target", "marquee"));
+            if (_imageAttr is { Length: > 0 }) scene.Add(new XAttribute("image", _imageAttr));
+            scene.Add(lamps, new XElement("bindings", maps), new XElement("attract", new XAttribute("mode", _attractMode)));
+
+            var doc = new XDocument(
+                new XComment(" Curé avec MarqueeManagerSetup : ce fichier prime et le générateur ne le touche plus. "),
+                new XElement("rbmarquee",
+                    new XAttribute("version", "1.2"),
+                    new XAttribute("game", _rom),
+                    new XAttribute("system", system),
+                    new XAttribute("generated", "false"),
+                    scene));
+            Directory.CreateDirectory(Path.GetDirectoryName(_scenePath)!);
+            doc.Save(_scenePath);
+            _status.Text = L.T($"Scène enregistrée : {_scenePath}", $"Scene saved: {_scenePath}");
+            _status.Foreground = Ui.Ok;
+        }
+        catch (Exception ex)
+        {
+            _status.Text = L.T($"Échec de l'enregistrement : {ex.Message}", $"Save failed: {ex.Message}");
+            _status.Foreground = Ui.Error;
+        }
+    }
+
+    // ================= canvas =================
+
+    private void SizeCanvasToBackground()
+    {
+        if (_backgroundPath != null && TryLoad(_backgroundPath) is { } bitmap && bitmap.PixelWidth > 0)
+        {
+            _viewHeight = Math.Clamp(ViewWidth * bitmap.PixelHeight / bitmap.PixelWidth, 60, 320);
+        }
+    }
+
+    private string? ResolveBackground(string? fallback)
+    {
+        if (_imageAttr is { Length: > 0 })
+        {
+            var path = Path.Combine(_pluginRoot, "resources", "images", _imageAttr);
+            if (File.Exists(path)) return path;
+        }
+        return fallback != null && File.Exists(fallback) ? fallback : null;
+    }
+
+    private void Render()
+    {
+        _canvas.Children.Clear();
+        if (_backgroundPath != null && TryLoad(_backgroundPath) is { } bitmap)
+        {
+            _canvas.Children.Add(new Image
+            {
+                Source = bitmap,
+                Width = ViewWidth,
+                Height = _viewHeight,
+                Stretch = Stretch.Fill,
+                Opacity = 0.85
+            });
+        }
+
+        foreach (var lamp in _lamps)
+        {
+            var fill = new SolidColorBrush(ParseColor(lamp.Color)) { Opacity = 0.45 };
+            var stroke = new SolidColorBrush(ParseColor(lamp.Color));
+            Shape shape;
+            if (lamp.IsRegion)
+            {
+                shape = new Rectangle
+                {
+                    Width = Math.Max(8, lamp.RW * ViewWidth),
+                    Height = Math.Max(8, lamp.RH * _viewHeight),
+                    RadiusX = 4,
+                    RadiusY = 4
+                };
+                Canvas.SetLeft(shape, lamp.RX * ViewWidth);
+                Canvas.SetTop(shape, lamp.RY * _viewHeight);
+            }
+            else
+            {
+                var diameter = Math.Max(10, lamp.Radius * 2 * _viewHeight);
+                shape = new Ellipse { Width = diameter, Height = diameter };
+                Canvas.SetLeft(shape, lamp.X * ViewWidth - diameter / 2);
+                Canvas.SetTop(shape, lamp.Y * _viewHeight - diameter / 2);
+            }
+            shape.Fill = fill;
+            shape.Stroke = stroke;
+            shape.StrokeThickness = lamp == _selected ? 2.5 : 1.2;
+            if (lamp == _selected)
+            {
+                shape.StrokeDashArray = new DoubleCollection { 3, 2 };
+            }
+            shape.Tag = lamp;
+            _canvas.Children.Add(shape);
+
+            var label = new TextBlock
+            {
+                Text = lamp.Id + (lamp.Output.Length > 0 ? $" ← {lamp.Output}" : ""),
+                Foreground = Brushes.White,
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold,
+                IsHitTestVisible = false,
+                Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 3, ShadowDepth = 0 }
+            };
+            Canvas.SetLeft(label, (lamp.IsRegion ? lamp.RX + lamp.RW / 2 : lamp.X) * ViewWidth - 20);
+            Canvas.SetTop(label, (lamp.IsRegion ? lamp.RY + lamp.RH / 2 : lamp.Y) * _viewHeight - 8);
+            _canvas.Children.Add(label);
+        }
+    }
+
+    private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        var position = e.GetPosition(_canvas);
+        Lamp? hit = null;
+        for (var i = _canvas.Children.Count - 1; i >= 0; i--)
+        {
+            if (_canvas.Children[i] is Shape { Tag: Lamp lamp } shape)
+            {
+                var left = Canvas.GetLeft(shape);
+                var top = Canvas.GetTop(shape);
+                if (position.X >= left && position.X <= left + shape.Width
+                    && position.Y >= top && position.Y <= top + shape.Height)
+                {
+                    hit = lamp;
+                    break;
+                }
+            }
+        }
+
+        Select(hit);
+        if (hit != null)
+        {
+            _dragging = true;
+            _dragStart = position;
+            _dragOrigin = hit.IsRegion ? (hit.RX, hit.RY) : (hit.X, hit.Y);
+            _canvas.CaptureMouse();
+        }
+        Render();
+    }
+
+    private void Canvas_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_dragging || _selected == null || e.LeftButton != MouseButtonState.Pressed) return;
+        var position = e.GetPosition(_canvas);
+        var dx = (position.X - _dragStart.X) / ViewWidth;
+        var dy = (position.Y - _dragStart.Y) / _viewHeight;
+        if (_selected.IsRegion)
+        {
+            _selected.RX = Math.Clamp(_dragOrigin.X + dx, -0.2, 1.0);
+            _selected.RY = Math.Clamp(_dragOrigin.Y + dy, -0.2, 1.0);
+        }
+        else
+        {
+            _selected.X = Math.Clamp(_dragOrigin.X + dx, 0, 1);
+            _selected.Y = Math.Clamp(_dragOrigin.Y + dy, 0, 1);
+        }
+        Render();
+    }
+
+    private void EndDrag()
+    {
+        if (_dragging)
+        {
+            _dragging = false;
+            _canvas.ReleaseMouseCapture();
+        }
+    }
+
+    private void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (_selected == null) return;
+        var factor = e.Delta > 0 ? 1.07 : 1 / 1.07;
+        if (_selected.IsRegion)
+        {
+            _selected.RW = Math.Clamp(_selected.RW * factor, 0.02, 1.4);
+            _selected.RH = Math.Clamp(_selected.RH * factor, 0.05, 1.4);
+        }
+        else
+        {
+            _selected.Radius = Math.Clamp(_selected.Radius * factor, 0.02, 0.6);
+        }
+        Render();
+        e.Handled = true;
+    }
+
+    // ================= inspector =================
+
+    private void Select(Lamp? lamp)
+    {
+        _selected = lamp;
+        _inspector.Children.Clear();
+        _inspector.Visibility = lamp == null ? Visibility.Collapsed : Visibility.Visible;
+        if (lamp == null) return;
+
+        var line = new WrapPanel();
+        var idLabel = Ui.MutedLabel(L.T("Lampe", "Lamp"));
+        idLabel.Margin = new Thickness(0, 0, 6, 0);
+        line.Children.Add(idLabel);
+        var idBox = Ui.TextBox(lamp.Id, 90);
+        idBox.TextChanged += (_, _) =>
+        {
+            lamp.Id = idBox.Text.Trim();
+            Render();
+        };
+        line.Children.Add(idBox);
+
+        var colorLabel = Ui.MutedLabel(L.T("Couleur", "Color"));
+        colorLabel.Margin = new Thickness(0, 0, 6, 0);
+        line.Children.Add(colorLabel);
+        var colorBox = Ui.TextBox(lamp.Color, 80);
+        var swatch = new Border
+        {
+            Width = 20, Height = 20, CornerRadius = new CornerRadius(4),
+            Background = new SolidColorBrush(ParseColor(lamp.Color)),
+            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0)
+        };
+        colorBox.TextChanged += (_, _) =>
+        {
+            lamp.Color = colorBox.Text.Trim();
+            swatch.Background = new SolidColorBrush(ParseColor(lamp.Color));
+            Render();
+        };
+        line.Children.Add(colorBox);
+        line.Children.Add(swatch);
+
+        var outputLabel = Ui.MutedLabel("Output");
+        outputLabel.Margin = new Thickness(0, 0, 6, 0);
+        line.Children.Add(outputLabel);
+        var output = new ComboBox
+        {
+            Width = 160,
+            FontSize = 12,
+            IsEditable = true,
+            Text = lamp.Output,
+            Margin = new Thickness(0, 2, 8, 2),
+            VerticalContentAlignment = VerticalAlignment.Center
+        };
+        foreach (var known in _knownOutputs)
+        {
+            output.Items.Add(known);
+        }
+        output.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) =>
+        {
+            lamp.Output = output.Text.Trim();
+            Render();
+        }));
+        output.SelectionChanged += (_, _) =>
+        {
+            if (output.SelectedItem is string chosen)
+            {
+                lamp.Output = chosen;
+                Render();
+            }
+        };
+        line.Children.Add(output);
+
+        line.Children.Add(Ui.Button(L.T("Supprimer", "Delete"), (_, _) =>
+        {
+            _lamps.Remove(lamp);
+            Select(null);
+            Render();
+        }));
+        _inspector.Children.Add(line);
+    }
+
+    // ================= data =================
+
+    /// <summary>Output names of the game's dynpanel (APIExpose data pack) — the
+    /// same source LedManager uses for its lamp channels.</summary>
+    private void LoadKnownOutputs(string system, string rom)
+    {
+        try
+        {
+            var root = Path.GetFullPath(Path.Combine(_pluginRoot, "..", "APIExpose", "resources", "dynpanels", "games"));
+            if (!Directory.Exists(root)) return;
+            var file = Path.Combine(root, rom + ".json");
+            if (!File.Exists(file))
+            {
+                file = Directory.EnumerateFiles(root, rom + ".json", SearchOption.AllDirectories).FirstOrDefault() ?? "";
+            }
+            if (file.Length == 0 || !File.Exists(file)) return;
+
+            using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(file));
+            if (doc.RootElement.TryGetProperty("outputs", out var outputs)
+                && outputs.ValueKind == System.Text.Json.JsonValueKind.Object)
+            {
+                foreach (var property in outputs.EnumerateObject())
+                {
+                    _knownOutputs.Add(property.Name);
+                }
+            }
+        }
+        catch
+        {
+            // no dynpanel: free-text output only
+        }
+    }
+
+    private static double Fraction(string value)
+        => double.TryParse(value, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : 0;
+
+    private static string Frac(double value)
+        => Math.Clamp(value, -2, 2).ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static BitmapImage? TryLoad(string path)
+    {
+        try
+        {
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri(path);
+            bitmap.DecodePixelWidth = 900;
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static Color ParseColor(string hex)
+    {
+        try
+        {
+            return (Color)ColorConverter.ConvertFromString(hex);
+        }
+        catch
+        {
+            return Color.FromRgb(0xFF, 0xD9, 0xA0);
+        }
+    }
+}

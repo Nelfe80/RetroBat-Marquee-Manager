@@ -26,6 +26,8 @@ public sealed class WebSocketListenerService : BackgroundService
     private string? _runningRom;
     private bool _pinballDmdActive;
     private readonly Application.Lighting.IngameEffectLibrary _ingameEffects;
+    private readonly Application.Lighting.GenreMap _genreMap;
+    private readonly string _effectOverridesRoot;
 
     public WebSocketListenerService(
         IConfigService config,
@@ -45,6 +47,9 @@ public sealed class WebSocketListenerService : BackgroundService
         _logger = logger;
         _ingameEffects = Application.Lighting.IngameEffectLibrary.Load(
             Path.Combine(config.BaseDirectory, "resources", "lighting"), logger);
+        _genreMap = Application.Lighting.GenreMap.Load(
+            Path.Combine(config.BaseDirectory, "resources", "lighting"), logger);
+        _effectOverridesRoot = Path.Combine(config.BaseDirectory, "overrides", "effects");
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -147,6 +152,12 @@ public sealed class WebSocketListenerService : BackgroundService
         if (marquee != null)
         {
             var meta = ExtractLightingMeta(payload);
+            if (meta != null)
+            {
+                // the ingame effect layers (game > system > genre) follow the displayed game
+                _ingameEffects.SetContext(meta.System ?? _selectedSystem, meta.Rom ?? _selectedRom,
+                    _genreMap.Resolve(meta.Genre, meta.GenreIds), _effectOverridesRoot, _logger);
+            }
             foreach (var target in _config.GetTargetsForContent("marquee"))
                 await _surfaces.DisplayMediaAsync(marquee, target, cancellationToken, meta);
         }
@@ -182,6 +193,8 @@ public sealed class WebSocketListenerService : BackgroundService
         var system = Text(selection, "System", "system");
         var gamePath = Text(selection, "GamePath", "gamePath");
         var rom = gamePath.Length > 0 ? Path.GetFileNameWithoutExtension(gamePath) : Text(selection, "Game", "game");
+        var genre = Text(selection, "Genre", "genre");
+        var genreIds = Text(selection, "Genres", "genres");
 
         if (year == null && developer.Length == 0 && publisher.Length == 0 && gameName.Length == 0 && system.Length == 0)
             return null;
@@ -190,7 +203,9 @@ public sealed class WebSocketListenerService : BackgroundService
             publisher.Length > 0 ? publisher : null,
             gameName.Length > 0 ? gameName : null,
             system.Length > 0 ? system : null,
-            rom.Length > 0 ? rom : null);
+            rom.Length > 0 ? rom : null,
+            genre.Length > 0 ? genre : null,
+            genreIds.Length > 0 ? genreIds : null);
     }
 
     private async Task HandleTopperAsync(JsonElement root, CancellationToken cancellationToken)

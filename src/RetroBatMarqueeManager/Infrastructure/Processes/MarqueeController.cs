@@ -96,7 +96,7 @@ public sealed class MarqueeController : IDisposable
         }
         var video = new[] { ".mp4", ".webm", ".avi", ".mkv", ".mov" }.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
         if (!video && target.Equals("marquee", StringComparison.OrdinalIgnoreCase))
-            path = PreferRealMarquee(path);
+            path = PreferUserComposition(path, lightingMeta) ?? PreferRealMarquee(path);
         _logger.LogInformation("Displaying {Kind} on target {Target} ({WindowCount} window(s)): {Path}", video ? "video" : "image", target, windows.Count, path);
         foreach (var window in windows)
         {
@@ -160,6 +160,49 @@ public sealed class MarqueeController : IDisposable
             };
             foreach (var window in pair.Value) window.LoadMameLayout(layout, view);
         }
+    }
+
+    /// <summary>
+    /// A marquee the user composed himself (MarqueeManagerSetup, "Mes jeux") wins
+    /// over everything the stream offers — scraped scan and generated composite
+    /// alike. Stored in media\marquees\&lt;system&gt;\&lt;rom&gt;.png next to the runtime.
+    /// The game identity comes from the enriched stream meta; the media path
+    /// layout (…\systems\&lt;system&gt;\games\&lt;rom&gt;\…) is the fallback.
+    /// </summary>
+    private string? PreferUserComposition(string path, Application.Lighting.LightingSceneMeta? meta)
+    {
+        var (system, rom) = (meta?.System, meta?.Rom);
+        if (string.IsNullOrEmpty(system) || string.IsNullOrEmpty(rom))
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(path,
+                @"[\\/]systems[\\/]([^\\/]+)[\\/]games[\\/]([^\\/]+)[\\/]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (!match.Success) return null;
+            system = match.Groups[1].Value;
+            rom = match.Groups[2].Value;
+        }
+
+        // ES exposes MAME sets as "arcade"; accept both spellings
+        var systems = system!.Equals("mame", StringComparison.OrdinalIgnoreCase)
+            ? new[] { system!, "arcade" }
+            : new[] { system! };
+        foreach (var candidateSystem in systems)
+        {
+            var candidate = Path.Combine(AppContext.BaseDirectory, "media", "marquees",
+                SafeFileName(candidateSystem), SafeFileName(rom!) + ".png");
+            if (File.Exists(candidate))
+            {
+                _logger.LogInformation("User-composed marquee preferred: {Path}", candidate);
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private static string SafeFileName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return new string(name.ToLowerInvariant().Where(c => !invalid.Contains(c)).ToArray());
     }
 
     /// <summary>
