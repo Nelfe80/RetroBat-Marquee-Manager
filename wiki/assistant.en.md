@@ -2,10 +2,16 @@
 
 `MarqueeManagerSetup.exe`, at the root of the plugin, is the visual tool that configures your screens without editing `config.ini` by hand. It detects your displays, helps you decide which one is the marquee, the topper or the instruction card, configures the physical DMD and even prepares touch interaction — then writes the configuration cleanly (with a `.bak` backup, never touching the file's comments).
 
-It offers five tabs in the sidebar.
+It offers seven views in the sidebar, with a dark/light theme toggle and a FR/EN language switch at the top of the rail.
 
 !!! note "French or English"
-    The assistant follows RetroBat's language (EmulationStation setting), else Windows'. To force it: `MarqueeManagerSetup.exe --lang fr` or `--lang en`.
+    The assistant follows RetroBat's language (EmulationStation setting), else Windows' — and can be switched anytime with the FR/EN button in the rail (the choice is remembered). To force it: `MarqueeManagerSetup.exe --lang fr` or `--lang en`.
+
+## Home
+
+![Home tab](assets/setup/setup-home.png)
+
+The installation health at a glance: runtime running or not (with a Start/Stop button), APIExpose response, `config.ini` presence, a summary of the configured surfaces and shortcuts to the other views.
 
 ## Screens
 
@@ -65,6 +71,12 @@ The setting is saved to `state\surfaces.profile.json` and read by MarqueeManager
 
 !!! note "Card naming (APIExpose media)"
     In a game's `artwork\ic`: `ic.png` for a single card, or `ic-1.png`, `ic-2.png`… for several cards. The `-left`/`-right` suffixes (e.g. mercs: `ic-1-left.png` … `ic-5-right.png`) are the **two card holders of the panel**: player 1 side and player 2 side. Navigation moves from card to card (ic-1 → ic-2…), and dual player mode shows the side of the player who tapped; `ic2` in an action means logical card #2, regardless of the file count.
+
+## My games
+
+![My games tab](assets/setup/setup-games.png)
+
+The per-game workshop: compose your own marquee from the game's media, wire `.MEM` signals to light effects (with a preview), edit the rbmarquee scene lamps and pin a light profile. A dedicated page covers it all: [My games](mes-jeux.en.md).
 
 ## Options
 

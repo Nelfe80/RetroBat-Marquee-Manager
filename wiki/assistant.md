@@ -2,10 +2,16 @@
 
 `MarqueeManagerSetup.exe`, à la racine du plugin, est l'outil visuel qui configure vos écrans sans éditer `config.ini` à la main. Il détecte vos écrans, vous aide à décider lequel sert de marquee, de topper ou d'instruction card, règle le DMD physique et prépare même le tactile — puis écrit proprement la configuration (avec sauvegarde `.bak`, sans toucher aux commentaires du fichier).
 
-Il propose cinq onglets dans la barre latérale.
+Il propose sept vues dans la barre latérale, avec bascule thème sombre/clair et langue FR/EN en haut du rail.
 
 !!! note "Français ou anglais"
-    L'assistant s'affiche dans la langue de RetroBat (réglage EmulationStation), sinon celle de Windows. Pour forcer : `MarqueeManagerSetup.exe --lang fr` ou `--lang en`.
+    L'assistant s'affiche dans la langue de RetroBat (réglage EmulationStation), sinon celle de Windows — et se bascule à tout moment avec le bouton FR/EN du rail (choix mémorisé). Pour forcer : `MarqueeManagerSetup.exe --lang fr` ou `--lang en`.
+
+## Accueil
+
+![Onglet Accueil](assets/setup/setup-home.png)
+
+L'état de l'installation en un coup d'œil : runtime démarré ou non (avec bouton Démarrer/Arrêter), réponse d'APIExpose, présence de `config.ini`, résumé des surfaces configurées et raccourcis vers les autres vues.
 
 ## Écrans
 
@@ -65,6 +71,12 @@ Le réglage est enregistré dans `state\surfaces.profile.json` et lu par Marquee
 
 !!! note "Nommage des cartes (médias APIExpose)"
     Dans `artwork\ic` d'un jeu : `ic.png` pour une carte unique, ou `ic-1.png`, `ic-2.png`… pour plusieurs cartes. Les suffixes `-left`/`-right` (ex. mercs : `ic-1-left.png` … `ic-5-right.png`) sont les **deux porte-cartes du panel** : côté joueur 1 et côté joueur 2. La navigation passe de carte en carte (ic-1 → ic-2…), et le mode dual player affiche le côté du joueur qui a tapé ; `ic2` dans une action désigne bien la carte n°2, quel que soit le nombre de fichiers.
+
+## Mes jeux
+
+![Onglet Mes jeux](assets/setup/setup-games.png)
+
+L'atelier par jeu : composer son propre marquee à partir des médias du jeu, lier les signaux `.MEM` à des effets lumière (avec préview), éditer les lampes de la scène rbmarquee et épingler un profil d'éclairage. Une page dédiée détaille tout : [Mes jeux](mes-jeux.md).
 
 ## Options
 
