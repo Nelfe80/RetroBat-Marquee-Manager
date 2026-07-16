@@ -35,7 +35,7 @@ The heart of the tool, now **dynamic**: create as many surfaces as you need (you
 - **the category**: marquee, topper, instruction card, virtual DMD, LCD or custom;
 - **the screen** it lives on and **the zone** (width × height — the x,y position is set visually in "Screens → Compose this screen");
 - **the streams** it displays (a surface can receive several);
-- **the components** stacked on it, each placed as fractions of the surface: stream media, logo, fanart, game video, text, hiscores, live score/timer, RetroAchievements, lighting engine, lamps, instruction cards, and even an embedded web page (live Twitch/YouTube stream).
+- **the components** stacked on it, **placed visually** ("Place components": drag, resize, magnetic guides): stream media, logo, fanart, game video, gradient, text, hiscores, live score/timer, RetroAchievements, lighting engine, lamps, instruction cards, and even an embedded web page (live Twitch/YouTube stream). Ready-made **surface templates** (composed marquee fanart+gradient+logo, static+cycling cards, video showcase, web stream…) build the stack in one click.
 
 ![Shared vertical screen](assets/ecran-partage.svg)
 

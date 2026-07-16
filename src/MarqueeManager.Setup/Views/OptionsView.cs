@@ -244,20 +244,16 @@ public sealed class OptionsView : UserControl
         var online = new StackPanel();
         online.Children.Add(Ui.MutedLabel(L.T(
             "Clés utilisées par « Récupérer des médias en ligne » (Mes composants) et par le composant vidéo live. "
-            + "Arcade Database ne demande aucune clé. ScreenScraper est déjà la source d'APIExpose — à réserver aux secours.",
+            + "Arcade Database ne demande aucune clé ; ScreenScraper est déjà couvert par APIExpose.",
             "Keys used by “Fetch media online” (My components) and by the live video component. "
-            + "Arcade Database needs no key. ScreenScraper already feeds APIExpose — keep it as a fallback.")));
+            + "Arcade Database needs no key; ScreenScraper is already covered by APIExpose.")));
         foreach (var (key, label) in new[]
                  {
                      ("SteamGridDbApiKey", "SteamGridDB — API key"),
                      ("TheGamesDbApiKey", "TheGamesDB — API key"),
                      ("TwitchClientId", "Twitch — Client ID"),
                      ("TwitchClientSecret", "Twitch — Client Secret"),
-                     ("YouTubeApiKey", "YouTube — Data API key"),
-                     ("ScreenScraperUser", "ScreenScraper — utilisateur"),
-                     ("ScreenScraperPassword", "ScreenScraper — mot de passe"),
-                     ("ScreenScraperDevId", "ScreenScraper — dev ID"),
-                     ("ScreenScraperDevPassword", "ScreenScraper — dev password")
+                     ("YouTubeApiKey", "YouTube — Data API key")
                  })
         {
             var box = Ui.TextBox(ini.Get("Scraper", key, ""), 280);

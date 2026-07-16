@@ -14,8 +14,8 @@ public sealed record ScrapeResult(string Source, string Kind, string ThumbUrl, s
 ///    cabinet, title (mirrors the reference artwork packs). Checked by default.
 ///  - SteamGridDB — API key: clean logos, grids, heroes.
 ///  - TheGamesDB — API key: fanarts, banners, clear logos.
-///  - ScreenScraper — full credentials (dev + user); UNCHECKED by default:
-///    APIExpose already mirrors ScreenScraper locally, this is a last resort.
+///  ScreenScraper is intentionally NOT here: its API needs per-software DEV
+///  credentials, and APIExpose already mirrors it locally.
 /// Downloads land in media\marquees\downloads\&lt;sys&gt;\&lt;rom&gt;\ and are added as
 /// composer layers.
 /// </summary>
@@ -44,9 +44,6 @@ public sealed class MediaScraperService
         "adb" => true,
         "steamgriddb" => _credential("SteamGridDbApiKey").Length > 0,
         "thegamesdb" => _credential("TheGamesDbApiKey").Length > 0,
-        "screenscraper" => _credential("ScreenScraperDevId").Length > 0
-                           && _credential("ScreenScraperDevPassword").Length > 0
-                           && _credential("ScreenScraperUser").Length > 0,
         _ => false
     };
 
@@ -68,9 +65,6 @@ public sealed class MediaScraperService
                         break;
                     case "thegamesdb":
                         results.AddRange(await SearchTheGamesDbAsync(gameName).ConfigureAwait(false));
-                        break;
-                    case "screenscraper":
-                        results.AddRange(await SearchScreenScraperAsync(rom).ConfigureAwait(false));
                         break;
                 }
             }
@@ -196,41 +190,6 @@ public sealed class MediaScraperService
             if (filename != null)
             {
                 results.Add(new ScrapeResult("thegamesdb", type, thumbBase + filename, baseUrl + filename));
-            }
-        }
-        return results;
-    }
-
-    // ================= ScreenScraper (last resort, full credentials) =================
-
-    private async Task<List<ScrapeResult>> SearchScreenScraperAsync(string rom)
-    {
-        var results = new List<ScrapeResult>();
-        var devId = _credential("ScreenScraperDevId");
-        var devPassword = _credential("ScreenScraperDevPassword");
-        var user = _credential("ScreenScraperUser");
-        var password = _credential("ScreenScraperPassword");
-        if (devId.Length == 0 || devPassword.Length == 0 || user.Length == 0) return results;
-
-        var json = await Http.GetStringAsync(
-            "https://api.screenscraper.fr/api2/jeuInfos.php?output=json&softname=marqueemanagersetup"
-            + $"&devid={Uri.EscapeDataString(devId)}&devpassword={Uri.EscapeDataString(devPassword)}"
-            + $"&ssid={Uri.EscapeDataString(user)}&sspassword={Uri.EscapeDataString(password)}"
-            + $"&romnom={Uri.EscapeDataString(rom)}.zip").ConfigureAwait(false);
-        using var doc = JsonDocument.Parse(json);
-        if (!doc.RootElement.TryGetProperty("response", out var response)
-            || !response.TryGetProperty("jeu", out var jeu)
-            || !jeu.TryGetProperty("medias", out var medias)
-            || medias.ValueKind != JsonValueKind.Array) return results;
-
-        foreach (var media in medias.EnumerateArray())
-        {
-            var type = media.TryGetProperty("type", out var t) ? t.GetString() ?? "" : "";
-            if (type is not ("marquee" or "screenmarquee" or "wheel" or "fanart" or "flyer")) continue;
-            var url = media.TryGetProperty("url", out var u) ? u.GetString() : null;
-            if (url != null)
-            {
-                results.Add(new ScrapeResult("screenscraper", type, url, url));
             }
         }
         return results;

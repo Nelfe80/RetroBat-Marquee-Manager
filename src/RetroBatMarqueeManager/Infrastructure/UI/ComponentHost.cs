@@ -7,6 +7,7 @@ using Image = System.Windows.Controls.Image;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
+using Point = System.Windows.Point;
 
 namespace RetroBatMarqueeManager.Infrastructure.UI;
 
@@ -144,6 +145,35 @@ public sealed class ComponentHost : Canvas
                     Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 6, ShadowDepth = 0 }
                 };
                 return text;
+            }
+
+            case "shape.gradient":
+            {
+                // readability veil under a logo (surface templates): linear gradient
+                // from transparent to `color`, direction up|down|left|right
+                var color = ParseBrush(component.Option("color", "#000000")) is SolidColorBrush brush
+                    ? brush.Color
+                    : Colors.Black;
+                var direction = component.Option("direction", "down").ToLowerInvariant();
+                var (start, end) = direction switch
+                {
+                    "up" => (new Point(0, 1), new Point(0, 0)),
+                    "left" => (new Point(1, 0), new Point(0, 0)),
+                    "right" => (new Point(0, 0), new Point(1, 0)),
+                    _ => (new Point(0, 0), new Point(0, 1))
+                };
+                var opacity = double.TryParse(component.Option("opacity", "0.7"),
+                    System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture,
+                    out var parsedOpacity)
+                    ? Math.Clamp(parsedOpacity, 0, 1)
+                    : 0.7;
+                return new System.Windows.Shapes.Rectangle
+                {
+                    Fill = new LinearGradientBrush(
+                        Color.FromArgb(0, color.R, color.G, color.B),
+                        Color.FromArgb((byte)(opacity * 255), color.R, color.G, color.B),
+                        start, end)
+                };
             }
 
             case "external.web":

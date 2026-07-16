@@ -15,12 +15,13 @@ namespace MarqueeManager.Setup.Controls;
 /// </summary>
 public sealed class ScrapeCard : UserControl
 {
+    // ScreenScraper is deliberately absent: its API requires per-software DEV
+    // credentials we cannot ship, and APIExpose already mirrors it locally.
     private static readonly (string Key, string Label, bool DefaultChecked)[] Sources =
     {
         ("adb", "Arcade Database", true),
         ("steamgriddb", "SteamGridDB", true),
-        ("thegamesdb", "TheGamesDB", true),
-        ("screenscraper", "ScreenScraper", false) // APIExpose mirrors it already
+        ("thegamesdb", "TheGamesDB", true)
     };
 
     private readonly MediaScraperService _scraper;

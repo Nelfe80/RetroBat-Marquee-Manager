@@ -54,7 +54,20 @@ public sealed class SurfacesView : UserControl
         ("lamps.scene", "Lampes rbmarquee", "rbmarquee lamps"),
         ("iccard.static", "Carte fixe", "Static card"),
         ("iccard.cycle", "Carte variable", "Cycling card"),
+        ("shape.gradient", "Gradient (lisibilité)", "Gradient (readability)"),
         ("external.web", "Web embarqué (Twitch, YouTube…)", "Embedded web (Twitch, YouTube…)")
+    };
+
+    /// <summary>Ready-made surface stacks, selectable at creation.</summary>
+    private static readonly (string Key, string Fr, string En)[] SurfaceTemplates =
+    {
+        ("empty", "Vide (média du flux)", "Empty (stream media)"),
+        ("marquee-classic", "Marquee classique (flux + lumière + overlays)", "Classic marquee (stream + lighting + overlays)"),
+        ("marquee-composed", "Marquee composé : fanart + gradient + logo", "Composed marquee: fanart + gradient + logo"),
+        ("marquee-live", "Marquee + infos live (hiscores, score, timer)", "Marquee + live info (hiscores, score, timer)"),
+        ("iccard-split", "Cartes fixe + variable (moitié/moitié)", "Static + cycling cards (half/half)"),
+        ("video-showcase", "Vitrine vidéo (vidéo du jeu + titre)", "Video showcase (game video + title)"),
+        ("web-stream", "Stream web (Twitch/YouTube plein cadre)", "Web stream (full-frame Twitch/YouTube)")
     };
 
     private readonly string _pluginRoot;
@@ -96,9 +109,15 @@ public sealed class SurfacesView : UserControl
         page.Children.Add(_list);
 
         var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 6) };
-        actions.Children.Add(Ui.Button(L.T("Ajouter une surface", "Add a surface"), (_, _) =>
+        var templatePicker = Ui.ComboBox(330);
+        foreach (var (key, fr, en) in SurfaceTemplates)
+            templatePicker.Items.Add(new ComboBoxItem { Content = L.T(fr, en), Tag = key });
+        templatePicker.SelectedIndex = 0;
+        actions.Children.Add(templatePicker);
+        actions.Children.Add(Ui.Button(L.T("Ajouter cette surface", "Add this surface"), (_, _) =>
         {
-            _surfaces.Add(NewSurface());
+            var template = (templatePicker.SelectedItem as ComboBoxItem)?.Tag as string ?? "empty";
+            _surfaces.Add(NewSurfaceFromTemplate(template));
             RebuildList();
         }));
         actions.Children.Add(Ui.Button(L.T("Enregistrer les surfaces", "Save surfaces"), (_, _) => OnSave(), primary: true));
@@ -110,10 +129,69 @@ public sealed class SurfacesView : UserControl
         RebuildList();
     }
 
-    private SurfaceModel NewSurface()
+    /// <summary>Ready-made component stacks — the surface templates the user
+    /// picks at creation (fanart+gradient+logo marquee, split cards, video…).</summary>
+    private SurfaceModel NewSurfaceFromTemplate(string template)
     {
+        ComponentModel C(string type, double x = 0, double y = 0, double w = 1, double h = 1,
+            params (string Key, string Value)[] options)
+        {
+            var component = new ComponentModel { Type = type, X = x, Y = y, W = w, H = h };
+            foreach (var (key, value) in options) component.Options[key] = value;
+            return component;
+        }
+
         var surface = new SurfaceModel { Id = UniqueId("surface"), Category = "custom" };
-        surface.Components.Add(new ComponentModel { Type = "media.flux" });
+        switch (template)
+        {
+            case "marquee-classic":
+                surface.Id = UniqueId("marquee");
+                surface.Category = "marquee";
+                surface.Streams.Add("marquee");
+                surface.Components.AddRange(SurfacesStore.DefaultComponents("marquee", lighting: true));
+                break;
+
+            case "marquee-composed":
+                surface.Id = UniqueId("marquee");
+                surface.Category = "marquee";
+                surface.Streams.Add("marquee");
+                surface.Components.Add(C("media.fanart"));
+                surface.Components.Add(C("shape.gradient", 0, 0.35, 1, 0.65, ("color", "#000000"), ("direction", "down"), ("opacity", "0.75")));
+                surface.Components.Add(C("media.logo", 0.25, 0.15, 0.5, 0.7));
+                break;
+
+            case "marquee-live":
+                surface.Id = UniqueId("marquee");
+                surface.Category = "marquee";
+                surface.Streams.Add("marquee");
+                surface.Components.Add(C("media.flux"));
+                surface.Components.Add(C("overlay.hiscore", 0.72, 0.06, 0.26, 0.55));
+                surface.Components.Add(C("overlay.live.score", 0.02, 0.68, 0.3, 0.3));
+                surface.Components.Add(C("overlay.live.timer", 0.68, 0.68, 0.3, 0.3));
+                break;
+
+            case "iccard-split":
+                surface.Id = UniqueId("iccard");
+                surface.Category = "iccard";
+                surface.Streams.Add("iccard");
+                surface.Components.Add(C("iccard.static", 0, 0, 0.5, 1, ("card", "1")));
+                surface.Components.Add(C("iccard.cycle", 0.5, 0, 0.5, 1));
+                break;
+
+            case "video-showcase":
+                surface.Streams.Add("marquee");
+                surface.Components.Add(C("media.video", 0, 0, 1, 0.85, ("sources", "twitch-live|youtube|local")));
+                surface.Components.Add(C("text.meta", 0, 0.85, 1, 0.15, ("template", "{name} — {year}")));
+                break;
+
+            case "web-stream":
+                surface.Components.Add(C("external.web", 0, 0, 1, 1, ("url", ""), ("mute", "true")));
+                break;
+
+            default:
+                surface.Components.Add(C("media.flux"));
+                break;
+        }
         return surface;
     }
 
@@ -246,8 +324,9 @@ public sealed class SurfacesView : UserControl
         }
         card.Children.Add(streams);
 
-        // components
-        card.Children.Add(Ui.MutedLabel(L.T("Composants (zones en fractions de la surface) :", "Components (zones as fractions of the surface):")));
+        // components: compact rows (label + option + reorder), the geometry is
+        // edited VISUALLY in the component editor
+        card.Children.Add(Ui.MutedLabel(L.T("Composants (du fond vers l'avant) :", "Components (back to front):")));
         var componentList = new StackPanel();
         BuildComponentRows(surface, componentList);
         card.Children.Add(componentList);
@@ -266,9 +345,32 @@ public sealed class SurfacesView : UserControl
                 BuildComponentRows(surface, componentList);
             }
         }));
+        addRow.Children.Add(Ui.Button(L.T("Placer les composants", "Place components"), (_, _) =>
+        {
+            var editor = new SurfaceComponentEditor(surface, ScreenAspect(surface))
+            {
+                Owner = Window.GetWindow(this)
+            };
+            if (editor.ShowDialog() == true)
+            {
+                BuildComponentRows(surface, componentList);
+            }
+        }, primary: true));
         card.Children.Add(addRow);
 
         return card;
+    }
+
+    /// <summary>Aspect ratio for the visual editor when the surface is fullscreen:
+    /// the host screen's ratio, else a marquee band.</summary>
+    private double ScreenAspect(SurfaceModel surface)
+    {
+        if (surface is { Width: > 0, Height: > 0 })
+            return (double)surface.Width.Value / surface.Height.Value;
+        var index = surface.Screens.Count > 0 ? surface.Screens[0] : -1;
+        if (index >= 0 && index < _screens.Count && _screens[index].Bounds.Height > 0)
+            return (double)_screens[index].Bounds.Width / _screens[index].Bounds.Height;
+        return 4.0;
     }
 
     private void BuildComponentRows(SurfaceModel surface, StackPanel host)
@@ -281,10 +383,12 @@ public sealed class SurfacesView : UserControl
             label.Width = 220;
             row.Children.Add(label);
 
-            row.Children.Add(FractionBox("x", component.X, v => component.X = v));
-            row.Children.Add(FractionBox("y", component.Y, v => component.Y = v));
-            row.Children.Add(FractionBox("w", component.W, v => component.W = v));
-            row.Children.Add(FractionBox("h", component.H, v => component.H = v));
+            var rect = Ui.MutedLabel(component is { X: 0, Y: 0, W: 1, H: 1 }
+                ? L.T("plein cadre", "full frame")
+                : string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"x{component.X:0.##} y{component.Y:0.##} · {component.W:0.##}×{component.H:0.##}"));
+            rect.Width = 150;
+            row.Children.Add(rect);
 
             // free-form option field for the types that need one
             var optionKey = component.Type switch
@@ -294,6 +398,8 @@ public sealed class SurfacesView : UserControl
                 "text.custom" => "text",
                 "text.meta" => "template",
                 "iccard.static" => "card",
+                "shape.gradient" => "color",
+                "media.video" => "sources",
                 _ => null
             };
             if (optionKey != null)
@@ -301,7 +407,7 @@ public sealed class SurfacesView : UserControl
                 var optLabel = Ui.MutedLabel(optionKey);
                 optLabel.Margin = new Thickness(6, 0, 4, 0);
                 row.Children.Add(optLabel);
-                var opt = Ui.TextBox(component.Options.TryGetValue(optionKey, out var value) ? value : "", 180);
+                var opt = Ui.TextBox(component.Options.TryGetValue(optionKey, out var value) ? value : "", 170);
                 opt.TextChanged += (_, _) => component.Options[optionKey] = opt.Text;
                 row.Children.Add(opt);
             }
@@ -324,23 +430,6 @@ public sealed class SurfacesView : UserControl
         if (index < 0 || target < 0 || target >= surface.Components.Count) return;
         (surface.Components[index], surface.Components[target]) = (surface.Components[target], surface.Components[index]);
         BuildComponentRows(surface, host);
-    }
-
-    private static StackPanel FractionBox(string label, double value, Action<double> onChange)
-    {
-        var host = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 6, 0) };
-        var text = Ui.MutedLabel(label);
-        text.Margin = new Thickness(0, 0, 3, 0);
-        host.Children.Add(text);
-        var box = Ui.TextBox(value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture), 44);
-        box.TextChanged += (_, _) =>
-        {
-            if (double.TryParse(box.Text, System.Globalization.NumberStyles.Float,
-                    System.Globalization.CultureInfo.InvariantCulture, out var parsed))
-                onChange(Math.Clamp(parsed, -0.5, 1.5));
-        };
-        host.Children.Add(box);
-        return host;
     }
 
     private static string ComponentLabel(string type)

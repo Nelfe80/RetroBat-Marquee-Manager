@@ -35,7 +35,7 @@ Le cœur de l'outil, désormais **dynamique** : créez autant de surfaces que n�
 - **la catégorie** : marquee, topper, instruction card, DMD virtuel, LCD ou libre ;
 - **l'écran** qui l'affiche et **la zone** (largeur × hauteur — la position x,y se règle visuellement dans « Écrans → Composer cet écran ») ;
 - **les flux** affichés (une surface peut en recevoir plusieurs) ;
-- **les composants** empilés dessus, chacun placé en fractions de la surface : média du flux, logo, fanart, vidéo du jeu, texte, hiscores, score/timer live, RetroAchievements, rendu lumineux, lampes, cartes d'instructions, et même une page web embarquée (stream Twitch/YouTube en direct).
+- **les composants** empilés dessus, **placés graphiquement** (« Placer les composants » : glisser, redimensionner, guides magnétiques) : média du flux, logo, fanart, vidéo du jeu, gradient, texte, hiscores, score/timer live, RetroAchievements, rendu lumineux, lampes, cartes d'instructions, et même une page web embarquée (stream Twitch/YouTube en direct). Des **templates de surface** prêts à l'emploi (marquee composé fanart+gradient+logo, cartes fixe+variable, vitrine vidéo, stream web…) créent la pile en un clic.
 
 ![Écran vertical partagé](assets/ecran-partage.svg)
 
