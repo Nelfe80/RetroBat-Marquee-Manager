@@ -55,6 +55,7 @@ public sealed class OptionsView : UserControl
     private readonly CheckBox _liveDmd;
     private readonly TextBox _liveScoreMs;
     private readonly TextBox _liveTimerMs;
+    private readonly Dictionary<string, TextBox> _scraperKeys = new();
 
     public OptionsView(string pluginRoot)
     {
@@ -238,6 +239,33 @@ public sealed class OptionsView : UserControl
         live.Children.Add(liveDurations);
         page.Children.Add(Ui.Card(live));
 
+        // --- online sources (scraper + live video) ---
+        page.Children.Add(Ui.SectionHeader(L.T("Sources en ligne (scrap de médias & vidéo live)", "Online sources (media scraping & live video)")));
+        var online = new StackPanel();
+        online.Children.Add(Ui.MutedLabel(L.T(
+            "Clés utilisées par « Récupérer des médias en ligne » (Mes composants) et par le composant vidéo live. "
+            + "Arcade Database ne demande aucune clé. ScreenScraper est déjà la source d'APIExpose — à réserver aux secours.",
+            "Keys used by “Fetch media online” (My components) and by the live video component. "
+            + "Arcade Database needs no key. ScreenScraper already feeds APIExpose — keep it as a fallback.")));
+        foreach (var (key, label) in new[]
+                 {
+                     ("SteamGridDbApiKey", "SteamGridDB — API key"),
+                     ("TheGamesDbApiKey", "TheGamesDB — API key"),
+                     ("TwitchClientId", "Twitch — Client ID"),
+                     ("TwitchClientSecret", "Twitch — Client Secret"),
+                     ("YouTubeApiKey", "YouTube — Data API key"),
+                     ("ScreenScraperUser", "ScreenScraper — utilisateur"),
+                     ("ScreenScraperPassword", "ScreenScraper — mot de passe"),
+                     ("ScreenScraperDevId", "ScreenScraper — dev ID"),
+                     ("ScreenScraperDevPassword", "ScreenScraper — dev password")
+                 })
+        {
+            var box = Ui.TextBox(ini.Get("Scraper", key, ""), 280);
+            _scraperKeys[key] = box;
+            online.Children.Add(Ui.Row(label, box));
+        }
+        page.Children.Add(Ui.Card(online));
+
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 6) };
         actions.Children.Add(Ui.Button(L.T("Enregistrer dans config.ini", "Save to config.ini"), OnSave, primary: true));
         page.Children.Add(actions);
@@ -351,6 +379,11 @@ public sealed class OptionsView : UserControl
         ini.Set("LiveData", "DmdEnabled", B(_liveDmd));
         SetIfNumeric(ini, "LiveData", "ScoreDurationMs", _liveScoreMs);
         SetIfNumeric(ini, "LiveData", "TimerDurationMs", _liveTimerMs);
+
+        foreach (var (key, box) in _scraperKeys)
+        {
+            ini.Set("Scraper", key, box.Text.Trim());
+        }
 
         ini.Save();
         _status.Text = L.T("Options enregistrées (sauvegarde .bak créée). Redémarrez MarqueeManager pour appliquer.",

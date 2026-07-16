@@ -246,6 +246,17 @@ public static class Ui
         HorizontalAlignment = HorizontalAlignment.Left
     };
 
+    /// <summary>Indeterminate progress row shown while a sheet loads off-thread.</summary>
+    public static StackPanel Spinner(string text)
+    {
+        var host = new StackPanel { Margin = new Thickness(0, 6, 0, 6) };
+        host.Children.Add(new ProgressBar { IsIndeterminate = true, Width = 220, HorizontalAlignment = HorizontalAlignment.Left });
+        var label = MutedLabel(text);
+        label.Margin = new Thickness(0, 6, 0, 0);
+        host.Children.Add(label);
+        return host;
+    }
+
     public static ScrollViewer Page(StackPanel content)
     {
         content.Margin = new Thickness(24, 20, 24, 20);

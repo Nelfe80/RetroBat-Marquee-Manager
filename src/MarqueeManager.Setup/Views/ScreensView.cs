@@ -92,10 +92,37 @@ public sealed class ScreensView : UserControl
         buttons.Children.Add(Ui.Button(L.T("Afficher la mire", "Show test pattern"), (_, _) =>
             new TestPatternWindow(L.T("ÉCRAN", "SCREEN") + $" {screen.Index}", screen.Bounds.X, screen.Bounds.Y,
                 screen.Bounds.Width, screen.Bounds.Height).Show()));
+        buttons.Children.Add(Ui.Button(L.T("Composer cet écran", "Compose this screen"), (_, _) => ComposeScreen(screen)));
         Grid.SetColumn(buttons, 1);
         grid.Children.Add(buttons);
 
         return Ui.Card(grid);
+    }
+
+    /// <summary>Opens the visual compositor on every surface hosted by this
+    /// screen — the place where surface x,y positions are edited.</summary>
+    private void ComposeScreen(ScreenInfo screen)
+    {
+        var store = new Data.SurfacesStore(_pluginRoot);
+        var surfaces = store.Load();
+        var hosted = surfaces.Where(s => s.Screens.Contains(screen.Index)).ToList();
+        if (hosted.Count == 0)
+        {
+            MessageBox.Show(
+                L.T($"Aucune surface n'est affectée à l'écran {screen.Index}. Créez-en une dans la vue Surfaces.",
+                    $"No surface is assigned to screen {screen.Index}. Create one in the Surfaces view."),
+                "MarqueeManagerSetup", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var editor = new ScreenCompositor(screen.Index, screen, hosted, hosted[0])
+        {
+            Owner = Window.GetWindow(this)
+        };
+        if (editor.ShowDialog() == true)
+        {
+            store.Save(surfaces);
+        }
     }
 
     private async Task RefreshReportAsync()

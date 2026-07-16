@@ -148,7 +148,8 @@ public sealed class MarqueeComposer : UserControl
 
     public MarqueeBackground BackgroundModel => _background;
 
-    /// <summary>Adds a media layer centered, sized to fill the height.</summary>
+    /// <summary>Adds a media layer centered. Logos land at 50 % of the surface
+    /// WIDTH by default (user rule); other media fit the height.</summary>
     public void AddMediaLayer(string absolutePath, string assetKey)
     {
         var layer = new MarqueeLayer
@@ -158,7 +159,30 @@ public sealed class MarqueeComposer : UserControl
             Scale = 0.9
         };
         var visual = AddLayerVisual(layer);
+        if (assetKey is "wheel" or "logo" && visual.AspectRatio > 0)
+        {
+            // Scale is height-relative: width = Scale × displayH × aspect = 0.5 × displayW
+            layer.Scale = Math.Clamp(0.5 * DisplayWidth / (_displayHeight * visual.AspectRatio), 0.05, 3.0);
+        }
         Select(visual);
+        Render();
+        Changed?.Invoke();
+    }
+
+    /// <summary>One-click APIExpose-style recipe: fanart cover background (sharp)
+    /// + the logo at half the surface width. Starting point of every template.</summary>
+    public void ApplyTemplatePreset(string? fanartPath, string? logoPath)
+    {
+        _layers.Clear();
+        Select(null);
+        if (fanartPath != null)
+        {
+            SetBackground(new MarqueeBackground { Kind = "media", Source = ToRelative(fanartPath), Blur = 0 });
+        }
+        if (logoPath != null)
+        {
+            AddMediaLayer(logoPath, "wheel");
+        }
         Render();
         Changed?.Invoke();
     }
@@ -474,12 +498,12 @@ public sealed class MarqueeComposer : UserControl
             return new Rectangle { Fill = Brushes.Black };
         }
 
-        return new Image
+        var image = new Image { Source = bitmap, Stretch = Stretch.UniformToFill };
+        if (_background.Blur > 0)
         {
-            Source = bitmap,
-            Stretch = Stretch.UniformToFill,
-            Effect = new System.Windows.Media.Effects.BlurEffect { Radius = _background.Blur }
-        };
+            image.Effect = new System.Windows.Media.Effects.BlurEffect { Radius = _background.Blur };
+        }
+        return image;
     }
 
     // ================= full-resolution export =================

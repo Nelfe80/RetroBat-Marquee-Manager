@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
-using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
+using MarqueeManager.Setup.Data;
 using MarqueeManager.Setup.Detection;
 using MarqueeManager.Setup.Localization;
 using MarqueeManager.Setup.Processes;
@@ -9,412 +9,423 @@ using MarqueeManager.Setup.Processes;
 namespace MarqueeManager.Setup.Views;
 
 /// <summary>
-/// Assigns each logical surface (marquee, topper, iccard, dmd, lcd) to a Windows
-/// screen, a content stream and an optional zone (*Bounds). Mirrors the [Screens]
-/// section of config.ini and writes it back without touching the comments.
+/// Dynamic surfaces editor (state\surfaces.json): create as many categorized
+/// surfaces as needed, pick their screen, size them (width × height only — the
+/// x,y position is set visually in the screen compositor), bind streams and
+/// stack components. Replaces the fixed five-target view.
 /// </summary>
 public sealed class SurfacesView : UserControl
 {
-    private static readonly string[] Contents = { "marquee", "topper", "iccard", "dmd", "lcd" };
-
-    private sealed record SurfaceDef(string Key, string Display, string Hint);
-
-    private static readonly SurfaceDef[] Surfaces =
+    private static readonly (string Key, string Fr, string En)[] Categories =
     {
-        new("Marquee", "Marquee",
-            L.T("Le bandeau lumineux principal au-dessus de l'écran de jeu.",
-                "The main light strip above the game screen.")),
-        new("Topper", "Topper",
-            L.T("Écran décoratif au sommet de la borne : fanart, visuels promotionnels.",
-                "Decorative screen at the top of the cabinet: fanart, promo visuals.")),
-        new("IcCard", "Instruction card",
-            L.T("Carte de contrôles / how-to-play, souvent tactile et proche du joueur.",
-                "Controls / how-to-play card, often touch-capable and close to the player.")),
-        new("Dmd", L.T("DMD virtuel (fenêtre WPF)", "Virtual DMD (WPF window)"),
-            L.T("Fenêtre DMD à l'écran. -1 ne désactive PAS le DMD physique (onglet DMD).",
-                "On-screen DMD window. -1 does NOT disable the physical DMD (DMD tab).")),
-        new("Lcd", "LCD panel",
-            L.T("Surface d'appoint : layouts MAME, panel de contrôles, aides.",
-                "Extra surface: MAME layouts, control panel, player aids."))
+        ("marquee", "Marquee", "Marquee"),
+        ("topper", "Topper", "Topper"),
+        ("iccard", "Instruction card", "Instruction card"),
+        ("dmd-virtual", "DMD virtuel", "Virtual DMD"),
+        ("lcd", "LCD / panel", "LCD / panel"),
+        ("custom", "Libre", "Custom")
     };
 
-    private sealed class SurfaceRow
+    private static readonly (string Key, string Fr, string En)[] KnownStreams =
     {
-        public SurfaceDef Def = null!;
-        public ComboBox Screen = null!;
-        public ComboBox Content = null!;
-        public CheckBox Fullscreen = null!;
-        public TextBox Bounds = null!;
-        public string? PreservedMultiValue;
+        ("marquee", "Flux marquee", "Marquee stream"),
+        ("topper", "Flux topper", "Topper stream"),
+        ("iccard", "Cartes d'instructions", "Instruction cards"),
+        ("dmd", "Flux DMD", "DMD stream"),
+        ("lcd", "Flux LCD / panel", "LCD / panel stream")
+    };
 
-        public int SelectedScreen()
-        {
-            if (Screen.SelectedItem is ComboBoxItem { Tag: int index })
-            {
-                return index;
-            }
-
-            return -1;
-        }
-
-        public bool IsMulti => Screen.SelectedItem is ComboBoxItem { Tag: string };
-    }
+    private static readonly (string Key, string Fr, string En)[] ComponentTypes =
+    {
+        ("media.flux", "Média du flux", "Stream media"),
+        ("media.logo", "Logo (wheel)", "Logo (wheel)"),
+        ("media.fanart", "Fanart", "Fanart"),
+        ("media.image", "Image (kind au choix)", "Image (any kind)"),
+        ("media.video", "Vidéo du jeu", "Game video"),
+        ("text.meta", "Texte méta (nom, année…)", "Meta text (name, year…)"),
+        ("text.custom", "Texte libre", "Custom text"),
+        ("overlay.hiscore", "Hiscores", "Hiscores"),
+        ("overlay.live.score", "Score live", "Live score"),
+        ("overlay.live.timer", "Timer live", "Live timer"),
+        ("overlay.ra.info", "RetroAchievements", "RetroAchievements"),
+        ("overlay.ra.badges", "Badges RA", "RA badges"),
+        ("overlay.ra.speedrun", "Speedrun RA", "RA speedrun"),
+        ("lighting.engine", "Rendu lumineux (Lighting)", "Lighting engine"),
+        ("lamps.scene", "Lampes rbmarquee", "rbmarquee lamps"),
+        ("iccard.static", "Carte fixe", "Static card"),
+        ("iccard.cycle", "Carte variable", "Cycling card"),
+        ("external.web", "Web embarqué (Twitch, YouTube…)", "Embedded web (Twitch, YouTube…)")
+    };
 
     private readonly string _pluginRoot;
-    private readonly List<SurfaceRow> _rows = new();
+    private readonly SurfacesStore _store;
+    private readonly List<SurfaceModel> _surfaces;
+    private readonly StackPanel _list = new();
     private readonly TextBlock _status = Ui.MutedLabel("", 12);
-    private IReadOnlyList<ScreenInfo> _screens;
+    private readonly IReadOnlyList<ScreenInfo> _screens;
 
     public SurfacesView(string pluginRoot)
     {
         _pluginRoot = pluginRoot;
+        _store = new SurfacesStore(pluginRoot);
+        _surfaces = _store.Load();
         _screens = ScreenProbe.Detect();
-        Rebuild();
-    }
-
-    private void Rebuild()
-    {
-        _rows.Clear();
-        _status.Text = "";
-        (_status.Parent as Panel)?.Children.Remove(_status);
-        var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
 
         var page = new StackPanel();
         page.Children.Add(Ui.Title("Surfaces"));
         page.Children.Add(Ui.Subtitle(L.T(
-            "Chaque surface s'affiche sur un écran Windows, montre un flux APIExpose, et peut se limiter à une zone "
-            + "de l'écran (plusieurs surfaces peuvent partager un même écran vertical). "
-            + "« Tester la zone » affiche une mire à l'emplacement exact avant d'enregistrer.",
-            "Each surface appears on a Windows screen, shows an APIExpose stream, and can be restricted to a zone "
-            + "of the screen (several surfaces can share one vertical display). "
-            + "\"Test the zone\" shows a pattern at the exact spot before saving.")));
+            "Créez autant de surfaces que nécessaire, catégorisez-les, liez-les à des flux et empilez des composants. "
+            + "La position x,y se règle visuellement dans « Écrans → Composer cet écran » ; ici une zone = largeur × hauteur.",
+            "Create as many surfaces as you need, categorize them, bind streams and stack components. "
+            + "The x,y position is set visually in “Screens → Compose this screen”; a zone here is width × height only.")));
 
-        foreach (var def in Surfaces)
+        if (SurfacesStore.MigratedThisSession)
         {
-            page.Children.Add(BuildSurfaceCard(def, ini));
+            page.Children.Add(Ui.Card(Ui.Label(L.T(
+                "✓ Votre configuration [Screens] a été convertie automatiquement en surfaces dynamiques (state\\surfaces.json). Le comportement est identique — vous pouvez maintenant l'enrichir.",
+                "✓ Your [Screens] configuration was automatically converted to dynamic surfaces (state\\surfaces.json). Behavior is identical — you can now build on it."))));
         }
 
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 6) };
-        actions.Children.Add(Ui.Button(L.T("Enregistrer dans config.ini", "Save to config.ini"), OnSave, primary: true));
-        actions.Children.Add(Ui.Button(L.T("Recharger", "Reload"), (_, _) =>
+        if (!_store.IsOwnedBySetup())
         {
-            _screens = ScreenProbe.Detect();
-            Rebuild();
+            page.Children.Add(Ui.Card(Ui.Label(L.T(
+                "surfaces.json n'a pas été créé par MarqueeManagerSetup — les modifications l'écraseront.",
+                "surfaces.json was not created by MarqueeManagerSetup — saving will overwrite it."))));
+        }
+
+        page.Children.Add(_list);
+
+        var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 6) };
+        actions.Children.Add(Ui.Button(L.T("Ajouter une surface", "Add a surface"), (_, _) =>
+        {
+            _surfaces.Add(NewSurface());
+            RebuildList();
         }));
+        actions.Children.Add(Ui.Button(L.T("Enregistrer les surfaces", "Save surfaces"), (_, _) => OnSave(), primary: true));
         page.Children.Add(actions);
         _status.TextWrapping = TextWrapping.Wrap;
         page.Children.Add(_status);
 
         Content = Ui.Page(page);
+        RebuildList();
     }
 
-    private Border BuildSurfaceCard(SurfaceDef def, IniFile ini)
+    private SurfaceModel NewSurface()
     {
-        var row = new SurfaceRow { Def = def };
-        _rows.Add(row);
-
-        var panel = new StackPanel();
-        var title = Ui.Label(def.Display, 14);
-        title.FontWeight = FontWeights.Bold;
-        panel.Children.Add(title);
-        panel.Children.Add(Ui.MutedLabel(def.Hint));
-
-        // screen selector
-        row.Screen = Ui.ComboBox(280);
-        var rawScreen = ini.Get("Screens", def.Key + "Screen", "-1");
-        FillScreenCombo(row, rawScreen);
-        panel.Children.Add(Ui.Row(L.T("Écran", "Screen"), row.Screen));
-
-        // content selector
-        row.Content = Ui.ComboBox(280);
-        var currentContent = ini.Get("Screens", def.Key + "Content", def.Key.ToLowerInvariant());
-        foreach (var content in Contents)
-        {
-            row.Content.Items.Add(new ComboBoxItem { Content = ContentDisplay(content), Tag = content });
-        }
-
-        row.Content.SelectedIndex = Math.Max(0, Array.FindIndex(Contents,
-            c => c.Equals(currentContent, StringComparison.OrdinalIgnoreCase)));
-        panel.Children.Add(Ui.Row(L.T("Contenu affiché", "Displayed content"), row.Content, L.T("flux APIExpose", "APIExpose stream")));
-
-        // bounds
-        var boundsRaw = ini.Get("Screens", def.Key + "Bounds", "");
-        row.Fullscreen = Ui.CheckBox(L.T("Plein écran", "Fullscreen"), string.IsNullOrWhiteSpace(boundsRaw));
-        row.Bounds = Ui.TextBox(boundsRaw, 180);
-        var boundsLine = new StackPanel { Orientation = Orientation.Horizontal };
-        boundsLine.Children.Add(row.Bounds);
-        boundsLine.Children.Add(Ui.Button(L.T("Tester la zone", "Test the zone"), (_, _) => TestZone(row)));
-        var boundsGrid = Ui.Row(L.T("Zone (x,y,largeur,hauteur)", "Zone (x,y,width,height)"), boundsLine, L.T("vide = plein écran", "empty = fullscreen"));
-        panel.Children.Add(Ui.Row("", row.Fullscreen));
-        panel.Children.Add(boundsGrid);
-
-        void SyncBoundsEnabled()
-        {
-            var zone = row.Fullscreen.IsChecked != true;
-            row.Bounds.IsEnabled = zone;
-            boundsGrid.Opacity = zone ? 1.0 : 0.45;
-        }
-
-        row.Fullscreen.Checked += (_, _) => SyncBoundsEnabled();
-        row.Fullscreen.Unchecked += (_, _) => SyncBoundsEnabled();
-        SyncBoundsEnabled();
-
-        return Ui.Card(panel);
+        var surface = new SurfaceModel { Id = UniqueId("surface"), Category = "custom" };
+        surface.Components.Add(new ComponentModel { Type = "media.flux" });
+        return surface;
     }
 
-    private void FillScreenCombo(SurfaceRow row, string rawValue)
+    private string UniqueId(string stem)
     {
-        row.Screen.Items.Clear();
-        row.Screen.Items.Add(new ComboBoxItem { Content = L.T("Désactivé", "Disabled"), Tag = -1 });
-        foreach (var screen in _screens)
-        {
-            row.Screen.Items.Add(new ComboBoxItem
-            {
-                Content = L.T("ÉCRAN", "SCREEN") + $" {screen.Index} — {screen.Bounds.Width}x{screen.Bounds.Height}"
-                          + (screen.Primary ? L.T(" (principal)", " (primary)") : "")
-                          + (screen.Touch == TouchSupport.Touch ? L.T(" (tactile)", " (touch)") : ""),
-                Tag = screen.Index
-            });
-        }
+        var id = stem;
+        var n = 2;
+        while (_surfaces.Any(s => s.Id.Equals(id, StringComparison.OrdinalIgnoreCase)))
+            id = $"{stem}-{n++}";
+        return id;
+    }
 
-        // the runtime accepts comma-separated indices (duplicated surface); preserve them
-        if (rawValue.Contains(','))
+    // ================= list =================
+
+    private void RebuildList()
+    {
+        _list.Children.Clear();
+        if (_surfaces.Count == 0)
         {
-            row.PreservedMultiValue = rawValue;
-            row.Screen.Items.Add(new ComboBoxItem
-            {
-                Content = L.T("Multi-écrans : ", "Multi-screen: ") + rawValue + L.T(" (conservé)", " (kept)"),
-                Tag = rawValue
-            });
-            row.Screen.SelectedIndex = row.Screen.Items.Count - 1;
+            _list.Children.Add(Ui.Card(Ui.Label(L.T(
+                "Aucune surface pour l'instant — ajoutez-en une.",
+                "No surface yet — add one."))));
             return;
         }
 
-        var index = int.TryParse(rawValue, out var parsed) ? parsed : -1;
-        var match = row.Screen.Items.Cast<ComboBoxItem>().ToList()
-            .FindIndex(item => item.Tag is int tag && tag == index);
-        if (match < 0 && index >= 0)
+        foreach (var surface in _surfaces.ToList())
         {
-            // configured screen currently absent (marquee powered off?): keep the value
-            // instead of silently falling back to "Disabled" and losing it on save
-            row.Screen.Items.Add(new ComboBoxItem
-            {
-                Content = L.T("ÉCRAN", "SCREEN") + $" {index} — "
-                          + L.T("non détecté actuellement (éteint ?), valeur conservée",
-                              "not detected right now (powered off?), value kept"),
-                Tag = index
-            });
-            match = row.Screen.Items.Count - 1;
+            _list.Children.Add(Ui.Card(BuildSurfaceCard(surface)));
         }
-
-        row.Screen.SelectedIndex = Math.Max(0, match);
     }
 
-    private static string ContentDisplay(string content) => content switch
+    private StackPanel BuildSurfaceCard(SurfaceModel surface)
     {
-        "marquee" => L.T("marquee — bandeau du jeu", "marquee — game strip"),
-        "topper" => L.T("topper — fanart / visuel dédié", "topper — fanart / dedicated visual"),
-        "iccard" => "iccard — instruction card",
-        "dmd" => L.T("dmd — DMD virtuel", "dmd — virtual DMD"),
-        "lcd" => L.T("lcd — panel / layout MAME", "lcd — panel / MAME layout"),
-        _ => content
-    };
+        var card = new StackPanel();
 
-    private void TestZone(SurfaceRow row)
-    {
-        var screenIndex = row.SelectedScreen();
-        if (row.IsMulti)
+        // header: name + category + duplicate/delete
+        var header = new WrapPanel();
+        var name = Ui.TextBox(surface.Id, 160);
+        name.TextChanged += (_, _) => surface.Id = name.Text.Trim();
+        header.Children.Add(name);
+
+        var category = Ui.ComboBox(170);
+        foreach (var (key, fr, en) in Categories)
         {
-            _status.Text = L.T("Zone non testable sur une affectation multi-écrans (modifiez config.ini à la main pour ce cas).",
-                "Zone not testable on a multi-screen assignment (edit config.ini by hand for this case).");
-            return;
+            var item = new ComboBoxItem { Content = L.T(fr, en), Tag = key };
+            category.Items.Add(item);
+            if (key.Equals(surface.Category, StringComparison.OrdinalIgnoreCase)) category.SelectedItem = item;
+        }
+        if (category.SelectedItem == null) category.SelectedIndex = 0;
+        category.SelectionChanged += (_, _) =>
+        {
+            if ((category.SelectedItem as ComboBoxItem)?.Tag is string key) surface.Category = key;
+        };
+        header.Children.Add(category);
+
+        header.Children.Add(Ui.Button(L.T("Dupliquer", "Duplicate"), (_, _) =>
+        {
+            var copy = CloneSurface(surface);
+            copy.Id = UniqueId(surface.Id);
+            _surfaces.Add(copy);
+            RebuildList();
+        }));
+        header.Children.Add(Ui.Button(L.T("Supprimer", "Delete"), (_, _) =>
+        {
+            _surfaces.Remove(surface);
+            RebuildList();
+        }));
+        card.Children.Add(header);
+
+        // screen + zone (width × height only, per design)
+        var placement = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
+        var screenLabel = Ui.MutedLabel(L.T("Écran", "Screen"));
+        screenLabel.Margin = new Thickness(0, 0, 6, 0);
+        placement.Children.Add(screenLabel);
+        var screen = Ui.ComboBox(200);
+        screen.Items.Add(new ComboBoxItem { Content = L.T("Désactivée", "Disabled"), Tag = -1 });
+        for (var i = 0; i < _screens.Count; i++)
+        {
+            var info = _screens[i];
+            var item = new ComboBoxItem { Content = $"{L.T("ÉCRAN", "SCREEN")} {i} — {info.Bounds.Width}×{info.Bounds.Height}", Tag = i };
+            screen.Items.Add(item);
+            if (surface.Screens.Contains(i)) screen.SelectedItem = item;
+        }
+        if (screen.SelectedItem == null) screen.SelectedIndex = 0;
+        screen.SelectionChanged += (_, _) =>
+        {
+            surface.Screens.Clear();
+            if ((screen.SelectedItem as ComboBoxItem)?.Tag is int index && index >= 0)
+                surface.Screens.Add(index);
+        };
+        placement.Children.Add(screen);
+
+        var widthLabel = Ui.MutedLabel(L.T("Largeur", "Width"));
+        widthLabel.Margin = new Thickness(8, 0, 6, 0);
+        placement.Children.Add(widthLabel);
+        var width = Ui.TextBox(surface.Width?.ToString() ?? "", 60);
+        width.TextChanged += (_, _) => surface.Width = int.TryParse(width.Text, out var v) && v > 0 ? v : null;
+        placement.Children.Add(width);
+        var heightLabel = Ui.MutedLabel(L.T("Hauteur", "Height"));
+        heightLabel.Margin = new Thickness(0, 0, 6, 0);
+        placement.Children.Add(heightLabel);
+        var height = Ui.TextBox(surface.Height?.ToString() ?? "", 60);
+        height.TextChanged += (_, _) => surface.Height = int.TryParse(height.Text, out var v) && v > 0 ? v : null;
+        placement.Children.Add(height);
+        placement.Children.Add(Ui.MutedLabel(L.T("vide = plein écran", "empty = fullscreen")));
+
+        placement.Children.Add(Ui.Button(L.T("Positionner sur l'écran", "Position on screen"), (_, _) => OpenCompositor(surface)));
+        card.Children.Add(placement);
+
+        if (!surface.IsFullscreen)
+        {
+            card.Children.Add(Ui.MutedLabel(L.T(
+                $"Position actuelle : x={surface.X ?? 0}, y={surface.Y ?? 0} (réglée dans l'éditeur d'écran)",
+                $"Current position: x={surface.X ?? 0}, y={surface.Y ?? 0} (set in the screen editor)")));
         }
 
+        // streams
+        card.Children.Add(Ui.MutedLabel(L.T("Flux affichés :", "Displayed streams:")));
+        var streams = new WrapPanel();
+        foreach (var (key, fr, en) in KnownStreams)
+        {
+            var box = Ui.CheckBox(L.T(fr, en), surface.Streams.Contains(key, StringComparer.OrdinalIgnoreCase));
+            box.Margin = new Thickness(0, 2, 14, 2);
+            box.Checked += (_, _) =>
+            {
+                if (!surface.Streams.Contains(key, StringComparer.OrdinalIgnoreCase)) surface.Streams.Add(key);
+            };
+            box.Unchecked += (_, _) => surface.Streams.RemoveAll(s => s.Equals(key, StringComparison.OrdinalIgnoreCase));
+            streams.Children.Add(box);
+        }
+        card.Children.Add(streams);
+
+        // components
+        card.Children.Add(Ui.MutedLabel(L.T("Composants (zones en fractions de la surface) :", "Components (zones as fractions of the surface):")));
+        var componentList = new StackPanel();
+        BuildComponentRows(surface, componentList);
+        card.Children.Add(componentList);
+
+        var addRow = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+        var picker = Ui.ComboBox(240);
+        foreach (var (key, fr, en) in ComponentTypes)
+            picker.Items.Add(new ComboBoxItem { Content = L.T(fr, en), Tag = key });
+        picker.SelectedIndex = 0;
+        addRow.Children.Add(picker);
+        addRow.Children.Add(Ui.Button(L.T("Ajouter le composant", "Add component"), (_, _) =>
+        {
+            if ((picker.SelectedItem as ComboBoxItem)?.Tag is string type)
+            {
+                surface.Components.Add(new ComponentModel { Type = type });
+                BuildComponentRows(surface, componentList);
+            }
+        }));
+        card.Children.Add(addRow);
+
+        return card;
+    }
+
+    private void BuildComponentRows(SurfaceModel surface, StackPanel host)
+    {
+        host.Children.Clear();
+        foreach (var component in surface.Components.ToList())
+        {
+            var row = new WrapPanel { Margin = new Thickness(8, 2, 0, 2) };
+            var label = Ui.Label(ComponentLabel(component.Type), 12);
+            label.Width = 220;
+            row.Children.Add(label);
+
+            row.Children.Add(FractionBox("x", component.X, v => component.X = v));
+            row.Children.Add(FractionBox("y", component.Y, v => component.Y = v));
+            row.Children.Add(FractionBox("w", component.W, v => component.W = v));
+            row.Children.Add(FractionBox("h", component.H, v => component.H = v));
+
+            // free-form option field for the types that need one
+            var optionKey = component.Type switch
+            {
+                "external.web" => "url",
+                "media.image" => "kind",
+                "text.custom" => "text",
+                "text.meta" => "template",
+                "iccard.static" => "card",
+                _ => null
+            };
+            if (optionKey != null)
+            {
+                var optLabel = Ui.MutedLabel(optionKey);
+                optLabel.Margin = new Thickness(6, 0, 4, 0);
+                row.Children.Add(optLabel);
+                var opt = Ui.TextBox(component.Options.TryGetValue(optionKey, out var value) ? value : "", 180);
+                opt.TextChanged += (_, _) => component.Options[optionKey] = opt.Text;
+                row.Children.Add(opt);
+            }
+
+            row.Children.Add(Ui.Button("↑", (_, _) => MoveComponent(surface, component, -1, host)));
+            row.Children.Add(Ui.Button("↓", (_, _) => MoveComponent(surface, component, +1, host)));
+            row.Children.Add(Ui.Button("✕", (_, _) =>
+            {
+                surface.Components.Remove(component);
+                BuildComponentRows(surface, host);
+            }));
+            host.Children.Add(row);
+        }
+    }
+
+    private void MoveComponent(SurfaceModel surface, ComponentModel component, int direction, StackPanel host)
+    {
+        var index = surface.Components.IndexOf(component);
+        var target = index + direction;
+        if (index < 0 || target < 0 || target >= surface.Components.Count) return;
+        (surface.Components[index], surface.Components[target]) = (surface.Components[target], surface.Components[index]);
+        BuildComponentRows(surface, host);
+    }
+
+    private static StackPanel FractionBox(string label, double value, Action<double> onChange)
+    {
+        var host = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 6, 0) };
+        var text = Ui.MutedLabel(label);
+        text.Margin = new Thickness(0, 0, 3, 0);
+        host.Children.Add(text);
+        var box = Ui.TextBox(value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture), 44);
+        box.TextChanged += (_, _) =>
+        {
+            if (double.TryParse(box.Text, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+                onChange(Math.Clamp(parsed, -0.5, 1.5));
+        };
+        host.Children.Add(box);
+        return host;
+    }
+
+    private static string ComponentLabel(string type)
+        => ComponentTypes.FirstOrDefault(c => c.Key.Equals(type, StringComparison.OrdinalIgnoreCase)) is { Key.Length: > 0 } match
+            ? L.T(match.Fr, match.En)
+            : type;
+
+    private static SurfaceModel CloneSurface(SurfaceModel source)
+    {
+        var copy = new SurfaceModel
+        {
+            Id = source.Id,
+            Category = source.Category,
+            X = source.X, Y = source.Y, Width = source.Width, Height = source.Height
+        };
+        copy.Screens.AddRange(source.Screens);
+        copy.Streams.AddRange(source.Streams);
+        foreach (var (key, value) in source.Params) copy.Params[key] = value;
+        foreach (var component in source.Components)
+        {
+            var c = new ComponentModel { Type = component.Type, X = component.X, Y = component.Y, W = component.W, H = component.H };
+            foreach (var (key, value) in component.Options) c.Options[key] = value;
+            copy.Components.Add(c);
+        }
+        return copy;
+    }
+
+    // ================= compositor bridge =================
+
+    private void OpenCompositor(SurfaceModel surface)
+    {
+        var screenIndex = surface.Screens.Count > 0 ? surface.Screens[0] : -1;
         if (screenIndex < 0 || screenIndex >= _screens.Count)
         {
-            _status.Text = $"{row.Def.Display}" + L.T(" : choisissez d'abord un écran.", ": pick a screen first.");
+            _status.Text = L.T("Affectez d'abord un écran à cette surface.", "Assign a screen to this surface first.");
+            _status.Foreground = Ui.Error;
             return;
         }
 
-        var screen = _screens[screenIndex];
-        int x = screen.Bounds.X, y = screen.Bounds.Y, w = screen.Bounds.Width, h = screen.Bounds.Height;
-        if (row.Fullscreen.IsChecked != true)
+        var editor = new ScreenCompositor(screenIndex, _screens[screenIndex],
+            _surfaces.Where(s => s.Screens.Contains(screenIndex)).ToList(), surface)
         {
-            if (!TryParseBounds(row.Bounds.Text, out var b))
+            Owner = Window.GetWindow(this)
+        };
+        if (editor.ShowDialog() == true)
+        {
+            RebuildList();
+            _status.Text = L.T("Positions mises à jour — pensez à enregistrer.", "Positions updated — remember to save.");
+            _status.Foreground = Ui.Muted;
+        }
+    }
+
+    // ================= save =================
+
+    private void OnSave()
+    {
+        var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var surface in _surfaces)
+        {
+            if (surface.Id.Trim().Length == 0)
             {
-                _status.Text = $"{row.Def.Display}" + L.T(" : zone invalide, attendu x,y,largeur,hauteur (ex. 0,0,1920,360).",
-                    ": invalid zone, expected x,y,width,height (e.g. 0,0,1920,360).");
+                _status.Text = L.T("Chaque surface doit avoir un nom.", "Every surface needs a name.");
+                _status.Foreground = Ui.Error;
                 return;
             }
-
-            x += b.x;
-            y += b.y;
-            w = Math.Min(b.w, screen.Bounds.Width - b.x);
-            h = Math.Min(b.h, screen.Bounds.Height - b.y);
-        }
-
-        new TestPatternWindow(row.Def.Display, x, y, w, h).Show();
-        _status.Text = $"{row.Def.Display}" + L.T($" : mire affichée sur l'écran {screenIndex}. Cliquez dessus pour la fermer.",
-            $": pattern shown on screen {screenIndex}. Click it to close.");
-    }
-
-    private static bool TryParseBounds(string raw, out (int x, int y, int w, int h) bounds)
-    {
-        bounds = default;
-        var parts = raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length != 4)
-        {
-            return false;
-        }
-
-        var values = new int[4];
-        for (var i = 0; i < 4; i++)
-        {
-            if (!int.TryParse(parts[i], out values[i]))
+            if (!ids.Add(surface.Id))
             {
-                return false;
-            }
-        }
-
-        if (values[2] <= 0 || values[3] <= 0 || values[0] < 0 || values[1] < 0)
-        {
-            return false;
-        }
-
-        bounds = (values[0], values[1], values[2], values[3]);
-        return true;
-    }
-
-    private void OnSave(object sender, RoutedEventArgs e)
-    {
-        var errors = new List<string>();
-        var warnings = new List<string>();
-        var zones = new List<(string surface, int screen, (int x, int y, int w, int h) rect)>();
-
-        foreach (var row in _rows)
-        {
-            if (row.IsMulti)
-            {
-                continue;
-            }
-
-            var screenIndex = row.SelectedScreen();
-            if (screenIndex < 0)
-            {
-                continue;
-            }
-
-            if (screenIndex >= _screens.Count)
-            {
-                // screen currently absent (powered off): keep the assignment untouched
-                warnings.Add($"{row.Def.Display}" + L.T($" : l'écran {screenIndex} n'est pas détecté en ce moment (éteint ?), l'affectation est conservée telle quelle.",
-                    $": screen {screenIndex} is not detected right now (powered off?), the assignment is kept as is."));
-                continue;
-            }
-
-            var screen = _screens[screenIndex];
-            var rect = (x: 0, y: 0, w: screen.Bounds.Width, h: screen.Bounds.Height);
-            if (row.Fullscreen.IsChecked != true)
-            {
-                if (!TryParseBounds(row.Bounds.Text, out rect))
-                {
-                    errors.Add($"{row.Def.Display}" + L.T($" : zone invalide « {row.Bounds.Text} » (attendu x,y,largeur,hauteur).",
-                        $": invalid zone \"{row.Bounds.Text}\" (expected x,y,width,height)."));
-                    continue;
-                }
-
-                if (rect.x >= screen.Bounds.Width || rect.y >= screen.Bounds.Height)
-                {
-                    errors.Add($"{row.Def.Display}" + L.T($" : la zone démarre hors de l'écran {screenIndex} ({screen.Bounds.Width}x{screen.Bounds.Height}).",
-                        $": the zone starts outside screen {screenIndex} ({screen.Bounds.Width}x{screen.Bounds.Height})."));
-                    continue;
-                }
-
-                if (rect.x + rect.w > screen.Bounds.Width || rect.y + rect.h > screen.Bounds.Height)
-                {
-                    warnings.Add($"{row.Def.Display}" + L.T($" : la zone dépasse l'écran {screenIndex}, elle sera rognée par le runtime.",
-                        $": the zone overflows screen {screenIndex}, the runtime will crop it."));
-                }
-            }
-
-            foreach (var other in zones.Where(z => z.screen == screenIndex))
-            {
-                if (other.rect == rect)
-                {
-                    warnings.Add(L.T($"{row.Def.Display} et {other.surface} occupent exactement la même zone de l'écran {screenIndex}.",
-                        $"{row.Def.Display} and {other.surface} occupy exactly the same zone of screen {screenIndex}."));
-                }
-                else if (Overlaps(other.rect, rect))
-                {
-                    warnings.Add(L.T($"{row.Def.Display} chevauche {other.surface} sur l'écran {screenIndex}.",
-                        $"{row.Def.Display} overlaps {other.surface} on screen {screenIndex}."));
-                }
-            }
-
-            zones.Add((row.Def.Display, screenIndex, rect));
-        }
-
-        if (errors.Count > 0)
-        {
-            _status.Text = L.T("Rien n'a été écrit :", "Nothing was written:") + Environment.NewLine + string.Join(Environment.NewLine, errors);
-            return;
-        }
-
-        if (warnings.Count > 0)
-        {
-            var confirm = MessageBox.Show(
-                string.Join(Environment.NewLine, warnings) + Environment.NewLine + Environment.NewLine
-                + L.T("Enregistrer quand même ?", "Save anyway?"),
-                "MarqueeManager Setup", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (confirm != MessageBoxResult.Yes)
-            {
-                _status.Text = L.T("Enregistrement annulé.", "Save cancelled.");
+                _status.Text = L.T($"Nom de surface en double : {surface.Id}.", $"Duplicate surface name: {surface.Id}.");
+                _status.Foreground = Ui.Error;
                 return;
             }
         }
 
-        var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
-        foreach (var row in _rows)
+        _store.Save(_surfaces);
+        _status.Foreground = Ui.Ok;
+        _status.Text = L.T("Surfaces enregistrées (state\\surfaces.json, .bak créé).",
+            "Surfaces saved (state\\surfaces.json, .bak created).");
+
+        if (MarqueeManagerProcess.IsRunning()
+            && MessageBox.Show(
+                L.T("Redémarrer MarqueeManager avec les nouvelles surfaces ?", "Restart MarqueeManager with the new surfaces?"),
+                "MarqueeManagerSetup", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
         {
-            var screenValue = row.IsMulti ? row.PreservedMultiValue! : row.SelectedScreen().ToString();
-            ini.Set("Screens", row.Def.Key + "Screen", screenValue);
-
-            if (row.Content.SelectedItem is ComboBoxItem { Tag: string content })
-            {
-                ini.Set("Screens", row.Def.Key + "Content", content);
-            }
-
-            if (row.Fullscreen.IsChecked == true || string.IsNullOrWhiteSpace(row.Bounds.Text))
-            {
-                ini.CommentOut("Screens", row.Def.Key + "Bounds");
-            }
-            else
-            {
-                ini.Set("Screens", row.Def.Key + "Bounds", row.Bounds.Text.Trim());
-            }
+            MarqueeManagerProcess.Stop();
+            MarqueeManagerProcess.Start(_pluginRoot);
         }
-
-        ini.Save();
-
-        var message = L.T("config.ini enregistré (sauvegarde .bak créée).", "config.ini saved (.bak backup created).");
-        if (MarqueeManagerProcess.IsRunning())
-        {
-            var restart = MessageBox.Show(
-                L.T("MarqueeManager tourne encore avec l'ancienne configuration. Le redémarrer maintenant ?",
-                    "MarqueeManager is still running with the old configuration. Restart it now?"),
-                "MarqueeManager Setup", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (restart == MessageBoxResult.Yes)
-            {
-                MarqueeManagerProcess.Stop();
-                message += MarqueeManagerProcess.Start(_pluginRoot)
-                    ? L.T(" MarqueeManager redémarré.", " MarqueeManager restarted.")
-                    : L.T(" Impossible de relancer MarqueeManager.exe.", " Could not restart MarqueeManager.exe.");
-            }
-        }
-
-        _status.Text = message;
     }
-
-    private static bool Overlaps((int x, int y, int w, int h) a, (int x, int y, int w, int h) b)
-        => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 }

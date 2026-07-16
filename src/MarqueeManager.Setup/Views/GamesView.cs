@@ -25,6 +25,9 @@ public sealed class GamesView : UserControl, IDisposable
 
     private IReadOnlyList<GameEntry> _allGames = Array.Empty<GameEntry>();
     private GameEntry? _current;
+    private GameIdentityIndex? _identity;
+    private readonly Dictionary<string, Dictionary<string, string>> _namesCache = new(StringComparer.OrdinalIgnoreCase);
+    private int _openSequence;
 
     private readonly ComboBox _systems = Ui.ComboBox(180);
     private readonly TextBox _search = new() { FontSize = 12, Padding = new Thickness(8, 6, 26, 6) };
@@ -43,10 +46,12 @@ public sealed class GamesView : UserControl, IDisposable
         _projects = new MarqueeProjectStore(pluginRoot);
 
         var page = new StackPanel();
-        page.Children.Add(Ui.Title(L.T("Mes jeux", "My games")));
+        page.Children.Add(Ui.Title(L.T("Mes composants", "My components")));
         page.Children.Add(Ui.Subtitle(L.T(
-            "Composez le marquee d'un jeu à partir de ses médias, et liez ses signaux de jeu (.MEM) à des effets lumière.",
-            "Compose a game's marquee from its media, and wire its in-game signals (.MEM) to light effects.")));
+            "Bibliothèque de compositions : templates automatiques, priorités des sources par système, "
+            + "et compositions originales par jeu ou par système (avec effets, lampes et profils).",
+            "Composition library: automatic templates, per-system source priorities, "
+            + "and original compositions per game or system (with effects, lamps and profiles).")));
 
         if (!_media.IsAvailable)
         {
@@ -57,7 +62,27 @@ public sealed class GamesView : UserControl, IDisposable
             return;
         }
 
+        var iniBoot = IniFile.Load(PluginPaths.ConfigPath(pluginRoot));
+        _identity = new GameIdentityIndex(pluginRoot, iniBoot.Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345"));
+
+        // ---- library: templates + per-system priorities ----
+        var templates = new StackPanel();
+        templates.Children.Add(Ui.SectionHeader(L.T("Templates de composition", "Composition templates")));
+        templates.Children.Add(Ui.MutedLabel(L.T(
+            "4 gabarits automatiques (fanart en fond + gradient selon la luminance + logo) : "
+            + "3 horizontaux aux proportions APIExpose — 1920×360, 1280×400, 920×360 — et 1 vertical 1080×1920. "
+            + "Affectez-les dans les priorités ci-dessous (« Template … ») : chaque jeu du système reçoit sa composition, "
+            + "rendue en tâche de fond puis mise en cache (ou pré-générée en masse).",
+            "4 automatic recipes (fanart background + luminance-driven gradient + logo): "
+            + "3 horizontal at APIExpose proportions — 1920×360, 1280×400, 920×360 — and 1 vertical 1080×1920. "
+            + "Assign them in the priorities below (“Template …”): every game of the system gets its composition, "
+            + "rendered in the background then cached (or pre-generated in bulk).")));
+        page.Children.Add(Ui.Card(templates));
+
+        page.Children.Add(Ui.Card(new PrioritiesCard(pluginRoot, _media, _identity)));
+
         // ---- picker: system + search ----
+        page.Children.Add(Ui.SectionHeader(L.T("Compositions originales par jeu / système", "Original compositions per game / system")));
         var picker = new StackPanel();
         var pickerRow = new WrapPanel();
         _systems.Items.Add(new ComboBoxItem { Content = L.T("Tous les systèmes", "All systems"), Tag = "" });
@@ -66,7 +91,12 @@ public sealed class GamesView : UserControl, IDisposable
             _systems.Items.Add(new ComboBoxItem { Content = system, Tag = system });
         }
         _systems.SelectedIndex = 0;
-        _systems.SelectionChanged += (_, _) => RefreshResults();
+        _systems.SelectionChanged += (_, _) =>
+        {
+            _ = EnsureNamesAsync(SelectedSystem());
+            RefreshResults();
+        };
+
         pickerRow.Children.Add(_systems);
 
         var searchHost = new Grid { Width = 320, Margin = new Thickness(0, 2, 0, 2) };
@@ -169,6 +199,35 @@ public sealed class GamesView : UserControl, IDisposable
         }
     }
 
+    private string SelectedSystem() => (_systems.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
+
+    /// <summary>Display names (ES gamelist / pack) loaded once per system, off the
+    /// UI thread — the search matches rom AND name as soon as they arrive.</summary>
+    private async Task EnsureNamesAsync(string system)
+    {
+        if (system.Length == 0 || _identity == null || _namesCache.ContainsKey(system)) return;
+        try
+        {
+            var names = await Task.Run(() => _identity.NamesAsync(system));
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var identity in names) map.TryAdd(identity.Rom, identity.Name);
+            if (!_disposed)
+            {
+                _namesCache[system] = map;
+                RefreshResults();
+            }
+        }
+        catch
+        {
+            // names unavailable: rom-only search keeps working
+        }
+    }
+
+    private string DisplayNameOf(GameEntry game)
+        => _namesCache.TryGetValue(game.System, out var names) && names.TryGetValue(game.Rom, out var name)
+            ? name
+            : game.Rom;
+
     private void RefreshResults()
     {
         _searchPlaceholder.Visibility = _search.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -179,19 +238,23 @@ public sealed class GamesView : UserControl, IDisposable
             return;
         }
 
-        var system = (_systems.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
+        var system = SelectedSystem();
         var matches = _allGames
             .Where(g => system.Length == 0 || g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
-            .Where(g => g.Rom.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Where(g => g.Rom.Contains(query, StringComparison.OrdinalIgnoreCase)
+                        || DisplayNameOf(g).Contains(query, StringComparison.OrdinalIgnoreCase))
             .Take(40)
             .ToList();
 
         _results.Items.Clear();
         foreach (var game in matches)
         {
+            var name = DisplayNameOf(game);
             _results.Items.Add(new ListBoxItem
             {
-                Content = $"{game.Rom} — {game.System}",
+                Content = name.Equals(game.Rom, StringComparison.OrdinalIgnoreCase)
+                    ? $"{game.Rom} — {game.System}"
+                    : $"{name} ({game.Rom}) — {game.System}",
                 Tag = game,
                 FontSize = 12
             });
@@ -201,6 +264,13 @@ public sealed class GamesView : UserControl, IDisposable
 
     // ================= per-game cards =================
 
+    /// <summary>Everything the game sheet needs, read OFF the UI thread — the
+    /// click shows a spinner instantly instead of freezing on I/O.</summary>
+    private sealed record GamePreload(
+        string Name, string? Genre, string? GenreIds,
+        IReadOnlyList<GameAsset> Assets, IReadOnlyList<MemSignal> Signals,
+        string ApiUrl, (int Width, int Height, string Label) MarqueeSize);
+
     private void OpenGame(GameEntry entry)
     {
         _results.Visibility = Visibility.Collapsed;
@@ -209,55 +279,84 @@ public sealed class GamesView : UserControl, IDisposable
         _status.Text = "";
         DisposeCards();
         _gameHost.Children.Clear();
+        _gameHost.Children.Add(Ui.Card(Ui.Spinner(L.T("Chargement du jeu…", "Loading the game…"))));
+        var sequence = ++_openSequence;
+        _ = OpenGameAsync(entry, sequence);
+    }
 
-        var name = _media.ReadDisplayName(entry.System, entry.Rom) ?? entry.Rom;
-        var genre = _media.ReadGenre(entry.System, entry.Rom);
+    private async Task OpenGameAsync(GameEntry entry, int sequence)
+    {
+        GamePreload data;
+        try
+        {
+            data = await Task.Run(() =>
+            {
+                var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
+                var memFile = _mem.FindMemFile(entry.System, entry.Rom);
+                return new GamePreload(
+                    _media.ReadDisplayName(entry.System, entry.Rom) ?? entry.Rom,
+                    _media.ReadGenre(entry.System, entry.Rom),
+                    _media.ReadGenreIds(entry.System, entry.Rom),
+                    _media.ListAssets(entry.System, entry.Rom),
+                    memFile != null ? _mem.ReadSignals(memFile) : Array.Empty<MemSignal>(),
+                    ini.Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345"),
+                    ResolveMarqueeSize());
+            });
+        }
+        catch (Exception ex)
+        {
+            if (_disposed || sequence != _openSequence) return;
+            _gameHost.Children.Clear();
+            _status.Text = L.T($"Chargement impossible : {ex.Message}", $"Load failed: {ex.Message}");
+            _status.Foreground = Ui.Error;
+            return;
+        }
+
+        if (_disposed || sequence != _openSequence) return;
+        DisposeCards();
+        _gameHost.Children.Clear();
 
         // header
         var header = new StackPanel();
-        var title = Ui.Label($"{name}", 16);
+        var title = Ui.Label(data.Name, 16);
         title.FontWeight = FontWeights.Bold;
         header.Children.Add(title);
-        var subtitle = Ui.MutedLabel($"{entry.Rom} · {entry.System}" + (genre is { Length: > 0 } ? $" · {genre}" : ""));
+        var subtitle = Ui.MutedLabel($"{entry.Rom} · {entry.System}" + (data.Genre is { Length: > 0 } ? $" · {data.Genre}" : ""));
         header.Children.Add(subtitle);
         _gameHost.Children.Add(Ui.Card(header));
 
-        BuildComposerCard(entry);
-        BuildEffectsCard(entry, genre);
+        BuildComposerCard(entry, data);
+
+        var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
+        var scraper = new MediaScraperService(_pluginRoot, key => ini.Get("Scraper", key, ""));
+        _gameHost.Children.Add(Ui.Card(new ScrapeCard(scraper, entry.System, entry.Rom, data.Name,
+            (path, kind) => _composer?.AddMediaLayer(path, kind))));
+
+        _gameHost.Children.Add(Ui.Card(new EffectsCard(_pluginRoot, entry.System, entry.Rom,
+            data.Signals, data.Genre, data.GenreIds, data.ApiUrl)));
 
         // scene lamps only make sense where MAME outputs exist
         if (entry.System is "arcade" or "mame" or "hbmame")
         {
-            var marquee = _media.ListAssets(entry.System, entry.Rom)
-                .FirstOrDefault(a => a.Key is "marquee" or "screenmarquee")?.Path;
+            var marquee = data.Assets.FirstOrDefault(a => a.Key is "marquee" or "screenmarquee")?.Path;
             _gameHost.Children.Add(Ui.Card(new SceneLampsCard(_pluginRoot, entry.System, entry.Rom, marquee)));
         }
         _gameHost.Children.Add(Ui.Card(new LightingProfileCard(_pluginRoot, entry.System, entry.Rom)));
     }
 
-    private void BuildEffectsCard(GameEntry entry, string? genre)
-    {
-        var memFile = _mem.FindMemFile(entry.System, entry.Rom);
-        var signals = memFile != null ? _mem.ReadSignals(memFile) : Array.Empty<MemSignal>();
-        var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
-        var apiUrl = ini.Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345");
-        _gameHost.Children.Add(Ui.Card(new EffectsCard(_pluginRoot, entry.System, entry.Rom,
-            signals, genre, _media.ReadGenreIds(entry.System, entry.Rom), apiUrl)));
-    }
-
-    private void BuildComposerCard(GameEntry entry)
+    private void BuildComposerCard(GameEntry entry, GamePreload data)
     {
         var card = new StackPanel();
         card.Children.Add(Ui.SectionHeader(L.T("Composer le marquee", "Compose the marquee")));
 
-        var (width, height, sourceLabel) = ResolveMarqueeSize();
+        var (width, height, sourceLabel) = data.MarqueeSize;
         card.Children.Add(Ui.MutedLabel(sourceLabel));
 
         var mediaRoot = Path.GetFullPath(Path.Combine(_pluginRoot, "..", "APIExpose", "media", "systems"));
         _composer = new MarqueeComposer(width, height, mediaRoot);
 
         // asset palette: click a thumbnail to add it as a layer
-        var assets = _media.ListAssets(entry.System, entry.Rom);
+        var assets = data.Assets;
         if (assets.Count == 0)
         {
             card.Children.Add(Ui.Label(L.T("Aucun média disponible pour ce jeu.", "No media available for this game.")));
@@ -272,6 +371,15 @@ public sealed class GamesView : UserControl, IDisposable
             }
             palette.Children.Add(TextThumb(entry));
             card.Children.Add(palette);
+
+            var presetRow = new WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
+            presetRow.Children.Add(Ui.Button(L.T("Gabarit auto (fanart + logo 50 %)", "Auto recipe (fanart + 50 % logo)"), (_, _) =>
+            {
+                _composer?.ApplyTemplatePreset(
+                    assets.FirstOrDefault(a => a.Key == "fanart")?.Path,
+                    assets.FirstOrDefault(a => a.Key == "wheel")?.Path);
+            }));
+            card.Children.Add(presetRow);
         }
 
         card.Children.Add(_composer);
@@ -352,21 +460,27 @@ public sealed class GamesView : UserControl, IDisposable
             Height = 54,
             Cursor = Cursors.Hand
         };
-        try
+        // decode OFF the UI thread: a dozen synchronous JPEG decodes froze the click
+        var thumbImage = new Image { Stretch = Stretch.Uniform, Margin = new Thickness(3) };
+        border.Child = thumbImage;
+        _ = Task.Run(() =>
         {
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = new Uri(asset.Path);
-            bitmap.DecodePixelWidth = 180;
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-            bitmap.Freeze();
-            border.Child = new Image { Source = bitmap, Stretch = Stretch.Uniform, Margin = new Thickness(3) };
-        }
-        catch
-        {
-            border.Child = Ui.MutedLabel("?");
-        }
+            try
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(asset.Path);
+                bitmap.DecodePixelWidth = 180;
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                Dispatcher.BeginInvoke(() => thumbImage.Source = bitmap);
+            }
+            catch
+            {
+                Dispatcher.BeginInvoke(() => border.Child = Ui.MutedLabel("?"));
+            }
+        });
         border.MouseLeftButtonDown += (_, _) => _composer?.AddMediaLayer(asset.Path, asset.Key);
         thumb.Children.Add(border);
         var label = Ui.MutedLabel(asset.Label, 10);

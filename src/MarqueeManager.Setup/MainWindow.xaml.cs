@@ -26,6 +26,19 @@ public partial class MainWindow : Window
         Ui.Initialize(_pluginRoot);
         L.Initialize(_pluginRoot);
 
+        // one-shot conversion of the legacy [Screens] model to dynamic surfaces
+        if (File.Exists(PluginPaths.ConfigPath(_pluginRoot)))
+        {
+            try
+            {
+                new Data.SurfacesStore(_pluginRoot).MigrateFromLegacyIfNeeded();
+            }
+            catch
+            {
+                // the runtime keeps its legacy fallback; the surfaces view can retry
+            }
+        }
+
         InitializeComponent();
         TryLowerProcessPriority();
         LoadBrandIcon();
@@ -164,7 +177,7 @@ public partial class MainWindow : Window
         NavSurfaces.Content = L.T("Surfaces", "Surfaces");
         NavDmd.Content = L.T("DMD physique", "Physical DMD");
         NavTouch.Content = L.T("IC card tactile", "Touch IC card");
-        NavGames.Content = L.T("Mes jeux", "My games");
+        NavGames.Content = L.T("Mes composants", "My components");
         NavOptions.Content = L.T("Options", "Options");
         LangToggle.Content = L.French ? "EN" : "FR";
         LangToggle.ToolTip = L.T("Switch to English", "Passer en français");

@@ -23,6 +23,7 @@ public sealed class TouchView : UserControl
         ("simple", L.T("Simple — un tap passe à la carte suivante", "Simple — a tap shows the next card")),
         ("center-toggle", L.T("Centre → IC2 — un appui au centre affiche la carte secondaire", "Center → IC2 — pressing the center shows the secondary card")),
         ("dual-player", L.T("Dual player — chaque moitié affiche la carte de son joueur", "Dual player — each half shows its player's card")),
+        ("split-static", L.T("Fixe + variable — carte 1 figée à gauche, la droite cycle à chaque tap (toute la surface)", "Static + cycling — card 1 pinned left, the right half cycles on any tap")),
         ("zones", L.T("Zones libres — dessinez vos propres zones tactiles", "Free zones — draw your own touch zones"))
     };
 
@@ -357,8 +358,67 @@ public sealed class TouchView : UserControl
                 });
                 return zones;
             }
+            case "split-static":
+                // rendering is done by the iccard.static / iccard.cycle surface
+                // components (written on save); the WHOLE surface cycles the right card
+                return new List<TouchZone>
+                {
+                    new()
+                    {
+                        Id = "all", Label = L.T("Carte suivante (droite)", "Next card (right)"), Rect = "0,0,100%,100%",
+                        Tap = new TouchAction { Action = "cycle-card" }
+                    }
+                };
             default:
                 return _freeZones.ToList();
+        }
+    }
+
+    /// <summary>split-static renders through surface components: make sure the
+    /// iccard surface carries iccard.static (left half, card 1) + iccard.cycle
+    /// (right half) — added on save, removed when leaving the mode.</summary>
+    private void SyncSplitComponents()
+    {
+        try
+        {
+            var store = new Data.SurfacesStore(_pluginRoot);
+            var surfaces = store.Load();
+            var iccard = surfaces.FirstOrDefault(s => s.Category.Equals("iccard", StringComparison.OrdinalIgnoreCase));
+            if (iccard == null) return;
+
+            var wantSplit = SelectedMode == "split-static";
+            var changed = false;
+            if (wantSplit)
+            {
+                if (!iccard.Components.Any(c => c.Type == "iccard.static"))
+                {
+                    var left = new Data.ComponentModel { Type = "iccard.static", X = 0, Y = 0, W = 0.5, H = 1 };
+                    left.Options["card"] = "1";
+                    iccard.Components.Add(left);
+                    changed = true;
+                }
+                if (!iccard.Components.Any(c => c.Type == "iccard.cycle"))
+                {
+                    iccard.Components.Add(new Data.ComponentModel { Type = "iccard.cycle", X = 0.5, Y = 0, W = 0.5, H = 1 });
+                    changed = true;
+                }
+                // the full-frame stream media would sit under the split: remove it
+                changed |= iccard.Components.RemoveAll(c => c.Type == "media.flux") > 0;
+            }
+            else
+            {
+                changed |= iccard.Components.RemoveAll(c => c.Type is "iccard.static" or "iccard.cycle") > 0;
+                if (changed && !iccard.Components.Any(c => c.Type == "media.flux"))
+                {
+                    iccard.Components.Insert(0, new Data.ComponentModel { Type = "media.flux" });
+                }
+            }
+
+            if (changed) store.Save(surfaces);
+        }
+        catch
+        {
+            // surfaces.json unavailable: the touch profile alone still works
         }
     }
 
@@ -599,6 +659,7 @@ public sealed class TouchView : UserControl
             Zones = BuildZones()
         };
         profile.Save(path);
+        SyncSplitComponents();
 
         _status.Text = L.T(
             "Profil tactile enregistré dans state\\surfaces.profile.json (sauvegarde .bak créée). "
