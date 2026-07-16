@@ -3,7 +3,7 @@
 ## Nothing shows on the marquee
 
 1. **Is APIExpose running?** MarqueeManager only displays what APIExpose sends. Check that the APIExpose plugin is started.
-2. **The right screen?** In `config.ini`, section `[Screens]`, check the screen index (see [Screens and surfaces](ecrans.md#assigning-screens)). `-1` = surface disabled.
+2. **The right screen?** Open [My setup](mon-setup.md) in the assistant: “Identify screens” shows every screen's number, and the map shows which surface lives on which screen.
 3. Is the **.NET 8 Desktop runtime** installed? Without it, the executable will not start.
 
 ## The DMD is blurry

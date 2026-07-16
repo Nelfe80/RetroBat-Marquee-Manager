@@ -70,9 +70,17 @@ public sealed class HomeView : UserControl
             var shortcuts = new StackPanel();
             shortcuts.Children.Add(Ui.SectionHeader(L.T("Raccourcis", "Shortcuts")));
             var buttons = new WrapPanel();
-            buttons.Children.Add(Ui.Button(L.T("Configurer les écrans", "Configure screens"), (_, _) => _navigate?.Invoke("screens")));
+            buttons.Children.Add(Ui.Button(L.T("Configurer mon setup", "Configure my setup"), (_, _) => _navigate?.Invoke("setup")));
             buttons.Children.Add(Ui.Button(L.T("Composer mes marquees", "Compose my marquees"), (_, _) => _navigate?.Invoke("games")));
             buttons.Children.Add(Ui.Button(L.T("Options du runtime", "Runtime options"), (_, _) => _navigate?.Invoke("options")));
+            buttons.Children.Add(Ui.Button(L.T("Diagnostic", "Diagnostics"), (_, _) => _navigate?.Invoke("diagnostic")));
+            buttons.Children.Add(Ui.Button(L.T("Relancer l'assistant de démarrage", "Rerun the startup wizard"), (_, _) =>
+            {
+                if (new Controls.OnboardingWizard(pluginRoot) { Owner = System.Windows.Window.GetWindow(this) }.ShowDialog() == true)
+                {
+                    _navigate?.Invoke("setup");
+                }
+            }));
             shortcuts.Children.Add(buttons);
             page.Children.Add(Ui.Card(shortcuts));
         }

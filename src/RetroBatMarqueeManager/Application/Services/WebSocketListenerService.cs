@@ -517,6 +517,7 @@ public sealed class WebSocketListenerService : BackgroundService
             type.Equals("ui.system.selected.raw", StringComparison.OrdinalIgnoreCase))
         {
             if (_pinballDmdActive) ReleasePinballDmd("selection changed");
+            _surfaces.SetDisplayScene("navigation");
             var selectedSystem = ExtractSystem(payload);
             var selectedRom = ExtractRom(payload);
             if (selectedSystem.Length > 0)
@@ -548,6 +549,7 @@ public sealed class WebSocketListenerService : BackgroundService
             // back to the frontend: sounds return, audible re-ignition
             _surfaces.SetLightingIngame(false);
             _surfaces.PowerCycleLighting();
+            _surfaces.SetDisplayScene("navigation");
             return;
         }
         if (!type.Equals("ui.game.started", StringComparison.OrdinalIgnoreCase) && !type.Equals("ui.game.started.raw", StringComparison.OrdinalIgnoreCase)) return;
@@ -555,6 +557,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // game launch drama: silent power cycle — the play session stays clean
         _surfaces.SetLightingIngame(true);
         _surfaces.PowerCycleLighting();
+        _surfaces.SetDisplayScene("ingame");
         var system = ExtractSystem(payload);
         if (system.Length == 0) system = _selectedSystem ?? string.Empty;
         if (system.Length > 0) _selectedSystem = system;
@@ -640,15 +643,37 @@ public sealed class WebSocketListenerService : BackgroundService
         // flow lifecycle changes gate the speedrun leaderboard (no timer during demos)
         _presentation.OnGameplayFlow(action);
 
-        var rule = _ingameEffects.Resolve(action, family.Length > 0 ? family : null);
-        if (rule == null) return;
+        var sequence = _ingameEffects.Resolve(action, family.Length > 0 ? family : null);
+        if (sequence.Count == 0) return;
 
         // la couleur portee par l'evenement (deltas score arcade) prime sur la
         // couleur de la regle : l'effet prend la teinte de la cible du jeu.
         var eventColor = Application.Lighting.IngameEffectLibrary.TryParseEventColor(color);
-        if (eventColor is { } overrideColor) rule = rule with { Color = overrideColor };
 
-        _logger.LogInformation("Ingame action {Action} → lighting effect {Kind} ({Label})", action, rule.Kind, rule.Label);
+        _logger.LogInformation("Ingame action {Action} → {Count} effect action(s) ({Label})",
+            action, sequence.Count, sequence[0].Label);
+        foreach (var step in sequence)
+        {
+            var rule = eventColor is { } overrideColor ? step with { Color = overrideColor } : step;
+            if (rule.DelayMs <= 0)
+            {
+                FireEffect(rule);
+            }
+            else
+            {
+                // sequenced action ("flash PUIS nuée de sprites"): fire after its delay
+                _ = Task.Delay(rule.DelayMs).ContinueWith(_ => FireEffect(rule), TaskScheduler.Default);
+            }
+        }
+    }
+
+    private void FireEffect(Application.Lighting.IngameEffectRule rule)
+    {
+        if (rule.MediaPath is { Length: > 0 })
+        {
+            _surfaces.PlayMediaEffect(rule.MediaPath, rule.MediaFullscreen, rule.DurationMs);
+            if (rule.Kind == Application.Lighting.IngameEffectKind.Sprite && rule.Sprite == null) return;
+        }
         _surfaces.TriggerLightingEffect(rule);
     }
 

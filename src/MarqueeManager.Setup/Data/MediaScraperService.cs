@@ -14,8 +14,10 @@ public sealed record ScrapeResult(string Source, string Kind, string ThumbUrl, s
 ///    cabinet, title (mirrors the reference artwork packs). Checked by default.
 ///  - SteamGridDB — API key: clean logos, grids, heroes.
 ///  - TheGamesDB — API key: fanarts, banners, clear logos.
-///  ScreenScraper is intentionally NOT here: its API needs per-software DEV
-///  credentials, and APIExpose already mirrors it locally.
+///  - ScreenScraper — only offered when DEV credentials resolve
+///    (<see cref="ScreenScraperCredentials"/>); ssid/sspassword picked up from
+///    Options or es_settings.cfg. Unchecked by default: APIExpose already
+///    mirrors ScreenScraper locally, this is the on-demand complement.
 /// Downloads land in media\marquees\downloads\&lt;sys&gt;\&lt;rom&gt;\ and are added as
 /// composer layers.
 /// </summary>
@@ -44,6 +46,7 @@ public sealed class MediaScraperService
         "adb" => true,
         "steamgriddb" => _credential("SteamGridDbApiKey").Length > 0,
         "thegamesdb" => _credential("TheGamesDbApiKey").Length > 0,
+        "screenscraper" => ScreenScraperCredentials.HasDev(_pluginRoot),
         _ => false
     };
 
@@ -65,6 +68,9 @@ public sealed class MediaScraperService
                         break;
                     case "thegamesdb":
                         results.AddRange(await SearchTheGamesDbAsync(gameName).ConfigureAwait(false));
+                        break;
+                    case "screenscraper":
+                        results.AddRange(await SearchScreenScraperAsync(system, rom).ConfigureAwait(false));
                         break;
                 }
             }
@@ -143,6 +149,50 @@ public sealed class MediaScraperService
                 {
                     results.Add(new ScrapeResult("steamgriddb", kind, thumb ?? url, url));
                 }
+            }
+        }
+        return results;
+    }
+
+    // ================= ScreenScraper (jeuInfos.php) =================
+
+    private async Task<List<ScrapeResult>> SearchScreenScraperAsync(string system, string rom)
+    {
+        var results = new List<ScrapeResult>();
+        var (devId, devPassword) = ScreenScraperCredentials.ResolveDev(_pluginRoot);
+        if (devId.Length == 0 || devPassword.Length == 0) return results;
+        var systemId = ScreenScraperCredentials.ResolveSystemId(_pluginRoot, system);
+        if (systemId.Length == 0) return results;
+        var (user, password) = ScreenScraperCredentials.ResolveUser(_pluginRoot, _credential);
+
+        var url = "https://api.screenscraper.fr/api2/jeuInfos.php?output=json"
+                  + $"&devid={Uri.EscapeDataString(devId)}&devpassword={Uri.EscapeDataString(devPassword)}"
+                  + "&softname=RetroBat-MarqueeManager"
+                  + (user.Length > 0 ? $"&ssid={Uri.EscapeDataString(user)}&sspassword={Uri.EscapeDataString(password)}" : "")
+                  + $"&systemeid={Uri.EscapeDataString(systemId)}&romtype=rom&romnom={Uri.EscapeDataString(rom + ".zip")}";
+        var json = await Http.GetStringAsync(url).ConfigureAwait(false);
+        using var doc = JsonDocument.Parse(json);
+        if (!doc.RootElement.TryGetProperty("response", out var response)
+            || !response.TryGetProperty("jeu", out var game)
+            || !game.TryGetProperty("medias", out var medias)
+            || medias.ValueKind != JsonValueKind.Array)
+        {
+            return results;
+        }
+
+        var wanted = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "marquee", "screenmarquee", "screenmarqueesmall", "wheel", "wheel-hd", "fanart", "flyer"
+        };
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var media in medias.EnumerateArray())
+        {
+            var type = media.TryGetProperty("type", out var t) ? t.GetString() ?? "" : "";
+            if (!wanted.Contains(type) || !seen.Add(type)) continue; // first (best region) of each kind
+            var mediaUrl = media.TryGetProperty("url", out var u) ? u.GetString() : null;
+            if (mediaUrl is { Length: > 0 })
+            {
+                results.Add(new ScrapeResult("screenscraper", type, mediaUrl + "&maxwidth=320", mediaUrl));
             }
         }
         return results;

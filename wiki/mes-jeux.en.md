@@ -1,38 +1,43 @@
-# My components
+# My games
 
-The **My components** tab is MarqueeManagerSetup's composition library: automatic templates, **per-system source priorities**, your **personal media folder**, and original compositions per game or per system — still with light effects, lamps and light profiles.
+**My games** is a game's full sheet: its marquee composition, its online media, its **light effects** driven by the game's signals, its lamps and its lighting profile. Search accepts the game name, the rom name or any alias.
 
-![My components tab](assets/setup/setup-games.png)
+![My games view](assets/setup/setup-games.png)
 
-## Composition templates
+## Composer
 
-Four automatic recipes mirror APIExpose's own (fanart background, black or white gradient picked by luminance, logo): three horizontal at the generated-marquee proportions — **1920×360, 1280×400, 920×360** — and one vertical **1080×1920**. Assign a template to a system in the priorities: every game gets its composition, rendered in the background on first display then cached.
+Layers built from the game's media, on a canvas matching the marquee's real resolution. An inserted logo takes **50 % of the width** by default; “Auto recipe” lays fanart + gradient + logo in one click. A saved composition overrides every other source ([My systems](mes-systemes.md)).
 
-!!! tip "Instant ES navigation"
-    **Pre-generate this system** (or all of them) renders every templated composition ahead of time: no wait at game selection, ever.
+## Fetch media online
 
-## Per-system priorities
+Arcade Database (no key), SteamGridDB, TheGamesDB — keys in Options → Online sources. Clicking a result downloads it and adds it as a layer.
 
-For each **category** (marquee, topper, DMD) then each system, an ordered chain of sources: the runtime shows the **first available** one. Sources: manual composition, my folder, template, scraped marquee, screen-marquee, APIExpose generated, logo, fanart… (and for the DMD: your animated GIFs, the pack's dmd*.gif, dmd.png).
+??? note "What about ScreenScraper?"
+    The ScreenScraper source only appears when the **developer** credentials are available (they are never shipped in the code); your ScreenScraper **user** account is picked up automatically from EmulationStation, or typed in Options. Day to day, APIExpose already scrapes ScreenScraper locally — this direct source is an on-demand complement, unchecked by default.
 
-A typical arcade chain: *composition > my folder > scraped marquee > generated* — your images first, the scrape next, the auto-generated as last resort. And when one game displeases you, its manual composition overrides it individually.
+## Light effects: “When [signal] then [effect]”
 
-### My folder
+Games with a `.MEM` definition emit **semantic signals** (HIT, LOSE_LIFE, BOSS_DEFEATED…). Each signal reads like a sentence: *When HIT then red flash*. Tweaks apply to the game, its whole system or its whole **genre** (a HIT in a shmup is not a HIT in a beat 'em up); a badge always shows where the winning rule comes from.
 
-Drop your own **images or videos** into `media\marquees\user\<system>\` (same for `media\toppers\user\`, `media\dmd\user\` — your animated DMD GIFs cycle there). File names are **alias-resolved** through APIExpose's gamelist index: `Metal Slug (World).png`, `metalslug.png` or the exact set name all point to the same game. Drag & drop straight onto the card (or onto a game sheet) copies and renames automatically.
+### My effects — the effect composer
 
-**Test the chain** shows, for a few games of the system, which source wins — the chain is never a black box.
+**My effects…** opens the library: an effect is a **stack of sequenced actions**, each with its type (colored veil, flash, shake, strobe, sprite swarm, **your webm/gif media**), its parameters, its **start** (ms) and duration. Two actions starting at 0 play together (“red veil + shake + explosions”); staggered starts make a sequence (“red flash THEN a swarm of sprites”). The preview replays the whole sequence; the library is a plain file (`media\effects\library.json`), exportable.
 
-## Original compositions
+Drop your animations (transparent webm, gif, apng) in `media\effects\user\`: a “My media” action plays them **overlaid** on the composed marquee, or temporarily **fullscreen**. The Lighting Engine's neon tubes stay alive behind.
 
-The search (game name, rom name or alias) opens the game sheet:
+### Allocate and disengage
 
-- **Composer**: layers from the game's media, canvas locked to the real marquee resolution. An inserted logo takes **50 % of the width** by default; the "Auto recipe" button lays fanart + logo in one click.
-- **Fetch media online**: Arcade Database (no key), SteamGridDB, TheGamesDB — and ScreenScraper as a fallback (APIExpose scrapes it already). Keys in Options → Online sources. Clicking a result downloads it and adds it as a layer.
-- **Light effects** (.MEM signals), rbmarquee **scene & lamps** and **light profile**: unchanged, see their dedicated sections.
+On every game signal: **Simple effect** (flash, sprite… as before) or **One of my effects** (the named sequence). And per game, a three-position policy:
 
-Per-SYSTEM compositions (a system selected in ES) are stored in `media\marquees\systems\<system>.png`.
+- **Inherit** — genre/system defaults + your tweaks (normal behavior);
+- **Only my effects** — every default muted, only the signals you allocated react;
+- **Disable everything** — no MEM effect on this game.
 
-## Live video on a surface
+### Live monitor
 
-A surface's video component can follow a **live Twitch stream > YouTube > local video** chain: when someone streams the displayed game, the live takes the video's place. Twitch/YouTube credentials in Options → Online sources; without keys, the local video simply plays.
+Launch the game and play: firing signals show up live; click one to tune its effect. It is the easiest way to discover what a game can emit.
+
+## Scene, lamps and lighting
+
+- **Scene & lamps**: the rbmarquee editor (MAME layout lamps driven by `/ws/arcade`).
+- **Lighting profile**: the Lighting Engine's bulbs and cabinet, per game.

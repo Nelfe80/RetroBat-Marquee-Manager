@@ -26,7 +26,7 @@ Installing MarqueeManager requires **no installer**: download, extract, activate
 
 ## First setting: your screens
 
-On first launch, open `config.ini` and set in `[Screens]` which Windows screen carries each surface — it is the only truly required setting. Everything is explained in [Screens and surfaces](ecrans.md).
+Launch `MarqueeManagerSetup.exe`: on first start, a **three-step wizard** detects your screens, suggests a type for each and lays a working configuration — under three minutes to your first marquee. Everything stays tweakable later in [My setup](mon-setup.md).
 
 ## Check that it works
 

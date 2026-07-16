@@ -1,91 +1,54 @@
 # The setup assistant
 
-`MarqueeManagerSetup.exe`, at the root of the plugin, is the visual tool that configures your screens without editing `config.ini` by hand. It detects your displays, helps you decide which one is the marquee, the topper or the instruction card, configures the physical DMD and even prepares touch interaction — then writes the configuration cleanly (with a `.bak` backup, never touching the file's comments).
-
-It offers seven views in the sidebar, with a dark/light theme toggle and a FR/EN language switch at the top of the rail.
+`MarqueeManagerSetup.exe`, at the root of the plugin, is the visual tool that configures everything without editing `config.ini` by hand — and writes the configuration cleanly (with a `.bak` backup, never touching the file's comments).
 
 !!! note "French or English"
     The assistant follows RetroBat's language (EmulationStation setting), else Windows' — and can be switched anytime with the FR/EN button in the rail (the choice is remembered). To force it: `MarqueeManagerSetup.exe --lang fr` or `--lang en`.
+
+## First launch: three steps
+
+On the very first start, a welcome wizard does everything in under three minutes:
+
+1. **“We detected N screens”** — identification with big numbers;
+2. **one pre-picked type per screen** based on its shape (a 5:1 strip → Marquee?) — fix it in one click;
+3. **“Your setup is ready”** — default surfaces and components laid out, confirmation patterns, runtime started.
+
+“Configure later” skips the wizard (relaunchable from Home). Then browse EmulationStation: your marquees show up.
+
+## The six rail views
+
+| View | What it does |
+|---|---|
+| **Home** | Installation health, shortcuts, startup wizard relaunch |
+| **[My setup](mon-setup.md)** | The map of your screens: zero-config types, surfaces, composition editor, display states, test patterns, physical DMD, touch |
+| **[My systems](mes-systemes.md)** | Per system: source priorities, automatic templates, personal media folder, pre-generation |
+| **[My games](mes-jeux.md)** | A game's sheet: composer, online media, light effects (My effects, policy, allocation), lamps, lighting |
+| **Options** | APIExpose connection, Lighting Engine, MAME layouts, RetroAchievements, live score/timer, online sources (API keys, ScreenScraper account) |
+| **Diagnostics** | Detection report (screens, DMD, ports), data source status, latest runtime events |
 
 ## Home
 
 ![Home tab](assets/setup/setup-home.png)
 
-The installation health at a glance: runtime running or not (with a Start/Stop button), APIExpose response, `config.ini` presence, a summary of the configured surfaces and shortcuts to the other views.
-
-## Screens
-
-![Screens tab](assets/setup/setup-screens.png)
-
-The starting tab: every Windows display detected, with its number, resolution, ratio and touch detection.
-
-- **Identify screens** shows a big "ÉCRAN n" badge on each physical display for a few seconds — no more guessing which Windows index maps to which cabinet screen.
-- **Show test pattern** fills a screen with a calibration pattern (grid, border, center cross). Click it to close.
-- The **detection report** at the bottom sums everything up: screens and suggestions ("ratio 5.33, suggests marquee"), DMD stack, serial ports, MarqueeManager and APIExpose status.
-
-!!! note "The numbers shown are the config.ini ones"
-    The assistant enumerates screens exactly like the runtime: the number displayed is the one used by `MarqueeScreen`, `TopperScreen`, and so on.
-
-## Surfaces
-
-![Surfaces tab](assets/setup/setup-surfaces.png)
-
-The heart of the tool, now **dynamic**: create as many surfaces as you need (your existing `[Screens]` configuration converts automatically on first launch, with identical behavior). For each surface:
-
-- **the category**: marquee, topper, instruction card, virtual DMD, LCD or custom;
-- **the screen** it lives on and **the zone** (width × height — the x,y position is set visually in "Screens → Compose this screen");
-- **the streams** it displays (a surface can receive several);
-- **the components** stacked on it, **placed visually** ("Place components": drag, resize, magnetic guides): stream media, logo, fanart, game video, gradient, text, hiscores, live score/timer, RetroAchievements, lighting engine, lamps, instruction cards, and even an embedded web page (live Twitch/YouTube stream). Ready-made **surface templates** (composed marquee fanart+gradient+logo, static+cycling cards, video showcase, web stream…) build the stack in one click.
-
-![Shared vertical screen](assets/ecran-partage.svg)
-
-A screen hosting several surfaces (the typical vertical display) is composed visually: drag and resize the rectangles, with magnetic guides and live dimensions.
-
-## Physical DMD
-
-![Physical DMD tab](assets/setup/setup-dmd.png)
-
-Configuration of the `[DMD]` section: model (ZeDMD, ZeDMD HD, Pin2DMD, PinDMD v3…), resolution, serial port, brightness, USB packet size. The tab also checks that the DMD stack is in place (DmdDevice/ZeDMD DLLs, `dmdext.exe`) and lists detected serial ports.
-
-**Show a pattern on the DMD** sends dmdext's test pattern to the panel — the panel must be powered; the assistant stops MarqueeManager for the duration of the test.
-
-!!! warning "Virtual DMD ≠ physical DMD"
-    `DmdScreen=-1` in the Surfaces tab only disables the on-screen DMD window. The real panel is configured here.
-
-## Touch IC card
-
-![Touch IC card tab](assets/setup/setup-touch.png)
-
-If your instruction card screen is touch-capable (or even mouse-driven), this tab makes it interactive. Four modes:
-
-- **Simple**: a tap anywhere shows the game's next card (how-to-play → moves → …).
-- **Center → IC2**: pressing the center shows the secondary card (special moves, for instance), then automatically returns to the main card after the chosen delay.
-- **Dual player**: for a screen shared by two players — the left half shows player 1's card, the right half player 2's, with an optional common zone in the middle:
-
-![Dual player touch zones](assets/zones-tactiles.svg)
-- **Free zones**: draw your own zones directly on the preview (click-drag) and pick each one's action: next card, a specific card, a player card, back to the default card.
-
-The setting is saved to `state\surfaces.profile.json` and read by MarqueeManager at startup. The mouse triggers the same actions as touch — handy to test without a touchscreen.
-
-!!! note "Card naming (APIExpose media)"
-    In a game's `artwork\ic`: `ic.png` for a single card, or `ic-1.png`, `ic-2.png`… for several cards. The `-left`/`-right` suffixes (e.g. mercs: `ic-1-left.png` … `ic-5-right.png`) are the **two card holders of the panel**: player 1 side and player 2 side. Navigation moves from card to card (ic-1 → ic-2…), and dual player mode shows the side of the player who tapped; `ic2` in an action means logical card #2, regardless of the file count.
-
-## My components
-
-![My components tab](assets/setup/setup-games.png)
-
-The composition library: automatic templates, per-system source priorities (your images, the scrape, the generated… in the order you want), a personal media folder with alias-resolved names, original compositions per game or system, online media fetching, light effects, lamps and profiles. A dedicated page covers it all: [My components](mes-jeux.en.md).
+The installation status at a glance: runtime running or not (with a Start/Stop button), APIExpose response, `config.ini` presence, a summary of the configured surfaces and shortcuts to the other views.
 
 ## Options
 
 ![Options tab](assets/setup/setup-options.png)
 
-Everything else, presented as simple switches:
+Everything else, presented as simple settings:
 
 - **Connection**: APIExpose address with a test button.
-- **Lighting**: the marquee Lighting Engine — quality/performance, framing, glass reflection, tube sounds.
-- **MAME layouts**: `.lay` file support for marquee, topper, iccard and DMD.
-- **RetroAchievements**: per-surface activation, badges, unlock takeover.
-- **Live score and timer**: the real-time overlays on the marquee and the DMD.
+- **Lighting render**: the marquee's Lighting Engine — quality/performance, framing, glass reflection, tube sounds.
+- **MAME layouts**: `.lay` file rendering for marquee, topper, iccard and DMD.
+- **RetroAchievements**: per-surface enabling, badges, fullscreen unlock.
+- **Live score and timer**: the real-time overlays on the marquee and DMD.
+- **Online sources**: SteamGridDB/TheGamesDB/Twitch/YouTube keys and the ScreenScraper **user** account (picked up from EmulationStation when empty).
 
-Fine-grained settings (durations, thresholds…) remain available in `config.ini`, where every option is commented — the assistant never destroys those comments.
+Fine-grained settings (durations, thresholds…) stay available in `config.ini`, where every option is commented — the assistant never overwrites those comments.
+
+## Diagnostics
+
+![Diagnostics tab](assets/setup/setup-diagnostic.png)
+
+“Why is my screen black?” — the full detection report (screens with suggestions, DMD stack, serial ports), the data source status (APIExpose tested, keys set or not) and the latest events from the runtime's log file.

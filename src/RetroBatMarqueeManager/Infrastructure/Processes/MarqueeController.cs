@@ -308,6 +308,13 @@ public sealed class MarqueeController : IDisposable
         foreach (var window in WindowsWithComponent("lighting.engine")) window.TriggerLightingEffect(rule);
     }
 
+    /// <summary>User-dropped effect media (webm/gif) triggered by a signal:
+    /// overlay on the marquee or temporary fullscreen takeover.</summary>
+    public void PlayMediaEffect(string path, bool fullscreen, int durationMs)
+    {
+        foreach (var window in WindowsWithComponent("lighting.engine")) window.PlayMediaEffect(path, fullscreen, durationMs);
+    }
+
     public void SetLampState(string lampName, int state)
     {
         foreach (var window in AllWindows()) window.SetLampState(lampName, state);
@@ -331,11 +338,19 @@ public sealed class MarqueeController : IDisposable
 
     /// <summary>The rich overlays are no longer marquee-only: any surface carrying
     /// the matching component receives them (legacy configs get the historical
-    /// component stack on the marquee surface, so behavior is unchanged there).</summary>
+    /// component stack on the marquee surface, so behavior is unchanged there).
+    /// A component scoped by `when` only routes in its display state.</summary>
     private IEnumerable<MarqueeWindow> WindowsWithComponent(string componentType)
         => _surfaces.Values
             .Where(surface => surface.HasComponent(componentType))
-            .SelectMany(surface => GetWindows(surface.Id));
+            .SelectMany(surface => GetWindows(surface.Id))
+            .Where(window => window.IsComponentActive(componentType));
+
+    /// <summary>Display state switch, broadcast to every surface.</summary>
+    public void SetDisplayScene(string scene)
+    {
+        foreach (var window in AllWindows()) window.SetDisplayScene(scene);
+    }
 
     /// <summary>Information overlays are keyed by owner; each owner belongs to a
     /// component type, which decides which surfaces show it.</summary>

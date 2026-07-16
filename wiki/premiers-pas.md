@@ -26,7 +26,7 @@ Installer MarqueeManager ne demande **aucun installateur** : on télécharge, on
 
 ## Premier réglage : vos écrans
 
-Au premier lancement, ouvrez `config.ini` et indiquez dans `[Screens]` quel écran Windows porte chaque surface — c'est le seul réglage vraiment indispensable. Tout est expliqué dans [Écrans et surfaces](ecrans.md).
+Lancez `MarqueeManagerSetup.exe` : au premier démarrage, un **assistant en trois étapes** détecte vos écrans, propose un type pour chacun et pose une configuration fonctionnelle — moins de trois minutes jusqu'au premier marquee. Tout reste retouchable ensuite dans [Mon setup](mon-setup.md).
 
 ## Vérifier que ça fonctionne
 

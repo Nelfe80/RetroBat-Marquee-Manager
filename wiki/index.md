@@ -16,7 +16,7 @@
 <div class="grid cards" markdown>
 
 - **[Premiers pas](premiers-pas.md)** — installer MarqueeManager en 5 minutes.
-- **[Écrans et surfaces](ecrans.md)** — assigner chaque surface à un écran Windows.
+- **[Mon setup](mon-setup.md)** — le plan de vos écrans : un type par écran et tout fonctionne.
 - **[DMD et ZeDMD](dmd.md)** — régler votre DMD, virtuel ou physique.
 - **[Dépannage](depannage.md)** — les solutions aux problèmes courants.
 

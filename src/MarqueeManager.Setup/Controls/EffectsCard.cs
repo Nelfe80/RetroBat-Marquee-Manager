@@ -54,6 +54,7 @@ public sealed class EffectsCard : UserControl, IDisposable
     private string _scope = "game"; // game | system | genre:<slug>
     private string? _expandedAction;
 
+    private readonly List<System.Windows.Threading.DispatcherTimer> _previewTimers = new();
     private IngameMonitor? _monitor;
     private Button? _monitorButton;
     private TextBlock? _monitorStatus;
@@ -74,6 +75,39 @@ public sealed class EffectsCard : UserControl, IDisposable
 
         var card = new StackPanel();
         card.Children.Add(Ui.SectionHeader(L.T("Effets lumière (signaux du jeu)", "Light effects (game signals)")));
+
+        // policy (per game) + library access
+        var policyRow = new WrapPanel { Margin = new Thickness(0, 2, 0, 2) };
+        var policyLabel = Ui.MutedLabel(L.T("Pour ce jeu :", "For this game:"));
+        policyLabel.Margin = new Thickness(0, 0, 6, 0);
+        policyRow.Children.Add(policyLabel);
+        var policyPicker = Ui.ComboBox(300);
+        policyPicker.Items.Add(new ComboBoxItem { Content = L.T("Hériter des effets par défaut (genre/système)", "Inherit the default effects (genre/system)"), Tag = "inherit" });
+        policyPicker.Items.Add(new ComboBoxItem { Content = L.T("Uniquement mes effets (défauts coupés)", "Only my effects (defaults muted)"), Tag = "custom-only" });
+        policyPicker.Items.Add(new ComboBoxItem { Content = L.T("Tout désactiver", "Disable everything"), Tag = "off" });
+        var currentPolicy = _store.LoadPolicy(system, rom);
+        policyPicker.SelectedIndex = currentPolicy switch { "custom-only" => 1, "off" => 2, _ => 0 };
+        policyPicker.SelectionChanged += (_, _) =>
+        {
+            if ((policyPicker.SelectedItem as ComboBoxItem)?.Tag is string policy)
+            {
+                _store.SavePolicy(_system, _rom, policy);
+                _status.Text = policy switch
+                {
+                    "custom-only" => L.T("Seuls les signaux que vous allouez ci-dessous réagiront.", "Only the signals you allocate below will react."),
+                    "off" => L.T("Aucun effet MEM ne jouera sur ce jeu.", "No MEM effect will play on this game."),
+                    _ => L.T("Défauts genre/système + vos réglages.", "Genre/system defaults + your tweaks.")
+                };
+                _status.Foreground = Ui.Muted;
+            }
+        };
+        policyRow.Children.Add(policyPicker);
+        policyRow.Children.Add(Ui.Button(L.T("Mes effets…", "My effects…"), (_, _) =>
+        {
+            new EffectComposerWindow(_pluginRoot) { Owner = Window.GetWindow(this) }.ShowDialog();
+            RebuildRows();
+        }));
+        card.Children.Add(policyRow);
 
         if (_genreSlugs.Count > 0)
         {
@@ -127,6 +161,7 @@ public sealed class EffectsCard : UserControl, IDisposable
 
     public void Dispose()
     {
+        StopPreviewTimers();
         _monitor?.Dispose();
         _monitor = null;
     }
@@ -213,6 +248,14 @@ public sealed class EffectsCard : UserControl, IDisposable
         {
             sentence.Inlines.Add(new System.Windows.Documents.Run(L.T("silencieux (désactivé)", "silenced (off)")) { Foreground = Ui.Muted, FontStyle = FontStyles.Italic });
         }
+        else if (rule.EffectRef is { Length: > 0 })
+        {
+            sentence.Inlines.Add(new System.Windows.Documents.Run("✦ " + rule.EffectRef) { Foreground = Ui.Accent, FontWeight = FontWeights.SemiBold });
+        }
+        else if (rule.Actions is { Count: > 0 })
+        {
+            sentence.Inlines.Add(new System.Windows.Documents.Run(L.T($"séquence ({rule.Actions.Count} actions)", $"sequence ({rule.Actions.Count} actions)")) { Foreground = Ui.Accent, FontWeight = FontWeights.SemiBold });
+        }
         else
         {
             sentence.Inlines.Add(new System.Windows.Documents.Run(KindLabel(rule.Kind)) { Foreground = Ui.Accent, FontWeight = FontWeights.SemiBold });
@@ -225,7 +268,7 @@ public sealed class EffectsCard : UserControl, IDisposable
 
         // right side: color dot + provenance badge
         var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        if (rule is { Off: false } && rule.Kind is not ("sprite" or "shake" or "blackout"))
+        if (rule is { Off: false, EffectRef: null, Actions: null } && rule.Kind is not ("sprite" or "shake" or "blackout"))
         {
             right.Children.Add(new Border
             {
@@ -288,23 +331,66 @@ public sealed class EffectsCard : UserControl, IDisposable
 
     private StackPanel BuildEditor(MemSignal signal, EffectRule? current)
     {
-        var draft = current == null
-            ? new EffectRule()
-            : new EffectRule
-            {
-                Kind = current.Kind,
-                Color = current.Color,
-                DurationMs = current.DurationMs,
-                Dip = current.Dip,
-                Sprite = current.Sprite,
-                Count = current.Count,
-                Motion = current.Motion,
-                ThrottleMs = current.ThrottleMs,
-                Off = current.Off
-            };
+        var draft = current?.Clone() ?? new EffectRule();
 
         var editor = new StackPanel { Margin = new Thickness(12, 6, 0, 8) };
         var preview = new EffectPreview();
+        var simple = new StackPanel();
+        var library = new StackPanel();
+
+        // mode: direct action, or one of "Mes effets" (named sequence)
+        var modeRow = new WrapPanel();
+        var modePicker = Ui.ComboBox(190);
+        modePicker.Items.Add(new ComboBoxItem { Content = L.T("Effet simple", "Simple effect"), Tag = "simple" });
+        modePicker.Items.Add(new ComboBoxItem { Content = L.T("Un de mes effets", "One of my effects"), Tag = "library" });
+        modePicker.SelectedIndex = draft.EffectRef is { Length: > 0 } ? 1 : 0;
+        modeRow.Children.Add(modePicker);
+        editor.Children.Add(modeRow);
+
+        // ----- library mode -----
+        var namePicker = Ui.ComboBox(260);
+        void FillNames()
+        {
+            namePicker.Items.Clear();
+            foreach (var name in new EffectsLibraryStore(_pluginRoot).LoadOrSeed().Keys
+                         .OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
+            {
+                var item = new ComboBoxItem { Content = name, Tag = name };
+                namePicker.Items.Add(item);
+                if (name.Equals(draft.EffectRef, StringComparison.OrdinalIgnoreCase)) namePicker.SelectedItem = item;
+            }
+            if (namePicker.SelectedItem == null && namePicker.Items.Count > 0) namePicker.SelectedIndex = 0;
+            if ((namePicker.SelectedItem as ComboBoxItem)?.Tag is string first) draft.EffectRef = first;
+        }
+        namePicker.SelectionChanged += (_, _) =>
+        {
+            if ((namePicker.SelectedItem as ComboBoxItem)?.Tag is string name) draft.EffectRef = name;
+        };
+        var libraryRow = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+        libraryRow.Children.Add(namePicker);
+        libraryRow.Children.Add(Ui.Button(L.T("Composer / gérer…", "Compose / manage…"), (_, _) =>
+        {
+            var composer = new EffectComposerWindow(_pluginRoot, pickMode: true) { Owner = Window.GetWindow(this) };
+            if (composer.ShowDialog() == true && composer.SelectedEffectName is { } picked) draft.EffectRef = picked;
+            FillNames();
+        }));
+        library.Children.Add(libraryRow);
+
+        void ApplyMode()
+        {
+            var isLibrary = (modePicker.SelectedItem as ComboBoxItem)?.Tag as string == "library";
+            simple.Visibility = isLibrary ? Visibility.Collapsed : Visibility.Visible;
+            library.Visibility = isLibrary ? Visibility.Visible : Visibility.Collapsed;
+            if (isLibrary)
+            {
+                FillNames();
+            }
+            else
+            {
+                draft.EffectRef = null;
+            }
+        }
+        modePicker.SelectionChanged += (_, _) => ApplyMode();
 
         var line1 = new WrapPanel();
         var kind = PickerFor(line1, L.T("Effet", "Effect"), Kinds, draft.Kind, v => draft.Kind = v);
@@ -326,7 +412,7 @@ public sealed class EffectsCard : UserControl, IDisposable
         line1.Children.Add(colorBox);
         line1.Children.Add(swatch);
         var durationBox = NumberFor(line1, L.T("Durée (ms)", "Duration (ms)"), draft.DurationMs, v => draft.DurationMs = v);
-        editor.Children.Add(line1);
+        simple.Children.Add(line1);
 
         var line2 = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
         var spritePicker = Ui.ComboBox(170);
@@ -357,7 +443,7 @@ public sealed class EffectsCard : UserControl, IDisposable
         line2.Children.Add(spritePicker);
         var countBox = NumberFor(line2, L.T("Nombre", "Count"), draft.Count, v => draft.Count = Math.Clamp(v, 1, 8), 40);
         PickerFor(line2, "Motion", Motions, draft.Motion, v => draft.Motion = v);
-        editor.Children.Add(line2);
+        simple.Children.Add(line2);
 
         var line3 = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
         var dipSlider = new Slider
@@ -375,10 +461,14 @@ public sealed class EffectsCard : UserControl, IDisposable
         offBox.Checked += (_, _) => draft.Off = true;
         offBox.Unchecked += (_, _) => draft.Off = false;
         line3.Children.Add(offBox);
-        editor.Children.Add(line3);
+        simple.Children.Add(line3);
+
+        editor.Children.Add(simple);
+        editor.Children.Add(library);
+        ApplyMode();
 
         var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
-        actions.Children.Add(Ui.Button(L.T("▶ Tester l'effet", "▶ Preview the effect"), (_, _) => preview.Play(draft, _spritesDir)));
+        actions.Children.Add(Ui.Button(L.T("▶ Tester l'effet", "▶ Preview the effect"), (_, _) => PlayDraft(preview, draft)));
         actions.Children.Add(Ui.Button(L.T("Enregistrer", "Save"), (_, _) =>
         {
             var rules = LoadScopeRules();
@@ -407,8 +497,40 @@ public sealed class EffectsCard : UserControl, IDisposable
         preview.Margin = new Thickness(0, 8, 0, 0);
 
         // first look: replay what the signal currently does
-        Dispatcher.BeginInvoke(() => preview.Play(draft, _spritesDir), System.Windows.Threading.DispatcherPriority.Background);
+        Dispatcher.BeginInvoke(() => PlayDraft(preview, draft), System.Windows.Threading.DispatcherPriority.Background);
         return editor;
+    }
+
+    /// <summary>Preview a draft: a named effect replays its whole timed stack
+    /// (media actions excluded — the band cannot decode webm), a simple rule
+    /// plays directly.</summary>
+    private void PlayDraft(EffectPreview preview, EffectRule draft)
+    {
+        StopPreviewTimers();
+        var actions = draft.EffectRef is { Length: > 0 }
+            ? new EffectsLibraryStore(_pluginRoot).Load().TryGetValue(draft.EffectRef, out var stack) ? stack : new List<EffectRule>()
+            : draft.Actions is { Count: > 0 } ? draft.Actions : new List<EffectRule> { draft };
+        foreach (var action in actions.Where(a => a.Media is not { Length: > 0 }))
+        {
+            var timer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(Math.Max(1, action.DelayMs))
+            };
+            var frozen = action;
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                preview.Play(frozen, _spritesDir);
+            };
+            timer.Start();
+            _previewTimers.Add(timer);
+        }
+    }
+
+    private void StopPreviewTimers()
+    {
+        foreach (var timer in _previewTimers) timer.Stop();
+        _previewTimers.Clear();
     }
 
     private string ScopeLabel() => _scope switch

@@ -53,23 +53,20 @@
                     <RadioButton x:Name="NavHome" Style="{StaticResource NavItem}" Tag="&#xE80F;"
                                  Content="Accueil" GroupName="nav" IsChecked="True"
                                  Checked="Nav_Checked"/>
-                    <RadioButton x:Name="NavScreens" Style="{StaticResource NavItem}" Tag="&#xE7F4;"
-                                 Content="Écrans" GroupName="nav"
+                    <RadioButton x:Name="NavSetup" Style="{StaticResource NavItem}" Tag="&#xE7F4;"
+                                 Content="Mon setup" GroupName="nav"
                                  Checked="Nav_Checked"/>
-                    <RadioButton x:Name="NavSurfaces" Style="{StaticResource NavItem}" Tag="&#xE8F1;"
-                                 Content="Surfaces" GroupName="nav"
-                                 Checked="Nav_Checked"/>
-                    <RadioButton x:Name="NavDmd" Style="{StaticResource NavItem}" Tag="&#xE90F;"
-                                 Content="DMD physique" GroupName="nav"
-                                 Checked="Nav_Checked"/>
-                    <RadioButton x:Name="NavTouch" Style="{StaticResource NavItem}" Tag="&#xE815;"
-                                 Content="IC card tactile" GroupName="nav"
+                    <RadioButton x:Name="NavSystems" Style="{StaticResource NavItem}" Tag="&#xE8F1;"
+                                 Content="Mes systèmes" GroupName="nav"
                                  Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavGames" Style="{StaticResource NavItem}" Tag="&#xE7FC;"
                                  Content="Mes jeux" GroupName="nav"
                                  Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavOptions" Style="{StaticResource NavItem}" Tag="&#xE713;"
                                  Content="Options" GroupName="nav"
+                                 Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavDiagnostic" Style="{StaticResource NavItem}" Tag="&#xE90F;"
+                                 Content="Diagnostic" GroupName="nav"
                                  Checked="Nav_Checked"/>
                 </StackPanel>
 

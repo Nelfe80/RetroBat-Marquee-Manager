@@ -4,19 +4,34 @@ using System.Text.Json.Serialization;
 
 namespace MarqueeManager.Setup.Data;
 
-/// <summary>One effect binding, mirror of the runtime's rule grammar
-/// (ingame.effects.xml attributes). Null effect = signal explicitly silenced.</summary>
+/// <summary>One effect binding, mirror of the runtime's rule grammar. A rule is
+/// either a direct action (kind/color/…), a reference to a named library effect
+/// (<see cref="EffectRef"/>), or a stack of sequenced actions (<see cref="Actions"/>,
+/// each with its own delayMs). The three shapes round-trip so editing one signal
+/// never corrupts another one's sequence. Null effect = signal silenced.</summary>
 public sealed class EffectRule
 {
+    [JsonPropertyName("effect")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? EffectRef { get; set; }
+    [JsonPropertyName("actions")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public List<EffectRule>? Actions { get; set; }
     [JsonPropertyName("kind")] public string Kind { get; set; } = "flash";
     [JsonPropertyName("color")] public string Color { get; set; } = "#ff2a18";
     [JsonPropertyName("durationMs")] public int DurationMs { get; set; } = 300;
+    [JsonPropertyName("delayMs")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int DelayMs { get; set; }
     [JsonPropertyName("dip")] public double Dip { get; set; }
     [JsonPropertyName("sprite")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Sprite { get; set; }
+    [JsonPropertyName("media")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Media { get; set; }
+    [JsonPropertyName("fullscreen")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Fullscreen { get; set; }
     [JsonPropertyName("count")] public int Count { get; set; } = 1;
     [JsonPropertyName("motion")] public string Motion { get; set; } = "pop";
     [JsonPropertyName("throttleMs")] public int ThrottleMs { get; set; } = 400;
     [JsonPropertyName("off")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Off { get; set; }
+
+    public EffectRule Clone()
+    {
+        var copy = (EffectRule)MemberwiseClone();
+        copy.Actions = Actions?.Select(a => a.Clone()).ToList();
+        return copy;
+    }
 }
 
 /// <summary>
@@ -56,6 +71,42 @@ public sealed class EffectsOverrideStore
 
     public void SaveGenre(string slug, Dictionary<string, EffectRule> rules)
         => SaveRules(GenrePath(slug), rules, keepOtherSections: true);
+
+    // ---- the per-game file also hosts the "policy" knob (C4bis) ----
+
+    /// <summary>"inherit" (defaults + overrides), "custom-only" (only this game's
+    /// allocated signals react), or "off" (no MEM effect at all).</summary>
+    public string LoadPolicy(string system, string rom)
+    {
+        try
+        {
+            var path = GamePath(system, rom);
+            if (!File.Exists(path)) return "inherit";
+            using var doc = JsonDocument.Parse(File.ReadAllText(path));
+            return doc.RootElement.TryGetProperty("policy", out var policy) && policy.ValueKind == JsonValueKind.String
+                ? policy.GetString() ?? "inherit"
+                : "inherit";
+        }
+        catch
+        {
+            return "inherit";
+        }
+    }
+
+    public void SavePolicy(string system, string rom, string policy)
+    {
+        var path = GamePath(system, rom);
+        var document = ReadDocument(path);
+        if (policy is "inherit" or "")
+        {
+            document.Remove("policy");
+        }
+        else
+        {
+            document["policy"] = policy;
+        }
+        WriteOrDelete(path, document);
+    }
 
     // ---- the per-game file also hosts the "lighting" section (bulb/cabinet profile) ----
 
@@ -160,7 +211,7 @@ public sealed class EffectsOverrideStore
 
     private static void WriteOrDelete(string path, Dictionary<string, object?> document)
     {
-        var hasContent = document.Keys.Any(k => k is "rules" or "lighting") &&
+        var hasContent = document.Keys.Any(k => k is "rules" or "lighting" or "policy") &&
                          document.Any(kv => kv.Value is not null);
         if (!hasContent)
         {

@@ -15,13 +15,14 @@ namespace MarqueeManager.Setup.Controls;
 /// </summary>
 public sealed class ScrapeCard : UserControl
 {
-    // ScreenScraper is deliberately absent: its API requires per-software DEV
-    // credentials we cannot ship, and APIExpose already mirrors it locally.
+    // ScreenScraper appears only when DEV credentials resolve (env / APIExpose
+    // .env / build-embedded); unchecked by default — APIExpose mirrors it locally.
     private static readonly (string Key, string Label, bool DefaultChecked)[] Sources =
     {
         ("adb", "Arcade Database", true),
         ("steamgriddb", "SteamGridDB", true),
-        ("thegamesdb", "TheGamesDB", true)
+        ("thegamesdb", "TheGamesDB", true),
+        ("screenscraper", "ScreenScraper", false)
     };
 
     private readonly MediaScraperService _scraper;
@@ -49,6 +50,7 @@ public sealed class ScrapeCard : UserControl
         foreach (var (key, label, defaultChecked) in Sources)
         {
             var hasKey = _scraper.HasKey(key);
+            if (key == "screenscraper" && !hasKey) continue; // no dev creds → hidden, not "missing key"
             var box = Ui.CheckBox(label + (hasKey ? "" : L.T(" (clé manquante)", " (missing key)")),
                 hasKey && defaultChecked);
             box.IsEnabled = hasKey;

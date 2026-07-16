@@ -243,10 +243,10 @@ public sealed class OptionsView : UserControl
         page.Children.Add(Ui.SectionHeader(L.T("Sources en ligne (scrap de médias & vidéo live)", "Online sources (media scraping & live video)")));
         var online = new StackPanel();
         online.Children.Add(Ui.MutedLabel(L.T(
-            "Clés utilisées par « Récupérer des médias en ligne » (Mes composants) et par le composant vidéo live. "
-            + "Arcade Database ne demande aucune clé ; ScreenScraper est déjà couvert par APIExpose.",
-            "Keys used by “Fetch media online” (My components) and by the live video component. "
-            + "Arcade Database needs no key; ScreenScraper is already covered by APIExpose.")));
+            "Clés utilisées par « Récupérer des médias en ligne » (Mes jeux) et par le composant vidéo live. "
+            + "Arcade Database ne demande aucune clé.",
+            "Keys used by “Fetch media online” (My games) and by the live video component. "
+            + "Arcade Database needs no key.")));
         foreach (var (key, label) in new[]
                  {
                      ("SteamGridDbApiKey", "SteamGridDB — API key"),
@@ -259,6 +259,23 @@ public sealed class OptionsView : UserControl
             var box = Ui.TextBox(ini.Get("Scraper", key, ""), 280);
             _scraperKeys[key] = box;
             online.Children.Add(Ui.Row(label, box));
+        }
+
+        // ScreenScraper: only the USER account is exposed here; the developer
+        // credentials resolve silently (env / APIExpose .env / build-embedded).
+        var (esUser, _) = Data.ScreenScraperCredentials.ResolveUser(pluginRoot, key => ini.Get("Scraper", key, ""));
+        foreach (var (key, label) in new[]
+                 {
+                     ("ScreenScraperUser", L.T("ScreenScraper — utilisateur", "ScreenScraper — username")),
+                     ("ScreenScraperPass", L.T("ScreenScraper — mot de passe", "ScreenScraper — password"))
+                 })
+        {
+            var box = Ui.TextBox(ini.Get("Scraper", key, ""), 280);
+            _scraperKeys[key] = box;
+            online.Children.Add(Ui.Row(label, box,
+                hint: ini.Get("Scraper", key, "").Length == 0 && esUser.Length > 0
+                    ? L.T("(repris d'EmulationStation)", "(picked up from EmulationStation)")
+                    : null));
         }
         page.Children.Add(Ui.Card(online));
 

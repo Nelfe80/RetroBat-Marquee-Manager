@@ -4,14 +4,24 @@ using RetroBatMarqueeManager.Core.Interfaces;
 namespace RetroBatMarqueeManager.Core.Surfaces;
 
 /// <summary>One component placed on a surface. Coordinates are FRACTIONS of the
-/// surface (0..1) so a layout survives a resolution change.</summary>
+/// surface (0..1) so a layout survives a resolution change. `When` scopes the
+/// component to a display state — "navigation" (ES browsing), "ingame" (a game
+/// runs) or "both" (default, always shown). `Visible` is the editor's eye toggle
+/// (a hidden layer is kept but never rendered).</summary>
 public sealed record ComponentDefinition(
     string Type,
     double X = 0, double Y = 0, double W = 1, double H = 1,
-    IReadOnlyDictionary<string, string>? Options = null)
+    IReadOnlyDictionary<string, string>? Options = null,
+    string When = "both",
+    bool Visible = true)
 {
     public string Option(string name, string fallback = "")
         => Options != null && Options.TryGetValue(name, out var value) ? value : fallback;
+
+    /// <summary>True when the component participates in the given display state.</summary>
+    public bool ActiveIn(string scene)
+        => Visible && (When.Equals("both", StringComparison.OrdinalIgnoreCase)
+                       || When.Equals(scene, StringComparison.OrdinalIgnoreCase));
 }
 
 /// <summary>
@@ -135,15 +145,20 @@ public static class SurfacesDocument
                 var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 foreach (var property in c.EnumerateObject())
                 {
-                    if (property.Name is "type" or "x" or "y" or "w" or "h") continue;
+                    if (property.Name is "type" or "x" or "y" or "w" or "h" or "when" or "visible" or "locked") continue;
                     options[property.Name] = property.Value.ValueKind == JsonValueKind.String
                         ? property.Value.GetString() ?? ""
                         : property.Value.GetRawText();
                 }
+                var when = ReadString(c, "when");
+                var visible = !c.TryGetProperty("visible", out var visibleValue)
+                              || visibleValue.ValueKind != JsonValueKind.False;
                 components.Add(new ComponentDefinition(type,
                     ReadDouble(c, "x") ?? 0, ReadDouble(c, "y") ?? 0,
                     ReadDouble(c, "w") ?? 1, ReadDouble(c, "h") ?? 1,
-                    options));
+                    options,
+                    when.Length > 0 ? when : "both",
+                    visible));
             }
         }
 

@@ -60,6 +60,131 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             => Dispatcher.BeginInvoke(new Action(() => _componentHost?.SetSource(type, path)));
 
         public bool HasSurfaceComponent(string type) => _surface?.HasComponent(type) == true;
+
+        private string _activeScene = "navigation";
+        private FrameworkElement? _mediaEffectOverlay;
+
+        /// <summary>User effect media (webm via MediaElement, animated gif via
+        /// decoded frames) played once: overlay over the composed marquee, or a
+        /// temporary fullscreen takeover. Removed after durationMs (min 500 ms).</summary>
+        public void PlayMediaEffect(string path, bool fullscreen, int durationMs)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try
+                {
+                    if (_mediaEffectOverlay != null)
+                    {
+                        (_mediaEffectOverlay as MediaElement)?.Stop();
+                        _mainGrid.Children.Remove(_mediaEffectOverlay);
+                        _mediaEffectOverlay = null;
+                    }
+                    if (!File.Exists(path)) return;
+
+                    FrameworkElement overlay;
+                    var extension = Path.GetExtension(path).ToLowerInvariant();
+                    if (extension is ".gif" or ".apng" or ".png")
+                    {
+                        var frames = DecodeGifFrames(path);
+                        if (frames.Count == 0) return;
+                        var image = new Image { Source = frames[0], Stretch = fullscreen ? Stretch.UniformToFill : Stretch.Uniform };
+                        if (frames.Count > 1)
+                        {
+                            var index = 0;
+                            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(70) };
+                            timer.Tick += (_, _) =>
+                            {
+                                index = (index + 1) % frames.Count;
+                                image.Source = frames[index];
+                            };
+                            timer.Start();
+                            image.Unloaded += (_, _) => timer.Stop();
+                        }
+                        overlay = image;
+                    }
+                    else
+                    {
+                        var media = new MediaElement
+                        {
+                            LoadedBehavior = MediaState.Manual,
+                            UnloadedBehavior = MediaState.Manual,
+                            Stretch = fullscreen ? Stretch.UniformToFill : Stretch.Uniform,
+                            IsMuted = true,
+                            Source = new Uri(path)
+                        };
+                        media.Play();
+                        overlay = media;
+                    }
+
+                    overlay.IsHitTestVisible = false;
+                    if (fullscreen)
+                    {
+                        overlay.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
+                        overlay.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
+                    }
+                    _mediaEffectOverlay = overlay;
+                    _mainGrid.Children.Add(overlay); // topmost layer: over the composed marquee
+
+                    var lifetime = new System.Windows.Threading.DispatcherTimer
+                    {
+                        Interval = TimeSpan.FromMilliseconds(Math.Max(500, durationMs))
+                    };
+                    lifetime.Tick += (_, _) =>
+                    {
+                        lifetime.Stop();
+                        if (_mediaEffectOverlay == overlay)
+                        {
+                            (overlay as MediaElement)?.Stop();
+                            _mainGrid.Children.Remove(overlay);
+                            _mediaEffectOverlay = null;
+                        }
+                    };
+                    lifetime.Start();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Media effect failed for {Path}: {Message}", path, ex.Message);
+                }
+            }));
+        }
+
+        private static List<System.Windows.Media.Imaging.BitmapSource> DecodeGifFrames(string path)
+        {
+            var frames = new List<System.Windows.Media.Imaging.BitmapSource>();
+            try
+            {
+                using var stream = File.OpenRead(path);
+                var decoder = System.Windows.Media.Imaging.BitmapDecoder.Create(stream,
+                    System.Windows.Media.Imaging.BitmapCreateOptions.PreservePixelFormat,
+                    System.Windows.Media.Imaging.BitmapCacheOption.OnLoad);
+                foreach (var frame in decoder.Frames)
+                {
+                    frame.Freeze();
+                    frames.Add(frame);
+                }
+            }
+            catch
+            {
+                // undecodable: no overlay
+            }
+            return frames;
+        }
+
+        /// <summary>Display state switch (navigation ↔ ingame): the dynamic
+        /// components filter on their `when`, the rich overlays gate through
+        /// <see cref="IsComponentActive"/>.</summary>
+        public void SetDisplayScene(string scene)
+        {
+            _activeScene = scene;
+            Dispatcher.BeginInvoke(new Action(() => _componentHost?.ApplyScene(scene)));
+        }
+
+        /// <summary>True when the surface carries the component AND it participates
+        /// in the current display state (legacy surfaces: always, `when` = both).</summary>
+        public bool IsComponentActive(string type)
+            => _surface == null
+               || _surface.Components.Any(c =>
+                   c.Type.Equals(type, StringComparison.OrdinalIgnoreCase) && c.ActiveIn(_activeScene));
         private SkiaSharp.SKBitmap? _dmdSmall;
         private byte[]? _dmdBuffer;
         private long _dmdLastPushMs;

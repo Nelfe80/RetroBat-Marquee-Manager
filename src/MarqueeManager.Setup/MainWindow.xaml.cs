@@ -58,6 +58,19 @@ public partial class MainWindow : Window
         {
             Loaded += (_, _) => _ = CaptureAllTabsAsync(args[shotIndex + 1]);
         }
+        else if (OnboardingWizard.ShouldRun(_pluginRoot))
+        {
+            // first launch: three steps to a working marquee, skippable
+            Loaded += (_, _) =>
+            {
+                if (new OnboardingWizard(_pluginRoot) { Owner = this }.ShowDialog() == true)
+                {
+                    NavigateTo("setup");
+                }
+                UpdateFooter();
+                ShowCurrent();
+            };
+        }
     }
 
     private async System.Threading.Tasks.Task CaptureAllTabsAsync(string directory)
@@ -66,12 +79,11 @@ public partial class MainWindow : Window
         var tabs = new (System.Windows.Controls.RadioButton Nav, string Name)[]
         {
             (NavHome, "setup-home"),
-            (NavScreens, "setup-screens"),
-            (NavSurfaces, "setup-surfaces"),
-            (NavDmd, "setup-dmd"),
-            (NavTouch, "setup-touch"),
+            (NavSetup, "setup-monsetup"),
+            (NavSystems, "setup-systems"),
             (NavGames, "setup-games"),
-            (NavOptions, "setup-options")
+            (NavOptions, "setup-options"),
+            (NavDiagnostic, "setup-diagnostic")
         };
         foreach (var (nav, name) in tabs)
         {
@@ -117,12 +129,11 @@ public partial class MainWindow : Window
         DisposeActiveView();
         ContentHost.Content = true switch
         {
-            _ when NavScreens.IsChecked == true => new ScreensView(_pluginRoot),
-            _ when NavSurfaces.IsChecked == true => new SurfacesView(_pluginRoot),
-            _ when NavDmd.IsChecked == true => new DmdView(_pluginRoot),
-            _ when NavTouch.IsChecked == true => new TouchView(_pluginRoot),
+            _ when NavSetup.IsChecked == true => new MonSetupView(_pluginRoot),
+            _ when NavSystems.IsChecked == true => new MesSystemesView(_pluginRoot),
             _ when NavGames.IsChecked == true => new GamesView(_pluginRoot),
             _ when NavOptions.IsChecked == true => new OptionsView(_pluginRoot),
+            _ when NavDiagnostic.IsChecked == true => new DiagnosticView(_pluginRoot),
             _ => (object)new HomeView(_pluginRoot, NavigateTo)
         };
         UpdateFooter();
@@ -130,14 +141,14 @@ public partial class MainWindow : Window
 
     private void NavigateTo(string view)
     {
+        // legacy keys (screens/surfaces/dmd/touch) now land on "Mon setup"
         var nav = view switch
         {
-            "screens" => NavScreens,
-            "surfaces" => NavSurfaces,
-            "dmd" => NavDmd,
-            "touch" => NavTouch,
+            "setup" or "screens" or "surfaces" or "dmd" or "touch" => NavSetup,
+            "systems" => NavSystems,
             "games" => NavGames,
             "options" => NavOptions,
+            "diagnostic" => NavDiagnostic,
             _ => NavHome
         };
         nav.IsChecked = true;
@@ -173,12 +184,11 @@ public partial class MainWindow : Window
     private void ApplyShellTexts()
     {
         NavHome.Content = L.T("Accueil", "Home");
-        NavScreens.Content = L.T("Écrans", "Screens");
-        NavSurfaces.Content = L.T("Surfaces", "Surfaces");
-        NavDmd.Content = L.T("DMD physique", "Physical DMD");
-        NavTouch.Content = L.T("IC card tactile", "Touch IC card");
-        NavGames.Content = L.T("Mes composants", "My components");
+        NavSetup.Content = L.T("Mon setup", "My setup");
+        NavSystems.Content = L.T("Mes systèmes", "My systems");
+        NavGames.Content = L.T("Mes jeux", "My games");
         NavOptions.Content = L.T("Options", "Options");
+        NavDiagnostic.Content = L.T("Diagnostic", "Diagnostics");
         LangToggle.Content = L.French ? "EN" : "FR";
         LangToggle.ToolTip = L.T("Switch to English", "Passer en français");
     }

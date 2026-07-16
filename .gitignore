@@ -82,3 +82,9 @@ site/
 
 # User media data (compositions, drop folders, template cache, assignments)
 /media/
+
+# ScreenScraper DEV secrets: generated at build into obj\, must NEVER be tracked.
+**/EmbeddedSecretDefaults.g.cs
+
+# Internal product/UX planning docs stay local.
+RetroBat-Marquee-Manager-Plan-*.md

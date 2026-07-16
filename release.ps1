@@ -42,8 +42,10 @@ Write-Host 'Construction update.7z...'
 & $sz a -t7z $update "$name\" @ex "-x!$name\Resources" "-x!$name\tools" -mx=5 -bsp0 -bso0
 
 $listing = & $sz l $full
-$leaks = $listing | Select-String '\\src\\|\\docs\\|CAHIER|\.git|crash|checkpoint'
+$leaks = $listing | Select-String '\\src\\|\\docs\\|CAHIER|\.git|crash|checkpoint|EmbeddedSecretDefaults|\.env'
 if ($leaks) { throw "FUITE DETECTEE dans l'archive : $($leaks[0])" }
+$tracked = git -C $root ls-files | Select-String 'EmbeddedSecretDefaults'
+if ($tracked) { throw "FUITE DETECTEE dans git : $($tracked[0])" }
 Write-Host 'Controle anti-fuite : OK'
 
 $hashes = Get-FileHash "$out\*.7z" -Algorithm SHA256 | ForEach-Object { '{0}  {1}' -f $_.Hash, (Split-Path $_.Path -Leaf) }

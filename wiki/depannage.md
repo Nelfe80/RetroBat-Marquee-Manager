@@ -3,7 +3,7 @@
 ## Rien ne s'affiche sur le marquee
 
 1. **APIExpose tourne ?** MarqueeManager n'affiche que ce qu'APIExpose lui envoie. Vérifiez que le plugin APIExpose est démarré.
-2. **Le bon écran ?** Dans `config.ini`, section `[Screens]`, vérifiez l'indice de l'écran (voir [Écrans et surfaces](ecrans.md#assigner-les-ecrans)). `-1` = surface désactivée.
+2. **Le bon écran ?** Ouvrez [Mon setup](mon-setup.md) dans l'assistant : « Identifier les écrans » affiche le numéro de chacun, et le plan montre quelle surface vit sur quel écran.
 3. **Le runtime .NET 8 Desktop** est-il installé ? Sans lui, l'exécutable ne démarre pas.
 
 ## Le DMD est flou

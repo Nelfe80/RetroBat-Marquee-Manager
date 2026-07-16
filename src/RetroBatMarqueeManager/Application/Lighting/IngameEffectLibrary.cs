@@ -7,7 +7,9 @@ namespace RetroBatMarqueeManager.Application.Lighting;
 public enum IngameEffectKind { Flash, Pulse, PowerCycle, Blackout, Sprite, Shake, Strobe, Tint }
 
 /// <summary>One rule of the ingame effects library (resources/lighting/ingame.effects.xml).
-/// A rule can combine a glass flash AND sprites (sprite attr on any kind).</summary>
+/// A rule can combine a glass flash AND sprites (sprite attr on any kind).
+/// `DelayMs` sequences stacked actions (0 = fires with the signal); `MediaPath`
+/// carries a user-dropped effect media (webm/gif) with `MediaFullscreen`.</summary>
 public sealed record IngameEffectRule(
     IngameEffectKind Kind,
     SKColor Color,
@@ -18,7 +20,10 @@ public sealed record IngameEffectRule(
     string? Sprite = null,
     int Count = 1,
     string Motion = "pop",
-    SKColor? TrailColor = null);
+    SKColor? TrailColor = null,
+    int DelayMs = 0,
+    string? MediaPath = null,
+    bool MediaFullscreen = false);
 
 /// <summary>
 /// Maps semantic .mem actions from the ws/ingame stream to light effects (CDC §18),
@@ -34,7 +39,7 @@ public sealed record IngameEffectRule(
 /// </summary>
 public sealed class IngameEffectLibrary
 {
-    private sealed record Rule(string[]? Actions, string? FamilyPrefix, IngameEffectRule? Effect, string[]? Genres = null, bool ExactActions = false);
+    private sealed record Rule(string[]? Actions, string? FamilyPrefix, IReadOnlyList<IngameEffectRule>? Effects, string[]? Genres = null, bool ExactActions = false);
 
     private readonly List<Rule> _rules = new();
     private readonly Dictionary<string, long> _lastFired = new(StringComparer.OrdinalIgnoreCase);
@@ -46,6 +51,9 @@ public sealed class IngameEffectLibrary
     private List<Rule> _genreRules = new();
     private string[] _genreSlugs = Array.Empty<string>();
     private string? _contextKey;
+    /// <summary>Per-game effect policy: inherit (default) | custom-only | off.</summary>
+    private string _policy = "inherit";
+    private string _libraryRoot = "";
 
     public static IngameEffectLibrary Load(string directory, ILogger logger)
     {
@@ -84,6 +92,9 @@ public sealed class IngameEffectLibrary
             _gameRules = new List<Rule>();
             _systemRules = new List<Rule>();
             _genreRules = new List<Rule>();
+            _policy = "inherit";
+            // named effect library lives beside the user media: media\effects\
+            _libraryRoot = Path.GetFullPath(Path.Combine(overridesRoot, "..", "..", "media", "effects"));
 
             try
             {
@@ -91,14 +102,14 @@ public sealed class IngameEffectLibrary
                 {
                     var safeSystem = SafeName(candidateSystem);
                     if (rom is { Length: > 0 } && _gameRules.Count == 0)
-                        _gameRules = LoadOverrideFile(Path.Combine(overridesRoot, safeSystem, SafeName(rom) + ".json"), logger);
+                        (_gameRules, _policy) = LoadOverrideFile(Path.Combine(overridesRoot, safeSystem, SafeName(rom) + ".json"), logger);
                     if (_systemRules.Count == 0)
-                        _systemRules = LoadOverrideFile(Path.Combine(overridesRoot, safeSystem + ".json"), logger);
+                        (_systemRules, _) = LoadOverrideFile(Path.Combine(overridesRoot, safeSystem + ".json"), logger);
                 }
 
                 foreach (var slug in genreSlugs)
                 {
-                    _genreRules.AddRange(LoadOverrideFile(Path.Combine(overridesRoot, "genres", SafeName(slug) + ".json"), logger));
+                    _genreRules.AddRange(LoadOverrideFile(Path.Combine(overridesRoot, "genres", SafeName(slug) + ".json"), logger).Rules);
                 }
             }
             catch (Exception ex)
@@ -115,22 +126,34 @@ public sealed class IngameEffectLibrary
         }
     }
 
-    /// <summary>Resolve an action/family to a rule, applying per-rule throttling.
-    /// Null = no effect (no match, throttled, or explicitly turned off).</summary>
-    public IngameEffectRule? Resolve(string action, string? family)
+    /// <summary>Resolve an action/family to a SEQUENCE of effect actions (delays
+    /// included), applying per-rule throttling. Empty = nothing fires (no match,
+    /// throttled, explicitly off, or game policy). Policies: `off` silences the
+    /// game entirely; `custom-only` only fires the game's own allocations.</summary>
+    public IReadOnlyList<IngameEffectRule> Resolve(string action, string? family)
     {
         List<Rule> game, system, genre;
         string[] slugs;
+        string policy;
         lock (_contextSync)
         {
             game = _gameRules;
             system = _systemRules;
             genre = _genreRules;
             slugs = _genreSlugs;
+            policy = _policy;
         }
 
+        if (policy.Equals("off", StringComparison.OrdinalIgnoreCase))
+            return Array.Empty<IngameEffectRule>();
+
+        if (FindMatch(game, action, family, requireGenre: null) is { } gameRule)
+            return Throttled(gameRule);
+        if (policy.Equals("custom-only", StringComparison.OrdinalIgnoreCase))
+            return Array.Empty<IngameEffectRule>();
+
         // override layers first, then the library: genre-scoped rules beat generic ones
-        foreach (var layer in new[] { game, system, genre })
+        foreach (var layer in new[] { system, genre })
         {
             if (FindMatch(layer, action, family, requireGenre: null) is { } rule)
                 return Throttled(rule);
@@ -139,7 +162,7 @@ public sealed class IngameEffectLibrary
             return Throttled(scoped);
         if (FindMatch(_rules, action, family, requireGenre: Array.Empty<string>()) is { } generic)
             return Throttled(generic);
-        return null;
+        return Array.Empty<IngameEffectRule>();
     }
 
     /// <summary>requireGenre: null = layer already scoped (overrides); empty = only
@@ -166,18 +189,20 @@ public sealed class IngameEffectLibrary
         return null;
     }
 
-    private IngameEffectRule? Throttled(Rule rule)
+    private IReadOnlyList<IngameEffectRule> Throttled(Rule rule)
     {
-        if (rule.Effect == null) return null; // "off": the signal is silenced on purpose
+        if (rule.Effects is not { Count: > 0 }) return Array.Empty<IngameEffectRule>(); // "off"
 
+        // one throttle for the whole sequence (its first action carries the label)
+        var head = rule.Effects[0];
         var now = _clock.ElapsedMilliseconds;
         lock (_lastFired)
         {
-            if (_lastFired.TryGetValue(rule.Effect.Label, out var last) && now - last < rule.Effect.ThrottleMs)
-                return null;
-            _lastFired[rule.Effect.Label] = now;
+            if (_lastFired.TryGetValue(head.Label, out var last) && now - last < head.ThrottleMs)
+                return Array.Empty<IngameEffectRule>();
+            _lastFired[head.Label] = now;
         }
-        return rule.Effect;
+        return rule.Effects;
     }
 
     private void LoadRules(XDocument document)
@@ -191,7 +216,7 @@ public sealed class IngameEffectLibrary
             var genres = ((string?)element.Attribute("genre"))
                 ?.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var label = (genres is { Length: > 0 } ? $"[{genres[0]}]" : "") + (actionsRaw ?? $"family:{family}");
-            _rules.Add(new Rule(actions, family, ParseEffect(element, label), genres is { Length: > 0 } ? genres : null));
+            _rules.Add(new Rule(actions, family, new[] { ParseEffect(element, label) }, genres is { Length: > 0 } ? genres : null));
         }
     }
 
@@ -222,17 +247,26 @@ public sealed class IngameEffectLibrary
     }
 
     /// <summary>Sparse JSON override layer (schema marqueemanager.effects-override.v1):
-    /// { "rules": { "ACTION" | "family:prefix": { kind, color, durationMs, dip,
-    /// sprite, count, motion, throttleMs } | { "off": true } } }.</summary>
-    private static List<Rule> LoadOverrideFile(string path, ILogger logger)
+    /// { "policy": "inherit"|"custom-only"|"off",
+    ///   "rules": { "ACTION" | "family:prefix":
+    ///       { kind, color, durationMs, dip, sprite, count, motion, throttleMs, delayMs, media, fullscreen }
+    ///     | { "actions": [ {…}, {…} ] }          // stacked/sequenced actions
+    ///     | { "effect": "Touché nucléaire" }      // named effect from media\effects\library.json
+    ///     | { "off": true } } }.</summary>
+    private (List<Rule> Rules, string Policy) LoadOverrideFile(string path, ILogger logger)
     {
         var rules = new List<Rule>();
+        var policy = "inherit";
         try
         {
-            if (!File.Exists(path)) return rules;
+            if (!File.Exists(path)) return (rules, policy);
             using var doc = JsonDocument.Parse(File.ReadAllText(path));
+            if (doc.RootElement.TryGetProperty("policy", out var policyValue)
+                && policyValue.ValueKind == JsonValueKind.String)
+                policy = policyValue.GetString() ?? "inherit";
+
             if (!doc.RootElement.TryGetProperty("rules", out var ruleSet) || ruleSet.ValueKind != JsonValueKind.Object)
-                return rules;
+                return (rules, policy);
 
             foreach (var entry in ruleSet.EnumerateObject())
             {
@@ -252,34 +286,123 @@ public sealed class IngameEffectLibrary
                     continue;
                 }
 
-                var effect = new IngameEffectRule(
-                    ReadString(entry.Value, "kind")?.ToLowerInvariant() switch
-                    {
-                        "pulse" => IngameEffectKind.Pulse,
-                        "powercycle" => IngameEffectKind.PowerCycle,
-                        "blackout" => IngameEffectKind.Blackout,
-                        "sprite" => IngameEffectKind.Sprite,
-                        "shake" => IngameEffectKind.Shake,
-                        "strobe" => IngameEffectKind.Strobe,
-                        "tint" => IngameEffectKind.Tint,
-                        _ => IngameEffectKind.Flash
-                    },
-                    ParseColor(ReadString(entry.Value, "color")),
-                    ReadInt(entry.Value, "durationMs") ?? 300,
-                    (float)(ReadDouble(entry.Value, "dip") ?? 0.0),
-                    ReadInt(entry.Value, "throttleMs") ?? 400,
-                    $"override:{Path.GetFileNameWithoutExtension(path)}:{key}",
-                    ReadString(entry.Value, "sprite"),
-                    Math.Clamp(ReadInt(entry.Value, "count") ?? 1, 1, 8),
-                    ReadString(entry.Value, "motion")?.ToLowerInvariant() ?? "pop");
-                rules.Add(new Rule(actions, familyPrefix, effect, ExactActions: true));
+                var label = $"override:{Path.GetFileNameWithoutExtension(path)}:{key}";
+                var effects = ParseRuleEffects(entry.Value, label, logger);
+                if (effects.Count > 0)
+                    rules.Add(new Rule(actions, familyPrefix, effects, ExactActions: true));
             }
         }
         catch (Exception ex)
         {
             logger.LogWarning("Invalid effect override {Path} skipped: {Message}", path, ex.Message);
         }
-        return rules;
+        return (rules, policy);
+    }
+
+    /// <summary>Single object, "actions" array, or "effect" library reference —
+    /// all normalize to a sequence of actions sharing the rule's label/throttle.</summary>
+    private List<IngameEffectRule> ParseRuleEffects(JsonElement value, string label, ILogger logger)
+    {
+        // named effect from the user library
+        if (value.TryGetProperty("effect", out var reference) && reference.ValueKind == JsonValueKind.String)
+        {
+            var named = LookupLibraryEffect(reference.GetString() ?? "", logger);
+            if (named.Count > 0)
+            {
+                // the whole sequence throttles on the head; keep the rule label
+                return named.Select((action, index) => action with { Label = label + (index == 0 ? "" : $"#{index}") }).ToList();
+            }
+            return new List<IngameEffectRule>();
+        }
+
+        if (value.TryGetProperty("actions", out var array) && array.ValueKind == JsonValueKind.Array)
+        {
+            var throttle = ReadInt(value, "throttleMs");
+            var list = new List<IngameEffectRule>();
+            var index = 0;
+            foreach (var action in array.EnumerateArray())
+            {
+                if (action.ValueKind != JsonValueKind.Object) continue;
+                var parsed = ParseJsonAction(action, label + (index == 0 ? "" : $"#{index}"));
+                if (throttle != null && index == 0) parsed = parsed with { ThrottleMs = throttle.Value };
+                list.Add(parsed);
+                index++;
+            }
+            return list;
+        }
+
+        return new List<IngameEffectRule> { ParseJsonAction(value, label) };
+    }
+
+    private IngameEffectRule ParseJsonAction(JsonElement value, string label)
+    {
+        var media = ReadString(value, "media");
+        string? mediaPath = null;
+        if (media is { Length: > 0 })
+        {
+            mediaPath = Path.IsPathRooted(media) ? media : Path.Combine(_libraryRoot, "user", media);
+        }
+
+        return new IngameEffectRule(
+            ReadString(value, "kind")?.ToLowerInvariant() switch
+            {
+                "pulse" => IngameEffectKind.Pulse,
+                "powercycle" => IngameEffectKind.PowerCycle,
+                "blackout" => IngameEffectKind.Blackout,
+                "sprite" => IngameEffectKind.Sprite,
+                "shake" => IngameEffectKind.Shake,
+                "strobe" => IngameEffectKind.Strobe,
+                "tint" => IngameEffectKind.Tint,
+                _ when mediaPath != null => IngameEffectKind.Sprite, // media rides the overlay pipeline
+                _ => IngameEffectKind.Flash
+            },
+            ParseColor(ReadString(value, "color")),
+            ReadInt(value, "durationMs") ?? 300,
+            (float)(ReadDouble(value, "dip") ?? 0.0),
+            ReadInt(value, "throttleMs") ?? 400,
+            label,
+            ReadString(value, "sprite"),
+            Math.Clamp(ReadInt(value, "count") ?? 1, 1, 8),
+            ReadString(value, "motion")?.ToLowerInvariant() ?? "pop",
+            null,
+            ReadInt(value, "delayMs") ?? 0,
+            mediaPath,
+            value.TryGetProperty("fullscreen", out var fullscreen) && fullscreen.ValueKind == JsonValueKind.True);
+    }
+
+    private (string Path, DateTime Stamp, Dictionary<string, List<IngameEffectRule>> Effects) _libraryCache;
+
+    /// <summary>media\effects\library.json — the user's named, reusable effect
+    /// compositions: { "effects": { "<name>": { "actions": [ {…}, {…} ] } } }.</summary>
+    private List<IngameEffectRule> LookupLibraryEffect(string name, ILogger logger)
+    {
+        var path = Path.Combine(_libraryRoot, "library.json");
+        try
+        {
+            var stamp = File.Exists(path) ? File.GetLastWriteTimeUtc(path) : DateTime.MinValue;
+            if (_libraryCache.Effects == null || _libraryCache.Path != path || _libraryCache.Stamp != stamp)
+            {
+                var effects = new Dictionary<string, List<IngameEffectRule>>(StringComparer.OrdinalIgnoreCase);
+                if (File.Exists(path))
+                {
+                    using var doc = JsonDocument.Parse(File.ReadAllText(path));
+                    if (doc.RootElement.TryGetProperty("effects", out var set) && set.ValueKind == JsonValueKind.Object)
+                    {
+                        foreach (var entry in set.EnumerateObject())
+                        {
+                            effects[entry.Name] = ParseRuleEffects(entry.Value, "fx:" + entry.Name, logger);
+                        }
+                    }
+                }
+                _libraryCache = (path, stamp, effects);
+            }
+            return _libraryCache.Effects!.TryGetValue(name, out var found) ? found : new List<IngameEffectRule>();
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Effect library unreadable ({Message}); named effect {Name} skipped", ex.Message, name);
+            return new List<IngameEffectRule>();
+        }
     }
 
     private static string? ReadString(JsonElement element, string name)

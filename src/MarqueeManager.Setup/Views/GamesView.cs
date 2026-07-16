@@ -46,12 +46,10 @@ public sealed class GamesView : UserControl, IDisposable
         _projects = new MarqueeProjectStore(pluginRoot);
 
         var page = new StackPanel();
-        page.Children.Add(Ui.Title(L.T("Mes composants", "My components")));
+        page.Children.Add(Ui.Title(L.T("Mes jeux", "My games")));
         page.Children.Add(Ui.Subtitle(L.T(
-            "Bibliothèque de compositions : templates automatiques, priorités des sources par système, "
-            + "et compositions originales par jeu ou par système (avec effets, lampes et profils).",
-            "Composition library: automatic templates, per-system source priorities, "
-            + "and original compositions per game or system (with effects, lamps and profiles).")));
+            "La fiche complète d'un jeu : composition du marquee, médias en ligne, effets ingame (politique, allocation, mes effets), lampes et profil d'éclairage.",
+            "A game's full sheet: marquee composition, online media, ingame effects (policy, allocation, my effects), lamps and light profile.")));
 
         if (!_media.IsAvailable)
         {
@@ -65,24 +63,7 @@ public sealed class GamesView : UserControl, IDisposable
         var iniBoot = IniFile.Load(PluginPaths.ConfigPath(pluginRoot));
         _identity = new GameIdentityIndex(pluginRoot, iniBoot.Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345"));
 
-        // ---- library: templates + per-system priorities ----
-        var templates = new StackPanel();
-        templates.Children.Add(Ui.SectionHeader(L.T("Templates de composition", "Composition templates")));
-        templates.Children.Add(Ui.MutedLabel(L.T(
-            "4 gabarits automatiques (fanart en fond + gradient selon la luminance + logo) : "
-            + "3 horizontaux aux proportions APIExpose — 1920×360, 1280×400, 920×360 — et 1 vertical 1080×1920. "
-            + "Affectez-les dans les priorités ci-dessous (« Template … ») : chaque jeu du système reçoit sa composition, "
-            + "rendue en tâche de fond puis mise en cache (ou pré-générée en masse).",
-            "4 automatic recipes (fanart background + luminance-driven gradient + logo): "
-            + "3 horizontal at APIExpose proportions — 1920×360, 1280×400, 920×360 — and 1 vertical 1080×1920. "
-            + "Assign them in the priorities below (“Template …”): every game of the system gets its composition, "
-            + "rendered in the background then cached (or pre-generated in bulk).")));
-        page.Children.Add(Ui.Card(templates));
-
-        page.Children.Add(Ui.Card(new PrioritiesCard(pluginRoot, _media, _identity)));
-
         // ---- picker: system + search ----
-        page.Children.Add(Ui.SectionHeader(L.T("Compositions originales par jeu / système", "Original compositions per game / system")));
         var picker = new StackPanel();
         var pickerRow = new WrapPanel();
         _systems.Items.Add(new ComboBoxItem { Content = L.T("Tous les systèmes", "All systems"), Tag = "" });

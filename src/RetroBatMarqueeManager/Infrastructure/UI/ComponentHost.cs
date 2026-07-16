@@ -30,6 +30,37 @@ public sealed class ComponentHost : Canvas
 
     private readonly ILogger _logger;
     private readonly List<(ComponentDefinition Definition, FrameworkElement Element)> _visuals = new();
+    private string _scene = "navigation";
+
+    /// <summary>Display state switch (navigation ↔ ingame). Components scoped by
+    /// `when` show/hide; "both" components never blink.</summary>
+    public void ApplyScene(string scene)
+    {
+        _scene = scene;
+        foreach (var (definition, element) in _visuals)
+        {
+            RefreshVisibility(definition, element);
+        }
+    }
+
+    /// <summary>Final visibility = active in the current state AND has content.</summary>
+    private void RefreshVisibility(ComponentDefinition definition, FrameworkElement element)
+    {
+        if (!definition.ActiveIn(_scene))
+        {
+            element.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var hasContent = element switch
+        {
+            Image image => image.Source != null,
+            ContentControl host => host.Content != null,
+            TextBlock text => text.Text.Length > 0,
+            _ => true // shapes, gradients, web views
+        };
+        element.Visibility = hasContent ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     /// <summary>True when the surface declares at least one non-built-in component.</summary>
     public static bool IsNeeded(SurfaceDefinition surface)
@@ -78,6 +109,7 @@ public sealed class ComponentHost : Canvas
                     // fed by InstructionCardService through SetSource
                     break;
             }
+            RefreshVisibility(definition, element);
         }
     }
 
@@ -91,6 +123,7 @@ public sealed class ComponentHost : Canvas
                 SetVideo(element, path);
             else
                 SetImage(element, path);
+            RefreshVisibility(definition, element);
         }
     }
 
@@ -106,7 +139,7 @@ public sealed class ComponentHost : Canvas
             foreach (var (key, value) in meta)
                 template = template.Replace("{" + key + "}", value, StringComparison.OrdinalIgnoreCase);
             text.Text = template.Trim();
-            text.Visibility = text.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            RefreshVisibility(definition, element);
         }
     }
 
@@ -251,7 +284,6 @@ public sealed class ComponentHost : Canvas
         if (element is not Image image) return;
         if (path == null || !File.Exists(path))
         {
-            image.Visibility = Visibility.Collapsed;
             image.Source = null;
             return;
         }
@@ -265,11 +297,10 @@ public sealed class ComponentHost : Canvas
             bitmap.EndInit();
             bitmap.Freeze();
             image.Source = bitmap;
-            image.Visibility = Visibility.Visible;
         }
         catch
         {
-            image.Visibility = Visibility.Collapsed;
+            image.Source = null;
         }
     }
 
@@ -279,7 +310,7 @@ public sealed class ComponentHost : Canvas
         if (path == null)
         {
             (host.Content as MediaElement)?.Stop();
-            host.Visibility = Visibility.Collapsed;
+            host.Content = null;
             return;
         }
 
@@ -299,13 +330,13 @@ public sealed class ComponentHost : Canvas
                 {
                     view.Source = new Uri(path);
                 }
-                host.Visibility = Visibility.Visible;
                 return;
             }
 
             if (!File.Exists(path))
             {
-                host.Visibility = Visibility.Collapsed;
+                (host.Content as MediaElement)?.Stop();
+                host.Content = null;
                 return;
             }
 
@@ -326,12 +357,11 @@ public sealed class ComponentHost : Canvas
                 host.Content = media;
             }
             media.Source = new Uri(path);
-            host.Visibility = Visibility.Visible;
             media.Play();
         }
         catch
         {
-            host.Visibility = Visibility.Collapsed;
+            host.Content = null;
         }
     }
 

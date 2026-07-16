@@ -16,7 +16,7 @@
 <div class="grid cards" markdown>
 
 - **[Getting started](premiers-pas.md)** — install MarqueeManager in 5 minutes.
-- **[Screens and surfaces](ecrans.md)** — assign each surface to a Windows screen.
+- **[My setup](mon-setup.md)** — the map of your screens: one type per screen and everything works.
 - **[DMD and ZeDMD](dmd.md)** — tune your DMD, virtual or physical.
 - **[Troubleshooting](depannage.md)** — solutions to common issues.
 
