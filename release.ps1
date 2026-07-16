@@ -44,7 +44,7 @@ Write-Host 'Construction update.7z...'
 $listing = & $sz l $full
 $leaks = $listing | Select-String '\\src\\|\\docs\\|CAHIER|\.git|crash|checkpoint|EmbeddedSecretDefaults|\.env'
 if ($leaks) { throw "FUITE DETECTEE dans l'archive : $($leaks[0])" }
-$tracked = git -C $root ls-files | Select-String 'EmbeddedSecretDefaults'
+$tracked = git -C $PSScriptRoot ls-files | Select-String 'EmbeddedSecretDefaults'
 if ($tracked) { throw "FUITE DETECTEE dans git : $($tracked[0])" }
 Write-Host 'Controle anti-fuite : OK'
 
