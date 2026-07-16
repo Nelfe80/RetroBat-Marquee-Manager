@@ -1,4 +1,4 @@
-# release.ps1 - Construit et publie une release MarqueeManager sur GitHub.
+﻿# release.ps1 - Construit et publie une release MarqueeManager sur GitHub.
 # Usage :
 #   .\release.ps1                # construit les archives + release DRAFT
 #   .\release.ps1 -Publish      # publie directement (sans draft)
@@ -29,7 +29,7 @@ $ex = @(
     "-x!$name\artifacts", "-x!$name\wiki", "-x!$name\mkdocs.yml", "-x!$name\site",
     "-x!$name\build.bat", "-x!$name\build-Setup.bat", "-x!$name\release.ps1",
     "-x!$name\RetroBatMarqueeManager.sln", "-x!$name\Directory.Build.props",
-    "-x!$name\MARQUEE_MANAGER_SETUP.md", "-x!$name\state",
+    "-x!$name\MARQUEE_MANAGER_SETUP.md", "-x!$name\state", "-x!$name\media",
     '-xr!CAHIER_DES_CHARGES*', '-xr!*.log', '-xr!__pycache__', '-xr!*.pyc'
 )
 

@@ -123,17 +123,31 @@ public sealed class IniConfigService : IConfigService
         return new TargetBounds(values[0], values[1], values[2], values[3]);
     }
 
+    /// <summary>Surface ids receiving a content/stream — the fanout every ws
+    /// handler routes through. Dynamic surfaces when surfaces.json is valid,
+    /// otherwise the historical [Screens] behavior via the legacy converter.</summary>
     public IReadOnlyList<string> GetTargetsForContent(string source)
+        => GetSurfaces()
+            .Where(surface => surface.AcceptsStream(source)
+                              && (surface.Screens.Count > 0
+                                  || surface.Category.Equals("dmd-physical", StringComparison.OrdinalIgnoreCase)))
+            .Select(surface => surface.Id)
+            .ToArray();
+
+    private IReadOnlyList<Core.Surfaces.SurfaceDefinition>? _surfaces;
+
+    public IReadOnlyList<Core.Surfaces.SurfaceDefinition> GetSurfaces()
     {
-        var result = new List<string>();
-        foreach (var target in new[] { "Marquee", "Topper", "IcCard", "Dmd", "Lcd" })
-        {
-            var configured = Get("Screens", target + "Content", target.ToLowerInvariant());
-            if (configured.Equals(source, StringComparison.OrdinalIgnoreCase) && GetScreenIndices(target).Count > 0)
-                result.Add(target.ToLowerInvariant());
-        }
-        return result;
+        if (_surfaces != null) return _surfaces;
+        var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+        _surfaces = Core.Surfaces.SurfacesDocument.TryLoad(
+                        Core.Surfaces.SurfacesDocument.PathFor(BaseDirectory), logger)
+                    ?? Core.Surfaces.SurfacesDocument.FromLegacy(this);
+        return _surfaces;
     }
+
+    public string GetValue(string section, string key, string fallback = "")
+        => Get(section, key, fallback);
 
     public string GetSetting(string key, string defaultValue = "")
         => _flat.TryGetValue(key, out var value) ? value : defaultValue;

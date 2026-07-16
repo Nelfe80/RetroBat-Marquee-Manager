@@ -42,6 +42,24 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private readonly Core.Interfaces.IDmdService? _dmdMirror;
         private readonly int _dmdWidth;
         private readonly int _dmdHeight;
+        /// <summary>The dynamic surface this window renders (null on legacy paths
+        /// that never went through GetSurfaces — tests, tooling).</summary>
+        private readonly Core.Surfaces.SurfaceDefinition? _surface;
+        private ComponentHost? _componentHost;
+
+        /// <summary>Media kinds of the current selection → the dynamic components.</summary>
+        public void UpdateComponentMedia(IReadOnlyDictionary<string, string?> kinds)
+            => Dispatcher.BeginInvoke(new Action(() => _componentHost?.ApplyMedia(kinds)));
+
+        /// <summary>Selection meta (name/year/developer/publisher/system) → text.meta.</summary>
+        public void UpdateComponentMeta(IReadOnlyDictionary<string, string> meta)
+            => Dispatcher.BeginInvoke(new Action(() => _componentHost?.ApplyMeta(meta)));
+
+        /// <summary>Direct feed of one component type (instruction cards…).</summary>
+        public void SetComponentSource(string type, string? path)
+            => Dispatcher.BeginInvoke(new Action(() => _componentHost?.SetSource(type, path)));
+
+        public bool HasSurfaceComponent(string type) => _surface?.HasComponent(type) == true;
         private SkiaSharp.SKBitmap? _dmdSmall;
         private byte[]? _dmdBuffer;
         private long _dmdLastPushMs;
@@ -128,7 +146,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private static readonly Lazy<System.Drawing.Text.PrivateFontCollection?> SpeedrunFontCollection = new(LoadSpeedrunFontCollection);
 
         public MarqueeWindow(int screenNumber, ILogger logger, LightingSurfaceOptions? lightingOptions = null, Core.Interfaces.TargetBounds? bounds = null,
-            Core.Interfaces.IDmdService? dmdMirror = null, int dmdWidth = 128, int dmdHeight = 32)
+            Core.Interfaces.IDmdService? dmdMirror = null, int dmdWidth = 128, int dmdHeight = 32,
+            Core.Surfaces.SurfaceDefinition? surface = null)
         {
             _targetScreen = screenNumber;
             _logger = logger;
@@ -137,6 +156,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             _dmdMirror = dmdMirror;
             _dmdWidth = dmdWidth;
             _dmdHeight = dmdHeight;
+            _surface = surface;
 
             this.WindowStyle = WindowStyle.None;
             this.ResizeMode = ResizeMode.NoResize;
@@ -298,6 +318,13 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             transformGroup.Children.Add(_logoTranslate);
             _logoImage.RenderTransform = transformGroup;
             _mainGrid.Children.Add(_logoImage);
+
+            // 4b. Dynamic surface components (media blocks, texts, web embeds…)
+            if (_surface != null && ComponentHost.IsNeeded(_surface))
+            {
+                _componentHost = new ComponentHost(_surface, _logger);
+                _mainGrid.Children.Add(_componentHost);
+            }
 
             // 5. Custom Overlay Slot Layer
             _overlayCanvas = new Canvas();

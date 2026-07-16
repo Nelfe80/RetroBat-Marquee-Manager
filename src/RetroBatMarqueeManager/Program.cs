@@ -15,6 +15,17 @@ public static class Program
     [STAThread]
     public static async Task Main(string[] args)
     {
+        // headless batch mode: pre-render every templated composition of the given
+        // systems so ES navigation shows them instantly (Setup's "Pré-générer").
+        // Deliberately OUTSIDE the single-instance mutex: it only writes the cache.
+        var renderIndex = Array.IndexOf(args, "--render-templates");
+        if (renderIndex >= 0)
+        {
+            Environment.Exit(Application.Media.TemplateBatchRenderer.Run(
+                renderIndex + 1 < args.Length ? args[renderIndex + 1] : ""));
+            return;
+        }
+
         using var mutex = new Mutex(true, "RetroBatMarqueeManager.SingleInstance", out var ownsMutex);
         if (!ownsMutex) return;
 

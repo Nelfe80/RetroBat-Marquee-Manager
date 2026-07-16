@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -28,6 +29,8 @@ public sealed class WebSocketListenerService : BackgroundService
     private readonly Application.Lighting.IngameEffectLibrary _ingameEffects;
     private readonly Application.Lighting.GenreMap _genreMap;
     private readonly string _effectOverridesRoot;
+    private readonly Application.Media.CompositionChainResolver _compositionChains;
+    private readonly Application.Media.CompositionTemplateRenderer _templateRenderer;
 
     public WebSocketListenerService(
         IConfigService config,
@@ -50,6 +53,33 @@ public sealed class WebSocketListenerService : BackgroundService
         _genreMap = Application.Lighting.GenreMap.Load(
             Path.Combine(config.BaseDirectory, "resources", "lighting"), logger);
         _effectOverridesRoot = Path.Combine(config.BaseDirectory, "overrides", "effects");
+        _compositionChains = new Application.Media.CompositionChainResolver(
+            config.BaseDirectory, logger, config.LightingPreferGeneratedMarquee);
+        _templateRenderer = new Application.Media.CompositionTemplateRenderer(config.BaseDirectory, logger);
+        _compositionChains.TemplateMissing = OnTemplateMissing;
+    }
+
+    private readonly Dictionary<string, string?> _lastMarqueeKinds = new(StringComparer.OrdinalIgnoreCase);
+    private Application.Lighting.LightingSceneMeta? _lastMarqueeMeta;
+
+    /// <summary>A chain asked for a template PNG not yet cached: render it in the
+    /// background, then re-display if the selection did not move on (the
+    /// "pending → updated" pattern of APIExpose's own generation).</summary>
+    private void OnTemplateMissing(string templateId, string system, string rom, bool systemScope)
+    {
+        string? fanart, logo;
+        lock (_lastMarqueeKinds)
+        {
+            _lastMarqueeKinds.TryGetValue("fanart", out fanart);
+            _lastMarqueeKinds.TryGetValue("logo", out logo);
+        }
+        _templateRenderer.RenderInBackground("marquee", templateId, system, rom, fanart, logo, path =>
+        {
+            var meta = _lastMarqueeMeta;
+            if (meta?.Rom == null || !meta.Rom.Equals(rom, StringComparison.OrdinalIgnoreCase)) return;
+            foreach (var target in _config.GetTargetsForContent("marquee"))
+                _ = _surfaces.DisplayMediaAsync(path, target, CancellationToken.None, meta, resolved: true);
+        });
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -148,29 +178,221 @@ public sealed class WebSocketListenerService : BackgroundService
     {
         var payload = Payload(root);
         var media = Child(payload, "Media", "media");
-        var marquee = MediaPath(media, "Marquee") ?? MediaPath(media, "GeneratedMarquee") ?? MediaPath(media, "Logo");
+        var snapshotMeta = ExtractLightingMeta(payload);
+        var selection = Child(payload, "Selection", "selection");
+        var systemScope = Text(selection, "Scope", "scope").Equals("system", StringComparison.OrdinalIgnoreCase);
+
+        // remember the snapshot kinds: template renders and component feeds use them
+        lock (_lastMarqueeKinds)
+        {
+            _lastMarqueeKinds["logo"] = MediaPath(media, "Logo");
+            _lastMarqueeKinds["fanart"] = MediaPath(media, "Fanart");
+            _lastMarqueeKinds["marquee"] = MediaPath(media, "Marquee");
+            _lastMarqueeKinds["generated"] = MediaPath(media, "GeneratedMarquee");
+            _lastMarqueeKinds["screenmarquee"] = MediaPath(media, "ScreenMarquee");
+            _lastMarqueeKinds["screenmarquee-small"] = MediaPath(media, "ScreenMarqueeSmall");
+            _lastMarqueeKinds["topper"] = MediaPath(media, "Topper");
+        }
+        _lastMarqueeMeta = snapshotMeta;
+
+        // the per-system priority chain decides the marquee source; the stream's
+        // own priority (marquee > generated > logo) stays the last resort
+        var chained = _compositionChains.Resolve("marquee", snapshotMeta, systemScope, SnapshotKind);
+        var marquee = chained
+                      ?? MediaPath(media, "Marquee") ?? MediaPath(media, "GeneratedMarquee") ?? MediaPath(media, "Logo");
         if (marquee != null)
         {
-            var meta = ExtractLightingMeta(payload);
-            if (meta != null)
+            if (snapshotMeta != null)
             {
                 // the ingame effect layers (game > system > genre) follow the displayed game
-                _ingameEffects.SetContext(meta.System ?? _selectedSystem, meta.Rom ?? _selectedRom,
-                    _genreMap.Resolve(meta.Genre, meta.GenreIds), _effectOverridesRoot, _logger);
+                _ingameEffects.SetContext(snapshotMeta.System ?? _selectedSystem, snapshotMeta.Rom ?? _selectedRom,
+                    _genreMap.Resolve(snapshotMeta.Genre, snapshotMeta.GenreIds), _effectOverridesRoot, _logger);
             }
             foreach (var target in _config.GetTargetsForContent("marquee"))
-                await _surfaces.DisplayMediaAsync(marquee, target, cancellationToken, meta);
+                await _surfaces.DisplayMediaAsync(marquee, target, cancellationToken, snapshotMeta, resolved: chained != null);
         }
+
+        FeedSurfaceComponents(media, snapshotMeta);
 
         var dmd = Child(media, "Dmd", "dmd");
         var generatedDmdPath = MediaPath(dmd, "Generated");
         var stillDmdPath = MediaPath(dmd, "Still");
-        var dmdPath = FirstAnimation(dmd) ?? stillDmdPath ?? generatedDmdPath;
+        var chainedDmd = _compositionChains.Resolve("dmd", snapshotMeta, systemScope, source => source.ToLowerInvariant() switch
+        {
+            "animations" => FirstAnimation(dmd),
+            "still" => stillDmdPath,
+            "generated" => generatedDmdPath,
+            _ => null
+        });
+        var dmdPath = chainedDmd ?? FirstAnimation(dmd) ?? stillDmdPath ?? generatedDmdPath;
         if (dmdPath == null) return;
         // Keep the generated game DMD behind text even when an animation is preferred while idle.
         await _dmd.SetBaseMediaAsync(dmdPath, cancellationToken, generatedDmdPath ?? stillDmdPath ?? dmdPath);
         foreach (var target in _config.GetTargetsForContent("dmd"))
             await _surfaces.DisplayMediaAsync(dmdPath, target, cancellationToken);
+    }
+
+    /// <summary>
+    /// The dynamic surface components eat the whole snapshot: every media kind
+    /// (logo, fanart, screenmarquee…) plus the game video resolved on disk (the
+    /// snapshot does not carry it), and the selection meta for text.meta.
+    /// Cheap no-op when no surface declares dynamic components.
+    /// </summary>
+    private void FeedSurfaceComponents(JsonElement media, Application.Lighting.LightingSceneMeta? meta)
+    {
+        if (!_surfaces.HasComponent("media.logo") && !_surfaces.HasComponent("media.fanart")
+            && !_surfaces.HasComponent("media.image") && !_surfaces.HasComponent("media.video")
+            && !_surfaces.HasComponent("text.meta"))
+            return;
+
+        var kinds = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["logo"] = MediaPath(media, "Logo"),
+            ["fanart"] = MediaPath(media, "Fanart"),
+            ["marquee"] = MediaPath(media, "Marquee"),
+            ["generated"] = MediaPath(media, "GeneratedMarquee"),
+            ["screenmarquee"] = MediaPath(media, "ScreenMarquee"),
+            ["screenmarquee-small"] = MediaPath(media, "ScreenMarqueeSmall"),
+            ["topper"] = MediaPath(media, "Topper"),
+            ["video"] = ResolveGameVideo(meta)
+        };
+
+        var metaValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["name"] = meta?.GameName ?? "",
+            ["year"] = meta?.Year?.ToString() ?? "",
+            ["developer"] = meta?.Developer ?? "",
+            ["publisher"] = meta?.Publisher ?? "",
+            ["system"] = meta?.System ?? ""
+        };
+
+        _surfaces.UpdateComponentMedia(kinds, metaValues);
+        _ = ResolveLiveVideoAsync(meta);
+    }
+
+    private static readonly HttpClient VideoHttp = new() { Timeout = TimeSpan.FromSeconds(5) };
+    private (string Token, DateTime Expires) _twitchToken;
+
+    /// <summary>
+    /// media.video source chain (user rule: live stream &gt; YouTube &gt; local video).
+    /// The local file is already pushed with the snapshot; when a live Twitch
+    /// stream (or a YouTube video) is found for the game, the component swaps to
+    /// its embed. Every lookup failure silently keeps the previous source.
+    /// </summary>
+    private async Task ResolveLiveVideoAsync(Application.Lighting.LightingSceneMeta? meta)
+    {
+        if (meta?.GameName is not { Length: > 0 } gameName) return;
+        var sources = _config.GetSurfaces()
+            .SelectMany(surface => surface.Components)
+            .FirstOrDefault(component => component.Type.Equals("media.video", StringComparison.OrdinalIgnoreCase))
+            ?.Option("sources", "local")
+            .Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (sources == null || !sources.Any(s => s is "twitch-live" or "youtube")) return;
+
+        var rom = meta.Rom;
+        foreach (var source in sources)
+        {
+            string? url = null;
+            try
+            {
+                if (source.Equals("twitch-live", StringComparison.OrdinalIgnoreCase))
+                    url = await TwitchLiveUrlAsync(gameName).ConfigureAwait(false);
+                else if (source.Equals("youtube", StringComparison.OrdinalIgnoreCase))
+                    url = await YouTubeEmbedUrlAsync(gameName).ConfigureAwait(false);
+                else if (source.Equals("local", StringComparison.OrdinalIgnoreCase))
+                    return; // the snapshot feed already pushed the local file
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Video source {Source} lookup failed: {Message}", source, ex.Message);
+            }
+
+            if (url != null)
+            {
+                // the selection may have moved on during the lookup
+                if (_lastMarqueeMeta?.Rom != rom) return;
+                _logger.LogInformation("media.video: {Source} found for {Game}", source, gameName);
+                _surfaces.SetComponentSource("media.video", url);
+                return;
+            }
+        }
+    }
+
+    /// <summary>Live Twitch stream on the game, via Helix (client credentials from
+    /// config [Scraper] TwitchClientId/TwitchClientSecret).</summary>
+    private async Task<string?> TwitchLiveUrlAsync(string gameName)
+    {
+        var clientId = _config.GetValue("Scraper", "TwitchClientId");
+        var secret = _config.GetValue("Scraper", "TwitchClientSecret");
+        if (clientId.Length == 0 || secret.Length == 0) return null;
+
+        if (_twitchToken.Token is not { Length: > 0 } || DateTime.UtcNow >= _twitchToken.Expires)
+        {
+            using var tokenResponse = await VideoHttp.PostAsync(
+                $"https://id.twitch.tv/oauth2/token?client_id={Uri.EscapeDataString(clientId)}&client_secret={Uri.EscapeDataString(secret)}&grant_type=client_credentials",
+                null).ConfigureAwait(false);
+            if (!tokenResponse.IsSuccessStatusCode) return null;
+            using var tokenDoc = JsonDocument.Parse(await tokenResponse.Content.ReadAsStringAsync().ConfigureAwait(false));
+            var token = tokenDoc.RootElement.GetProperty("access_token").GetString() ?? "";
+            var expires = tokenDoc.RootElement.TryGetProperty("expires_in", out var e) ? e.GetInt32() : 3600;
+            _twitchToken = (token, DateTime.UtcNow.AddSeconds(Math.Max(60, expires - 120)));
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            $"https://api.twitch.tv/helix/games?name={Uri.EscapeDataString(gameName)}");
+        request.Headers.Add("Client-Id", clientId);
+        request.Headers.Add("Authorization", "Bearer " + _twitchToken.Token);
+        using var gameResponse = await VideoHttp.SendAsync(request).ConfigureAwait(false);
+        if (!gameResponse.IsSuccessStatusCode) return null;
+        using var gameDoc = JsonDocument.Parse(await gameResponse.Content.ReadAsStringAsync().ConfigureAwait(false));
+        var gameId = gameDoc.RootElement.TryGetProperty("data", out var games) && games.GetArrayLength() > 0
+            ? games[0].GetProperty("id").GetString()
+            : null;
+        if (gameId == null) return null;
+
+        using var streamsRequest = new HttpRequestMessage(HttpMethod.Get,
+            $"https://api.twitch.tv/helix/streams?game_id={gameId}&first=1");
+        streamsRequest.Headers.Add("Client-Id", clientId);
+        streamsRequest.Headers.Add("Authorization", "Bearer " + _twitchToken.Token);
+        using var streamsResponse = await VideoHttp.SendAsync(streamsRequest).ConfigureAwait(false);
+        if (!streamsResponse.IsSuccessStatusCode) return null;
+        using var streamsDoc = JsonDocument.Parse(await streamsResponse.Content.ReadAsStringAsync().ConfigureAwait(false));
+        var login = streamsDoc.RootElement.TryGetProperty("data", out var streams) && streams.GetArrayLength() > 0
+            ? streams[0].GetProperty("user_login").GetString()
+            : null;
+        return login == null ? null : $"https://www.twitch.tv/{login}";
+    }
+
+    /// <summary>First embeddable YouTube video on the game (Data API key in
+    /// config [Scraper] YouTubeApiKey).</summary>
+    private async Task<string?> YouTubeEmbedUrlAsync(string gameName)
+    {
+        var key = _config.GetValue("Scraper", "YouTubeApiKey");
+        if (key.Length == 0) return null;
+        var query = Uri.EscapeDataString(gameName + " arcade gameplay");
+        var json = await VideoHttp.GetStringAsync(
+            $"https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&type=video&videoEmbeddable=true&q={query}&key={Uri.EscapeDataString(key)}")
+            .ConfigureAwait(false);
+        using var doc = JsonDocument.Parse(json);
+        var id = doc.RootElement.TryGetProperty("items", out var items) && items.GetArrayLength() > 0
+            ? items[0].GetProperty("id").GetProperty("videoId").GetString()
+            : null;
+        return id == null ? null : $"https://www.youtube.com/embed/{id}?autoplay=1&mute=1&controls=0&loop=1&playlist={id}";
+    }
+
+    /// <summary>games\&lt;rom&gt;\video.mp4 lives in the APIExpose media library
+    /// (sibling plugin) and is not part of the ws snapshot.</summary>
+    private string? ResolveGameVideo(Application.Lighting.LightingSceneMeta? meta)
+    {
+        if (meta?.System is not { Length: > 0 } || meta.Rom is not { Length: > 0 }) return null;
+        foreach (var system in meta.System.Equals("mame", StringComparison.OrdinalIgnoreCase)
+                     ? new[] { meta.System, "arcade" } : new[] { meta.System })
+        {
+            var path = Path.Combine(_config.BaseDirectory, "..", "APIExpose", "media", "systems",
+                system, "games", meta.Rom, "video.mp4");
+            if (File.Exists(path)) return Path.GetFullPath(path);
+        }
+        return null;
     }
 
     /// <summary>
@@ -210,9 +432,27 @@ public sealed class WebSocketListenerService : BackgroundService
 
     private async Task HandleTopperAsync(JsonElement root, CancellationToken cancellationToken)
     {
-        var media = Child(Payload(root), "Media", "media");
-        var path = MediaPath(media, "Topper");
-        if (path != null) foreach (var target in _config.GetTargetsForContent("topper")) await _surfaces.DisplayMediaAsync(path, target, cancellationToken);
+        var payload = Payload(root);
+        var media = Child(payload, "Media", "media");
+        var meta = ExtractLightingMeta(payload) ?? _lastMarqueeMeta;
+        var systemScope = Text(Child(payload, "Selection", "selection"), "Scope", "scope")
+            .Equals("system", StringComparison.OrdinalIgnoreCase);
+        var chained = _compositionChains.Resolve("topper", meta, systemScope, source =>
+            source.Equals("topper", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Topper")
+            : source.Equals("fanart", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Fanart")
+            : source.Equals("logo", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Logo")
+            : null);
+        var path = chained ?? MediaPath(media, "Topper");
+        if (path != null) foreach (var target in _config.GetTargetsForContent("topper")) await _surfaces.DisplayMediaAsync(path, target, cancellationToken, resolved: chained != null);
+    }
+
+    /// <summary>Chain source name → the last marquee snapshot asset.</summary>
+    private string? SnapshotKind(string source)
+    {
+        lock (_lastMarqueeKinds)
+        {
+            return _lastMarqueeKinds.TryGetValue(source, out var path) ? path : null;
+        }
     }
 
     private async Task HandleInstructionCardAsync(JsonElement root, CancellationToken cancellationToken)

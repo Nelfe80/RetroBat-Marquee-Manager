@@ -22,6 +22,13 @@ public interface IConfigService
     IReadOnlyList<string> GetTargetsForContent(string source);
     TargetBounds? GetTargetBounds(string target);
 
+    /// <summary>Raw section/key access (used by the legacy→surfaces converter).</summary>
+    string GetValue(string section, string key, string fallback = "");
+
+    /// <summary>The dynamic surfaces (state\surfaces.json) or their legacy
+    /// [Screens] equivalent — the runtime always consumes this shape.</summary>
+    IReadOnlyList<Core.Surfaces.SurfaceDefinition> GetSurfaces();
+
     bool DmdEnabled { get; }
     string DmdModel { get; }
     string DmdExePath { get; }

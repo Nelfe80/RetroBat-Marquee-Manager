@@ -79,3 +79,6 @@ state/
 # MkDocs build output
 site/
 
+
+# User media data (compositions, drop folders, template cache, assignments)
+/media/

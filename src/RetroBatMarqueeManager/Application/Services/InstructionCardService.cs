@@ -61,6 +61,16 @@ public sealed class InstructionCardService : IDisposable
         {
             await DisplayAsync(path, cancellationToken);
         }
+
+        if (_surfaces.HasComponent("iccard.static"))
+        {
+            string? staticPath;
+            lock (_lock)
+            {
+                staticPath = StaticCardPath();
+            }
+            _surfaces.SetComponentSource("iccard.static", staticPath);
+        }
     }
 
     private int DefaultGroupIndex()
@@ -184,6 +194,21 @@ public sealed class InstructionCardService : IDisposable
         {
             await _surfaces.DisplayMediaAsync(path, target, cancellationToken);
         }
+
+        // split rendering (fixed card + cycling card side by side): the cycling
+        // component follows every card change, the static one is pinned on its
+        // configured card and only moves on a game change (SetCardsAsync)
+        _surfaces.SetComponentSource("iccard.cycle", path);
+    }
+
+    /// <summary>Path of the card pinned by an iccard.static component ("card" option,
+    /// logical number, default 1).</summary>
+    private string? StaticCardPath()
+    {
+        var option = _surfaces.ComponentOption("iccard.static", "card");
+        var number = int.TryParse(option, out var parsed) && parsed >= 1 ? parsed : 1;
+        var group = _groups.FirstOrDefault(g => g.Number == number) ?? _groups.FirstOrDefault();
+        return group?.PathFor("left");
     }
 
     /// <summary>"ic2" / "2" → logical card n°2; otherwise match by file name fragment.</summary>
