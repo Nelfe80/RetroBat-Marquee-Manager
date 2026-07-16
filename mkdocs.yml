@@ -50,7 +50,7 @@ plugins:
             Accueil: Home
             Premiers pas: Getting started
             Assistant de configuration: Setup assistant
-            Mes jeux: My games
+            Mes composants: My components
             Écrans et surfaces: Screens and surfaces
             DMD et ZeDMD: DMD and ZeDMD
             RetroAchievements: RetroAchievements
@@ -72,7 +72,7 @@ nav:
   - Accueil: index.md
   - Premiers pas: premiers-pas.md
   - Assistant de configuration: assistant.md
-  - Mes jeux: mes-jeux.md
+  - Mes composants: mes-jeux.md
   - Écrans et surfaces: ecrans.md
   - DMD et ZeDMD: dmd.md
   - RetroAchievements: retroachievements.md

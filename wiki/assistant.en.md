@@ -30,18 +30,16 @@ The starting tab: every Windows display detected, with its number, resolution, r
 
 ![Surfaces tab](assets/setup/setup-surfaces.png)
 
-The heart of the tool: for each of the five surfaces (marquee, topper, instruction card, virtual DMD, LCD panel), pick:
+The heart of the tool, now **dynamic**: create as many surfaces as you need (your existing `[Screens]` configuration converts automatically on first launch, with identical behavior). For each surface:
 
-- **the screen** it appears on (or "Disabled");
-- **the content**: any surface can show any stream — for instance the instruction card on the topper when you have no dedicated screen;
-- **the zone**: fullscreen, or an `x,y,width,height` rectangle to share one large vertical display between topper, marquee and instruction card:
+- **the category**: marquee, topper, instruction card, virtual DMD, LCD or custom;
+- **the screen** it lives on and **the zone** (width × height — the x,y position is set visually in "Screens → Compose this screen");
+- **the streams** it displays (a surface can receive several);
+- **the components** stacked on it, each placed as fractions of the surface: stream media, logo, fanart, game video, text, hiscores, live score/timer, RetroAchievements, lighting engine, lamps, instruction cards, and even an embedded web page (live Twitch/YouTube stream).
 
 ![Shared vertical screen](assets/ecran-partage.svg)
 
-**Test the zone** shows the pattern exactly where it will land, before saving. The assistant refuses invalid zones, flags overlaps and asks for confirmation before writing. If MarqueeManager is still running, it offers to restart it with the new configuration.
-
-!!! tip "Screen powered off?"
-    If a configured screen is off while you tweak, the assistant says so and **keeps** its assignment instead of overwriting it.
+A screen hosting several surfaces (the typical vertical display) is composed visually: drag and resize the rectangles, with magnetic guides and live dimensions.
 
 ## Physical DMD
 
@@ -72,11 +70,11 @@ The setting is saved to `state\surfaces.profile.json` and read by MarqueeManager
 !!! note "Card naming (APIExpose media)"
     In a game's `artwork\ic`: `ic.png` for a single card, or `ic-1.png`, `ic-2.png`… for several cards. The `-left`/`-right` suffixes (e.g. mercs: `ic-1-left.png` … `ic-5-right.png`) are the **two card holders of the panel**: player 1 side and player 2 side. Navigation moves from card to card (ic-1 → ic-2…), and dual player mode shows the side of the player who tapped; `ic2` in an action means logical card #2, regardless of the file count.
 
-## My games
+## My components
 
-![My games tab](assets/setup/setup-games.png)
+![My components tab](assets/setup/setup-games.png)
 
-The per-game workshop: compose your own marquee from the game's media, wire `.MEM` signals to light effects (with a preview), edit the rbmarquee scene lamps and pin a light profile. A dedicated page covers it all: [My games](mes-jeux.en.md).
+The composition library: automatic templates, per-system source priorities (your images, the scrape, the generated… in the order you want), a personal media folder with alias-resolved names, original compositions per game or system, online media fetching, light effects, lamps and profiles. A dedicated page covers it all: [My components](mes-jeux.en.md).
 
 ## Options
 

@@ -1,64 +1,38 @@
-# My games
+# My components
 
-The **My games** tab of MarqueeManagerSetup is the per-game workshop: compose your own marquee, wire in-game signals to light effects, retouch the scene lamps and pin a light profile.
+The **My components** tab is MarqueeManagerSetup's composition library: automatic templates, **per-system source priorities**, your **personal media folder**, and original compositions per game or per system — still with light effects, lamps and light profiles.
 
-![My games tab](assets/setup/setup-games.png)
+![My components tab](assets/setup/setup-games.png)
 
-Pick a game first: filter by system then type a few letters in the search box (the APIExpose media library is indexed automatically).
+## Composition templates
 
-## Compose the marquee
+Four automatic recipes mirror APIExpose's own (fanart background, black or white gradient picked by luminance, logo): three horizontal at the generated-marquee proportions — **1920×360, 1280×400, 920×360** — and one vertical **1080×1920**. Assign a template to a system in the priorities: every game gets its composition, rendered in the background on first display then cached.
 
-The composer assembles a marquee from the game's media: fanart, logo (wheel), scraped marquee, flyer, box, screenshot… Click a thumbnail to add it as a layer, then:
+!!! tip "Instant ES navigation"
+    **Pre-generate this system** (or all of them) renders every templated composition ahead of time: no wait at game selection, ever.
 
-- **drag** to move, **wheel** to resize, **Shift+wheel** to rotate;
-- fine tuning (opacity, mirror, layer order) under the preview;
-- three backgrounds: black, dark gradient or blurred fanart.
+## Per-system priorities
 
-The canvas is **locked to the real resolution** of your marquee (the `MarqueeBounds` area when set, otherwise the marquee screen). On save:
+For each **category** (marquee, topper, DMD) then each system, an ordered chain of sources: the runtime shows the **first available** one. Sources: manual composition, my folder, template, scraped marquee, screen-marquee, APIExpose generated, logo, fanart… (and for the DMD: your animated GIFs, the pack's dmd*.gif, dmd.png).
 
-- the flattened PNG goes to `media\marquees\<system>\<rom>.png` — it **replaces the scraped or generated marquee** for this game, with absolute priority;
-- a `.project.json` file sits next to it: reopen the game and the composition is editable again, layer by layer.
+A typical arcade chain: *composition > my folder > scraped marquee > generated* — your images first, the scrape next, the auto-generated as last resort. And when one game displeases you, its manual composition overrides it individually.
 
-"Delete my composition" hands control back to the original marquee.
+### My folder
 
-## Light effects (game signals)
+Drop your own **images or videos** into `media\marquees\user\<system>\` (same for `media\toppers\user\`, `media\dmd\user\` — your animated DMD GIFs cycle there). File names are **alias-resolved** through APIExpose's gamelist index: `Metal Slug (World).png`, `metalslug.png` or the exact set name all point to the same game. Drag & drop straight onto the card (or onto a game sheet) copies and renames automatically.
 
-Every game with a `.MEM` definition exposes its **semantic signals** (LOSE_LIFE, BOSS_DEFEATED, COIN_GAIN…). The card shows them as readable sentences:
+**Test the chain** shows, for a few games of the system, which source wins — the chain is never a black box.
 
-> **When** `HIT` — Player 1 Health decreased **then** Colored flash
+## Original compositions
 
-Click a row to open the editor: effect kind (flash, pulse, tint, shake, strobe, blackout, sprites), color, duration, animated sprite, cooldown… The **▶ Preview the effect** button replays the effect in a mini marquee band, without launching the game.
+The search (game name, rom name or alias) opens the game sheet:
 
-### Tweak scope
+- **Composer**: layers from the game's media, canvas locked to the real marquee resolution. An inserted logo takes **50 % of the width** by default; the "Auto recipe" button lays fanart + logo in one click.
+- **Fetch media online**: Arcade Database (no key), SteamGridDB, TheGamesDB — and ScreenScraper as a fallback (APIExpose scrapes it already). Keys in Options → Online sources. Clicking a result downloads it and adds it as a layer.
+- **Light effects** (.MEM signals), rbmarquee **scene & lamps** and **light profile**: unchanged, see their dedicated sections.
 
-The "My tweaks apply to" selector picks the write layer:
+Per-SYSTEM compositions (a system selected in ES) are stored in `media\marquees\systems\<system>.png`.
 
-| Scope | File |
-|---|---|
-| this game only | `overrides\effects\<system>\<rom>.json` |
-| the whole system | `overrides\effects\<system>.json` |
-| every game of the genre | `overrides\effects\genres\<slug>.json` |
+## Live video on a surface
 
-The runtime resolves in order **game → system → genre → genre defaults → generic defaults**, and reloads the layers at every game change. "Silence this signal" mutes one signal without touching the others.
-
-### Genre drives the style
-
-The game's scraped genre (shmup, beat'em up, racing…) is normalized by `resources\lighting\genres.map.xml`: a `HIT` in a shmup blows bombs across the marquee, the same `HIT` in a beat'em up throws an impact burst. Genre rules live in `resources\lighting\ingame.effects.xml` (`genre=` attribute) and stay editable.
-
-### Live monitor
-
-Start listening, launch the game and play: firing signals scroll by live (name, family, time). Click one to tune its effect right away — the most natural way to discover what a game emits.
-
-## Scene & lamps
-
-For arcade games, the light scene (`resources\rbmarquee\<rom>.xml`) places **lamps driven by the game outputs** (APB's beacons, Chase H.Q.'s lamps…). The editor shows the marquee as background:
-
-- drag a lamp, resize with the wheel;
-- color and **output wiring** (list of the game's known outputs) under the preview;
-- attract mode: none, chase or alternate.
-
-Saving stamps the scene `generated="false"`: it is **curated**, the automatic generator will never overwrite it again (a `.bak` backup is kept).
-
-## Light profile
-
-By default the lighting engine picks the period bulb through its grammar (year, manufacturer, publisher…). You can **pin** a library bulb (39 profiles: fluorescent tubes, incandescent, neon, LED…) and/or a cabinet profile for a specific game. The choice is stored with the game's effects and beats the grammar.
+A surface's video component can follow a **live Twitch stream > YouTube > local video** chain: when someone streams the displayed game, the live takes the video's place. Twitch/YouTube credentials in Options → Online sources; without keys, the local video simply plays.

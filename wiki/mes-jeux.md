@@ -1,64 +1,38 @@
-# Mes jeux
+# Mes composants
 
-L'onglet **Mes jeux** de MarqueeManagerSetup est l'atelier par jeu : composez votre propre marquee, liez les signaux de jeu à des effets lumière, retouchez les lampes de la scène et épinglez un profil d'éclairage.
+L'onglet **Mes composants** est la bibliothèque de compositions de MarqueeManagerSetup : des templates automatiques, des **priorités de sources par système**, votre **dossier de médias personnels**, et les compositions originales par jeu ou par système — avec toujours les effets lumière, les lampes et les profils d'éclairage.
 
-![Onglet Mes jeux](assets/setup/setup-games.png)
+![Onglet Mes composants](assets/setup/setup-games.png)
 
-Choisissez d'abord un jeu : filtrez par système puis tapez quelques lettres dans la recherche (la bibliothèque média d'APIExpose est indexée automatiquement).
+## Templates de composition
 
-## Composer le marquee
+Quatre gabarits automatiques reprennent la recette d'APIExpose (fanart en fond, gradient noir ou blanc selon la luminance, logo) : trois horizontaux aux proportions des marquees générés — **1920×360, 1280×400, 920×360** — et un vertical **1080×1920**. Affectez un template à un système dans les priorités : chaque jeu reçoit sa composition, rendue en tâche de fond au premier affichage puis mise en cache.
 
-Le compositeur assemble un marquee à partir des médias du jeu : fanart, logo (wheel), marquee scrapé, flyer, boîte, capture… Cliquez sur une vignette pour l'ajouter en calque, puis :
+!!! tip "Navigation ES instantanée"
+    **Pré-générer ce système** (ou tous) rend d'avance toutes les compositions templatées : plus aucune attente à la sélection d'un jeu.
 
-- **glisser** pour déplacer, **molette** pour la taille, **Maj+molette** pour la rotation ;
-- réglages fins (opacité, miroir, ordre des calques) sous l'aperçu ;
-- trois fonds : noir, dégradé sombre ou fanart flouté.
+## Priorités par système
 
-Le canevas est **calé sur la résolution réelle** de votre marquee (zone `MarqueeBounds` si définie, sinon l'écran marquee). À l'enregistrement :
+Pour chaque **catégorie** (marquee, topper, DMD) puis chaque système, une chaîne ordonnée de sources : le runtime affiche la **première disponible**. Sources : composition manuelle, mon dossier, template, marquee scrapé, screen-marquee, généré APIExpose, logo, fanart… (et pour le DMD : vos GIF animés, les dmd*.gif du pack, dmd.png).
 
-- le PNG aplati part dans `media\marquees\<système>\<rom>.png` — il **remplace le marquee scrapé ou généré** pour ce jeu, en priorité absolue ;
-- un fichier projet `.project.json` est posé à côté : rouvrez le jeu et la composition se réédite calque par calque.
+Exemple typique pour arcade : *composition > mon dossier > marquee scrapé > généré* — vos images d'abord, le scrapé ensuite, l'auto-généré en dernier recours. Et si un jeu ne vous plaît pas, sa composition manuelle le surclasse individuellement.
 
-« Supprimer ma composition » rend la main au marquee d'origine.
+### Mon dossier
 
-## Effets lumière (signaux du jeu)
+Déposez vos propres **images ou vidéos** dans `media\marquees\user\<système>\` (idem `media\toppers\user\`, `media\dmd\user\` — vos GIF animés DMD y sont cyclés). Les noms de fichiers sont **résolus par alias** via l'index gamelist d'APIExpose : `Metal Slug (World).png`, `metalslug.png` ou le nom de set exact désignent tous le même jeu. Le glisser-déposer directement sur la carte (ou sur la fiche d'un jeu) copie et renomme automatiquement.
 
-Chaque jeu doté d'une définition `.MEM` expose ses **signaux sémantiques** (LOSE_LIFE, BOSS_DEFEATED, COIN_GAIN…). La carte les présente en phrases lisibles :
+**Tester la chaîne** affiche pour quelques jeux du système la source qui gagne — la chaîne n'est jamais une boîte noire.
 
-> **Quand** `HIT` — Player 1 Health decreased **alors** Flash coloré
+## Compositions originales
 
-Cliquez une ligne pour ouvrir l'éditeur : type d'effet (flash, impulsion, teinte, secousse, strobo, extinction, sprites), couleur, durée, sprite animé, anti-rafale… Le bouton **▶ Tester l'effet** rejoue l'effet dans une mini-bande marquee, sans lancer le jeu.
+La recherche (nom de jeu, nom de rom ou alias) ouvre la fiche du jeu :
 
-### Portée des réglages
+- **Compositeur** : calques depuis les médias du jeu, canvas calé sur la résolution réelle du marquee. Un logo inséré occupe **50 % de la largeur** par défaut ; le bouton « Gabarit auto » pose fanart + logo en un clic.
+- **Récupérer des médias en ligne** : Arcade Database (sans clé), SteamGridDB, TheGamesDB — et ScreenScraper en secours (APIExpose le scrape déjà). Clés dans Options → Sources en ligne. Un clic sur un résultat le télécharge et l'ajoute en calque.
+- **Effets lumière** (signaux .MEM), **scène & lampes** rbmarquee et **profil d'éclairage** : inchangés, voir les sections dédiées.
 
-Le sélecteur « Mes réglages s'appliquent à » choisit la couche d'écriture :
+Les compositions par SYSTÈME (sélection d'un système dans ES) s'enregistrent dans `media\marquees\systems\<système>.png`.
 
-| Portée | Fichier |
-|---|---|
-| ce jeu uniquement | `overrides\effects\<système>\<rom>.json` |
-| tout le système | `overrides\effects\<système>.json` |
-| tous les jeux du genre | `overrides\effects\genres\<slug>.json` |
+## Vidéo live sur une surface
 
-Le runtime résout dans l'ordre **jeu → système → genre → défauts genrés → défauts génériques**, et recharge les couches à chaque changement de jeu. « Désactiver ce signal » rend un signal muet sans toucher aux autres.
-
-### Le genre pilote le style
-
-Le genre scrapé du jeu (shmup, beat'em up, racing…) est normalisé par `resources\lighting\genres.map.xml` : un `HIT` dans un shmup fait exploser des bombes sur le marquee, le même `HIT` dans un beat'em up projette une gerbe d'impact. Les règles genrées vivent dans `resources\lighting\ingame.effects.xml` (attribut `genre=`) et restent éditables.
-
-### Moniteur live
-
-Démarrez l'écoute, lancez le jeu et jouez : les signaux qui tirent défilent en direct (nom, famille, heure). Cliquez-en un pour régler immédiatement son effet — c'est la façon la plus naturelle de découvrir ce qu'un jeu émet.
-
-## Scène & lampes
-
-Pour les jeux arcade, la scène lumineuse (`resources\rbmarquee\<rom>.xml`) place des **lampes pilotées par les outputs du jeu** (gyrophares d'APB, lampes de Chase H.Q.…). L'éditeur affiche le marquee en fond :
-
-- glissez une lampe, redimensionnez à la molette ;
-- couleur et **câblage output** (liste des outputs connus du jeu) sous l'aperçu ;
-- mode attract : aucun, chenillard ou alterné.
-
-L'enregistrement marque la scène `generated="false"` : elle est **curée**, le générateur automatique ne l'écrasera plus (une sauvegarde `.bak` est conservée).
-
-## Profil d'éclairage
-
-Par défaut le moteur lumineux choisit l'ampoule d'époque via sa grammaire (année, constructeur, éditeur…). Vous pouvez **épingler** pour un jeu précis une ampoule de la bibliothèque (39 profils : tubes fluo, incandescence, néon, LED…) et/ou un profil de borne. Le choix est stocké avec les effets du jeu et prime sur la grammaire.
+Le composant vidéo d'une surface peut suivre une chaîne **stream Twitch en direct > YouTube > vidéo locale** : s'il existe un live sur le jeu affiché, il prend la place de la vidéo. Identifiants Twitch/YouTube dans Options → Sources en ligne ; sans clé, la vidéo locale s'affiche simplement.

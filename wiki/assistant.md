@@ -30,18 +30,16 @@ L'onglet de départ : tous les écrans Windows détectés, avec leur numéro, le
 
 ![Onglet Surfaces](assets/setup/setup-surfaces.png)
 
-Le cœur de l'outil : pour chacune des cinq surfaces (marquee, topper, instruction card, DMD virtuel, LCD panel), choisissez :
+Le cœur de l'outil, désormais **dynamique** : créez autant de surfaces que nécessaire (votre configuration `[Screens]` existante est convertie automatiquement au premier lancement, à comportement identique). Pour chaque surface :
 
-- **l'écran** qui l'affiche (ou « Désactivé ») ;
-- **le contenu** : chaque surface peut afficher n'importe quel flux — par exemple l'instruction card sur le topper si vous n'avez pas d'écran dédié ;
-- **la zone** : plein écran, ou un rectangle `x,y,largeur,hauteur` pour partager un grand écran vertical entre topper, marquee et instruction card :
+- **la catégorie** : marquee, topper, instruction card, DMD virtuel, LCD ou libre ;
+- **l'écran** qui l'affiche et **la zone** (largeur × hauteur — la position x,y se règle visuellement dans « Écrans → Composer cet écran ») ;
+- **les flux** affichés (une surface peut en recevoir plusieurs) ;
+- **les composants** empilés dessus, chacun placé en fractions de la surface : média du flux, logo, fanart, vidéo du jeu, texte, hiscores, score/timer live, RetroAchievements, rendu lumineux, lampes, cartes d'instructions, et même une page web embarquée (stream Twitch/YouTube en direct).
 
 ![Écran vertical partagé](assets/ecran-partage.svg)
 
-**Tester la zone** affiche la mire exactement à l'emplacement configuré, avant d'enregistrer. L'assistant refuse les zones invalides, signale les chevauchements et vous demande confirmation avant d'écrire. Si MarqueeManager tourne encore, il propose de le redémarrer avec la nouvelle configuration.
-
-!!! tip "Écran éteint ?"
-    Si un écran configuré n'est pas allumé au moment du réglage, l'assistant le signale et **conserve** son affectation au lieu de l'écraser.
+Un écran qui héberge plusieurs surfaces (écran vertical typique) se compose visuellement : glissez et redimensionnez les rectangles, avec guides magnétiques et dimensions affichées.
 
 ## DMD physique
 
@@ -72,11 +70,11 @@ Le réglage est enregistré dans `state\surfaces.profile.json` et lu par Marquee
 !!! note "Nommage des cartes (médias APIExpose)"
     Dans `artwork\ic` d'un jeu : `ic.png` pour une carte unique, ou `ic-1.png`, `ic-2.png`… pour plusieurs cartes. Les suffixes `-left`/`-right` (ex. mercs : `ic-1-left.png` … `ic-5-right.png`) sont les **deux porte-cartes du panel** : côté joueur 1 et côté joueur 2. La navigation passe de carte en carte (ic-1 → ic-2…), et le mode dual player affiche le côté du joueur qui a tapé ; `ic2` dans une action désigne bien la carte n°2, quel que soit le nombre de fichiers.
 
-## Mes jeux
+## Mes composants
 
-![Onglet Mes jeux](assets/setup/setup-games.png)
+![Onglet Mes composants](assets/setup/setup-games.png)
 
-L'atelier par jeu : composer son propre marquee à partir des médias du jeu, lier les signaux `.MEM` à des effets lumière (avec préview), éditer les lampes de la scène rbmarquee et épingler un profil d'éclairage. Une page dédiée détaille tout : [Mes jeux](mes-jeux.md).
+La bibliothèque de compositions : templates automatiques, priorités des sources par système (vos images, le scrapé, le généré… dans l'ordre que vous voulez), dossier de médias personnels résolu par alias, compositions originales par jeu ou système, scrap de médias en ligne, effets lumière, lampes et profils. Une page dédiée détaille tout : [Mes composants](mes-jeux.md).
 
 ## Options
 
