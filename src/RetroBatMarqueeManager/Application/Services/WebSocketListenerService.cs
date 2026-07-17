@@ -563,6 +563,9 @@ public sealed class WebSocketListenerService : BackgroundService
         if (type.Equals("ui.game.ended", StringComparison.OrdinalIgnoreCase) || type.Equals("ui.game.ended.raw", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogInformation("Frontend game ended event received: {Type}", type);
+            // scene FIRST: ingame-only surfaces must leave the game screen even
+            // if a later step throws — ES does not always re-select afterwards
+            _surfaces.SetDisplayScene("navigation");
             _lay.Clear();
             _presentation.MarkGameEnded();
             _runningRom = null;
@@ -570,15 +573,14 @@ public sealed class WebSocketListenerService : BackgroundService
             // back to the frontend: sounds return, audible re-ignition
             _surfaces.SetLightingIngame(false);
             _surfaces.PowerCycleLighting();
-            _surfaces.SetDisplayScene("navigation");
             return;
         }
         if (!type.Equals("ui.game.started", StringComparison.OrdinalIgnoreCase) && !type.Equals("ui.game.started.raw", StringComparison.OrdinalIgnoreCase)) return;
+        _surfaces.SetDisplayScene("ingame");
         _presentation.MarkGameStarted();
         // game launch drama: silent power cycle — the play session stays clean
         _surfaces.SetLightingIngame(true);
         _surfaces.PowerCycleLighting();
-        _surfaces.SetDisplayScene("ingame");
         var system = ExtractSystem(payload);
         if (system.Length == 0) system = _selectedSystem ?? string.Empty;
         if (system.Length > 0) _selectedSystem = system;

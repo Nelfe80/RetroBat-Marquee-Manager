@@ -39,6 +39,12 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     private SKPaint? _fpsPaint;
     private SKFont? _fpsFont;
 
+    /// <summary>Adaptive resolution: when the CPU raster cannot hold the frame
+    /// budget (sprite bursts force full-frame renders), the surface renders at a
+    /// reduced internal scale (down to 0.5) and WPF stretches it back — smooth
+    /// effects beat crisp-but-stuttering ones. Recovers when the load drops.</summary>
+    private double _adaptiveScale = 1.0;
+
     public double CurrentFps { get; private set; }
 
     /// <summary>
@@ -121,7 +127,8 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         while (!ct.IsCancellationRequested)
         {
             var frameStart = clock.ElapsedTicks;
-            int width = _targetWidth, height = _targetHeight;
+            var width = (int)Math.Round(_targetWidth * _adaptiveScale);
+            var height = (int)Math.Round(_targetHeight * _adaptiveScale);
 
             if (width > 0 && height > 0 && _renderer != null)
             {
@@ -149,12 +156,26 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
             if (now - fpsWindowStart >= Stopwatch.Frequency)
             {
                 CurrentFps = fpsFrames * (double)Stopwatch.Frequency / (now - fpsWindowStart);
+                // adaptive resolution: only judge windows where we actually
+                // rendered continuously (idle skipping reads as low FPS)
+                if (fpsFrames >= _fpsLimit / 3)
+                {
+                    if (CurrentFps < _fpsLimit * 0.70 && _adaptiveScale > 0.5)
+                    {
+                        _adaptiveScale = Math.Max(0.5, _adaptiveScale * 0.8);
+                        _logger.LogInformation("Lighting surface overloaded ({Fps:F1} FPS): render scale lowered to {Scale:P0}", CurrentFps, _adaptiveScale);
+                    }
+                    else if (CurrentFps > _fpsLimit * 0.92 && _adaptiveScale < 1.0)
+                    {
+                        _adaptiveScale = Math.Min(1.0, _adaptiveScale * 1.12);
+                    }
+                }
                 fpsFrames = 0;
                 fpsWindowStart = now;
                 if (now - lastFpsLog >= 5 * Stopwatch.Frequency)
                 {
                     lastFpsLog = now;
-                    _logger.LogInformation("Skia lighting surface {Width}x{Height}: {Fps:F1} rendered FPS (identical frames skipped)", width, height, CurrentFps);
+                    _logger.LogInformation("Skia lighting surface {Width}x{Height} (scale {Scale:P0}): {Fps:F1} rendered FPS (identical frames skipped)", width, height, _adaptiveScale, CurrentFps);
                 }
             }
 

@@ -68,6 +68,9 @@ public sealed class MarqueeController : IDisposable
                     if (surface.Category.Equals("iccard", StringComparison.OrdinalIgnoreCase))
                         window.SurfaceTapped += (fx, fy) => IcCardTapped?.Invoke(fx, fy);
                     window.Show();
+                    // apply the INITIAL display state: an ingame-only surface must
+                    // not sit over ES from startup until the first scene event
+                    window.SetDisplayScene("navigation");
                     _logger.LogInformation("Surface {Id} ({Category}) opened on screen {Screen}, bounds={Bounds}",
                         surface.Id, surface.Category, screen, surface.Bounds);
                 }

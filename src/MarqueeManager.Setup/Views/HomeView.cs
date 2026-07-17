@@ -216,21 +216,43 @@ public sealed class HomeView : UserControl
         }
         else
         {
-            // health without opening the port: the configured COM port must be
-            // present in Windows — an unplugged panel goes ORANGE, not green
+            // health without ever opening a port: the panel needs a serial port
+            // that is NOT claimed by another device (COM5 = the LedManager Pico
+            // is not a DMD). No explicit port → a free candidate must exist.
+            var probe = DmdProbe.Inspect(_pluginRoot);
             var port = ini.Get("DMD", "ZeDmdPort", "").Trim();
-            var portPresent = port.Length == 0
-                || System.IO.Ports.SerialPort.GetPortNames()
-                    .Any(p => p.Equals(port, StringComparison.OrdinalIgnoreCase));
-            if (portPresent)
+            string? issue = null;
+            if (port.Length > 0)
+            {
+                if (!probe.SerialPorts.Any(p => p.Equals(port, StringComparison.OrdinalIgnoreCase)))
+                {
+                    issue = L.T($"configuré sur {port}, mais le port est introuvable — panneau débranché ?",
+                        $"configured on {port}, but the port is missing — panel unplugged?");
+                }
+                else if (probe.KnownPorts.TryGetValue(port, out var owner))
+                {
+                    issue = L.T($"configuré sur {port}, mais ce port est {owner} — pas un DMD.",
+                        $"configured on {port}, but that port is {owner} — not a DMD.");
+                }
+            }
+            else if (probe.CandidatePorts.Count == 0)
+            {
+                var claimed = probe.SerialPorts.Count > 0
+                    ? " (" + string.Join(", ", probe.SerialPorts.Select(p =>
+                        probe.KnownPorts.TryGetValue(p, out var owner) ? $"{p} = {owner}" : p)) + ")"
+                    : "";
+                issue = L.T($"aucun port série libre détecté{claimed} — panneau débranché ?",
+                    $"no free serial port detected{claimed} — panel unplugged?");
+            }
+
+            if (issue == null)
             {
                 SetState(_dmd, true, L.T($"{model} — {dims} px, miroir du marquee.",
                     $"{model} — {dims} px, marquee mirror."));
             }
             else
             {
-                SetWarning(_dmd, L.T($"{model} configuré sur {port}, mais le port est introuvable — panneau débranché ?",
-                    $"{model} configured on {port}, but the port is missing — panel unplugged?"));
+                SetWarning(_dmd, $"{model} : {issue}");
             }
         }
         _dmd.Actions.Children.Clear();
