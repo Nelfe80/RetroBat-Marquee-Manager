@@ -208,7 +208,6 @@ public sealed class HomeView : UserControl
         var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
         var enabled = ini.GetBool("DMD", "Enabled", false);
         var model = ini.Get("DMD", "Model", "");
-        var dims = $"{ini.Get("DMD", "Width", "128")}×{ini.Get("DMD", "Height", "32")}";
 
         if (!enabled)
         {
@@ -216,44 +215,39 @@ public sealed class HomeView : UserControl
         }
         else
         {
-            // health without ever opening a port: the panel needs a serial port
-            // that is NOT claimed by another device (COM5 = the LedManager Pico
-            // is not a DMD). No explicit port → a free candidate must exist.
-            var probe = DmdProbe.Inspect(_pluginRoot);
-            var port = ini.Get("DMD", "ZeDmdPort", "").Trim();
-            string? issue = null;
-            if (port.Length > 0)
+            // REAL health: the ZeDMD handshake through libzedmd — the lib sends
+            // the "ZeDMD" magic frame, only a real panel answers with its
+            // identity (dims + firmware). A free COM port or the LedManager
+            // Pico never passes. Runs async (the port scan takes a moment).
+            SetState(_dmd, null, L.T("test du panneau (handshake ZeDMD)…", "probing the panel (ZeDMD handshake)…"));
+            var forcedPort = ini.Get("DMD", "ZeDmdPort", "").Trim();
+            var runtimeRunning = MarqueeManagerProcess.IsRunning();
+            _ = System.Threading.Tasks.Task.Run(() =>
             {
-                if (!probe.SerialPorts.Any(p => p.Equals(port, StringComparison.OrdinalIgnoreCase)))
+                var result = ZeDmdProbe.Probe(_pluginRoot, forcedPort.Length > 0 ? forcedPort : null);
+                Dispatcher.BeginInvoke(() =>
                 {
-                    issue = L.T($"configuré sur {port}, mais le port est introuvable — panneau débranché ?",
-                        $"configured on {port}, but the port is missing — panel unplugged?");
-                }
-                else if (probe.KnownPorts.TryGetValue(port, out var owner))
-                {
-                    issue = L.T($"configuré sur {port}, mais ce port est {owner} — pas un DMD.",
-                        $"configured on {port}, but that port is {owner} — not a DMD.");
-                }
-            }
-            else if (probe.CandidatePorts.Count == 0)
-            {
-                var claimed = probe.SerialPorts.Count > 0
-                    ? " (" + string.Join(", ", probe.SerialPorts.Select(p =>
-                        probe.KnownPorts.TryGetValue(p, out var owner) ? $"{p} = {owner}" : p)) + ")"
-                    : "";
-                issue = L.T($"aucun port série libre détecté{claimed} — panneau débranché ?",
-                    $"no free serial port detected{claimed} — panel unplugged?");
-            }
-
-            if (issue == null)
-            {
-                SetState(_dmd, true, L.T($"{model} — {dims} px, miroir du marquee.",
-                    $"{model} — {dims} px, marquee mirror."));
-            }
-            else
-            {
-                SetWarning(_dmd, $"{model} : {issue}");
-            }
+                    if (result.Found)
+                    {
+                        SetState(_dmd, true, L.T(
+                            $"{model} détecté sur {result.Port} — {result.Width}×{result.Height} px, firmware {result.Firmware}.",
+                            $"{model} detected on {result.Port} — {result.Width}×{result.Height} px, firmware {result.Firmware}."));
+                    }
+                    else if (runtimeRunning)
+                    {
+                        // the runtime may hold the port: unreachable ≠ unplugged
+                        SetWarning(_dmd, L.T(
+                            $"{model} : panneau non joignable (handshake sans réponse) — port tenu par le runtime en cours, ou panneau débranché. Arrêtez MarqueeManager pour un test fiable.",
+                            $"{model}: panel unreachable (handshake unanswered) — port held by the running runtime, or panel unplugged. Stop MarqueeManager for a reliable test."));
+                    }
+                    else
+                    {
+                        SetWarning(_dmd, L.T(
+                            $"{model} : aucun panneau ne répond au handshake ZeDMD — débranché ?" + (result.Error != null ? $" ({result.Error})" : ""),
+                            $"{model}: no panel answers the ZeDMD handshake — unplugged?" + (result.Error != null ? $" ({result.Error})" : "")));
+                    }
+                });
+            });
         }
         _dmd.Actions.Children.Clear();
         if (_navigate != null)
