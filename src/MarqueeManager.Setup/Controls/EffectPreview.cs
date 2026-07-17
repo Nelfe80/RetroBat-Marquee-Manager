@@ -111,7 +111,8 @@ public sealed class EffectPreview : UserControl
 
         if (rule.Sprite is { Length: > 0 })
         {
-            SpawnSprites(Path.Combine(spritesDirectory, rule.Sprite), rule.Count, rule.Motion, duration);
+            SpawnSprites(Path.Combine(spritesDirectory, rule.Sprite), rule.Count, rule.Motion, duration,
+                rule.Scale <= 0 ? 1.0 : rule.Scale);
         }
     }
 
@@ -190,7 +191,7 @@ public sealed class EffectPreview : UserControl
         _tube.BeginAnimation(OpacityProperty, animation);
     }
 
-    private void SpawnSprites(string gifPath, int count, string motion, TimeSpan duration)
+    private void SpawnSprites(string gifPath, int count, string motion, TimeSpan duration, double scale)
     {
         var frames = DecodeGif(gifPath);
         if (frames.Count == 0)
@@ -200,15 +201,21 @@ public sealed class EffectPreview : UserControl
 
         var random = new Random();
         var life = duration < TimeSpan.FromMilliseconds(500) ? TimeSpan.FromMilliseconds(700) : duration;
+        var height = 34 * scale;
         for (var i = 0; i < Math.Clamp(count, 1, 6); i++)
         {
-            var image = new Image { Source = frames[0], Height = 34, Stretch = Stretch.Uniform };
+            var image = new Image { Source = frames[0], Height = height, Stretch = Stretch.Uniform };
+            if (scale >= 1.5)
+            {
+                // same rule as the runtime: deliberate upscales keep crisp pixels
+                RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.NearestNeighbor);
+            }
             var startX = random.NextDouble() * (BandWidth - 40);
             var startY = motion switch
             {
-                "fall" => -36.0,
+                "fall" => -(height + 2),
                 "rise" => BandHeight,
-                _ => random.NextDouble() * (BandHeight - 36)
+                _ => random.NextDouble() * Math.Max(2, BandHeight - height)
             };
             Canvas.SetLeft(image, startX);
             Canvas.SetTop(image, startY);

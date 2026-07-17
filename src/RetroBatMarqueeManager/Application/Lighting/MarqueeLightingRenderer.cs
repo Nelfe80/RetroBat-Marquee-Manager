@@ -265,7 +265,7 @@ half4 main(float2 p) {
 
     /// <summary>Animated sprite overlays, composited after the shader (CDC §23):
     /// glowing trail ghosts behind moving sprites, then the animated frame.</summary>
-    private void DrawSprites(SKCanvas canvas, double t)
+    private void DrawSprites(SKCanvas canvas, double t, float w, float h, SKPoint offset)
     {
         if (_sprites.Count == 0) return;
         // a sprite out of the field frees its slot immediately
@@ -275,8 +275,6 @@ half4 main(float2 p) {
             var (px, py) = sprite.PositionAt(t);
             return px < -0.2f || px > 1.2f || py < -0.25f || py > 1.25f;
         });
-        var w = _maps!.Width;
-        var h = _maps.Height;
         foreach (var sprite in _sprites)
         {
             if (t < sprite.StartSeconds) continue;
@@ -291,7 +289,7 @@ half4 main(float2 p) {
                     var (gx, gy) = sprite.PositionAt(t - k * 0.06);
                     var ghostAlpha = alpha * (1f - k / 3f) * 0.4f;
                     DrawStretchedGlow(canvas,
-                        new SKPoint(_offset.X + gx * w, _offset.Y + gy * h),
+                        new SKPoint(offset.X + gx * w, offset.Y + gy * h),
                         0.08f * h * sprite.Scale, 1.4f, 0.8f,
                         trail.WithAlpha((byte)(ghostAlpha * 255)));
                 }
@@ -311,8 +309,8 @@ half4 main(float2 p) {
                 width = height * frame.Width / frame.Height;
             }
             var dest = SKRect.Create(
-                _offset.X + nx * w - width / 2f,
-                _offset.Y + ny * h - height / 2f, width, height);
+                offset.X + nx * w - width / 2f,
+                offset.Y + ny * h - height / 2f, width, height);
             _glowPaint.BlendMode = sprite.Animation.Opaque ? SKBlendMode.Screen : SKBlendMode.SrcOver;
             _glowPaint.Color = SKColors.White.WithAlpha((byte)(alpha * 255));
             if (sprite.PixelCrisp)
@@ -361,7 +359,13 @@ half4 main(float2 p) {
     {
         if (_dirty || _generating) return true;
         lock (_resultLock) { if (_pendingResult != null) return true; }
-        if (_maps == null) return false;
+        if (_maps == null)
+        {
+            // sceneless (video marquee, console game): the ingame effects still
+            // animate as an overlay at the flicker cadence
+            if (_sprites.Count > 0) return (long)(elapsed.TotalSeconds * FlickerHz) != _steadySlot;
+            lock (_fxLock) { return _activeFx != null || _pendingSprites.Count > 0; }
+        }
         // anything alive keeps the flicker cadence: lamps (attract/outputs),
         // ingame effects, sprites, blackout, audio-driven sequence
         if (_lampStates.Length > 0 || _sequence != null || _blackoutUntil > 0 || _sprites.Count > 0)
@@ -423,9 +427,12 @@ half4 main(float2 p) {
 
         if (_maps == null || _currentPath == null)
         {
-            // no scene yet: fully transparent so the static image below stays visible
+            // no scene: transparent so the media below stays visible — but the
+            // ingame effects still draw. A video marquee (console games) unmounts
+            // the lighting scene; sprites and veils must survive it.
             canvas.Clear(SKColors.Transparent);
             _sound?.SetLevels(0f, 0f);
+            RenderOverlayFx(canvas, width, height, elapsed.TotalSeconds);
             return;
         }
 
@@ -476,10 +483,23 @@ half4 main(float2 p) {
             DrawElectrodeGlow(canvas, (float)_tubes[1].Electrode, _backlightProfile.TubeY2);
         DrawLamps(canvas);
         SpawnSprites(t);
-        DrawSprites(canvas, t);
+        DrawSprites(canvas, t, _maps.Width, _maps.Height, _offset);
         if (shaking) canvas.Restore();
-        if (fx != null) DrawIngameEffect(canvas, fx.Value.Rule, fx.Value.Envelope);
+        if (fx != null) DrawIngameEffect(canvas, fx.Value.Rule, fx.Value.Envelope, _maps.Width, _maps.Height, _offset);
         DrawGlass(canvas);
+    }
+
+    /// <summary>Sceneless ingame effects: sprites and color veils drawn over the
+    /// whole surface while no lighting scene is mounted (video marquee, console
+    /// game without artwork). Tube-level effects (dip, strobe, shake, blackout)
+    /// have no tubes to act on and reduce to their overlay component.</summary>
+    private void RenderOverlayFx(SKCanvas canvas, int width, int height, double t)
+    {
+        float i1 = 1f, i2 = 1f;
+        var fx = UpdateIngameEffect(t, ref i1, ref i2);
+        SpawnSprites(t);
+        DrawSprites(canvas, t, width, height, default);
+        if (fx != null) DrawIngameEffect(canvas, fx.Value.Rule, fx.Value.Envelope, width, height, default);
     }
 
     /// <summary>
@@ -535,8 +555,11 @@ half4 main(float2 p) {
         {
             if (t < _blackoutUntil) { i1 = i2 = 0.02f; return null; }
             _blackoutUntil = -1;
-            _sceneReadyAt += t; // restart scene clock: re-ignition
-            CreateTubeSimulators();
+            if (_maps != null)
+            {
+                _sceneReadyAt += t; // restart scene clock: re-ignition
+                CreateTubeSimulators();
+            }
             return null;
         }
 
@@ -602,12 +625,12 @@ half4 main(float2 p) {
     private float _shakeX, _shakeY;
 
     /// <summary>Colored glass veil (flash) or additive pulse over the whole marquee.</summary>
-    private void DrawIngameEffect(SKCanvas canvas, IngameEffectRule rule, float envelope)
+    private void DrawIngameEffect(SKCanvas canvas, IngameEffectRule rule, float envelope, float w, float h, SKPoint offset)
     {
         var alpha = rule.Kind == IngameEffectKind.Pulse ? 0.28f : 0.38f;
         _glassPaint.BlendMode = rule.Kind == IngameEffectKind.Pulse ? SKBlendMode.Plus : SKBlendMode.SrcOver;
         _glassPaint.Color = rule.Color.WithAlpha((byte)(alpha * envelope * 255));
-        canvas.DrawRect(_offset.X, _offset.Y, _maps!.Width, _maps.Height, _glassPaint);
+        canvas.DrawRect(offset.X, offset.Y, w, h, _glassPaint);
         _glassPaint.Color = SKColors.White;
         _glassPaint.BlendMode = SKBlendMode.SrcOver;
     }
@@ -979,6 +1002,9 @@ half4 main(float2 p) {
         _shapeRow = new SKBitmap(new SKImageInfo(1, maps.Height, SKColorType.Bgra8888, SKAlphaType.Premul));
         _shapeBuffer = null;
         _sceneReadyAt = elapsed.TotalSeconds;
+        // sceneless overlay sprites live on the absolute clock; the scene clock
+        // restarts here, so their timestamps would be meaningless
+        _sprites.Clear();
         CreateTubeSimulators();
     }
 
