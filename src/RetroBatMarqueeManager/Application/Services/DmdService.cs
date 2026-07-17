@@ -330,8 +330,8 @@ public sealed class DmdService : IDmdService
                         background = _textBackgroundMedia;
                         statusBadges = _statusBadges.ToArray();
                     }
-                    var pixels = _renderer.RenderText(item.Title, item.Detail, item.BadgePath, _config.DmdWidth, _config.DmdHeight, background, statusBadges);
-                    RenderPixels(pixels);
+                    if (_nativeOpen)
+                        RenderPixels(_renderer.RenderText(item.Title, item.Detail, item.BadgePath, _config.DmdWidth, _config.DmdHeight, background, statusBadges));
                     await Task.Delay(item.DurationMs, cancellationToken);
                 }
                 finally
@@ -386,7 +386,8 @@ public sealed class DmdService : IDmdService
         if (content != null)
         {
             StopOwnedPlayback();
-            RenderPixels(_renderer.RenderText(content.Owner, content.Text, null, _config.DmdWidth, _config.DmdHeight, textBackground, statusBadges, content.DetailColor));
+            if (_nativeOpen)
+                RenderPixels(_renderer.RenderText(content.Owner, content.Text, null, _config.DmdWidth, _config.DmdHeight, textBackground, statusBadges, content.DetailColor));
             return Task.CompletedTask;
         }
         lock (_sync) _displayedPersistentOwner = null;
@@ -496,6 +497,9 @@ public sealed class DmdService : IDmdService
             StartOwnedDmdExt(path);
             return Task.CompletedTask;
         }
+        // no native panel connected: RenderPixels drops every frame, so decoding
+        // images/animations here would only burn CPU on the hot selection path
+        if (!_nativeOpen) return Task.CompletedTask;
         if (extension.Equals(".gif", StringComparison.OrdinalIgnoreCase))
         {
             var frames = _renderer.RenderAnimation(path, _config.DmdWidth, _config.DmdHeight);

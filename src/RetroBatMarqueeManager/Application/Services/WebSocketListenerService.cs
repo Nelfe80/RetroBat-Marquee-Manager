@@ -2,6 +2,7 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Channels;
 using RetroBatMarqueeManager.Core.Interfaces;
 using RetroBatMarqueeManager.Infrastructure.Processes;
 
@@ -14,6 +15,17 @@ public sealed class WebSocketListenerService : BackgroundService
         "arcade", "frontend", "marquee", "topper", "instruction-card", "panel", "hiscore",
         "retroachievements", "score", "timer", "ingame"
     };
+
+    // Streams whose messages describe the CURRENT state (snapshots): during fast
+    // ES navigation only the most recent one matters — replaying the backlog one
+    // by one is what made the marquee lag tens of seconds behind the frontend.
+    // Event-like streams (hiscore, retroachievements, ingame…) keep strict FIFO.
+    private static readonly HashSet<string> StateStreams = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "marquee", "topper", "instruction-card", "panel", "frontend"
+    };
+
+    private readonly Dictionary<string, Channel<JsonDocument>> _mailboxes = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly IConfigService _config;
     private readonly MarqueeController _surfaces;
@@ -87,7 +99,25 @@ public sealed class WebSocketListenerService : BackgroundService
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        => Task.WhenAll(Streams.Select(stream => ListenAsync(stream, stoppingToken)));
+    {
+        // rollback switch: [Settings] CoalesceStateStreams=false restores the
+        // historical inline processing (strict FIFO on every stream)
+        var coalesce = !_config.GetValue("Settings", "CoalesceStateStreams", "true")
+            .Equals("false", StringComparison.OrdinalIgnoreCase);
+        var tasks = new List<Task>();
+        foreach (var stream in Streams)
+        {
+            if (coalesce && StateStreams.Contains(stream))
+            {
+                var mailbox = Channel.CreateUnbounded<JsonDocument>(
+                    new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
+                _mailboxes[stream] = mailbox;
+                tasks.Add(DrainLatestAsync(stream, mailbox.Reader, stoppingToken));
+            }
+            tasks.Add(ListenAsync(stream, stoppingToken));
+        }
+        return Task.WhenAll(tasks);
+    }
 
     private async Task ListenAsync(string stream, CancellationToken cancellationToken)
     {
@@ -128,6 +158,13 @@ public sealed class WebSocketListenerService : BackgroundService
             if (result.MessageType != WebSocketMessageType.Text) continue;
             try
             {
+                if (_mailboxes.TryGetValue(stream, out var mailbox))
+                {
+                    // never block the socket drain on processing: hand the
+                    // snapshot to the stream worker (which owns its disposal)
+                    mailbox.Writer.TryWrite(JsonDocument.Parse(message.ToArray()));
+                    continue;
+                }
                 using var document = JsonDocument.Parse(message.ToArray());
                 await ProcessAsync(stream, document.RootElement, cancellationToken);
             }
@@ -136,6 +173,76 @@ public sealed class WebSocketListenerService : BackgroundService
                 _logger.LogWarning("Invalid JSON received on {Stream}: {Message}", stream, ex.Message);
             }
         }
+    }
+
+    /// <summary>
+    /// Worker for a state stream: drains everything already received and only
+    /// processes the most recent snapshot — older ones describe selections the
+    /// user has already scrolled past. On the frontend stream, lifecycle events
+    /// (game started/ended) are never skipped; only `*.selected*` messages
+    /// coalesce between themselves, in arrival order.
+    /// </summary>
+    private async Task DrainLatestAsync(string stream, ChannelReader<JsonDocument> reader, CancellationToken cancellationToken)
+    {
+        var batch = new List<JsonDocument>();
+        try
+        {
+            while (await reader.WaitToReadAsync(cancellationToken))
+            {
+                batch.Clear();
+                while (reader.TryRead(out var pending)) batch.Add(pending);
+
+                var lastSnapshot = -1;
+                for (var i = batch.Count - 1; i >= 0; i--)
+                {
+                    if (!IsSnapshotMessage(stream, batch[i])) continue;
+                    lastSnapshot = i;
+                    break;
+                }
+
+                var skipped = 0;
+                for (var i = 0; i < batch.Count; i++)
+                {
+                    var document = batch[i];
+                    try
+                    {
+                        if (i < lastSnapshot && IsSnapshotMessage(stream, document))
+                        {
+                            skipped++;
+                            continue;
+                        }
+                        await ProcessAsync(stream, document.RootElement, cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Processing {Stream} message failed", stream);
+                    }
+                    finally
+                    {
+                        document.Dispose();
+                    }
+                }
+                if (skipped > 0)
+                    _logger.LogDebug("{Stream}: coalesced {Count} stale snapshot(s)", stream, skipped);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        finally
+        {
+            while (reader.TryRead(out var leftover)) leftover.Dispose();
+        }
+    }
+
+    /// <summary>frontend carries both state (`*.selected*`) and lifecycle events;
+    /// the other state streams are pure snapshots.</summary>
+    private static bool IsSnapshotMessage(string stream, JsonDocument document)
+    {
+        if (!stream.Equals("frontend", StringComparison.OrdinalIgnoreCase)) return true;
+        return Text(document.RootElement, "Type", "type").Contains(".selected", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task ProcessAsync(string stream, JsonElement root, CancellationToken cancellationToken)
