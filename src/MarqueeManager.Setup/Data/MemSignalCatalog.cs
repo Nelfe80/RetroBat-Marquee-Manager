@@ -42,7 +42,11 @@ public sealed partial class MemSignalCatalog
 
     private readonly string _ramRoot;
     private readonly object _sync = new();
-    private readonly Dictionary<string, Dictionary<string, string>> _indexBySystem = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, SystemIndex> _indexBySystem = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Exact keys (alias.json entries, basenames, rom.name, hash labels)
+    /// plus a punctuation-tolerant projection of every key.</summary>
+    private sealed record SystemIndex(Dictionary<string, string> Exact, Dictionary<string, string> Normalized);
 
     public MemSignalCatalog(string pluginRoot)
     {
@@ -51,11 +55,19 @@ public sealed partial class MemSignalCatalog
 
     public bool IsAvailable => Directory.Exists(_ramRoot);
 
-    /// <summary>The .MEM file describing this rom, or null when the game has none.</summary>
+    /// <summary>The .MEM file describing this rom, or null when the game has none.
+    /// Same resolution order as the runtime wrapper: alias.json exact key first,
+    /// then a normalized match, finally the dump tags are stripped
+    /// ("Sonic The Hedgehog (Europe)" still finds sonic-the-hedgehog).</summary>
     public string? FindMemFile(string system, string rom)
     {
         var index = IndexFor(system);
-        return index.TryGetValue(rom, out var path) ? path : null;
+        if (index.Exact.TryGetValue(rom, out var path)) return path;
+        if (index.Normalized.TryGetValue(NormalizeKey(rom), out path)) return path;
+        var stripped = StripDumpTags(rom);
+        return !ReferenceEquals(stripped, rom) && index.Normalized.TryGetValue(NormalizeKey(stripped), out path)
+            ? path
+            : null;
     }
 
     /// <summary>Signals of a .MEM file, grouped by family path (e.g. "flow.lifecycle").</summary>
@@ -146,8 +158,12 @@ public sealed partial class MemSignalCatalog
         signals.Add(new MemSignal(action, family, desc));
     }
 
-    /// <summary>rom → .MEM path map for a system, built once per session.</summary>
-    private Dictionary<string, string> IndexFor(string system)
+    /// <summary>rom → .MEM path map for a system, built once per session. Primary
+    /// source: the mem-curator alias.json referential (every known dump name,
+    /// slug variant and hash of a game → its canonical .MEM basename) — the
+    /// exact file the runtime wrapper resolves with. The header scan
+    /// (rom.name + hash labels) only complements systems without alias.json.</summary>
+    private SystemIndex IndexFor(string system)
     {
         // ES exposes MAME sets under the canonical "arcade" system
         var folder = system.Equals("arcade", StringComparison.OrdinalIgnoreCase) ? "arcade" : system;
@@ -162,18 +178,76 @@ public sealed partial class MemSignalCatalog
             var dir = Path.Combine(_ramRoot, folder);
             if (Directory.Exists(dir))
             {
+                var hasAliases = IndexAliases(dir, index);
                 foreach (var file in Directory.EnumerateFiles(dir, "*.MEM"))
                 {
                     // the file basename (= rom.name slug) is a valid key too
                     index.TryAdd(Path.GetFileNameWithoutExtension(file), file);
-                    IndexHeader(file, index);
+                    if (!hasAliases)
+                    {
+                        IndexHeader(file, index);
+                    }
                 }
             }
 
-            _indexBySystem[folder] = index;
-            return index;
+            var normalized = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in index)
+            {
+                var key = NormalizeKey(pair.Key);
+                if (key.Length > 0) normalized.TryAdd(key, pair.Value);
+            }
+
+            var built = new SystemIndex(index, normalized);
+            _indexBySystem[folder] = built;
+            return built;
         }
     }
+
+    /// <summary>Loads alias.json (raw names, slugs, extensions, hashes → canonical
+    /// basename). Duplicate keys differing only by case are legal there — the
+    /// case-insensitive index absorbs them. Returns false when the file is
+    /// missing or unreadable.</summary>
+    private static bool IndexAliases(string dir, Dictionary<string, string> index)
+    {
+        var path = Path.Combine(dir, "alias.json");
+        if (!File.Exists(path)) return false;
+        try
+        {
+            // one directory listing instead of a stat per alias entry (tens of
+            // thousands of keys on the big systems)
+            var existing = Directory.EnumerateFiles(dir, "*.MEM")
+                .Select(Path.GetFileNameWithoutExtension)
+                .OfType<string>()
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+            var count = 0;
+            foreach (var property in doc.RootElement.EnumerateObject())
+            {
+                if (property.Value.ValueKind != System.Text.Json.JsonValueKind.String) continue;
+                var target = property.Value.GetString();
+                if (string.IsNullOrWhiteSpace(target) || !existing.Contains(target)) continue;
+                index.TryAdd(property.Name, Path.Combine(dir, target + ".MEM"));
+                count++;
+            }
+            return count > 0;
+        }
+        catch
+        {
+            return false; // malformed referential: header scan takes over
+        }
+    }
+
+    /// <summary>"Sonic The Hedgehog (USA, Europe) [!]" → "Sonic The Hedgehog".</summary>
+    private static string StripDumpTags(string rom)
+    {
+        var cut = rom.IndexOfAny(new[] { '(', '[' });
+        return cut > 0 ? rom[..cut].TrimEnd() : rom;
+    }
+
+    /// <summary>Case/punctuation-tolerant key: "Streets of Rage 2" == "streets-of-rage-2".</summary>
+    private static string NormalizeKey(string value)
+        => new(value.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
 
     private static void IndexHeader(string file, Dictionary<string, string> index)
     {
