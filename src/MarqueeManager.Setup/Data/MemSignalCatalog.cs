@@ -35,7 +35,9 @@ public sealed partial class MemSignalCatalog
     [GeneratedRegex("name\\s*=\\s*\"([^\"]+)\"")]
     private static partial Regex RomNameRegex();
 
-    [GeneratedRegex("label\\s*=\\s*\"([^\"\\s<]+)")]
+    // full label captured: console labels carry spaces ("Sonic The Hedgehog
+    // (USA, Europe).md"); the arcade "<set description>" tail is cut afterwards
+    [GeneratedRegex("label\\s*=\\s*\"([^\"]+)\"")]
     private static partial Regex HashLabelRegex();
 
     private readonly string _ramRoot;
@@ -162,6 +164,8 @@ public sealed partial class MemSignalCatalog
             {
                 foreach (var file in Directory.EnumerateFiles(dir, "*.MEM"))
                 {
+                    // the file basename (= rom.name slug) is a valid key too
+                    index.TryAdd(Path.GetFileNameWithoutExtension(file), file);
                     IndexHeader(file, index);
                 }
             }
@@ -197,7 +201,10 @@ public sealed partial class MemSignalCatalog
 
                 foreach (Match label in HashLabelRegex().Matches(line))
                 {
-                    var zipBase = Path.GetFileNameWithoutExtension(label.Groups[1].Value);
+                    var raw = label.Groups[1].Value;
+                    var cut = raw.IndexOf('<');       // "garou.7z <Garou - Mark…>"
+                    if (cut >= 0) raw = raw[..cut];
+                    var zipBase = Path.GetFileNameWithoutExtension(raw.Trim());
                     if (zipBase.Length > 0)
                     {
                         index.TryAdd(zipBase, file);
