@@ -27,6 +27,8 @@ public sealed class GameMediaCatalog
     private readonly string _systemsRoot;
     private readonly object _sync = new();
     private List<GameEntry>? _games;
+    /// <summary>system → normalized folder key → media folder name.</summary>
+    private readonly Dictionary<string, Dictionary<string, string>> _folderKeys = new(StringComparer.OrdinalIgnoreCase);
 
     public GameMediaCatalog(string pluginRoot)
     {
@@ -147,7 +149,84 @@ public sealed class GameMediaCatalog
     }
 
     public string GameRoot(string system, string rom)
-        => Path.Combine(_systemsRoot, system, "games", rom);
+        => Path.Combine(_systemsRoot, system, "games", ResolveMediaFolder(system, rom));
+
+    /// <summary>Media folder of a game. The physical rom name ("Sonic The
+    /// Hedgehog (USA, Europe)") rarely matches the library slug
+    /// ("sonic_the_hedgehog"): an exactly named folder wins, then a normalized
+    /// match with the parenthesized dump tags stripped. Two folders can
+    /// normalize identically (hyphen and underscore slug variants); the richest
+    /// one (metadata + artwork) is kept.</summary>
+    private string ResolveMediaFolder(string system, string rom)
+    {
+        var gamesRoot = Path.Combine(_systemsRoot, system, "games");
+        try
+        {
+            if (Directory.Exists(Path.Combine(gamesRoot, rom))) return rom;
+        }
+        catch
+        {
+            return rom; // unusable rom name: keep it, downstream reads just miss
+        }
+
+        Dictionary<string, string>? keys;
+        lock (_sync)
+        {
+            _folderKeys.TryGetValue(system, out keys);
+        }
+        if (keys == null)
+        {
+            keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                foreach (var dir in Directory.EnumerateDirectories(gamesRoot))
+                {
+                    var folder = Path.GetFileName(dir);
+                    var normalized = NormalizeKey(folder);
+                    if (normalized.Length == 0) continue;
+                    if (!keys.TryGetValue(normalized, out var existing)
+                        || FolderRichness(gamesRoot, folder) > FolderRichness(gamesRoot, existing))
+                    {
+                        keys[normalized] = folder;
+                    }
+                }
+            }
+            catch
+            {
+                // no media folder for this system
+            }
+            lock (_sync)
+            {
+                _folderKeys[system] = keys;
+            }
+        }
+
+        return keys.TryGetValue(NormalizeKey(StripDumpTags(rom)), out var match) ? match : rom;
+    }
+
+    private static int FolderRichness(string gamesRoot, string folder)
+    {
+        try
+        {
+            var root = Path.Combine(gamesRoot, folder);
+            var score = Directory.Exists(Path.Combine(root, "texts")) ? 1000 : 0;
+            return score + Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).Take(50).Count();
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>"Sonic The Hedgehog (USA, Europe) [!]" → "Sonic The Hedgehog".</summary>
+    private static string StripDumpTags(string rom)
+    {
+        var cut = rom.IndexOfAny(new[] { '(', '[' });
+        return cut > 0 ? rom[..cut] : rom;
+    }
+
+    private static string NormalizeKey(string value)
+        => new(value.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
 
     /// <summary>The SYSTEM marquee currently displayed when this system is
     /// selected in ES: the manual composition wins, else the generated one
