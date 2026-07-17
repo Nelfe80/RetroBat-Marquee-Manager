@@ -65,6 +65,9 @@ public sealed class ScrapeCard : UserControl
             "Clés API dans Options → Sources en ligne. Cliquez sur un résultat pour le télécharger et l'ajouter en calque.",
             "API keys in Options → Online sources. Click a result to download it and add it as a layer.")));
         card.Children.Add(_results);
+        card.Children.Add(Ui.MutedLabel(L.T(
+            "Cliquez sur un média pour l'importer et pouvoir l'utiliser dans le compositeur.",
+            "Click a media to import it and use it in the composer.")));
         _status.TextWrapping = TextWrapping.Wrap;
         card.Children.Add(_status);
         Content = card;

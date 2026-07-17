@@ -181,6 +181,33 @@ public partial class MainWindow : Window
         ShowCurrent();
     }
 
+    /// <summary>LedManager-style hardware summary under the nav: every detected
+    /// screen (index, resolution, primary/touch) + the physical DMD.</summary>
+    private void RefreshHardwareList()
+    {
+        try
+        {
+            HardwareTitle.Text = L.T("MATÉRIEL DÉTECTÉ", "DETECTED HARDWARE");
+            var lines = new List<string>();
+            foreach (var screen in Detection.ScreenProbe.Detect())
+            {
+                lines.Add($"🖥 {screen.Index} · {screen.Bounds.Width}×{screen.Bounds.Height}"
+                          + (screen.Primary ? L.T(" · principal", " · primary") : "")
+                          + (screen.Touch == Detection.TouchSupport.Touch ? L.T(" · tactile", " · touch") : ""));
+            }
+            var ini = Config.IniFile.Load(Config.PluginPaths.ConfigPath(_pluginRoot));
+            if (ini.GetBool("DMD", "Enabled", false))
+            {
+                lines.Add($"▦ DMD {ini.Get("DMD", "Model", "?")} · {ini.Get("DMD", "Width", "128")}×{ini.Get("DMD", "Height", "32")}");
+            }
+            HardwareInfo.Text = string.Join("\n", lines);
+        }
+        catch
+        {
+            HardwareInfo.Text = "";
+        }
+    }
+
     private void ApplyShellTexts()
     {
         NavHome.Content = L.T("Accueil", "Home");
@@ -191,6 +218,7 @@ public partial class MainWindow : Window
         NavDiagnostic.Content = L.T("Diagnostic", "Diagnostics");
         LangToggle.Content = L.French ? "EN" : "FR";
         LangToggle.ToolTip = L.T("Switch to English", "Passer en français");
+        RefreshHardwareList();
     }
 
     private void UpdateThemeGlyph()

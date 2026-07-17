@@ -193,9 +193,24 @@ public sealed class GamesView : UserControl, IDisposable
         if (system.Length == 0 || _identity == null || _namesCache.ContainsKey(system)) return;
         try
         {
-            var names = await Task.Run(() => _identity.NamesAsync(system));
-            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var identity in names) map.TryAdd(identity.Rom, identity.Name);
+            var map = await Task.Run(async () =>
+            {
+                // LedManager cascade: API gamelist → roms\<sys>\gamelist.xml → pack
+                var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var identity in await _identity.NamesAsync(system)) result.TryAdd(identity.Rom, identity.Name);
+
+                // supplementary source: the media library metadata fills the roms
+                // the cascade missed (bounded — one small json per missing rom)
+                var mediaRoms = _allGames.Where(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
+                    .Select(g => g.Rom);
+                var budget = 800;
+                foreach (var rom in mediaRoms)
+                {
+                    if (result.ContainsKey(rom) || budget-- <= 0) continue;
+                    if (_media.ReadDisplayName(system, rom) is { Length: > 0 } name) result[rom] = name;
+                }
+                return result;
+            });
             if (!_disposed)
             {
                 _namesCache[system] = map;
@@ -241,28 +256,44 @@ public sealed class GamesView : UserControl, IDisposable
         }
         _ = EnsureNamesAsync(system);
 
+        // LedManager engine: the candidates are the INSTALLED ROMS of the system
+        // (media presence is NOT required — llander has no media folder and must
+        // still be findable), matched on rom OR display name once names load
+        var candidates = _present.TryGetValue(system, out var installed)
+            ? (IEnumerable<string>)installed
+            : _allGames.Where(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase)).Select(g => g.Rom);
+        var names = _namesCache.TryGetValue(system, out var loaded)
+            ? loaded
+            : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
         var normalized = Normalize(query);
-        var matches = _allGames
-            .Where(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
-            .Where(IsPresent)
-            .Where(g => Normalize(g.Rom).Contains(normalized, StringComparison.OrdinalIgnoreCase)
-                        || DisplayNameOf(g).Contains(query, StringComparison.OrdinalIgnoreCase)
-                        || Normalize(DisplayNameOf(g)).Contains(normalized, StringComparison.OrdinalIgnoreCase))
+        var matches = candidates
+            .Where(rom => Normalize(rom).Contains(normalized, StringComparison.OrdinalIgnoreCase)
+                          || (names.TryGetValue(rom, out var n)
+                              && (n.Contains(query, StringComparison.OrdinalIgnoreCase)
+                                  || Normalize(n).Contains(normalized, StringComparison.OrdinalIgnoreCase))))
+            .OrderBy(rom => rom, StringComparer.OrdinalIgnoreCase)
             .Take(100)
             .ToList();
 
         _results.Items.Clear();
-        foreach (var game in matches)
+        foreach (var rom in matches)
         {
-            var name = DisplayNameOf(game);
-            var item = new ListBoxItem
+            var game = new GameEntry(system, rom);
+            // LedManager presentation: game name prominent, rom as a discreet line
+            var content = new StackPanel();
+            var hasName = names.TryGetValue(rom, out var name) && !rom.Equals(name, StringComparison.OrdinalIgnoreCase);
+            content.Children.Add(new TextBlock
             {
-                Content = name.Equals(game.Rom, StringComparison.OrdinalIgnoreCase)
-                    ? $"{game.Rom} — {game.System}"
-                    : $"{name} ({game.Rom}) — {game.System}",
-                Tag = game,
-                FontSize = 12
-            };
+                Text = hasName ? name : rom,
+                FontSize = 12.5,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            });
+            if (hasName)
+            {
+                content.Children.Add(new TextBlock { Text = rom, FontSize = 10.5, Opacity = 0.62 });
+            }
+            var item = new ListBoxItem { Tag = game, Content = content };
             // open on CLICK (not SelectionChanged): re-picking the same entry or
             // searching again after a selection always works
             item.PreviewMouseLeftButtonUp += (_, _) => OpenGame(game);

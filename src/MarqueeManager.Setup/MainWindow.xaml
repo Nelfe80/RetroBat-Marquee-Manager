@@ -70,13 +70,25 @@
                                  Checked="Nav_Checked"/>
                 </StackPanel>
 
-                <!-- status card -->
-                <Border Grid.Row="2" Background="{DynamicResource CardBackground}"
-                        BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1"
-                        CornerRadius="10" Padding="12,11">
-                    <TextBlock x:Name="FooterInfo" Foreground="{DynamicResource AppMuted}"
-                               FontSize="10" LineHeight="15" TextWrapping="Wrap"/>
-                </Border>
+                <!-- hardware + status cards -->
+                <StackPanel Grid.Row="2">
+                    <Border Background="{DynamicResource CardBackground}"
+                            BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1"
+                            CornerRadius="10" Padding="12,10" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock x:Name="HardwareTitle" Foreground="{DynamicResource AppForeground}"
+                                       FontSize="10" FontWeight="Bold" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="HardwareInfo" Foreground="{DynamicResource AppMuted}"
+                                       FontSize="10" LineHeight="15" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource CardBackground}"
+                            BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1"
+                            CornerRadius="10" Padding="12,11">
+                        <TextBlock x:Name="FooterInfo" Foreground="{DynamicResource AppMuted}"
+                                   FontSize="10" LineHeight="15" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
             </Grid>
         </Border>
 

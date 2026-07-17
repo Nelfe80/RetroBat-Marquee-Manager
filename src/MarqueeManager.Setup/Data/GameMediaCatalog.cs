@@ -88,7 +88,14 @@ public sealed class GameMediaCatalog
                     foreach (var entry in Directory.EnumerateFileSystemEntries(path))
                     {
                         var name = Path.GetFileNameWithoutExtension(entry);
-                        if (name is { Length: > 0 } && !name.StartsWith('.')) roms.Add(name);
+                        if (name is not { Length: > 0 } || name.StartsWith('.')) continue;
+                        // the roms folder also holds metadata/media noise
+                        var extension = Path.GetExtension(entry).ToLowerInvariant();
+                        if (extension is ".xml" or ".txt" or ".cfg" or ".dat" or ".ini" or ".bak" or ".srm" or ".sav" or ".nfo") continue;
+                        if (Directory.Exists(entry) && name.ToLowerInvariant()
+                                is "images" or "videos" or "video" or "manuals" or "media"
+                                or "downloaded_images" or "downloaded_videos" or "boxart") continue;
+                        roms.Add(name);
                     }
                 }
                 catch

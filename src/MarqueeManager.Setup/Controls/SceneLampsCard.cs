@@ -46,6 +46,7 @@ public sealed class SceneLampsCard : UserControl
 
     private readonly Canvas _canvas = new() { ClipToBounds = true };
     private readonly StackPanel _inspector = new() { Margin = new Thickness(0, 8, 0, 0), Visibility = Visibility.Collapsed };
+    private readonly StackPanel _lampList = new() { Margin = new Thickness(0, 8, 0, 0) };
     private readonly TextBlock _status = Ui.MutedLabel("", 12);
     private Lamp? _selected;
     private bool _dragging;
@@ -184,6 +185,9 @@ public sealed class SceneLampsCard : UserControl
         });
 
         card.Children.Add(_inspector);
+
+        // every placed lamp with its parameters at a glance, click = select
+        card.Children.Add(_lampList);
 
         var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
         actions.Children.Add(Ui.Button(L.T("Ajouter une lampe", "Add a lamp"), (_, _) =>
@@ -492,6 +496,84 @@ public sealed class SceneLampsCard : UserControl
             Canvas.SetTop(label, (lamp.IsRegion ? lamp.RY + lamp.RH / 2 : lamp.Y) * _viewHeight - 8);
             _canvas.Children.Add(label);
         }
+        RefreshLampList();
+    }
+
+    /// <summary>Detailed table of every lamp: shape, geometry, color, output, actions.</summary>
+    private void RefreshLampList()
+    {
+        _lampList.Children.Clear();
+        if (_lamps.Count == 0) return;
+        var header = Ui.MutedLabel(L.T($"LAMPES ({_lamps.Count})", $"LAMPS ({_lamps.Count})"), 10);
+        header.FontWeight = FontWeights.Bold;
+        _lampList.Children.Add(header);
+
+        foreach (var lamp in _lamps)
+        {
+            var row = new Grid
+            {
+                Margin = new Thickness(0, 1, 0, 1),
+                Background = Brushes.Transparent,
+                Cursor = Cursors.Hand
+            };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(22) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(70) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var dot = new Border
+            {
+                Width = 12, Height = 12, CornerRadius = new CornerRadius(6),
+                Background = new SolidColorBrush(ParseColor(lamp.Color)),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            row.Children.Add(dot);
+
+            var id = Ui.Label(lamp.Id, 11);
+            id.FontWeight = lamp == _selected ? FontWeights.Bold : FontWeights.Normal;
+            if (lamp == _selected) id.Foreground = Ui.Accent;
+            id.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(id, 1);
+            row.Children.Add(id);
+
+            var geometry = lamp.IsRegion
+                ? L.T($"rectangle · x={lamp.RX:0.###} y={lamp.RY:0.###} · {lamp.RW:0.###}×{lamp.RH:0.###}",
+                    $"rectangle · x={lamp.RX:0.###} y={lamp.RY:0.###} · {lamp.RW:0.###}×{lamp.RH:0.###}")
+                : L.T($"cercle · x={lamp.X:0.###} y={lamp.Y:0.###} · rayon {lamp.Radius:0.###}",
+                    $"circle · x={lamp.X:0.###} y={lamp.Y:0.###} · radius {lamp.Radius:0.###}");
+            var details = Ui.MutedLabel(geometry, 11);
+            details.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(details, 2);
+            row.Children.Add(details);
+
+            var wiring = Ui.MutedLabel(lamp.Output.Length > 0 ? $"← {lamp.Output}" : L.T("(non câblée)", "(not wired)"), 11);
+            wiring.VerticalAlignment = VerticalAlignment.Center;
+            wiring.TextTrimming = TextTrimming.CharacterEllipsis;
+            Grid.SetColumn(wiring, 3);
+            row.Children.Add(wiring);
+
+            var actions = new StackPanel { Orientation = Orientation.Horizontal };
+            var currentLamp = lamp;
+            var remove = Ui.Button("✕", (_, _) =>
+            {
+                _lamps.Remove(currentLamp);
+                if (_selected == currentLamp) Select(null);
+                Render();
+            });
+            remove.Padding = new Thickness(7, 2, 7, 2);
+            actions.Children.Add(remove);
+            Grid.SetColumn(actions, 4);
+            row.Children.Add(actions);
+
+            row.MouseLeftButtonDown += (_, e) =>
+            {
+                Select(currentLamp);
+                Render();
+                e.Handled = true;
+            };
+            _lampList.Children.Add(row);
+        }
     }
 
     private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
@@ -617,7 +699,6 @@ public sealed class SceneLampsCard : UserControl
             Width = 160,
             FontSize = 12,
             IsEditable = true,
-            Text = lamp.Output,
             Margin = new Thickness(0, 2, 8, 2),
             VerticalContentAlignment = VerticalAlignment.Center
         };
@@ -625,6 +706,9 @@ public sealed class SceneLampsCard : UserControl
         {
             output.Items.Add(known);
         }
+        // the lamp's CURRENT output pre-selects in the list (free text otherwise)
+        output.SelectedItem = _knownOutputs.FirstOrDefault(k => k.Equals(lamp.Output, StringComparison.OrdinalIgnoreCase));
+        if (output.SelectedItem == null) output.Text = lamp.Output;
         output.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) =>
         {
             lamp.Output = output.Text.Trim();
@@ -715,6 +799,36 @@ public sealed class SceneLampsCard : UserControl
         }
         line2.Children.Add(Ui.MutedLabel(L.T("(fractions du marquee, 0–1)", "(marquee fractions, 0–1)")));
         _inspector.Children.Add(line2);
+
+        // composer-style size slider (wheel on the canvas does the same)
+        var line3 = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+        var sizeLabel = Ui.MutedLabel(L.T("Taille", "Size"));
+        sizeLabel.Margin = new Thickness(0, 0, 6, 0);
+        line3.Children.Add(sizeLabel);
+        var size = new Slider
+        {
+            Minimum = 0.02,
+            Maximum = lamp.IsRegion ? 1.4 : 0.6,
+            Value = lamp.IsRegion ? lamp.RH : lamp.Radius,
+            Width = 180,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        size.ValueChanged += (_, args) =>
+        {
+            if (lamp.IsRegion)
+            {
+                var ratio = lamp.RH > 0.001 ? lamp.RW / lamp.RH : 0.2;
+                lamp.RH = args.NewValue;
+                lamp.RW = Math.Clamp(args.NewValue * ratio, 0.02, 1.4);
+            }
+            else
+            {
+                lamp.Radius = args.NewValue;
+            }
+            Render();
+        };
+        line3.Children.Add(size);
+        _inspector.Children.Add(line3);
     }
 
     // ================= data =================

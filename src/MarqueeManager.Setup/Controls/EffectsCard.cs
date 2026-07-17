@@ -157,14 +157,25 @@ public sealed class EffectsCard : UserControl, IDisposable
                 $"{signals.Count} signals — click a row to link/edit its effect.")));
         }
 
-        // the .MEM file behind all this — never a black box
+        // the .MEM file behind all this — a compact badge, full path on hover
         if (memPath is { Length: > 0 })
         {
-            var link = Ui.MutedLabel(L.T($"Fichier .MEM : {memPath}", $".MEM file: {memPath}"), 11);
-            link.TextDecorations = TextDecorations.Underline;
-            link.Cursor = Cursors.Hand;
-            link.TextWrapping = TextWrapping.Wrap;
-            link.MouseLeftButtonDown += (_, _) =>
+            var badge = new Border
+            {
+                Background = Ui.Brush(Color.FromRgb(0x2E, 0x2E, 0x44)),
+                CornerRadius = new CornerRadius(7),
+                Padding = new Thickness(8, 3, 8, 3),
+                Margin = new Thickness(0, 2, 0, 2),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Cursor = Cursors.Hand,
+                ToolTip = memPath
+            };
+            var badgeText = new TextBlock { FontSize = 11, FontWeight = FontWeights.SemiBold };
+            badgeText.Inlines.Add(new System.Windows.Documents.Run("  ")
+            { FontFamily = new FontFamily("Segoe MDL2 Assets"), Foreground = Ui.Accent });
+            badgeText.Inlines.Add(new System.Windows.Documents.Run("MEM") { Foreground = Ui.Foreground });
+            badge.Child = badgeText;
+            badge.MouseLeftButtonDown += (_, _) =>
             {
                 try
                 {
@@ -175,12 +186,10 @@ public sealed class EffectsCard : UserControl, IDisposable
                     // explorer unavailable
                 }
             };
-            card.Children.Add(link);
+            card.Children.Add(badge);
         }
 
         card.Children.Add(_rows);
-        // no .MEM = no signal will ever fire: the defaults table is just noise
-        if (signals.Count > 0) BuildDefaultsSection(card);
         BuildMonitorSection(card);
         _status.TextWrapping = TextWrapping.Wrap;
         card.Children.Add(_status);
@@ -372,47 +381,6 @@ public sealed class EffectsCard : UserControl, IDisposable
         var s when s.StartsWith("genre:") => L.T($"genre {s["genre:".Length..]}", $"{s["genre:".Length..]} genre"),
         _ => L.T("ce jeu", "this game")
     };
-
-    // ================= full defaults table =================
-
-    /// <summary>"Voir tous les effets" — the whole default library, including the
-    /// rules other genres get, so the filter is never a mystery.</summary>
-    private void BuildDefaultsSection(StackPanel card)
-    {
-        var defaults = _library.ListDefaults();
-        if (defaults.Count == 0) return;
-
-        var body = new StackPanel();
-        foreach (var (match, genres, effect) in defaults)
-        {
-            var line = new TextBlock { FontSize = 11, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 1, 0, 1) };
-            line.Inlines.Add(new System.Windows.Documents.Run(match) { Foreground = Ui.Foreground, FontWeight = FontWeights.SemiBold });
-            line.Inlines.Add(new System.Windows.Documents.Run($" → {KindLabel(effect.Kind)}"
-                + (effect.Sprite is { Length: > 0 } ? $" + {effect.Sprite}" : "")) { Foreground = Ui.Accent });
-            if (genres != null)
-            {
-                var applies = _genreSlugs.Any(slug => genres.Contains(slug, StringComparison.OrdinalIgnoreCase));
-                line.Inlines.Add(new System.Windows.Documents.Run($"   [{genres}]"
-                    + (applies ? "" : L.T(" — autre genre, inactif ici", " — other genre, inactive here")))
-                { Foreground = Ui.Muted });
-            }
-            body.Children.Add(line);
-        }
-
-        card.Children.Add(new Expander
-        {
-            Header = new TextBlock
-            {
-                Text = L.T($"Voir tous les effets par défaut ({defaults.Count}, tous genres)",
-                    $"See every default effect ({defaults.Count}, all genres)"),
-                Foreground = Ui.Muted,
-                FontSize = 12
-            },
-            Content = body,
-            IsExpanded = false,
-            Margin = new Thickness(0, 6, 0, 0)
-        });
-    }
 
     // ================= live monitor =================
 

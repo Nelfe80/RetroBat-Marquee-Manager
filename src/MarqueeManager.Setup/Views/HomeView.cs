@@ -2,27 +2,36 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
+using MarqueeManager.Setup.Data;
 using MarqueeManager.Setup.Detection;
 using MarqueeManager.Setup.Localization;
 using MarqueeManager.Setup.Processes;
+using Path = System.IO.Path;
 
 namespace MarqueeManager.Setup.Views;
 
 /// <summary>
-/// Landing view: health at a glance (runtime, APIExpose, config), the configured
-/// surfaces summary, and shortcuts to the other views. Same spirit as the
-/// LedManagerSetup home page.
+/// Landing view, LedManagerSetup layout: one status card per link of the chain
+/// (runtime, APIExpose, screens &amp; surfaces, physical DMD, user content), each a
+/// dot + name + description + actions row, refreshed without blocking. Shortcuts
+/// and documentation below.
 /// </summary>
 public sealed class HomeView : UserControl
 {
+    private sealed record StatusCard(Ellipse Dot, TextBlock Text, StackPanel Actions);
+
     private readonly string _pluginRoot;
     private readonly Action<string>? _navigate;
 
-    private readonly TextBlock _runtimeStatus = Ui.Label("…");
-    private readonly TextBlock _apiStatus = Ui.Label("…");
-    private readonly Button _runtimeButton;
+    private readonly StatusCard _runtime;
+    private readonly StatusCard _api;
+    private readonly StatusCard _screens;
+    private readonly StatusCard _dmd;
+    private readonly StatusCard _content;
 
     public HomeView(string pluginRoot, Action<string>? navigate = null)
     {
@@ -30,39 +39,16 @@ public sealed class HomeView : UserControl
         _navigate = navigate;
 
         var page = new StackPanel();
-        page.Children.Add(Ui.Title(L.T("Accueil", "Home")));
+        page.Children.Add(Ui.Title(L.T("État de l'installation", "Installation status")));
         page.Children.Add(Ui.Subtitle(L.T(
-            "État de votre installation Marquee Manager en un coup d'œil.",
-            "Your Marquee Manager installation health at a glance.")));
+            "Chaque maillon de la chaîne, du flux APIExpose jusqu'à vos écrans.",
+            "Every link of the chain, from the APIExpose stream to your screens.")));
 
-        // ---- health card ----
-        var health = new StackPanel();
-        health.Children.Add(Ui.SectionHeader(L.T("État", "Health")));
-
-        _runtimeButton = Ui.Button("…", OnToggleRuntime);
-        var runtimeRow = new DockPanel { Margin = new Thickness(0, 3, 0, 3) };
-        DockPanel.SetDock(_runtimeButton, Dock.Right);
-        runtimeRow.Children.Add(_runtimeButton);
-        runtimeRow.Children.Add(_runtimeStatus);
-        health.Children.Add(runtimeRow);
-        health.Children.Add(_apiStatus);
-
-        var configPath = PluginPaths.ConfigPath(pluginRoot);
-        var configStatus = Ui.Label(File.Exists(configPath)
-            ? L.T("✓ config.ini trouvé", "✓ config.ini found")
-            : L.T("✗ config.ini introuvable !", "✗ config.ini not found!"));
-        configStatus.Foreground = File.Exists(configPath) ? Ui.Ok : Ui.Error;
-        health.Children.Add(configStatus);
-        page.Children.Add(Ui.Card(health));
-
-        // ---- configuration summary ----
-        var summary = new StackPanel();
-        summary.Children.Add(Ui.SectionHeader(L.T("Ma configuration", "My configuration")));
-        foreach (var line in DescribeConfiguration())
-        {
-            summary.Children.Add(Ui.Label(line));
-        }
-        page.Children.Add(Ui.Card(summary));
+        _runtime = AddCard(page, "MarqueeManager");
+        _api = AddCard(page, "APIExpose");
+        _screens = AddCard(page, L.T("Écrans & surfaces", "Screens & surfaces"));
+        _dmd = AddCard(page, L.T("DMD physique", "Physical DMD"));
+        _content = AddCard(page, L.T("Mes contenus", "My content"));
 
         // ---- shortcuts ----
         if (navigate != null)
@@ -76,7 +62,7 @@ public sealed class HomeView : UserControl
             buttons.Children.Add(Ui.Button(L.T("Diagnostic", "Diagnostics"), (_, _) => _navigate?.Invoke("diagnostic")));
             buttons.Children.Add(Ui.Button(L.T("Relancer l'assistant de démarrage", "Rerun the startup wizard"), (_, _) =>
             {
-                if (new Controls.OnboardingWizard(pluginRoot) { Owner = System.Windows.Window.GetWindow(this) }.ShowDialog() == true)
+                if (new OnboardingWizard(pluginRoot) { Owner = Window.GetWindow(this) }.ShowDialog() == true)
                 {
                     _navigate?.Invoke("setup");
                 }
@@ -98,23 +84,78 @@ public sealed class HomeView : UserControl
         page.Children.Add(Ui.Card(links));
 
         Content = Ui.Page(page);
-        RefreshHealth();
+        Refresh();
     }
 
-    private void RefreshHealth()
+    // ================= card factory (LedManager pattern) =================
+
+    private static StatusCard AddCard(StackPanel parent, string title)
+    {
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(26) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(160) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var dot = new Ellipse { Width = 12, Height = 12, Fill = Ui.Muted, VerticalAlignment = VerticalAlignment.Center };
+        grid.Children.Add(dot);
+
+        var name = Ui.Label(title, 13);
+        name.FontWeight = FontWeights.Bold;
+        name.VerticalAlignment = VerticalAlignment.Center;
+        Grid.SetColumn(name, 1);
+        grid.Children.Add(name);
+
+        var text = Ui.MutedLabel("…", 12);
+        text.TextWrapping = TextWrapping.Wrap;
+        text.VerticalAlignment = VerticalAlignment.Center;
+        Grid.SetColumn(text, 2);
+        grid.Children.Add(text);
+
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        Grid.SetColumn(actions, 3);
+        grid.Children.Add(actions);
+
+        parent.Children.Add(Ui.Card(grid, padding: 12));
+        return new StatusCard(dot, text, actions);
+    }
+
+    private static void SetState(StatusCard card, bool? ok, string text)
+    {
+        card.Dot.Fill = ok switch { true => Ui.Ok, false => Ui.Error, _ => Ui.Muted };
+        card.Text.Text = text;
+    }
+
+    // ================= refresh =================
+
+    private void Refresh()
+    {
+        RefreshRuntime();
+        RefreshScreens();
+        RefreshDmd();
+        RefreshContent();
+        SetState(_api, null, L.T("test en cours…", "probing…"));
+        _ = ProbeApiAsync();
+    }
+
+    private void RefreshRuntime()
     {
         var running = MarqueeManagerProcess.IsRunning();
-        _runtimeStatus.Text = running
-            ? L.T("● MarqueeManager est en cours d'exécution", "● MarqueeManager is running")
-            : L.T("○ MarqueeManager est arrêté", "○ MarqueeManager is stopped");
-        _runtimeStatus.Foreground = running ? Ui.Ok : Ui.Muted;
-        _runtimeButton.Content = running
-            ? L.T("Arrêter", "Stop")
-            : L.T("Démarrer", "Start");
-
-        _apiStatus.Text = L.T("… APIExpose : test en cours", "… APIExpose: probing");
-        _apiStatus.Foreground = Ui.Muted;
-        _ = ProbeApiAsync();
+        SetState(_runtime, running, running
+            ? L.T("En cours d'exécution — vos écrans suivent RetroBat.", "Running — your screens follow RetroBat.")
+            : L.T("Arrêté. Il démarre normalement avec RetroBat.", "Stopped. It normally starts with RetroBat."));
+        _runtime.Actions.Children.Clear();
+        _runtime.Actions.Children.Add(Ui.Button(
+            running ? L.T("Arrêter", "Stop") : L.T("Démarrer", "Start"), (_, _) =>
+            {
+                if (MarqueeManagerProcess.IsRunning()) MarqueeManagerProcess.Stop();
+                else MarqueeManagerProcess.Start(_pluginRoot);
+                _ = Dispatcher.InvokeAsync(async () =>
+                {
+                    await System.Threading.Tasks.Task.Delay(800);
+                    RefreshRuntime();
+                });
+            }));
     }
 
     private async System.Threading.Tasks.Task ProbeApiAsync()
@@ -122,81 +163,81 @@ public sealed class HomeView : UserControl
         var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
         var url = ini.Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345");
         var alive = await ApiExposeProbe.IsAliveAsync(url);
-        if (!Dispatcher.HasShutdownStarted)
-        {
-            _apiStatus.Text = alive
-                ? L.T($"● APIExpose répond ({url})", $"● APIExpose is up ({url})")
-                : L.T($"○ APIExpose ne répond pas ({url})", $"○ APIExpose is not responding ({url})");
-            _apiStatus.Foreground = alive ? Ui.Ok : Ui.Error;
-        }
+        if (Dispatcher.HasShutdownStarted) return;
+        SetState(_api, alive, alive
+            ? L.T($"Répond ({url}) — médias et données en direct.", $"Up ({url}) — live media and data.")
+            : L.T($"Ne répond pas ({url}) — les surfaces resteront vides.", $"Not responding ({url}) — surfaces will stay empty."));
     }
 
-    private void OnToggleRuntime(object sender, RoutedEventArgs e)
+    private void RefreshScreens()
     {
-        if (MarqueeManagerProcess.IsRunning())
+        try
         {
-            MarqueeManagerProcess.Stop();
+            var detected = ScreenProbe.Detect();
+            var store = new SurfacesStore(_pluginRoot);
+            var surfaces = store.Load();
+            var ok = surfaces.Count > 0;
+            SetState(_screens, ok, ok
+                ? L.T($"{detected.Count} écran(s) détecté(s) · {surfaces.Count} surface(s) configurée(s) ({string.Join(", ", surfaces.Select(s => s.Id))}).",
+                    $"{detected.Count} screen(s) detected · {surfaces.Count} configured surface(s) ({string.Join(", ", surfaces.Select(s => s.Id))}).")
+                : L.T($"{detected.Count} écran(s) détecté(s) — aucune surface configurée pour l'instant.",
+                    $"{detected.Count} screen(s) detected — no surface configured yet."));
         }
-        else
+        catch
         {
-            MarqueeManagerProcess.Start(_pluginRoot);
+            SetState(_screens, false, L.T("Configuration illisible.", "Unreadable configuration."));
         }
-        // the process needs a moment to appear/disappear from the process list
-        _ = Dispatcher.InvokeAsync(async () =>
+        _screens.Actions.Children.Clear();
+        if (_navigate != null)
         {
-            await System.Threading.Tasks.Task.Delay(800);
-            RefreshHealth();
-        });
+            _screens.Actions.Children.Add(Ui.Button(L.T("Mon setup", "My setup"), (_, _) => _navigate?.Invoke("setup")));
+        }
     }
 
-    private IEnumerable<string> DescribeConfiguration()
+    private void RefreshDmd()
     {
         var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
-        var screens = ScreenProbe.Detect();
-        var any = false;
-        foreach (var (key, label) in new[]
-                 {
-                     ("Marquee", L.T("Marquee", "Marquee")),
-                     ("Topper", L.T("Topper", "Topper")),
-                     ("IcCard", L.T("IC card", "IC card")),
-                     ("Dmd", L.T("DMD virtuel", "Virtual DMD")),
-                     ("Lcd", L.T("LCD", "LCD"))
-                 })
+        var enabled = ini.GetBool("DMD", "Enabled", false);
+        var model = ini.Get("DMD", "Model", "");
+        SetState(_dmd, enabled ? true : null, enabled
+            ? L.T($"{model} — {ini.Get("DMD", "Width", "128")}×{ini.Get("DMD", "Height", "32")} px, miroir du marquee.",
+                $"{model} — {ini.Get("DMD", "Width", "128")}×{ini.Get("DMD", "Height", "32")} px, marquee mirror.")
+            : L.T("Aucun panneau configuré (optionnel).", "No panel configured (optional)."));
+        _dmd.Actions.Children.Clear();
+        if (_navigate != null)
         {
-            var raw = ini.Get("Screens", key + "Screen", "-1");
-            if (raw.Trim() == "-1" || raw.Trim().Length == 0)
+            _dmd.Actions.Children.Add(Ui.Button(L.T("Mon setup", "My setup"), (_, _) => _navigate?.Invoke("setup")));
+        }
+    }
+
+    private void RefreshContent()
+    {
+        try
+        {
+            var compositions = 0;
+            foreach (var category in new[] { "marquees", "toppers", "dmd" })
             {
-                continue;
+                var root = Path.Combine(_pluginRoot, "media", category);
+                if (Directory.Exists(root))
+                {
+                    compositions += Directory.EnumerateFiles(root, "*.project.json", SearchOption.AllDirectories).Count();
+                }
             }
-
-            any = true;
-            var bounds = ini.Get("Screens", key + "Bounds", "");
-            var detail = bounds.Length > 0
-                ? L.T($"zone {bounds}", $"area {bounds}")
-                : L.T("plein écran", "fullscreen");
-            var screenLabel = L.T($"écran {raw}", $"screen {raw}");
-            if (int.TryParse(raw.Trim(), out var index) && index >= 0 && index < screens.Count)
-            {
-                var s = screens[index];
-                screenLabel += $" ({s.Bounds.Width}×{s.Bounds.Height})";
-            }
-            yield return $"• {label} → {screenLabel}, {detail}";
+            var library = new EffectsLibraryStore(_pluginRoot);
+            var effects = library.Load();
+            var custom = effects.Keys.Count(name => !library.IsOfficial(name));
+            SetState(_content, compositions + custom > 0 ? true : null, L.T(
+                $"{compositions} composition(s) manuelle(s) · {custom} effet(s) personnel(s) · {effects.Count} effet(s) en bibliothèque.",
+                $"{compositions} manual composition(s) · {custom} personal effect(s) · {effects.Count} library effect(s)."));
         }
-
-        if (!any)
+        catch
         {
-            yield return L.T("Aucune surface configurée pour l'instant.", "No surface configured yet.");
+            SetState(_content, null, L.T("Contenu non lisible.", "Unreadable content."));
         }
-
-        if (ini.GetBool("DMD", "Enabled", false))
+        _content.Actions.Children.Clear();
+        if (_navigate != null)
         {
-            yield return L.T($"• DMD physique : {ini.Get("DMD", "Model", "?")}",
-                $"• Physical DMD: {ini.Get("DMD", "Model", "?")}");
-        }
-        if (ini.GetBool("Lighting", "Enabled", false))
-        {
-            yield return L.T("• Effets lumière (Lighting Engine) : activés",
-                "• Light effects (Lighting Engine): enabled");
+            _content.Actions.Children.Add(Ui.Button(L.T("Mes jeux", "My games"), (_, _) => _navigate?.Invoke("games")));
         }
     }
 

@@ -98,6 +98,37 @@ public sealed class MesSystemesView : UserControl
         Add("wheel", "Logo du système", "System logo", @"ui\wheels\wheel.png");
         Add("marquee", "Marquee généré", "Generated marquee", @"artwork\marquee\generated-system-marquee.png");
         Add("dmd", "DMD généré", "Generated DMD", @"artwork\marquee\generated-system-dmd.png");
+
+        // APIExpose ships no system-level fanart: fall back to the first game
+        // fanart of the system so the composer always has a background to offer
+        if (assets.All(a => a.Key != "fanart"))
+        {
+            try
+            {
+                var games = System.IO.Path.Combine(root, "games");
+                if (System.IO.Directory.Exists(games))
+                {
+                    foreach (var dir in System.IO.Directory.EnumerateDirectories(games).Take(60))
+                    {
+                        foreach (var candidate in new[] { @"artwork\fanart.jpg", @"artwork\fanart.png" })
+                        {
+                            var path = System.IO.Path.Combine(dir, candidate);
+                            if (System.IO.File.Exists(path))
+                            {
+                                assets.Insert(0, new GameAsset("fanart",
+                                    L.T($"Fanart (jeu : {System.IO.Path.GetFileName(dir)})",
+                                        $"Fanart (game: {System.IO.Path.GetFileName(dir)})"), path));
+                                return assets;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // no fallback fanart: the palette simply skips it
+            }
+        }
         return assets;
     }
 }

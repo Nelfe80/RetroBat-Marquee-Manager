@@ -367,13 +367,9 @@ public sealed class PrioritiesCard : UserControl
 
     private async Task TestChainAsync()
     {
+        // "Global" tests the default chain on a cross-system sample — no more
+        // "pick a system" dead end; results (and errors) land right under the button
         var system = ScopeSystem();
-        if (system == null)
-        {
-            _status.Text = L.T("Choisissez un système à tester.", "Pick a system to test.");
-            _status.Foreground = Ui.Error;
-            return;
-        }
         var category = Category();
         var chain = _chain.ToList();
         _testPanel.Children.Clear();
@@ -382,18 +378,25 @@ public sealed class PrioritiesCard : UserControl
         var rows = await Task.Run(() =>
         {
             var games = _media.ListGames()
-                .Where(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
-                .Take(400).ToList();
+                .Where(g => system == null || g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
+                .Take(system == null ? 2000 : 400).ToList();
             var random = new Random();
             return games.OrderBy(_ => random.Next()).Take(5)
-                .Select(g => (g.Rom, Source: ResolveBadge(category, chain, system, g.Rom)))
+                .Select(g => (g.Rom, g.System, Source: ResolveBadge(category, chain, g.System, g.Rom)))
                 .ToList();
         });
 
         _testPanel.Children.Clear();
-        foreach (var (rom, source) in rows)
+        if (rows.Count == 0)
         {
-            _testPanel.Children.Add(Ui.MutedLabel($"• {rom} → " + L.T("source affichée : ", "displayed source: ") + source));
+            _testPanel.Children.Add(Ui.MutedLabel(L.T("Aucun jeu à tester dans ce périmètre.", "No game to test in this scope.")));
+            return;
+        }
+        foreach (var (rom, gameSystem, source) in rows)
+        {
+            _testPanel.Children.Add(Ui.MutedLabel(
+                $"• {rom}{(system == null ? $" ({gameSystem})" : "")} → "
+                + L.T("source affichée : ", "displayed source: ") + source));
         }
     }
 

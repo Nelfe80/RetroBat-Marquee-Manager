@@ -141,7 +141,20 @@ public sealed class GameComposerWindow : Window
 
         Content = root;
         MountComposer(LoadProjectFor(_target));
+
+        // the canvas follows the REAL window width (the window may not open
+        // maximized everywhere): remount on significant size changes
+        SizeChanged += (_, _) =>
+        {
+            if (!IsLoaded) return;
+            var wanted = Math.Max(640, ActualWidth - 590);
+            if (Math.Abs(wanted - _lastCanvasWidth) < 60) return;
+            var carried = _composer.HasLayers ? _composer.BuildProject(_system, _rom) : LoadProjectFor(_target);
+            MountComposer(carried);
+        };
     }
+
+    private double _lastCanvasWidth;
 
     private readonly StackPanel _layersPanel = new();
     private readonly StackPanel _inspectorPanel = new();
@@ -177,11 +190,13 @@ public sealed class GameComposerWindow : Window
         foreach (var layer in models.Reverse())
         {
             var isSelected = ReferenceEquals(layer, _composer.SelectedLayer);
+            // selection = accent text + left accent tick, no dark cartridge
             var row = new Border
             {
-                Background = isSelected ? Ui.Brush(Color.FromRgb(0x24, 0x24, 0x36)) : Brushes.Transparent,
-                CornerRadius = new CornerRadius(4),
-                Padding = new Thickness(2),
+                Background = Brushes.Transparent,
+                BorderBrush = isSelected ? Ui.Accent : Brushes.Transparent,
+                BorderThickness = new Thickness(2, 0, 0, 0),
+                Padding = new Thickness(4, 2, 2, 2),
                 Margin = new Thickness(0, 1, 0, 1),
                 AllowDrop = true,
                 Tag = layer
@@ -339,8 +354,9 @@ public sealed class GameComposerWindow : Window
     private void MountComposer(MarqueeProject? project)
     {
         // the canvas takes all the width left by the palette (200) and the
-        // layers/inspector column (270) — the window opens maximized
-        var canvasWidth = Math.Max(640, SystemParameters.WorkArea.Width - 590);
+        // layers/inspector column (270)
+        var canvasWidth = Math.Max(640, (IsLoaded && ActualWidth > 0 ? ActualWidth : SystemParameters.WorkArea.Width) - 590);
+        _lastCanvasWidth = canvasWidth;
         _composer = new MarqueeComposer(_target.W, _target.H, _mediaRoot, canvasWidth)
         {
             InlineInspector = false // the window hosts the layers panel + inspector
