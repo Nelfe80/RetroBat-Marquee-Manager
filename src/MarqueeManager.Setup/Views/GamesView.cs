@@ -530,7 +530,10 @@ public sealed class GamesView : UserControl, IDisposable
         {
             var surface = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
             if (surface == null) return;
+            // per-surface file AND the category-level legacy file: deleting
+            // only one lets the other come back through the chain/editor seed
             new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface), surface.Id).Delete(entry.System, entry.Rom);
+            new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface)).Delete(entry.System, entry.Rom);
             _status.Text = L.T($"Création de la surface {surface.Id} supprimée.", $"Surface {surface.Id} creation deleted.");
             _status.Foreground = Ui.Muted;
             if (_current != null) OpenGame(_current);
@@ -539,7 +542,8 @@ public sealed class GamesView : UserControl, IDisposable
         {
             var surface = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
             deleteButton.Visibility = surface != null
-                && new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface), surface.Id).HasComposition(entry.System, entry.Rom)
+                && (new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface), surface.Id).HasComposition(entry.System, entry.Rom)
+                    || new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface)).HasComposition(entry.System, entry.Rom))
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }

@@ -568,7 +568,10 @@ public sealed class GameComposerWindow : Window
 
     private void DeleteComposition()
     {
+        // per-surface file AND the category-level legacy file — otherwise the
+        // old creation seeds the editor again and "keeps coming back"
         StoreFor(_target).Delete(_system, _rom);
+        new MarqueeProjectStore(_pluginRoot, _target.Category).Delete(_system, _rom);
         _status.Text = L.T("Création graphique supprimée — la chaîne de sources reprend la main.",
             "Graphic creation deleted — the source chain takes over again.");
         _status.Foreground = Ui.Muted;

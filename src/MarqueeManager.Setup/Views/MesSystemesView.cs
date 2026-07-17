@@ -112,7 +112,10 @@ public sealed class MesSystemesView : UserControl
         deleteButton = Ui.Button(L.T("Supprimer la création de cette surface", "Delete this surface's creation"), (_, _) =>
         {
             if (SelectedSystem() is not { } system || SurfaceOf(SelectedSurface()) is not { } surface) return;
+            // the creation may live per-surface OR at the category level
+            // (pre-per-surface saves): delete BOTH or it keeps coming back
             new MarqueeProjectStore(pluginRoot, CategoryOf(surface), surface.Id).Delete("systems", system);
+            new MarqueeProjectStore(pluginRoot, CategoryOf(surface)).Delete("systems", system);
             Refresh();
         });
         surfaceRow.Children.Add(deleteButton);
@@ -126,7 +129,15 @@ public sealed class MesSystemesView : UserControl
             preview.Source = null;
             if (system == null) return;
 
-            var path = media.CurrentSystemMarquee(pluginRoot, system);
+            // the SELECTED surface's creation wins, then the shared category
+            // file, then the generated marquee — like the runtime
+            string? path = null;
+            if (SurfaceOf(SelectedSurface()) is { } previewSurface)
+            {
+                var surfaceStore = new MarqueeProjectStore(pluginRoot, CategoryOf(previewSurface), previewSurface.Id);
+                if (surfaceStore.HasComposition("systems", system)) path = surfaceStore.PngPath("systems", system);
+            }
+            path ??= media.CurrentSystemMarquee(pluginRoot, system);
             previewCaption.Text = path == null
                 ? L.T("Aucun marquee système pour l'instant.", "No system marquee yet.")
                 : System.IO.Path.GetFileName(path).StartsWith("generated", StringComparison.OrdinalIgnoreCase)
@@ -152,7 +163,8 @@ public sealed class MesSystemesView : UserControl
             }
 
             deleteButton.Visibility = SurfaceOf(SelectedSurface()) is { } surface
-                && new MarqueeProjectStore(pluginRoot, CategoryOf(surface), surface.Id).HasComposition("systems", system)
+                && (new MarqueeProjectStore(pluginRoot, CategoryOf(surface), surface.Id).HasComposition("systems", system)
+                    || new MarqueeProjectStore(pluginRoot, CategoryOf(surface)).HasComposition("systems", system))
                 ? System.Windows.Visibility.Visible
                 : System.Windows.Visibility.Collapsed;
         }
