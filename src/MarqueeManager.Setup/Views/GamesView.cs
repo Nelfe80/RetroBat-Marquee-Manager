@@ -27,6 +27,7 @@ public sealed class GamesView : UserControl, IDisposable
     private GameEntry? _current;
     private GameIdentityIndex? _identity;
     private readonly Dictionary<string, Dictionary<string, string>> _namesCache = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, HashSet<string>> _present = new(StringComparer.OrdinalIgnoreCase);
     private int _openSequence;
 
     private readonly ComboBox _systems = Ui.ComboBox(180);
@@ -34,7 +35,6 @@ public sealed class GamesView : UserControl, IDisposable
     private readonly TextBlock _searchPlaceholder = Ui.MutedLabel(L.T("Rechercher un jeu…", "Search a game…"));
     private readonly ListBox _results = new() { MaxHeight = 220, Margin = new Thickness(0, 4, 0, 0), Visibility = Visibility.Collapsed };
     private readonly StackPanel _gameHost = new();
-    private MarqueeComposer? _composer;
     private readonly TextBlock _status = Ui.MutedLabel("", 12);
     private bool _disposed;
 
@@ -120,15 +120,17 @@ public sealed class GamesView : UserControl, IDisposable
 
         Content = Ui.Page(page);
 
-        // rom index built off the UI thread (~5000 folders)
+        // rom index + physical-presence index built off the UI thread (~5000 folders)
         _ = System.Threading.Tasks.Task.Run(() =>
         {
             var games = _media.ListGames();
+            var present = _media.ListPresentRoms(pluginRoot);
             Dispatcher.Invoke(() =>
             {
                 if (!_disposed)
                 {
                     _allGames = games;
+                    _present = present;
                 }
             });
         });
@@ -209,6 +211,16 @@ public sealed class GamesView : UserControl, IDisposable
             ? name
             : game.Rom;
 
+    /// <summary>"sea wolf" must find the rom "seawolf": queries and roms compare
+    /// with everything but letters and digits stripped.</summary>
+    private static string Normalize(string text)
+        => new(text.Where(char.IsLetterOrDigit).ToArray());
+
+    /// <summary>Only games whose rom physically exists in RetroBat's roms\ folders
+    /// (a system without any roms folder is left unfiltered).</summary>
+    private bool IsPresent(GameEntry game)
+        => !_present.TryGetValue(game.System, out var roms) || roms.Contains(game.Rom);
+
     private void RefreshResults()
     {
         _searchPlaceholder.Visibility = _search.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -220,11 +232,20 @@ public sealed class GamesView : UserControl, IDisposable
         }
 
         var system = SelectedSystem();
+        if (system.Length == 0)
+        {
+            // "all systems": display names load per system on demand
+            foreach (var withRoms in _present.Keys) _ = EnsureNamesAsync(withRoms);
+        }
+
+        var normalized = Normalize(query);
         var matches = _allGames
             .Where(g => system.Length == 0 || g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
-            .Where(g => g.Rom.Contains(query, StringComparison.OrdinalIgnoreCase)
-                        || DisplayNameOf(g).Contains(query, StringComparison.OrdinalIgnoreCase))
-            .Take(40)
+            .Where(IsPresent)
+            .Where(g => Normalize(g.Rom).Contains(normalized, StringComparison.OrdinalIgnoreCase)
+                        || DisplayNameOf(g).Contains(query, StringComparison.OrdinalIgnoreCase)
+                        || Normalize(DisplayNameOf(g)).Contains(normalized, StringComparison.OrdinalIgnoreCase))
+            .Take(100)
             .ToList();
 
         _results.Items.Clear();
@@ -250,7 +271,8 @@ public sealed class GamesView : UserControl, IDisposable
     private sealed record GamePreload(
         string Name, string? Genre, string? GenreIds,
         IReadOnlyList<GameAsset> Assets, IReadOnlyList<MemSignal> Signals,
-        string ApiUrl, (int Width, int Height, string Label) MarqueeSize);
+        string ApiUrl, (int Width, int Height, string Label) MarqueeSize,
+        string? MemPath);
 
     private void OpenGame(GameEntry entry)
     {
@@ -281,7 +303,8 @@ public sealed class GamesView : UserControl, IDisposable
                     _media.ListAssets(entry.System, entry.Rom),
                     memFile != null ? _mem.ReadSignals(memFile) : Array.Empty<MemSignal>(),
                     ini.Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345"),
-                    ResolveMarqueeSize());
+                    ResolveMarqueeSize(),
+                    memFile);
             });
         }
         catch (Exception ex)
@@ -311,10 +334,15 @@ public sealed class GamesView : UserControl, IDisposable
         var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
         var scraper = new MediaScraperService(_pluginRoot, key => ini.Get("Scraper", key, ""));
         _gameHost.Children.Add(Ui.Card(new ScrapeCard(scraper, entry.System, entry.Rom, data.Name,
-            (path, kind) => _composer?.AddMediaLayer(path, kind))));
+            (path, _) =>
+            {
+                _status.Text = L.T($"Téléchargé : {Path.GetFileName(path)} — proposé dans le compositeur (médias téléchargés).",
+                    $"Downloaded: {Path.GetFileName(path)} — offered in the composer (downloaded media).");
+                _status.Foreground = Ui.Ok;
+            })));
 
         _gameHost.Children.Add(Ui.Card(new EffectsCard(_pluginRoot, entry.System, entry.Rom,
-            data.Signals, data.Genre, data.GenreIds, data.ApiUrl)));
+            data.Signals, data.Genre, data.GenreIds, data.ApiUrl, data.MemPath)));
 
         // scene lamps only make sense where MAME outputs exist
         if (entry.System is "arcade" or "mame" or "hbmame")
@@ -330,175 +358,53 @@ public sealed class GamesView : UserControl, IDisposable
         var card = new StackPanel();
         card.Children.Add(Ui.SectionHeader(L.T("Composer le marquee", "Compose the marquee")));
 
-        var (width, height, sourceLabel) = data.MarqueeSize;
-        card.Children.Add(Ui.MutedLabel(sourceLabel));
-
-        var mediaRoot = Path.GetFullPath(Path.Combine(_pluginRoot, "..", "APIExpose", "media", "systems"));
-        _composer = new MarqueeComposer(width, height, mediaRoot);
-
-        // asset palette: click a thumbnail to add it as a layer
-        var assets = data.Assets;
-        if (assets.Count == 0)
+        var hasComposition = _projects.HasComposition(entry.System, entry.Rom);
+        if (hasComposition)
         {
-            card.Children.Add(Ui.Label(L.T("Aucun média disponible pour ce jeu.", "No media available for this game.")));
-        }
-        else
-        {
-            card.Children.Add(Ui.MutedLabel(L.T("Cliquez sur un média pour l'ajouter en calque :", "Click a media to add it as a layer:")));
-            var palette = new WrapPanel { Margin = new Thickness(0, 4, 0, 8) };
-            foreach (var asset in assets)
+            // current composition preview
+            var preview = new Image { MaxHeight = 110, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 4, 0, 4) };
+            _ = Task.Run(() =>
             {
-                palette.Children.Add(AssetThumb(asset));
-            }
-            palette.Children.Add(TextThumb(entry));
-            card.Children.Add(palette);
-
-            var presetRow = new WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
-            presetRow.Children.Add(Ui.Button(L.T("Gabarit auto (fanart + logo 50 %)", "Auto recipe (fanart + 50 % logo)"), (_, _) =>
-            {
-                _composer?.ApplyTemplatePreset(
-                    assets.FirstOrDefault(a => a.Key == "fanart")?.Path,
-                    assets.FirstOrDefault(a => a.Key == "wheel")?.Path);
-            }));
-            card.Children.Add(presetRow);
-        }
-
-        card.Children.Add(_composer);
-
-        // background controls
-        var backgroundRow = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
-        var bgLabel = Ui.MutedLabel(L.T("Fond :", "Background:"));
-        bgLabel.Margin = new Thickness(0, 0, 6, 0);
-        backgroundRow.Children.Add(bgLabel);
-        var bgKind = Ui.ComboBox(170);
-        bgKind.Items.Add(new ComboBoxItem { Content = L.T("Noir", "Black"), Tag = "solid" });
-        bgKind.Items.Add(new ComboBoxItem { Content = L.T("Dégradé sombre", "Dark gradient"), Tag = "gradient" });
-        bgKind.Items.Add(new ComboBoxItem { Content = L.T("Fanart flouté", "Blurred fanart"), Tag = "media" });
-        bgKind.SelectedIndex = 0;
-        bgKind.SelectionChanged += (_, _) =>
-        {
-            if (_composer == null || (bgKind.SelectedItem as ComboBoxItem)?.Tag is not string kind)
-            {
-                return;
-            }
-
-            var fanart = assets.FirstOrDefault(a => a.Key is "fanart" or "mix" or "screenshot");
-            _composer.SetBackground(new MarqueeBackground
-            {
-                Kind = kind,
-                Color = kind == "gradient" ? "#101020" : "#000000",
-                Color2 = "#283048",
-                Source = kind == "media" && fanart != null ? fanart.Path : null
+                try
+                {
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = new Uri(_projects.PngPath(entry.System, entry.Rom));
+                    bitmap.DecodePixelWidth = 640;
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    Dispatcher.BeginInvoke(() => preview.Source = bitmap);
+                }
+                catch
+                {
+                    // preview unavailable
+                }
             });
-        };
-        backgroundRow.Children.Add(bgKind);
-        card.Children.Add(backgroundRow);
-
-        // load an existing project
-        var project = _projects.LoadProject(entry.System, entry.Rom);
-        if (project != null)
-        {
-            _composer.LoadProject(project);
-            SyncBackgroundPicker(bgKind, project.Background.Kind);
+            card.Children.Add(preview);
         }
+        card.Children.Add(Ui.MutedLabel(hasComposition
+            ? L.T("Ce jeu a une composition manuelle — elle prime sur toutes les autres sources.",
+                "This game has a manual composition — it overrides every other source.")
+            : L.T("Pas encore de composition manuelle : le compositeur assemble fanart, logo, textes et médias téléchargés.",
+                "No manual composition yet: the composer assembles fanart, logo, texts and downloaded media.")));
 
-        // actions
-        var actions = new WrapPanel { Margin = new Thickness(0, 10, 0, 0) };
-        actions.Children.Add(Ui.Button(L.T("Enregistrer ma composition", "Save my composition"), (_, _) => SaveComposition(entry), primary: true));
-        if (_projects.HasComposition(entry.System, entry.Rom))
+        var actions = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
+        actions.Children.Add(Ui.Button(L.T("Ouvrir le compositeur…", "Open the composer…"), (_, _) =>
+        {
+            var window = new Controls.GameComposerWindow(_pluginRoot, entry.System, entry.Rom, data.Name, data.Assets)
+            {
+                Owner = Window.GetWindow(this)
+            };
+            window.ShowDialog();
+            if (_current != null) OpenGame(_current); // refresh the preview
+        }, primary: true));
+        if (hasComposition)
         {
             actions.Children.Add(Ui.Button(L.T("Supprimer ma composition", "Delete my composition"), (_, _) => DeleteComposition(entry)));
         }
         card.Children.Add(actions);
-        card.Children.Add(Ui.MutedLabel(L.T(
-            "La composition est enregistrée dans media\\marquees et remplace le marquee scrapé/généré pour ce jeu.",
-            "The composition is saved to media\\marquees and replaces the scraped/generated marquee for this game.")));
-
         _gameHost.Children.Add(Ui.Card(card));
-    }
-
-    private static void SyncBackgroundPicker(ComboBox picker, string kind)
-    {
-        foreach (var item in picker.Items.OfType<ComboBoxItem>())
-        {
-            if (item.Tag as string == kind)
-            {
-                picker.SelectedItem = item;
-                return;
-            }
-        }
-    }
-
-    private FrameworkElement AssetThumb(GameAsset asset)
-    {
-        var thumb = new StackPanel { Width = 92, Margin = new Thickness(0, 0, 8, 6) };
-        var border = new Border
-        {
-            Background = Ui.Viewport,
-            BorderBrush = Ui.PanelBorder,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(6),
-            Height = 54,
-            Cursor = Cursors.Hand
-        };
-        // decode OFF the UI thread: a dozen synchronous JPEG decodes froze the click
-        var thumbImage = new Image { Stretch = Stretch.Uniform, Margin = new Thickness(3) };
-        border.Child = thumbImage;
-        _ = Task.Run(() =>
-        {
-            try
-            {
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(asset.Path);
-                bitmap.DecodePixelWidth = 180;
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                Dispatcher.BeginInvoke(() => thumbImage.Source = bitmap);
-            }
-            catch
-            {
-                Dispatcher.BeginInvoke(() => border.Child = Ui.MutedLabel("?"));
-            }
-        });
-        border.MouseLeftButtonDown += (_, _) => _composer?.AddMediaLayer(asset.Path, asset.Key);
-        thumb.Children.Add(border);
-        var label = Ui.MutedLabel(asset.Label, 10);
-        label.TextAlignment = TextAlignment.Center;
-        label.TextTrimming = TextTrimming.CharacterEllipsis;
-        thumb.Children.Add(label);
-        return thumb;
-    }
-
-    private FrameworkElement TextThumb(GameEntry entry)
-    {
-        var thumb = new StackPanel { Width = 92, Margin = new Thickness(0, 0, 8, 6) };
-        var border = new Border
-        {
-            Background = Ui.Viewport,
-            BorderBrush = Ui.PanelBorder,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(6),
-            Height = 54,
-            Cursor = Cursors.Hand,
-            Child = new TextBlock
-            {
-                Text = "Aa",
-                FontSize = 22,
-                FontWeight = FontWeights.Bold,
-                Foreground = Ui.Foreground,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            }
-        };
-        border.MouseLeftButtonDown += (_, _) =>
-            _composer?.AddTextLayer(_media.ReadDisplayName(entry.System, entry.Rom) ?? entry.Rom);
-        thumb.Children.Add(border);
-        var label = Ui.MutedLabel(L.T("Texte", "Text"), 10);
-        label.TextAlignment = TextAlignment.Center;
-        thumb.Children.Add(label);
-        return thumb;
     }
 
     /// <summary>Real marquee surface: [Screens] MarqueeBounds when set, otherwise the
@@ -528,48 +434,6 @@ public sealed class GamesView : UserControl, IDisposable
 
         return (1920, 360, L.T("Aucun écran marquee configuré — format bandeau 1920×360 par défaut.",
             "No marquee screen configured — defaulting to a 1920×360 banner."));
-    }
-
-    private void SaveComposition(GameEntry entry)
-    {
-        if (_composer == null)
-        {
-            return;
-        }
-
-        if (!_composer.HasLayers)
-        {
-            _status.Text = L.T("Ajoutez au moins un calque avant d'enregistrer.", "Add at least one layer before saving.");
-            _status.Foreground = Ui.Error;
-            return;
-        }
-
-        if (!_projects.IsOwnedBySetup(entry.System, entry.Rom))
-        {
-            var answer = MessageBox.Show(
-                L.T("Le projet existant n'a pas été créé par MarqueeManagerSetup. L'écraser ?",
-                    "The existing project was not created by MarqueeManagerSetup. Overwrite it?"),
-                "MarqueeManagerSetup", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (answer != MessageBoxResult.Yes)
-            {
-                return;
-            }
-        }
-
-        try
-        {
-            _projects.SaveProject(_composer.BuildProject(entry.System, entry.Rom));
-            _composer.RenderPng(_projects.PngPath(entry.System, entry.Rom));
-            _status.Text = L.T(
-                $"Composition enregistrée : {_projects.PngPath(entry.System, entry.Rom)}. Elle s'affichera à la prochaine sélection du jeu.",
-                $"Composition saved: {_projects.PngPath(entry.System, entry.Rom)}. It will show up on the next game selection.");
-            _status.Foreground = Ui.Ok;
-        }
-        catch (Exception ex)
-        {
-            _status.Text = L.T($"Échec de l'enregistrement : {ex.Message}", $"Save failed: {ex.Message}");
-            _status.Foreground = Ui.Error;
-        }
     }
 
     private void DeleteComposition(GameEntry entry)

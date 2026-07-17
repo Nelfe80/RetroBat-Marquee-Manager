@@ -117,6 +117,19 @@ public sealed class SpriteInstance
     /// <summary>Per-instance size factor (adds variety in multi-spawns).</summary>
     public float Scale { get; init; } = 1f;
 
+    /// <summary>Grow effect: the sprite swells from Scale to Scale×2 over its life.</summary>
+    public bool Grow { get; init; }
+
+    /// <summary>Pixel-art sprites scaled up keep their crisp pixels (nearest neighbor).</summary>
+    public bool PixelCrisp { get; init; }
+
+    public float ScaleAt(double now)
+    {
+        if (!Grow) return Scale;
+        var progress = Math.Clamp((now - StartSeconds) / DurationSeconds, 0, 1);
+        return Scale * (1f + (float)progress);
+    }
+
     public bool Done(double now) => now - StartSeconds >= DurationSeconds;
 
     public (float X, float Y) PositionAt(double now)

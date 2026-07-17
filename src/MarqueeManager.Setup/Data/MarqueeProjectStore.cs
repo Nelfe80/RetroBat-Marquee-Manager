@@ -67,9 +67,11 @@ public sealed class MarqueeProjectStore
 
     private readonly string _root;
 
-    public MarqueeProjectStore(string pluginRoot)
+    /// <summary>category: "marquees" (default), "toppers" or "dmd" — the media
+    /// folder the runtime's composition chains read for that surface family.</summary>
+    public MarqueeProjectStore(string pluginRoot, string category = "marquees")
     {
-        _root = Path.Combine(pluginRoot, "media", "marquees");
+        _root = Path.Combine(pluginRoot, "media", category);
     }
 
     public string PngPath(string system, string rom)

@@ -91,6 +91,14 @@ public sealed class EffectsLibraryReader
         return slugs;
     }
 
+    /// <summary>Every default rule of the library, unfiltered — lets the user see
+    /// the rules other genres get ("voir tous les effets").</summary>
+    public IReadOnlyList<(string Match, string? Genres, EffectRule Effect)> ListDefaults()
+        => _rules.Select(rule => (
+            rule.Actions != null ? string.Join(" | ", rule.Actions) : $"family:{rule.FamilyPrefix}",
+            rule.Genres is { Length: > 0 } ? string.Join(" | ", rule.Genres) : null,
+            rule.Effect)).ToList();
+
     /// <summary>The library default for an action, genre-scoped rules first.</summary>
     public (EffectRule Rule, bool GenreScoped)? FindDefault(string action, string family, IReadOnlyList<string> slugs)
     {

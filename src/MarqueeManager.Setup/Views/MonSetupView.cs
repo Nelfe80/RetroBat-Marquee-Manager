@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
 using MarqueeManager.Setup.Data;
 using MarqueeManager.Setup.Detection;
@@ -54,9 +55,11 @@ public sealed class MonSetupView : UserControl
     private string _previewState = "navigation";
     private ScreenModel? _selected;
     private ScreenModel? _dragging;
+    private bool _dragMoved;
     private Point _dragStart;
     private (double X, double Y) _dragOrigin;
     private double _scale = 0.06;
+    private readonly (bool Present, string Model, int W, int H) _physicalDmd;
 
     public MonSetupView(string pluginRoot)
     {
@@ -65,6 +68,21 @@ public sealed class MonSetupView : UserControl
         _surfaces = _store.Load();
         _detected = ScreenProbe.Detect();
         _plan = ReconcilePlan(_store.LoadScreens());
+
+        // a configured physical DMD joins the plan as a screen-like node
+        try
+        {
+            var ini = IniFile.Load(PluginPaths.ConfigPath(pluginRoot));
+            var enabled = ini.Get("DMD", "Enabled", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
+            var model = ini.Get("DMD", "Model", "");
+            _physicalDmd = (enabled && model.Length > 0, model,
+                int.TryParse(ini.Get("DMD", "Width", "128"), out var dmdW) ? dmdW : 128,
+                int.TryParse(ini.Get("DMD", "Height", "32"), out var dmdH) ? dmdH : 32);
+        }
+        catch
+        {
+            _physicalDmd = (false, "", 128, 32);
+        }
 
         var page = new StackPanel();
         page.Children.Add(Ui.Title(L.T("Mon setup", "My setup")));
@@ -248,6 +266,37 @@ public sealed class MonSetupView : UserControl
             Canvas.SetTop(card, (screen.PhysicalY - minY + 200) * _scale);
             _map.Children.Add(card);
         }
+
+        // physical DMD node: same visual language, click = its settings.
+        // Rendered at 4× its real pixels — a 128×32 panel would be invisible.
+        if (_physicalDmd.Present)
+        {
+            var color = CategoryColors["dmd-virtual"];
+            var node = new Border
+            {
+                Width = Math.Max(40, _physicalDmd.W * 4 * _scale),
+                Height = Math.Max(16, _physicalDmd.H * 4 * _scale),
+                Background = Ui.Brush(Color.FromRgb(0x1A, 0x12, 0x12)),
+                BorderBrush = new SolidColorBrush(color),
+                BorderThickness = new Thickness(1.5),
+                CornerRadius = new CornerRadius(4),
+                Tag = "dmd",
+                Cursor = Cursors.Hand,
+                Child = new TextBlock
+                {
+                    Text = $"DMD {_physicalDmd.Model} · {_physicalDmd.W}×{_physicalDmd.H}",
+                    Foreground = new SolidColorBrush(color),
+                    FontSize = 10,
+                    FontWeight = FontWeights.SemiBold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    IsHitTestVisible = false
+                }
+            };
+            Canvas.SetLeft(node, (maxX - minX + 240) * _scale);
+            Canvas.SetTop(node, 200 * _scale);
+            _map.Children.Add(node);
+        }
     }
 
     private void Map_MouseDown(object sender, MouseButtonEventArgs e)
@@ -256,12 +305,23 @@ public sealed class MonSetupView : UserControl
         var hit = _map.Children.OfType<Border>().Reverse()
             .FirstOrDefault(card => position.X >= Canvas.GetLeft(card) && position.X <= Canvas.GetLeft(card) + card.Width
                                     && position.Y >= Canvas.GetTop(card) && position.Y <= Canvas.GetTop(card) + card.Height);
+        if (hit?.Tag is string toolTag)
+        {
+            // pseudo-screens (physical DMD node) open their settings directly
+            if (toolTag == "dmd")
+            {
+                OpenToolWindow(L.T("DMD physique", "Physical DMD"), new DmdView(_pluginRoot));
+            }
+            e.Handled = true;
+            return;
+        }
         if (hit?.Tag is not ScreenModel screen) return;
 
         _selected = screen;
         _dragging = screen;
         _dragStart = position;
         _dragOrigin = (screen.PhysicalX, screen.PhysicalY);
+        _dragMoved = false;
         _map.CaptureMouse();
         RenderMap();
         RenderScreenPanel();
@@ -272,6 +332,7 @@ public sealed class MonSetupView : UserControl
     {
         if (_dragging == null || e.LeftButton != MouseButtonState.Pressed) return;
         var position = e.GetPosition(_map);
+        if (Math.Abs(position.X - _dragStart.X) + Math.Abs(position.Y - _dragStart.Y) > 4) _dragMoved = true;
         // snap the physical plan to a 40 px grid — tidy layouts by default
         _dragging.PhysicalX = Math.Round((_dragOrigin.X + (position.X - _dragStart.X) / _scale) / 40) * 40;
         _dragging.PhysicalY = Math.Round((_dragOrigin.Y + (position.Y - _dragStart.Y) / _scale) / 40) * 40;
@@ -280,10 +341,16 @@ public sealed class MonSetupView : UserControl
 
     private void EndDrag()
     {
-        if (_dragging != null)
+        if (_dragging == null) return;
+        var clicked = !_dragMoved ? _dragging : null;
+        _dragging = null;
+        _map.ReleaseMouseCapture();
+
+        // a plain CLICK (no drag) drills straight into the surfaces editor —
+        // including the RetroBat screen (add/remove surfaces with the ES warning)
+        if (clicked is { Connected: true })
         {
-            _dragging = null;
-            _map.ReleaseMouseCapture();
+            OpenDivision(clicked);
         }
     }
 
@@ -318,8 +385,6 @@ public sealed class MonSetupView : UserControl
                     OpenToolWindow(L.T("IC card tactile", "Touch IC card"), new TouchView(_pluginRoot))));
             }
         }
-        tools.Children.Add(Ui.Button(L.T("DMD physique…", "Physical DMD…"), (_, _) =>
-            OpenToolWindow(L.T("DMD physique", "Physical DMD"), new DmdView(_pluginRoot))));
         card.Children.Add(tools);
 
         // ZERO-CONFIG type
@@ -379,7 +444,7 @@ public sealed class MonSetupView : UserControl
         var actions = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
         if (screen.Connected)
         {
-            actions.Children.Add(Ui.Button(L.T("Diviser / positionner les surfaces", "Split / position surfaces"), (_, _) => OpenDivision(screen)));
+            actions.Children.Add(Ui.Button(L.T("Éditer les surfaces de cet écran", "Edit this screen's surfaces"), (_, _) => OpenDivision(screen)));
         }
         if (!screen.Connected)
         {
@@ -438,23 +503,21 @@ public sealed class MonSetupView : UserControl
     private void OpenDivision(ScreenModel screen)
     {
         if (screen.WindowsIndex < 0 || screen.WindowsIndex >= _detected.Count) return;
-        var hosted = _surfaces.Where(s => s.Screens.Contains(screen.WindowsIndex)).ToList();
-        if (hosted.Count == 0)
-        {
-            _status.Text = L.T("Appliquez d'abord un type à cet écran.", "Apply a type to this screen first.");
-            _status.Foreground = Ui.Error;
-            return;
-        }
-        var editor = new ScreenCompositor(screen.WindowsIndex, _detected[screen.WindowsIndex], hosted, hosted[0])
+        // the editor adds/removes surfaces itself — an empty screen is fine,
+        // and the RetroBat screen opens with the ES masking warning
+        var hostsGame = screen.Usage.Equals("game", StringComparison.OrdinalIgnoreCase)
+                        || _detected[screen.WindowsIndex].Primary;
+        var editor = new ScreenCompositor(screen.WindowsIndex, _detected[screen.WindowsIndex], _surfaces,
+            SurfacesOf(screen).FirstOrDefault(), hostsGame)
         {
             Owner = Window.GetWindow(this)
         };
         if (editor.ShowDialog() == true)
         {
             SaveAll();
-            RenderMap();
-            RenderScreenPanel();
         }
+        RenderMap();
+        RenderScreenPanel();
     }
 
     private void OpenComposition(SurfaceModel surface)

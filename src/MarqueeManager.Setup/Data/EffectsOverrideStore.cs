@@ -23,6 +23,11 @@ public sealed class EffectRule
     [JsonPropertyName("fullscreen")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Fullscreen { get; set; }
     [JsonPropertyName("count")] public int Count { get; set; } = 1;
     [JsonPropertyName("motion")] public string Motion { get; set; } = "pop";
+    /// <summary>Sprite size multiplier (2.0 = 200 %, pixels kept crisp by the runtime).</summary>
+    [JsonPropertyName("scale")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public double Scale { get; set; }
+    [JsonPropertyName("grow")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Grow { get; set; }
+    /// <summary>"random" (default), "center" or "spread" (evenly spaced).</summary>
+    [JsonPropertyName("placement")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Placement { get; set; }
     [JsonPropertyName("throttleMs")] public int ThrottleMs { get; set; } = 400;
     [JsonPropertyName("off")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Off { get; set; }
 

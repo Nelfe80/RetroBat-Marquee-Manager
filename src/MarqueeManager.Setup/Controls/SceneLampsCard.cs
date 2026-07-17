@@ -101,11 +101,18 @@ public sealed class SceneLampsCard : UserControl
 
     private void RebuildAsEditor()
     {
+        // _status/_canvas/_inspector are reused fields: detach them from the old
+        // visual tree first, or WPF throws "already the logical child".
+        (Content as Panel)?.Children.Clear();
+        if (_canvas.Parent is Border oldHost) oldHost.Child = null;
+
         var card = new StackPanel();
         card.Children.Add(Ui.SectionHeader(L.T("Scène & lampes (rbmarquee)", "Scene & lamps (rbmarquee)")));
         BuildEditor(card);
         Content = card;
     }
+
+    private bool _canvasWired;
 
     private void BuildEditor(StackPanel card)
     {
@@ -117,11 +124,15 @@ public sealed class SceneLampsCard : UserControl
         _canvas.Width = ViewWidth;
         _canvas.Height = _viewHeight;
         _canvas.Background = Ui.Viewport;
-        _canvas.MouseLeftButtonDown += Canvas_MouseDown;
-        _canvas.MouseMove += Canvas_MouseMove;
-        _canvas.MouseLeftButtonUp += (_, _) => EndDrag();
-        _canvas.MouseLeave += (_, _) => EndDrag();
-        _canvas.MouseWheel += Canvas_MouseWheel;
+        if (!_canvasWired)
+        {
+            _canvasWired = true;
+            _canvas.MouseLeftButtonDown += Canvas_MouseDown;
+            _canvas.MouseMove += Canvas_MouseMove;
+            _canvas.MouseLeftButtonUp += (_, _) => EndDrag();
+            _canvas.MouseLeave += (_, _) => EndDrag();
+            _canvas.MouseWheel += Canvas_MouseWheel;
+        }
 
         card.Children.Add(new Border
         {

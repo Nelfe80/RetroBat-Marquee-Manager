@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using MarqueeManager.Setup.Data;
@@ -10,12 +11,14 @@ using Path = System.IO.Path;
 namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
-/// "Quand [signal] alors [effet]" card (RetroCreator Flow Builder UX): the game's
-/// .MEM signals as readable sentences, an inline editor with a live preview band,
-/// provenance badges (game / system / genre / library default), and a live tap
-/// on ws/ingame to discover signals by playing. Overrides are written sparse to
-/// overrides\effects\ through <see cref="EffectsOverrideStore"/> — the runtime
-/// reloads them at every game change.
+/// "Gestion des effets pendant la partie" — the game's ingame effects. The .MEM
+/// signals show as readable "Quand X alors Y" rows on two columns with
+/// provenance badges; clicking one (or "Lier un effet à un signal") opens the
+/// dedicated <see cref="EffectBindingDialog"/>. The card also carries the
+/// per-game policy, the "Mes effets" library access, the link to the .MEM file,
+/// the full default table (unfiltered by genre) and the live ws/ingame monitor.
+/// Overrides are written sparse to overrides\effects\ through
+/// <see cref="EffectsOverrideStore"/> — the runtime reloads them per game.
 /// </summary>
 public sealed class EffectsCard : UserControl, IDisposable
 {
@@ -23,20 +26,12 @@ public sealed class EffectsCard : UserControl, IDisposable
     {
         ("flash", "Flash coloré", "Colored flash"),
         ("pulse", "Impulsion", "Pulse"),
-        ("tint", "Teinte soutenue", "Sustained tint"),
+        ("tint", "Voile coloré", "Colored veil"),
         ("shake", "Secousse", "Shake"),
         ("strobe", "Stroboscope", "Strobe"),
         ("blackout", "Extinction", "Blackout"),
         ("powercycle", "Rallumage", "Power cycle"),
-        ("sprite", "Sprites seuls", "Sprites only")
-    };
-
-    private static readonly (string Key, string Fr, string En)[] Motions =
-    {
-        ("pop", "Apparition", "Pop"),
-        ("fall", "Chute", "Fall"),
-        ("rise", "Montée", "Rise"),
-        ("cross", "Traversée", "Cross")
+        ("sprite", "Nuée de sprites", "Sprite swarm")
     };
 
     private readonly string _pluginRoot;
@@ -49,19 +44,18 @@ public sealed class EffectsCard : UserControl, IDisposable
     private readonly string _spritesDir;
     private readonly string _apiUrl;
 
-    private readonly StackPanel _rows = new();
+    private readonly UniformGrid _rows = new() { Columns = 2 };
     private readonly TextBlock _status = Ui.MutedLabel("", 12);
     private string _scope = "game"; // game | system | genre:<slug>
-    private string? _expandedAction;
 
-    private readonly List<System.Windows.Threading.DispatcherTimer> _previewTimers = new();
     private IngameMonitor? _monitor;
     private Button? _monitorButton;
     private TextBlock? _monitorStatus;
     private ListBox? _monitorList;
 
     public EffectsCard(string pluginRoot, string system, string rom,
-        IReadOnlyList<MemSignal> signals, string? genreLabels, string? genreIds, string apiUrl)
+        IReadOnlyList<MemSignal> signals, string? genreLabels, string? genreIds, string apiUrl,
+        string? memPath = null)
     {
         _pluginRoot = pluginRoot;
         _system = system;
@@ -74,7 +68,7 @@ public sealed class EffectsCard : UserControl, IDisposable
         _spritesDir = Path.Combine(pluginRoot, "resources", "sprites");
 
         var card = new StackPanel();
-        card.Children.Add(Ui.SectionHeader(L.T("Effets lumière (signaux du jeu)", "Light effects (game signals)")));
+        card.Children.Add(Ui.SectionHeader(L.T("Gestion des effets pendant la partie", "Ingame effects management")));
 
         // policy (per game) + library access
         var policyRow = new WrapPanel { Margin = new Thickness(0, 2, 0, 2) };
@@ -94,7 +88,7 @@ public sealed class EffectsCard : UserControl, IDisposable
                 _store.SavePolicy(_system, _rom, policy);
                 _status.Text = policy switch
                 {
-                    "custom-only" => L.T("Seuls les signaux que vous allouez ci-dessous réagiront.", "Only the signals you allocate below will react."),
+                    "custom-only" => L.T("Seuls les signaux que vous avez liés réagiront.", "Only the signals you linked will react."),
                     "off" => L.T("Aucun effet MEM ne jouera sur ce jeu.", "No MEM effect will play on this game."),
                     _ => L.T("Défauts genre/système + vos réglages.", "Genre/system defaults + your tweaks.")
                 };
@@ -142,15 +136,50 @@ public sealed class EffectsCard : UserControl, IDisposable
             }
         };
         scopeRow.Children.Add(scopePicker);
+        scopeRow.Children.Add(Ui.Button(L.T("Lier un effet à un signal…", "Link an effect to a signal…"), (_, _) =>
+            OpenBinding(_signals.FirstOrDefault()), primary: _signals.Count > 0));
         card.Children.Add(scopeRow);
 
         if (signals.Count == 0)
         {
-            card.Children.Add(Ui.Label(L.T(
-                "Ce jeu n'a pas de définition .MEM : aucun signal sémantique n'est disponible. Le moniteur live reste utilisable.",
-                "This game has no .MEM definition: no semantic signal is available. The live monitor still works.")));
+            var none = Ui.Label(L.T(
+                "⚠ Ce jeu n'a PAS de définition .MEM : aucun signal sémantique n'est disponible, donc aucun effet piloté par le jeu. "
+                + "Le moniteur live reste utilisable pour vérifier.",
+                "⚠ This game has NO .MEM definition: no semantic signal is available, so no game-driven effect. "
+                + "The live monitor still works to double-check."));
+            none.TextWrapping = TextWrapping.Wrap;
+            card.Children.Add(none);
         }
+        else
+        {
+            card.Children.Add(Ui.MutedLabel(L.T(
+                $"{signals.Count} signaux — cliquez une ligne pour lier/modifier son effet.",
+                $"{signals.Count} signals — click a row to link/edit its effect.")));
+        }
+
+        // the .MEM file behind all this — never a black box
+        if (memPath is { Length: > 0 })
+        {
+            var link = Ui.MutedLabel(L.T($"Fichier .MEM : {memPath}", $".MEM file: {memPath}"), 11);
+            link.TextDecorations = TextDecorations.Underline;
+            link.Cursor = Cursors.Hand;
+            link.TextWrapping = TextWrapping.Wrap;
+            link.MouseLeftButtonDown += (_, _) =>
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{memPath}\"");
+                }
+                catch
+                {
+                    // explorer unavailable
+                }
+            };
+            card.Children.Add(link);
+        }
+
         card.Children.Add(_rows);
+        BuildDefaultsSection(card);
         BuildMonitorSection(card);
         _status.TextWrapping = TextWrapping.Wrap;
         card.Children.Add(_status);
@@ -161,7 +190,6 @@ public sealed class EffectsCard : UserControl, IDisposable
 
     public void Dispose()
     {
-        StopPreviewTimers();
         _monitor?.Dispose();
         _monitor = null;
     }
@@ -225,7 +253,6 @@ public sealed class EffectsCard : UserControl, IDisposable
     {
         var (rule, origin, detail) = ResolveCurrent(signal);
 
-        var host = new StackPanel();
         var header = new Grid { Cursor = Cursors.Hand, Background = Brushes.Transparent };
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -283,29 +310,34 @@ public sealed class EffectsCard : UserControl, IDisposable
         right.Children.Add(Badge(detail, origin));
         Grid.SetColumn(right, 1);
         header.Children.Add(right);
-        host.Children.Add(header);
 
-        StackPanel? editor = null;
-        if (_expandedAction == signal.Action)
-        {
-            editor = BuildEditor(signal, rule);
-            host.Children.Add(editor);
-        }
-
-        header.MouseLeftButtonDown += (_, _) =>
-        {
-            _expandedAction = _expandedAction == signal.Action ? null : signal.Action;
-            RebuildRows();
-        };
+        header.MouseLeftButtonDown += (_, _) => OpenBinding(signal);
 
         return new Border
         {
-            Background = editor != null ? Ui.Brush(Color.FromRgb(0x16, 0x16, 0x20)) : Brushes.Transparent,
+            Background = Brushes.Transparent,
             BorderBrush = Ui.PanelBorder,
             BorderThickness = new Thickness(0, 0, 0, 1),
-            Padding = new Thickness(6, 4, 6, 4),
-            Child = host
+            Padding = new Thickness(6, 4, 10, 4),
+            Child = header
         };
+    }
+
+    private void OpenBinding(MemSignal? signal)
+    {
+        if (_signals.Count == 0)
+        {
+            _status.Text = L.T("Aucun signal .MEM à lier sur ce jeu.", "No .MEM signal to link on this game.");
+            _status.Foreground = Ui.Error;
+            return;
+        }
+        var dialog = new EffectBindingDialog(_pluginRoot, _spritesDir, _signals, signal,
+            LoadScopeRules, SaveScopeRules, ResolveCurrent, ScopeLabel())
+        {
+            Owner = Window.GetWindow(this)
+        };
+        dialog.ShowDialog();
+        if (dialog.Changed) RebuildRows();
     }
 
     private Border Badge(string text, EffectOrigin origin)
@@ -327,218 +359,53 @@ public sealed class EffectsCard : UserControl, IDisposable
         };
     }
 
-    // ================= inline editor =================
-
-    private StackPanel BuildEditor(MemSignal signal, EffectRule? current)
-    {
-        var draft = current?.Clone() ?? new EffectRule();
-
-        var editor = new StackPanel { Margin = new Thickness(12, 6, 0, 8) };
-        var preview = new EffectPreview();
-        var simple = new StackPanel();
-        var library = new StackPanel();
-
-        // mode: direct action, or one of "Mes effets" (named sequence)
-        var modeRow = new WrapPanel();
-        var modePicker = Ui.ComboBox(190);
-        modePicker.Items.Add(new ComboBoxItem { Content = L.T("Effet simple", "Simple effect"), Tag = "simple" });
-        modePicker.Items.Add(new ComboBoxItem { Content = L.T("Un de mes effets", "One of my effects"), Tag = "library" });
-        modePicker.SelectedIndex = draft.EffectRef is { Length: > 0 } ? 1 : 0;
-        modeRow.Children.Add(modePicker);
-        editor.Children.Add(modeRow);
-
-        // ----- library mode -----
-        var namePicker = Ui.ComboBox(260);
-        void FillNames()
-        {
-            namePicker.Items.Clear();
-            foreach (var name in new EffectsLibraryStore(_pluginRoot).LoadOrSeed().Keys
-                         .OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
-            {
-                var item = new ComboBoxItem { Content = name, Tag = name };
-                namePicker.Items.Add(item);
-                if (name.Equals(draft.EffectRef, StringComparison.OrdinalIgnoreCase)) namePicker.SelectedItem = item;
-            }
-            if (namePicker.SelectedItem == null && namePicker.Items.Count > 0) namePicker.SelectedIndex = 0;
-            if ((namePicker.SelectedItem as ComboBoxItem)?.Tag is string first) draft.EffectRef = first;
-        }
-        namePicker.SelectionChanged += (_, _) =>
-        {
-            if ((namePicker.SelectedItem as ComboBoxItem)?.Tag is string name) draft.EffectRef = name;
-        };
-        var libraryRow = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
-        libraryRow.Children.Add(namePicker);
-        libraryRow.Children.Add(Ui.Button(L.T("Composer / gérer…", "Compose / manage…"), (_, _) =>
-        {
-            var composer = new EffectComposerWindow(_pluginRoot, pickMode: true) { Owner = Window.GetWindow(this) };
-            if (composer.ShowDialog() == true && composer.SelectedEffectName is { } picked) draft.EffectRef = picked;
-            FillNames();
-        }));
-        library.Children.Add(libraryRow);
-
-        void ApplyMode()
-        {
-            var isLibrary = (modePicker.SelectedItem as ComboBoxItem)?.Tag as string == "library";
-            simple.Visibility = isLibrary ? Visibility.Collapsed : Visibility.Visible;
-            library.Visibility = isLibrary ? Visibility.Visible : Visibility.Collapsed;
-            if (isLibrary)
-            {
-                FillNames();
-            }
-            else
-            {
-                draft.EffectRef = null;
-            }
-        }
-        modePicker.SelectionChanged += (_, _) => ApplyMode();
-
-        var line1 = new WrapPanel();
-        var kind = PickerFor(line1, L.T("Effet", "Effect"), Kinds, draft.Kind, v => draft.Kind = v);
-        var colorBox = Ui.TextBox(draft.Color, 80);
-        var swatch = new Border
-        {
-            Width = 20, Height = 20, CornerRadius = new CornerRadius(4),
-            Background = SafeBrush(draft.Color), VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 10, 0)
-        };
-        colorBox.TextChanged += (_, _) =>
-        {
-            draft.Color = colorBox.Text.Trim();
-            swatch.Background = SafeBrush(draft.Color);
-        };
-        var colorLabel = Ui.MutedLabel(L.T("Couleur", "Color"));
-        colorLabel.Margin = new Thickness(0, 0, 6, 0);
-        line1.Children.Add(colorLabel);
-        line1.Children.Add(colorBox);
-        line1.Children.Add(swatch);
-        var durationBox = NumberFor(line1, L.T("Durée (ms)", "Duration (ms)"), draft.DurationMs, v => draft.DurationMs = v);
-        simple.Children.Add(line1);
-
-        var line2 = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
-        var spritePicker = Ui.ComboBox(170);
-        spritePicker.Items.Add(new ComboBoxItem { Content = L.T("(aucun sprite)", "(no sprite)"), Tag = "" });
-        try
-        {
-            foreach (var gif in Directory.EnumerateFiles(_spritesDir, "*.gif").OrderBy(f => f))
-            {
-                var name = Path.GetFileName(gif);
-                var item = new ComboBoxItem { Content = name, Tag = name };
-                spritePicker.Items.Add(item);
-                if (name.Equals(draft.Sprite, StringComparison.OrdinalIgnoreCase)) spritePicker.SelectedItem = item;
-            }
-        }
-        catch
-        {
-            // sprites folder missing: picker stays empty
-        }
-        if (spritePicker.SelectedItem == null) spritePicker.SelectedIndex = 0;
-        spritePicker.SelectionChanged += (_, _) =>
-        {
-            var tag = (spritePicker.SelectedItem as ComboBoxItem)?.Tag as string;
-            draft.Sprite = string.IsNullOrEmpty(tag) ? null : tag;
-        };
-        var spriteLabel = Ui.MutedLabel("Sprite");
-        spriteLabel.Margin = new Thickness(0, 0, 6, 0);
-        line2.Children.Add(spriteLabel);
-        line2.Children.Add(spritePicker);
-        var countBox = NumberFor(line2, L.T("Nombre", "Count"), draft.Count, v => draft.Count = Math.Clamp(v, 1, 8), 40);
-        PickerFor(line2, "Motion", Motions, draft.Motion, v => draft.Motion = v);
-        simple.Children.Add(line2);
-
-        var line3 = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
-        var dipSlider = new Slider
-        {
-            Minimum = 0, Maximum = 1, Value = Math.Clamp(draft.Dip, 0, 1),
-            Width = 110, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0)
-        };
-        dipSlider.ValueChanged += (_, args) => draft.Dip = Math.Round(args.NewValue, 2);
-        var dipLabel = Ui.MutedLabel(L.T("Creux lumière", "Light dip"));
-        dipLabel.Margin = new Thickness(0, 0, 6, 0);
-        line3.Children.Add(dipLabel);
-        line3.Children.Add(dipSlider);
-        var throttleBox = NumberFor(line3, L.T("Anti-rafale (ms)", "Cooldown (ms)"), draft.ThrottleMs, v => draft.ThrottleMs = v);
-        var offBox = Ui.CheckBox(L.T("Désactiver ce signal", "Silence this signal"), draft.Off);
-        offBox.Checked += (_, _) => draft.Off = true;
-        offBox.Unchecked += (_, _) => draft.Off = false;
-        line3.Children.Add(offBox);
-        simple.Children.Add(line3);
-
-        editor.Children.Add(simple);
-        editor.Children.Add(library);
-        ApplyMode();
-
-        var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
-        actions.Children.Add(Ui.Button(L.T("▶ Tester l'effet", "▶ Preview the effect"), (_, _) => PlayDraft(preview, draft)));
-        actions.Children.Add(Ui.Button(L.T("Enregistrer", "Save"), (_, _) =>
-        {
-            var rules = LoadScopeRules();
-            rules[signal.Action] = draft;
-            SaveScopeRules(rules);
-            _status.Text = L.T($"{signal.Action} enregistré ({ScopeLabel()}). Le runtime applique au prochain changement de jeu.",
-                $"{signal.Action} saved ({ScopeLabel()}). The runtime applies it on the next game change.");
-            _status.Foreground = Ui.Ok;
-            RebuildRows();
-        }, primary: true));
-        var scopeRules = LoadScopeRules();
-        if (scopeRules.ContainsKey(signal.Action))
-        {
-            actions.Children.Add(Ui.Button(L.T("Revenir au défaut", "Back to default"), (_, _) =>
-            {
-                var rules = LoadScopeRules();
-                rules.Remove(signal.Action);
-                SaveScopeRules(rules);
-                _status.Text = L.T($"{signal.Action} : réglage {ScopeLabel()} retiré.", $"{signal.Action}: {ScopeLabel()} tweak removed.");
-                _status.Foreground = Ui.Muted;
-                RebuildRows();
-            }));
-        }
-        editor.Children.Add(actions);
-        editor.Children.Add(preview);
-        preview.Margin = new Thickness(0, 8, 0, 0);
-
-        // first look: replay what the signal currently does
-        Dispatcher.BeginInvoke(() => PlayDraft(preview, draft), System.Windows.Threading.DispatcherPriority.Background);
-        return editor;
-    }
-
-    /// <summary>Preview a draft: a named effect replays its whole timed stack
-    /// (media actions excluded — the band cannot decode webm), a simple rule
-    /// plays directly.</summary>
-    private void PlayDraft(EffectPreview preview, EffectRule draft)
-    {
-        StopPreviewTimers();
-        var actions = draft.EffectRef is { Length: > 0 }
-            ? new EffectsLibraryStore(_pluginRoot).Load().TryGetValue(draft.EffectRef, out var stack) ? stack : new List<EffectRule>()
-            : draft.Actions is { Count: > 0 } ? draft.Actions : new List<EffectRule> { draft };
-        foreach (var action in actions.Where(a => a.Media is not { Length: > 0 }))
-        {
-            var timer = new System.Windows.Threading.DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(Math.Max(1, action.DelayMs))
-            };
-            var frozen = action;
-            timer.Tick += (_, _) =>
-            {
-                timer.Stop();
-                preview.Play(frozen, _spritesDir);
-            };
-            timer.Start();
-            _previewTimers.Add(timer);
-        }
-    }
-
-    private void StopPreviewTimers()
-    {
-        foreach (var timer in _previewTimers) timer.Stop();
-        _previewTimers.Clear();
-    }
-
     private string ScopeLabel() => _scope switch
     {
         "system" => L.T($"système {_system}", $"{_system} system"),
         var s when s.StartsWith("genre:") => L.T($"genre {s["genre:".Length..]}", $"{s["genre:".Length..]} genre"),
         _ => L.T("ce jeu", "this game")
     };
+
+    // ================= full defaults table =================
+
+    /// <summary>"Voir tous les effets" — the whole default library, including the
+    /// rules other genres get, so the filter is never a mystery.</summary>
+    private void BuildDefaultsSection(StackPanel card)
+    {
+        var defaults = _library.ListDefaults();
+        if (defaults.Count == 0) return;
+
+        var body = new StackPanel();
+        foreach (var (match, genres, effect) in defaults)
+        {
+            var line = new TextBlock { FontSize = 11, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 1, 0, 1) };
+            line.Inlines.Add(new System.Windows.Documents.Run(match) { Foreground = Ui.Foreground, FontWeight = FontWeights.SemiBold });
+            line.Inlines.Add(new System.Windows.Documents.Run($" → {KindLabel(effect.Kind)}"
+                + (effect.Sprite is { Length: > 0 } ? $" + {effect.Sprite}" : "")) { Foreground = Ui.Accent });
+            if (genres != null)
+            {
+                var applies = _genreSlugs.Any(slug => genres.Contains(slug, StringComparison.OrdinalIgnoreCase));
+                line.Inlines.Add(new System.Windows.Documents.Run($"   [{genres}]"
+                    + (applies ? "" : L.T(" — autre genre, inactif ici", " — other genre, inactive here")))
+                { Foreground = Ui.Muted });
+            }
+            body.Children.Add(line);
+        }
+
+        card.Children.Add(new Expander
+        {
+            Header = new TextBlock
+            {
+                Text = L.T($"Voir tous les effets par défaut ({defaults.Count}, tous genres)",
+                    $"See every default effect ({defaults.Count}, all genres)"),
+                Foreground = Ui.Muted,
+                FontSize = 12
+            },
+            Content = body,
+            IsExpanded = false,
+            Margin = new Thickness(0, 6, 0, 0)
+        });
+    }
 
     // ================= live monitor =================
 
@@ -561,8 +428,7 @@ public sealed class EffectsCard : UserControl, IDisposable
         {
             if (_monitorList.SelectedItem is ListBoxItem { Tag: string action } && action.Length > 0)
             {
-                _expandedAction = action;
-                RebuildRows();
+                OpenBinding(_signals.FirstOrDefault(s => s.Action.Equals(action, StringComparison.OrdinalIgnoreCase)));
             }
         };
         card.Children.Add(_monitorList);
@@ -618,42 +484,6 @@ public sealed class EffectsCard : UserControl, IDisposable
         => Kinds.FirstOrDefault(k => k.Key.Equals(kind, StringComparison.OrdinalIgnoreCase)) is { Key.Length: > 0 } match
             ? L.T(match.Fr, match.En)
             : kind;
-
-    private ComboBox PickerFor(Panel host, string label, (string Key, string Fr, string En)[] choices,
-        string selected, Action<string> onChange)
-    {
-        var text = Ui.MutedLabel(label);
-        text.Margin = new Thickness(0, 0, 6, 0);
-        host.Children.Add(text);
-        var picker = Ui.ComboBox(150);
-        foreach (var (key, fr, en) in choices)
-        {
-            var item = new ComboBoxItem { Content = L.T(fr, en), Tag = key };
-            picker.Items.Add(item);
-            if (key.Equals(selected, StringComparison.OrdinalIgnoreCase)) picker.SelectedItem = item;
-        }
-        if (picker.SelectedItem == null) picker.SelectedIndex = 0;
-        picker.SelectionChanged += (_, _) =>
-        {
-            if ((picker.SelectedItem as ComboBoxItem)?.Tag is string key) onChange(key);
-        };
-        host.Children.Add(picker);
-        return picker;
-    }
-
-    private static TextBox NumberFor(Panel host, string label, int value, Action<int> onChange, double width = 60)
-    {
-        var text = Ui.MutedLabel(label);
-        text.Margin = new Thickness(0, 0, 6, 0);
-        host.Children.Add(text);
-        var box = Ui.TextBox(value.ToString(), width);
-        box.TextChanged += (_, _) =>
-        {
-            if (int.TryParse(box.Text.Trim(), out var parsed) && parsed >= 0) onChange(parsed);
-        };
-        host.Children.Add(box);
-        return box;
-    }
 
     private static Brush SafeBrush(string hex)
     {

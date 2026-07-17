@@ -35,21 +35,70 @@ public sealed class GameMediaCatalog
 
     public bool IsAvailable => Directory.Exists(_systemsRoot);
 
+    /// <summary>Folders folded into "arcade" (APIExpose scrapes arcade media there;
+    /// the alias folders are near-empty duplicates that only confuse the pickers).</summary>
+    private static readonly HashSet<string> ArcadeAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "mame", "fbneo", "fba", "hbmame"
+    };
+
     public IReadOnlyList<string> ListSystems()
     {
         try
         {
-            return Directory.EnumerateDirectories(_systemsRoot)
+            var systems = Directory.EnumerateDirectories(_systemsRoot)
                 .Where(dir => Directory.Exists(Path.Combine(dir, "games")))
                 .Select(Path.GetFileName)
                 .OfType<string>()
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
+            if (systems.Contains("arcade", StringComparer.OrdinalIgnoreCase))
+            {
+                systems.RemoveAll(s => ArcadeAliases.Contains(s));
+            }
+            return systems;
         }
         catch
         {
             return Array.Empty<string>();
         }
+    }
+
+    /// <summary>Rom base names physically present in RetroBat's roms\ folders, per
+    /// media system. "arcade" aggregates its alias rom folders (mame, fbneo…).
+    /// A missing roms folder yields no entry — callers then skip the filter.</summary>
+    public Dictionary<string, HashSet<string>> ListPresentRoms(string pluginRoot)
+    {
+        var present = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        var romsRoot = Path.GetFullPath(Path.Combine(pluginRoot, "..", "..", "roms"));
+        if (!Directory.Exists(romsRoot)) return present;
+
+        foreach (var system in ListSystems())
+        {
+            var folders = ArcadeAliases.Contains(system) || system.Equals("arcade", StringComparison.OrdinalIgnoreCase)
+                ? new[] { "arcade", "mame", "fbneo", "hbmame", "neogeo" }
+                : new[] { system };
+            var roms = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var folder in folders)
+            {
+                var path = Path.Combine(romsRoot, folder);
+                if (!Directory.Exists(path)) continue;
+                try
+                {
+                    foreach (var entry in Directory.EnumerateFileSystemEntries(path))
+                    {
+                        var name = Path.GetFileNameWithoutExtension(entry);
+                        if (name is { Length: > 0 } && !name.StartsWith('.')) roms.Add(name);
+                    }
+                }
+                catch
+                {
+                    // unreadable roms folder: skipped
+                }
+            }
+            if (roms.Count > 0) present[system] = roms;
+        }
+        return present;
     }
 
     /// <summary>Full rom index, built once on first call (call it off the UI thread).</summary>

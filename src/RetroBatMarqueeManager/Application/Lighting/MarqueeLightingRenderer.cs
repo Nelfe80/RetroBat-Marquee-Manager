@@ -183,35 +183,55 @@ half4 main(float2 p) {
             for (var i = 0; i < rule.Count && _sprites.Count < budget; i++)
             {
                 var duration = Math.Max(0.3, rule.DurationMs / 1000.0) * (0.85 + _fxRandom.NextDouble() * 0.3);
-                float x, y, vx = 0, vy = 0;
+
+                // placement of the SPAWN point: random (historic), centered, or
+                // evenly spread across the width (count slots)
+                float px, py;
+                switch (rule.Placement)
+                {
+                    case "center":
+                        px = 0.5f;
+                        py = 0.5f;
+                        break;
+                    case "spread":
+                        px = (i + 0.5f) / rule.Count;
+                        py = 0.45f;
+                        break;
+                    default:
+                        px = 0.10f + (float)_fxRandom.NextDouble() * 0.80f;
+                        py = 0.18f + (float)_fxRandom.NextDouble() * 0.58f;
+                        break;
+                }
+
+                float x = px, y = py, vx = 0, vy = 0;
                 switch (rule.Motion)
                 {
                     case "cross":
-                        // horizontal crossing: random side, random height, slight slope
+                        // horizontal crossing: random side, placement height, slight slope
                         var leftToRight = _fxRandom.NextDouble() < 0.5;
                         x = leftToRight ? -0.08f : 1.08f;
-                        y = 0.18f + (float)_fxRandom.NextDouble() * 0.6f;
+                        y = rule.Placement == "random" ? 0.18f + (float)_fxRandom.NextDouble() * 0.6f : py;
                         vx = (float)((1.16 / duration) * (leftToRight ? 1 : -1));
                         vy = (float)((_fxRandom.NextDouble() - 0.5) * 0.25);
                         break;
                     case "fall":
                         // short vertical drop: exits fast, freeing a slot for the next one
-                        x = 0.06f + (float)_fxRandom.NextDouble() * 0.88f;
                         y = -0.15f;
                         vy = (float)(1.35 / duration);
-                        vx = (float)((_fxRandom.NextDouble() - 0.5) * 0.10);
+                        vx = rule.Placement == "random" ? (float)((_fxRandom.NextDouble() - 0.5) * 0.10) : 0;
                         break;
                     case "rise":
-                        x = 0.06f + (float)_fxRandom.NextDouble() * 0.88f;
                         y = 1.15f;
                         vy = (float)(-1.35 / duration);
-                        vx = (float)((_fxRandom.NextDouble() - 0.5) * 0.10);
-                        break;
-                    default: // pop: appears in place, fades away
-                        x = 0.10f + (float)_fxRandom.NextDouble() * 0.80f;
-                        y = 0.18f + (float)_fxRandom.NextDouble() * 0.58f;
+                        vx = rule.Placement == "random" ? (float)((_fxRandom.NextDouble() - 0.5) * 0.10) : 0;
                         break;
                 }
+
+                // the historic size jitter only applies in random placement — a
+                // deliberate scale (200 %…) must render exactly as asked
+                var jitter = rule.Placement == "random" && Math.Abs(rule.Scale - 1.0) < 0.01
+                    ? 0.8f + (float)_fxRandom.NextDouble() * 0.5f
+                    : 1f;
                 _sprites.Add(new SpriteInstance
                 {
                     Animation = animation,
@@ -220,7 +240,9 @@ half4 main(float2 p) {
                     VelocityX = vx,
                     VelocityY = vy,
                     TrailColor = rule.TrailColor,
-                    Scale = 0.8f + (float)_fxRandom.NextDouble() * 0.5f,
+                    Scale = (float)rule.Scale * jitter,
+                    Grow = rule.Grow,
+                    PixelCrisp = rule.Scale >= 1.5,
                     StartSeconds = t + i * (0.06 + _fxRandom.NextDouble() * 0.08),
                     DurationSeconds = duration
                 });
@@ -263,14 +285,23 @@ half4 main(float2 p) {
             }
 
             var frame = sprite.Animation.FrameAt((t - sprite.StartSeconds) * 1000);
-            var height = 0.30f * h * sprite.Scale;
+            var height = 0.30f * h * sprite.ScaleAt(t);
             var width = height * frame.Width / frame.Height;
             var dest = SKRect.Create(
                 _offset.X + nx * w - width / 2f,
                 _offset.Y + ny * h - height / 2f, width, height);
             _glowPaint.BlendMode = sprite.Animation.Opaque ? SKBlendMode.Screen : SKBlendMode.SrcOver;
             _glowPaint.Color = SKColors.White.WithAlpha((byte)(alpha * 255));
-            canvas.DrawBitmap(frame, dest, _glowPaint);
+            if (sprite.PixelCrisp)
+            {
+                // deliberate upscales keep the pixel-art look
+                using var image = SKImage.FromBitmap(frame);
+                canvas.DrawImage(image, dest, new SKSamplingOptions(SKFilterMode.Nearest), _glowPaint);
+            }
+            else
+            {
+                canvas.DrawBitmap(frame, dest, _glowPaint);
+            }
         }
         _glowPaint.Color = SKColors.White;
         _glowPaint.BlendMode = SKBlendMode.Plus;

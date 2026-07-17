@@ -76,7 +76,10 @@ public sealed partial class MemSignalCatalog
                 if (open.Success)
                 {
                     var name = open.Groups[1].Value;
-                    if (name.Equals("events", StringComparison.OrdinalIgnoreCase))
+                    // only the TOP-LEVEL "events" opens the section: some games
+                    // nest a family also named "events" (flow.events in garou) —
+                    // it must stack as a family, not reset the section depth
+                    if (name.Equals("events", StringComparison.OrdinalIgnoreCase) && !inEvents)
                     {
                         inEvents = true;
                         eventsDepth = depth;

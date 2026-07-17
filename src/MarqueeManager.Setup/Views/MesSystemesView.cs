@@ -45,6 +45,58 @@ public sealed class MesSystemesView : UserControl
         page.Children.Add(Ui.Card(templates));
 
         page.Children.Add(Ui.Card(new PrioritiesCard(pluginRoot, media, identity)));
+
+        // manual PER-SYSTEM composition (media\marquees\systems\<sys>.png):
+        // same composer window as the games, fed with the system's own media
+        var composeCard = new StackPanel();
+        composeCard.Children.Add(Ui.SectionHeader(L.T("Composition d'un système", "System composition")));
+        composeCard.Children.Add(Ui.MutedLabel(L.T(
+            "Le marquee affiché quand un SYSTÈME est sélectionné dans ES. Composez-le visuellement (logo, marquee généré, textes) — il prime sur le rendu automatique.",
+            "The marquee shown when a SYSTEM is selected in ES. Compose it visually (logo, generated marquee, texts) — it overrides the automatic render.")));
+        var composeRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 4, 0, 0) };
+        var systemPicker = Ui.ComboBox(200);
+        foreach (var system in media.ListSystems())
+        {
+            systemPicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = system, Tag = system });
+        }
+        if (systemPicker.Items.Count > 0) systemPicker.SelectedIndex = 0;
+        composeRow.Children.Add(systemPicker);
+        composeRow.Children.Add(Ui.Button(L.T("Composer ce système…", "Compose this system…"), (_, _) =>
+        {
+            if ((systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag is not string system) return;
+            var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system))
+            {
+                Owner = System.Windows.Window.GetWindow(this)
+            };
+            window.ShowDialog();
+        }, primary: true));
+        composeCard.Children.Add(composeRow);
+        page.Children.Add(Ui.Card(composeCard));
+
         Content = Ui.Page(page);
+    }
+
+    /// <summary>System-level media: theme logo (wheel), generated marquee/DMD, fanart when present.</summary>
+    private static IReadOnlyList<GameAsset> SystemAssets(string pluginRoot, string system)
+    {
+        var root = System.IO.Path.GetFullPath(System.IO.Path.Combine(pluginRoot, "..", "APIExpose", "media", "systems", system));
+        var assets = new List<GameAsset>();
+        void Add(string key, string fr, string en, params string[] relative)
+        {
+            foreach (var rel in relative)
+            {
+                var path = System.IO.Path.Combine(root, rel);
+                if (System.IO.File.Exists(path))
+                {
+                    assets.Add(new GameAsset(key, L.T(fr, en), path));
+                    return;
+                }
+            }
+        }
+        Add("fanart", "Fanart du système", "System fanart", @"artwork\fanart.jpg", @"artwork\fanart.png");
+        Add("wheel", "Logo du système", "System logo", @"ui\wheels\wheel.png");
+        Add("marquee", "Marquee généré", "Generated marquee", @"artwork\marquee\generated-system-marquee.png");
+        Add("dmd", "DMD généré", "Generated DMD", @"artwork\marquee\generated-system-dmd.png");
+        return assets;
     }
 }

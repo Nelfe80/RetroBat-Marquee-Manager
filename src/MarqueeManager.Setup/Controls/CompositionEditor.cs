@@ -92,7 +92,7 @@ public sealed class CompositionEditor : Window
                  {
                      ("navigation", "Navigation ES", "ES browsing"),
                      ("ingame", "En jeu", "Ingame"),
-                     ("both", "Les deux", "Both")
+                     ("both", "Navigation ES + En jeu", "ES browsing + Ingame")
                  })
         {
             var tab = Ui.Button(L.T(fr, en), (_, _) =>
@@ -100,8 +100,8 @@ public sealed class CompositionEditor : Window
                 _state = key;
                 RenderAll();
             }, primary: key == _state);
-            tab.Tag = "state:" + key;
             tab.Margin = new Thickness(4, 0, 0, 0);
+            _stateTabs.Add((key, tab));
             headerLeft.Children.Add(tab);
         }
         header.Children.Add(headerLeft);
@@ -314,17 +314,24 @@ public sealed class CompositionEditor : Window
         RefreshStateTabs();
     }
 
+    private readonly List<(string Key, Button Tab)> _stateTabs = new();
+
     private void RefreshStateTabs()
     {
-        // repaint the state tab buttons (primary = active)
-        if (Content is not Grid root) return;
-        foreach (var button in ((DockPanel)root.Children[0]).Children.OfType<StackPanel>()
-                     .SelectMany(panel => panel.Children.OfType<Button>())
-                     .Where(b => b.Tag is string tag && tag.StartsWith("state:")))
+        // the active tab wears the accent style, exactly like a primary button
+        var accent = System.Windows.Application.Current?.TryFindResource("AccentButton") as Style;
+        foreach (var (key, tab) in _stateTabs)
         {
-            var isActive = (string)button.Tag! == "state:" + _state;
-            button.FontWeight = isActive ? FontWeights.Bold : FontWeights.Normal;
-            button.BorderThickness = new Thickness(isActive ? 2 : 1);
+            var isActive = key == _state;
+            if (isActive && accent != null)
+            {
+                tab.Style = accent;
+            }
+            else
+            {
+                tab.ClearValue(StyleProperty); // back to the implicit button style
+                tab.FontWeight = isActive ? FontWeights.Bold : FontWeights.Normal;
+            }
         }
     }
 

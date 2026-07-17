@@ -40,6 +40,13 @@ public sealed class EffectComposerWindow : Window
         ("cross", "Traversée", "Cross")
     };
 
+    private static readonly (string Key, string Fr, string En)[] Placements =
+    {
+        ("random", "Au hasard", "Random"),
+        ("center", "Au centre", "Centered"),
+        ("spread", "Espacés régulièrement", "Evenly spaced")
+    };
+
     private readonly EffectsLibraryStore _store;
     private readonly Dictionary<string, List<EffectRule>> _effects;
     private readonly string _spritesDir;
@@ -147,9 +154,15 @@ public sealed class EffectComposerWindow : Window
     private void RefreshNames()
     {
         _names.Items.Clear();
-        foreach (var name in _effects.Keys.OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
+        foreach (var name in _effects.Keys
+                     .OrderBy(n => _store.IsOfficial(n) ? 0 : 1)
+                     .ThenBy(n => n, StringComparer.OrdinalIgnoreCase))
         {
-            var item = new ListBoxItem { Content = name, Tag = name };
+            var item = new ListBoxItem
+            {
+                Content = _store.IsOfficial(name) ? "★ " + name : name,
+                Tag = name
+            };
             _names.Items.Add(item);
             if (name.Equals(_current, StringComparison.OrdinalIgnoreCase)) _names.SelectedItem = item;
         }
@@ -177,6 +190,13 @@ public sealed class EffectComposerWindow : Window
     private void DeleteEffect()
     {
         if (_current == null) return;
+        if (_store.IsOfficial(_current))
+        {
+            _status.Text = L.T("Les effets fournis (★) ne se suppriment pas — dupliquez-les pour les personnaliser.",
+                "Shipped effects (★) cannot be deleted — duplicate them to customize.");
+            _status.Foreground = Ui.Error;
+            return;
+        }
         if (MessageBox.Show(L.T($"Supprimer « {_current} » ?", $"Delete “{_current}”?"),
                 Title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
         _effects.Remove(_current);
@@ -200,23 +220,33 @@ public sealed class EffectComposerWindow : Window
         _actionsPanel.Children.Clear();
         if (_current == null || !_effects.TryGetValue(_current, out var actions)) return;
 
-        // rename
+        // rename (shipped effects keep their name — duplicate to customize)
+        var isOfficial = _store.IsOfficial(_current);
         var nameRow = new WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
         var nameLabel = Ui.MutedLabel(L.T("Nom :", "Name:"));
         nameLabel.Margin = new Thickness(0, 0, 6, 0);
         nameRow.Children.Add(nameLabel);
         var nameBox = Ui.TextBox(_current, 260);
+        nameBox.IsEnabled = !isOfficial;
         nameRow.Children.Add(nameBox);
-        nameRow.Children.Add(Ui.Button(L.T("Renommer", "Rename"), (_, _) =>
+        if (isOfficial)
         {
-            var newName = nameBox.Text.Trim();
-            if (newName.Length == 0 || newName == _current || _effects.ContainsKey(newName)) return;
-            _effects.Remove(_current!);
-            _effects[newName] = actions;
-            _current = newName;
-            RefreshNames();
-            RenderActions();
-        }));
+            nameRow.Children.Add(Ui.MutedLabel(L.T("★ effet fourni — dupliquez-le pour le personnaliser librement",
+                "★ shipped effect — duplicate it to customize freely")));
+        }
+        else
+        {
+            nameRow.Children.Add(Ui.Button(L.T("Renommer", "Rename"), (_, _) =>
+            {
+                var newName = nameBox.Text.Trim();
+                if (newName.Length == 0 || newName == _current || _effects.ContainsKey(newName)) return;
+                _effects.Remove(_current!);
+                _effects[newName] = actions;
+                _current = newName;
+                RefreshNames();
+                RenderActions();
+            }));
+        }
         _actionsPanel.Children.Add(nameRow);
 
         for (var i = 0; i < actions.Count; i++)
@@ -362,6 +392,36 @@ public sealed class EffectComposerWindow : Window
             }
         }
         if (line2.Children.Count > 0) body.Children.Add(line2);
+
+        // sprite size / growth / placement (pixel-art friendly)
+        if (displayKind == "sprite")
+        {
+            var line2b = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+            var scalePicker = Ui.ComboBox(100);
+            foreach (var percent in new[] { 100, 150, 200, 300 })
+            {
+                var item = new ComboBoxItem { Content = percent + " %", Tag = percent };
+                scalePicker.Items.Add(item);
+                if (Math.Abs((action.Scale <= 0 ? 1.0 : action.Scale) * 100 - percent) < 1) scalePicker.SelectedItem = item;
+            }
+            if (scalePicker.SelectedItem == null) scalePicker.SelectedIndex = 0;
+            scalePicker.SelectionChanged += (_, _) =>
+            {
+                if ((scalePicker.SelectedItem as ComboBoxItem)?.Tag is int percent)
+                    action.Scale = percent == 100 ? 0 : percent / 100.0; // 0 = default, omitted from JSON
+            };
+            var scaleLabel = Ui.MutedLabel(L.T("Taille (pixels nets ≥ 150 %)", "Size (crisp pixels ≥ 150 %)"));
+            scaleLabel.Margin = new Thickness(0, 0, 6, 0);
+            line2b.Children.Add(scaleLabel);
+            line2b.Children.Add(scalePicker);
+            var growBox = Ui.CheckBox(L.T("Grossit pendant l'effet", "Grows during the effect"), action.Grow);
+            growBox.Checked += (_, _) => action.Grow = true;
+            growBox.Unchecked += (_, _) => action.Grow = false;
+            line2b.Children.Add(growBox);
+            PickerFor(line2b, L.T("Position", "Position"), Placements, action.Placement ?? "random",
+                v => action.Placement = v == "random" ? null : v);
+            body.Children.Add(line2b);
+        }
 
         var tools = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
         if (index > 0) tools.Children.Add(Ui.Button("↑", (_, _) =>
