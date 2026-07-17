@@ -20,7 +20,7 @@ public sealed class PrioritiesCard : UserControl
 {
     private static readonly (string Key, string Fr, string En)[] SourceLabels =
     {
-        ("composition", "Composition manuelle", "Manual composition"),
+        ("composition", "Ma création graphique", "My graphic creation"),
         ("user", "Mon dossier", "My folder"),
         ("marquee", "Marquee scrapé", "Scraped marquee"),
         ("screenmarquee", "Screen-marquee", "Screen-marquee"),

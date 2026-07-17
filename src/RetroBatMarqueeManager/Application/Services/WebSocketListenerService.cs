@@ -78,7 +78,11 @@ public sealed class WebSocketListenerService : BackgroundService
             var meta = _lastMarqueeMeta;
             if (meta?.Rom == null || !meta.Rom.Equals(rom, StringComparison.OrdinalIgnoreCase)) return;
             foreach (var target in _config.GetTargetsForContent("marquee"))
+            {
+                // never stomp a surface that displays its own graphic creation
+                if (_compositionChains.SurfaceCreation("marquee", target, meta, systemScope) != null) continue;
                 _ = _surfaces.DisplayMediaAsync(path, target, CancellationToken.None, meta, resolved: true);
+            }
         });
     }
 
@@ -209,7 +213,13 @@ public sealed class WebSocketListenerService : BackgroundService
                     _genreMap.Resolve(snapshotMeta.Genre, snapshotMeta.GenreIds), _effectOverridesRoot, _logger);
             }
             foreach (var target in _config.GetTargetsForContent("marquee"))
-                await _surfaces.DisplayMediaAsync(marquee, target, cancellationToken, snapshotMeta, resolved: chained != null);
+            {
+                // a graphic creation saved for THIS surface wins over the
+                // category-level resolution (creations are per-surface)
+                var surfaceCreation = _compositionChains.SurfaceCreation("marquee", target, snapshotMeta, systemScope);
+                await _surfaces.DisplayMediaAsync(surfaceCreation ?? marquee, target, cancellationToken, snapshotMeta,
+                    resolved: surfaceCreation != null || chained != null);
+            }
         }
 
         FeedSurfaceComponents(media, snapshotMeta);
@@ -229,7 +239,10 @@ public sealed class WebSocketListenerService : BackgroundService
         // Keep the generated game DMD behind text even when an animation is preferred while idle.
         await _dmd.SetBaseMediaAsync(dmdPath, cancellationToken, generatedDmdPath ?? stillDmdPath ?? dmdPath);
         foreach (var target in _config.GetTargetsForContent("dmd"))
-            await _surfaces.DisplayMediaAsync(dmdPath, target, cancellationToken);
+        {
+            var surfaceCreation = _compositionChains.SurfaceCreation("dmd", target, snapshotMeta, systemScope);
+            await _surfaces.DisplayMediaAsync(surfaceCreation ?? dmdPath, target, cancellationToken);
+        }
     }
 
     /// <summary>
@@ -443,7 +456,15 @@ public sealed class WebSocketListenerService : BackgroundService
             : source.Equals("logo", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Logo")
             : null);
         var path = chained ?? MediaPath(media, "Topper");
-        if (path != null) foreach (var target in _config.GetTargetsForContent("topper")) await _surfaces.DisplayMediaAsync(path, target, cancellationToken, resolved: chained != null);
+        if (path != null)
+        {
+            foreach (var target in _config.GetTargetsForContent("topper"))
+            {
+                var surfaceCreation = _compositionChains.SurfaceCreation("topper", target, meta, systemScope);
+                await _surfaces.DisplayMediaAsync(surfaceCreation ?? path, target, cancellationToken,
+                    resolved: surfaceCreation != null || chained != null);
+            }
+        }
     }
 
     /// <summary>Chain source name → the last marquee snapshot asset.</summary>

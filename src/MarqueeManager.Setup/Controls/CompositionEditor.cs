@@ -65,7 +65,7 @@ public sealed class CompositionEditor : Window
         _aspect = aspect;
         _state = initialState is "ingame" or "navigation" ? initialState : "navigation";
 
-        Title = L.T($"Composition — {surface.Id}", $"Composition — {surface.Id}");
+        Title = L.T($"Création graphique — surface {surface.Id}", $"Graphic creation — surface {surface.Id}");
         Width = 1240;
         Height = 760;
         WindowState = WindowState.Maximized;
@@ -111,7 +111,7 @@ public sealed class CompositionEditor : Window
         headerRight.Children.Add(Ui.Button("↶", (_, _) => Undo()));
         headerRight.Children.Add(Ui.Button("↷", (_, _) => Redo()));
         headerRight.Children.Add(Ui.Button(L.T("Annuler", "Cancel"), (_, _) => DialogResult = false));
-        headerRight.Children.Add(Ui.Button(L.T("Valider la composition", "Apply composition"), (_, _) => DialogResult = true, primary: true));
+        headerRight.Children.Add(Ui.Button(L.T("Valider la création graphique", "Apply the graphic creation"), (_, _) => DialogResult = true, primary: true));
         DockPanel.SetDock(headerRight, Dock.Right);
         header.Children.Add(headerRight);
         Grid.SetColumnSpan(header, 3);

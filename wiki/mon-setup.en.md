@@ -1,6 +1,6 @@
 # My setup
 
-**My setup** is the map of your installation: every detected screen appears where it physically sits (drag them to mirror your cabinet, cupboard or desk). From there, everything configures top-down: **the map → a screen → a surface → its composition**.
+**My setup** is the map of your installation: every detected screen appears where it physically sits (drag them to mirror your cabinet, cupboard or desk). From there, everything configures top-down: **the map → a screen → a surface → its graphic creation**.
 
 ![My setup view](assets/setup/setup-monsetup.png)
 
@@ -22,15 +22,18 @@ The tool pre-suggests the type from the screen's shape (a 5:1 strip is probably 
 
 ## Display states
 
-Every component belongs to a state: **ES browsing**, **Ingame**, or **Both** (default). A score board can thus show up only while playing, a video showcase only while browsing. The state selector above the map previews what each screen will show in each situation — your cabinet “lives” without launching anything.
+Every **surface** and every component belongs to a state: **ES browsing**, **Ingame**, or both (default). An “ingame only” surface disappears entirely while browsing — e.g. nothing over ES on the RetroBat screen until a game runs. The state selector above the map previews what each screen will show in each situation; a surface's state is set in “Edit the surfaces” (Visible in: …).
 
-## Composing a surface
+!!! tip "Map navigation"
+    A **first click** on a screen selects it and shows its details below; a **second click** opens the surfaces editor. The **physical DMD** appears as a map screen (draggable, red outline) — its second click opens its settings.
 
-“Compose” opens the composition editor, Photoshop logic:
+## A surface's graphic creation
+
+“Graphic creation” opens the surface's graphic creation interface, Photoshop logic:
 
 - **left, the elements** by groups: media (fanart, 50 % logo, game video…), game info (title, year/publisher), live (hiscores, score, timer), RetroAchievements, decoration (readability gradient, text, embedded web, neon tubes) — plus one-click **composites**: *Marquee* (fanart+gradient+logo), *Full score*, *Live media*, *Twitch chat*;
 - **center, the canvas** at the surface's real scale: drag, resize handle, magnetic guides, Del, Ctrl+D (duplicate), Ctrl+Z/Y (undo/redo) — with a real example game's media;
-- **right, the layers** (eye to hide, padlock to lock, ↑↓ for z-order) and the **inspector**: layout (x, y, width, height as fractions — the composition survives any resolution change), content (visibility state, `{name}` `{year}` templates…), style.
+- **right, the layers** (eye to hide, padlock to lock, ↑↓ for z-order) and the **inspector**: layout (x, y, width, height as fractions — the creation survives any resolution change), content (visibility state, `{name}` `{year}` templates…), style.
 
 The **ES browsing / Ingame / Both** tabs at the top filter editing per state.
 

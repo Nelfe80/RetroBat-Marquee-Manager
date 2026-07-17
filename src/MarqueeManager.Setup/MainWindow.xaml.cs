@@ -131,7 +131,7 @@ public partial class MainWindow : Window
         {
             _ when NavSetup.IsChecked == true => new MonSetupView(_pluginRoot),
             _ when NavSystems.IsChecked == true => new MesSystemesView(_pluginRoot),
-            _ when NavGames.IsChecked == true => new GamesView(_pluginRoot),
+            _ when NavGames.IsChecked == true => new GamesView(_pluginRoot, NavigateTo),
             _ when NavOptions.IsChecked == true => new OptionsView(_pluginRoot),
             _ when NavDiagnostic.IsChecked == true => new DiagnosticView(_pluginRoot),
             _ => (object)new HomeView(_pluginRoot, NavigateTo)

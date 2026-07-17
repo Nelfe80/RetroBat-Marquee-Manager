@@ -20,9 +20,9 @@ On the very first start, a welcome wizard does everything in under three minutes
 | View | What it does |
 |---|---|
 | **Home** | Installation health, shortcuts, startup wizard relaunch |
-| **[My setup](mon-setup.md)** | The map of your screens: zero-config types, surfaces, composition editor, display states, test patterns, physical DMD, touch |
+| **[My setup](mon-setup.md)** | The map of your screens: zero-config types, surfaces, graphic creation, display states, test patterns, physical DMD, touch |
 | **[My systems](mes-systemes.md)** | Per system: source priorities, automatic templates, personal media folder, pre-generation |
-| **[My games](mes-jeux.md)** | A game's sheet: composer, online media, light effects (My effects, policy, allocation), lamps, lighting |
+| **[My games](mes-jeux.md)** | A game's sheet: per-surface graphic creations, online media, ingame effects, lamps, lighting |
 | **Options** | APIExpose connection, Lighting Engine, MAME layouts, RetroAchievements, live score/timer, online sources (API keys, ScreenScraper account) |
 | **Diagnostics** | Detection report (screens, DMD, ports), data source status, latest runtime events |
 
@@ -30,7 +30,7 @@ On the very first start, a welcome wizard does everything in under three minutes
 
 ![Home tab](assets/setup/setup-home.png)
 
-The installation status at a glance: runtime running or not (with a Start/Stop button), APIExpose response, `config.ini` presence, a summary of the configured surfaces and shortcuts to the other views.
+One status card per link of the chain, with a green/orange/red dot and actions: MarqueeManager (Start/Stop), APIExpose, Screens & surfaces, physical DMD (orange when the configured panel is unplugged) and My content (graphic creations, personal effects). Under the navigation, the **Detected hardware** card lists your screens and the DMD.
 
 ## Options
 

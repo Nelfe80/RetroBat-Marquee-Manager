@@ -477,7 +477,7 @@ public sealed class MonSetupView : UserControl
             var activeCount = surface.Components.Count(comp => comp.Visible
                 && (comp.When == "both" || comp.When.Equals(_previewState, StringComparison.OrdinalIgnoreCase)));
             row.Children.Add(Ui.MutedLabel(L.T($"{activeCount} composant(s) en {StateLabel()}", $"{activeCount} component(s) in {StateLabel()}")));
-            row.Children.Add(Ui.Button(L.T("Composer", "Compose"), (_, _) => OpenComposition(surface)));
+            row.Children.Add(Ui.Button(L.T("Création graphique", "Graphic creation"), (_, _) => OpenComposition(surface)));
             card.Children.Add(row);
         }
 

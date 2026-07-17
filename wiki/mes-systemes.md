@@ -1,28 +1,23 @@
 # Mes systèmes
 
-**Mes systèmes** décide, système par système, **quoi afficher et dans quel ordre** : vos médias, le scrapé, le généré — et le template automatique qui fabrique une composition pour chaque jeu.
+**Mes systèmes** décide, système par système, **quoi afficher et dans quel ordre** : vos créations graphiques, vos médias, le scrapé, le généré — et le template automatique qui fabrique une création pour chaque jeu.
 
 ![Vue Mes systèmes](assets/setup/setup-systems.png)
 
+## Création graphique d'un système
+
+Le marquee affiché quand un **système** est sélectionné dans ES. Choisissez le système (seuls ceux avec des jeux installés apparaissent ; mame et fbneo gardent leurs créations propres), la **surface cible** (chaque création est propre à une surface), et « **Ouvrir l'interface de création graphique** ». L'aperçu montre ce qui s'affiche actuellement (votre création ou le marquee généré) ; le **fanart du système** vient du thème ES actif (carbon en fournit pour presque tous les systèmes).
+
 ## Priorités par système
 
-Pour chaque **catégorie** (marquee, topper, DMD) puis chaque système, une chaîne ordonnée de sources : le runtime affiche la **première disponible**. Sources : composition manuelle, mon dossier, template, marquee scrapé, screen-marquee, généré APIExpose, logo, fanart… (et pour le DMD : vos GIF animés, les `dmd*.gif` du pack, `dmd.png`).
+Pour chaque **catégorie** (marquee, topper, DMD) puis chaque système, une chaîne ordonnée de sources : le runtime affiche la **première disponible**. Sources : ma création graphique, mon dossier, template, marquee scrapé, screen-marquee, généré APIExpose, logo, fanart… (DMD : vos GIF animés, `dmd*.gif`, `dmd.png`).
 
-Exemple typique pour arcade : *composition > mon dossier > marquee scrapé > généré* — vos images d'abord, le scrapé ensuite, l'auto-généré en dernier recours. Et si un jeu ne vous plaît pas, sa composition manuelle (fiche du jeu) le surclasse individuellement.
-
-**Tester la chaîne** affiche pour quelques jeux du système la source qui gagne — la chaîne n'est jamais une boîte noire.
+Exemple pour arcade : *ma création > mon dossier > marquee scrapé > généré*. **Tester la chaîne** affiche, juste en dessous, la source qui gagne sur un échantillon (fonctionne aussi en Global).
 
 ## Mon dossier
 
-Déposez vos propres **images ou vidéos** dans `media\marquees\user\<système>\` (idem `media\toppers\user\`, `media\dmd\user\` — vos GIF animés DMD y sont cyclés). Les noms de fichiers sont **résolus par alias** via l'index gamelist d'APIExpose : `Metal Slug (World).png`, `metalslug.png` ou le nom de set exact désignent tous le même jeu. Le glisser-déposer directement sur la carte (ou sur la fiche d'un jeu) copie et renomme automatiquement.
+Déposez ici vos médias (images PNG/JPG ou vidéos MP4) : un fichier par jeu, nommé comme la rom (« mslug.png »), le titre (« Metal Slug (World).png ») ou n'importe quel alias — le nom se résout automatiquement. Ils passent devant les autres sources dès que « Mon dossier » est dans la chaîne. Glisser-déposer directement sur la carte fonctionne.
 
-## Templates de composition
+## Pré-génération des templates
 
-Quatre gabarits automatiques reprennent la recette d'APIExpose (fanart en fond, gradient noir ou blanc selon la luminance, logo) : trois horizontaux aux proportions des marquees générés — **1920×360, 1280×400, 920×360** — et un vertical **1080×1920**. Affectez un template à un système dans les priorités : chaque jeu reçoit sa composition, rendue en tâche de fond au premier affichage puis mise en cache.
-
-!!! tip "Navigation ES instantanée"
-    **Pré-générer ce système** (ou tous) rend d'avance toutes les compositions templatées : plus aucune attente à la sélection d'un jeu. En ligne de commande : `MarqueeManager.exe --render-templates arcade` (ou `all`).
-
-## Compositions par système
-
-La sélection d'un **système** dans ES bascule automatiquement les composants média sur les médias du système (logo et fanart du thème) — la même composition sert au jeu et au système. Pour un rendu système sur mesure, une composition manuelle s'enregistre dans `media\marquees\systems\<système>.png`.
+Un « Template » est une création automatique (fanart + gradient selon la luminance + logo) rendue pour **chaque jeu** du système, aux formats 1920×360, 1280×400, 920×360 ou vertical 1080×1920. Ajoutez « Template … » dans la chaîne pour l'utiliser ; le rendu se fait au premier affichage, ou d'avance avec **Pré-générer** pour une navigation ES instantanée (`MarqueeManager.exe --render-templates <système|all>`).

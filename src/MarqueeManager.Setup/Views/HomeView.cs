@@ -57,7 +57,7 @@ public sealed class HomeView : UserControl
             shortcuts.Children.Add(Ui.SectionHeader(L.T("Raccourcis", "Shortcuts")));
             var buttons = new WrapPanel();
             buttons.Children.Add(Ui.Button(L.T("Configurer mon setup", "Configure my setup"), (_, _) => _navigate?.Invoke("setup")));
-            buttons.Children.Add(Ui.Button(L.T("Composer mes marquees", "Compose my marquees"), (_, _) => _navigate?.Invoke("games")));
+            buttons.Children.Add(Ui.Button(L.T("Créer mes marquees", "Create my marquees"), (_, _) => _navigate?.Invoke("games")));
             buttons.Children.Add(Ui.Button(L.T("Options du runtime", "Runtime options"), (_, _) => _navigate?.Invoke("options")));
             buttons.Children.Add(Ui.Button(L.T("Diagnostic", "Diagnostics"), (_, _) => _navigate?.Invoke("diagnostic")));
             buttons.Children.Add(Ui.Button(L.T("Relancer l'assistant de démarrage", "Rerun the startup wizard"), (_, _) =>
@@ -125,6 +125,13 @@ public sealed class HomeView : UserControl
     private static void SetState(StatusCard card, bool? ok, string text)
     {
         card.Dot.Fill = ok switch { true => Ui.Ok, false => Ui.Error, _ => Ui.Muted };
+        card.Text.Text = text;
+    }
+
+    /// <summary>Orange dot: configured but currently degraded (e.g. DMD unplugged).</summary>
+    private static void SetWarning(StatusCard card, string text)
+    {
+        card.Dot.Fill = Ui.Accent;
         card.Text.Text = text;
     }
 
@@ -201,10 +208,31 @@ public sealed class HomeView : UserControl
         var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
         var enabled = ini.GetBool("DMD", "Enabled", false);
         var model = ini.Get("DMD", "Model", "");
-        SetState(_dmd, enabled ? true : null, enabled
-            ? L.T($"{model} — {ini.Get("DMD", "Width", "128")}×{ini.Get("DMD", "Height", "32")} px, miroir du marquee.",
-                $"{model} — {ini.Get("DMD", "Width", "128")}×{ini.Get("DMD", "Height", "32")} px, marquee mirror.")
-            : L.T("Aucun panneau configuré (optionnel).", "No panel configured (optional)."));
+        var dims = $"{ini.Get("DMD", "Width", "128")}×{ini.Get("DMD", "Height", "32")}";
+
+        if (!enabled)
+        {
+            SetState(_dmd, null, L.T("Aucun panneau configuré (optionnel).", "No panel configured (optional)."));
+        }
+        else
+        {
+            // health without opening the port: the configured COM port must be
+            // present in Windows — an unplugged panel goes ORANGE, not green
+            var port = ini.Get("DMD", "ZeDmdPort", "").Trim();
+            var portPresent = port.Length == 0
+                || System.IO.Ports.SerialPort.GetPortNames()
+                    .Any(p => p.Equals(port, StringComparison.OrdinalIgnoreCase));
+            if (portPresent)
+            {
+                SetState(_dmd, true, L.T($"{model} — {dims} px, miroir du marquee.",
+                    $"{model} — {dims} px, marquee mirror."));
+            }
+            else
+            {
+                SetWarning(_dmd, L.T($"{model} configuré sur {port}, mais le port est introuvable — panneau débranché ?",
+                    $"{model} configured on {port}, but the port is missing — panel unplugged?"));
+            }
+        }
         _dmd.Actions.Children.Clear();
         if (_navigate != null)
         {

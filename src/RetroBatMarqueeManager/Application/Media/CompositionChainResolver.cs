@@ -104,6 +104,21 @@ public sealed class CompositionChainResolver
         return null;
     }
 
+    /// <summary>A graphic creation saved for ONE SPECIFIC SURFACE
+    /// (media\&lt;cat&gt;s\surfaces\&lt;surfaceId&gt;\…): each surface can carry its own
+    /// creation for the same game or system, independent of the category-level
+    /// file which stays the default for the other surfaces.</summary>
+    public string? SurfaceCreation(string category, string surfaceId, LightingSceneMeta? meta, bool systemScope)
+    {
+        var system = meta?.System;
+        var rom = meta?.Rom;
+        if (string.IsNullOrEmpty(system) || string.IsNullOrEmpty(surfaceId)) return null;
+        var root = Path.Combine(CategoryRoot(category), "surfaces", SafeName(surfaceId));
+        return systemScope || string.IsNullOrEmpty(rom)
+            ? FirstExisting(root, "systems", SafeName(system))
+            : FirstExisting(root, SafeName(system), SafeName(rom!));
+    }
+
     // ================= chains =================
 
     private IReadOnlyList<string> ChainFor(string category, string system)

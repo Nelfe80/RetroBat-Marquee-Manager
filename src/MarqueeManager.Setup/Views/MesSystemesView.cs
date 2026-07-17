@@ -35,18 +35,19 @@ public sealed class MesSystemesView : UserControl
             return;
         }
 
-        // manual PER-SYSTEM composition (media\marquees\systems\<sys>.png) —
-        // first thing on the page: same composer window as the games, fed with
-        // the system's own media
+        // PER-SYSTEM graphic creation — first thing on the page: same creation
+        // window as the games, fed with the system's own media. Each creation
+        // is INDEPENDENT per surface.
         var composeCard = new StackPanel();
-        composeCard.Children.Add(Ui.SectionHeader(L.T("Composition d'un système", "System composition")));
+        composeCard.Children.Add(Ui.SectionHeader(L.T("Création graphique d'un système", "System graphic creation")));
         composeCard.Children.Add(Ui.MutedLabel(L.T(
-            "Le marquee affiché quand un SYSTÈME est sélectionné dans ES. Composez-le visuellement (logo, marquee généré, textes) — il prime sur le rendu automatique.",
-            "The marquee shown when a SYSTEM is selected in ES. Compose it visually (logo, generated marquee, texts) — it overrides the automatic render.")));
+            "Le marquee affiché quand un SYSTÈME est sélectionné dans ES. Créez-le visuellement (logo, marquee généré, fanart du thème, textes) — il prime sur le rendu automatique.",
+            "The marquee shown when a SYSTEM is selected in ES. Create it visually (logo, generated marquee, theme fanart, texts) — it overrides the automatic render.")));
         var composeRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 4, 0, 0) };
         var systemPicker = Ui.ComboBox(200);
-        // only systems with at least one INSTALLED game; mame/fbneo stay listed
-        // (they carry their own chains and original compositions)
+        // nothing preselected; only systems with at least one INSTALLED game;
+        // mame/fbneo stay listed (they carry their own chains and creations)
+        systemPicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = L.T("- sélectionner -", "- select -"), Tag = null });
         var present = media.ListPresentRoms(pluginRoot);
         bool HasGames(string system) => GameMediaCatalog.ArcadeAliases.Contains(system)
             ? present.TryGetValue("arcade", out var arcade) && arcade.Count > 0
@@ -55,8 +56,17 @@ public sealed class MesSystemesView : UserControl
         {
             systemPicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = system, Tag = system });
         }
-        if (systemPicker.Items.Count > 0) systemPicker.SelectedIndex = 0;
+        systemPicker.SelectedIndex = 0;
         composeRow.Children.Add(systemPicker);
+
+        // surface picker: the creation targets ONE surface
+        var surfacePicker = Ui.ComboBox(200);
+        foreach (var surface in new SurfacesStore(pluginRoot).Load())
+        {
+            surfacePicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id });
+        }
+        if (surfacePicker.Items.Count > 0) surfacePicker.SelectedIndex = 0;
+        if (surfacePicker.Items.Count > 1) composeRow.Children.Add(surfacePicker);
 
         // live preview: the marquee CURRENTLY displayed for the picked system
         var preview = new System.Windows.Controls.Image
@@ -69,13 +79,18 @@ public sealed class MesSystemesView : UserControl
         void RefreshPreview()
         {
             var system = (systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
-            var path = system == null ? null : media.CurrentSystemMarquee(pluginRoot, system);
             preview.Source = null;
+            if (system == null)
+            {
+                previewCaption.Text = ""; // nothing shown until an explicit pick
+                return;
+            }
+            var path = media.CurrentSystemMarquee(pluginRoot, system);
             previewCaption.Text = path == null
                 ? L.T("Aucun marquee système pour l'instant.", "No system marquee yet.")
                 : System.IO.Path.GetFileName(path).StartsWith("generated", StringComparison.OrdinalIgnoreCase)
                     ? L.T("Affiché actuellement : marquee généré.", "Currently displayed: generated marquee.")
-                    : L.T("Affiché actuellement : votre composition.", "Currently displayed: your composition.");
+                    : L.T("Affiché actuellement : votre création graphique.", "Currently displayed: your graphic creation.");
             if (path == null) return;
             try
             {
@@ -94,10 +109,11 @@ public sealed class MesSystemesView : UserControl
             }
         }
         systemPicker.SelectionChanged += (_, _) => RefreshPreview();
-        composeRow.Children.Add(Ui.Button(L.T("Composer ce système…", "Compose this system…"), (_, _) =>
+        composeRow.Children.Add(Ui.Button(L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"), (_, _) =>
         {
             if ((systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag is not string system) return;
-            var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system))
+            var surfaceId = (surfacePicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
+            var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system), surfaceId)
             {
                 Owner = System.Windows.Window.GetWindow(this)
             };

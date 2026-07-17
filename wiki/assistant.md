@@ -20,9 +20,9 @@ Au tout premier démarrage, un assistant de bienvenue fait tout en moins de troi
 | Vue | Ce qu'on y fait |
 |---|---|
 | **Accueil** | Santé de l'installation, raccourcis, relance de l'assistant de démarrage |
-| **[Mon setup](mon-setup.md)** | Le plan de vos écrans : types zéro-config, surfaces, éditeur de composition, états d'affichage, mires, DMD physique, tactile |
+| **[Mon setup](mon-setup.md)** | Le plan de vos écrans : types zéro-config, surfaces, création graphique, états d'affichage, mires, DMD physique, tactile |
 | **[Mes systèmes](mes-systemes.md)** | Par système : priorités des sources, templates automatiques, dossier de médias personnels, pré-génération |
-| **[Mes jeux](mes-jeux.md)** | La fiche d'un jeu : compositeur, médias en ligne, effets lumière (Mes effets, politique, allocation), lampes, éclairage |
+| **[Mes jeux](mes-jeux.md)** | La fiche d'un jeu : créations graphiques par surface, médias en ligne, effets pendant la partie, lampes, éclairage |
 | **Options** | Connexion APIExpose, Lighting Engine, layouts MAME, RetroAchievements, score/timer live, sources en ligne (clés API, compte ScreenScraper) |
 | **Diagnostic** | Rapport de détection (écrans, DMD, ports), état des sources, derniers événements du runtime |
 
@@ -30,7 +30,7 @@ Au tout premier démarrage, un assistant de bienvenue fait tout en moins de troi
 
 ![Onglet Accueil](assets/setup/setup-home.png)
 
-L'état de l'installation en un coup d'œil : runtime démarré ou non (avec bouton Démarrer/Arrêter), réponse d'APIExpose, présence de `config.ini`, résumé des surfaces configurées et raccourcis vers les autres vues.
+Une carte d'état par maillon de la chaîne, avec pastille verte/orange/rouge et actions : MarqueeManager (Démarrer/Arrêter), APIExpose, Écrans & surfaces, DMD physique (orange si le panneau configuré est débranché) et Mes contenus (créations graphiques, effets personnels). Sous la navigation, la carte **Matériel détecté** liste vos écrans et le DMD.
 
 ## Options
 

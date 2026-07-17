@@ -28,40 +28,11 @@ public sealed class GamesView : UserControl, IDisposable
     private GameIdentityIndex? _identity;
     private readonly Dictionary<string, Dictionary<string, string>> _namesCache = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, HashSet<string>> _present = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Image _systemPreview = new();
-    private readonly TextBlock _systemPreviewCaption = Ui.MutedLabel("");
-
-    /// <summary>Shows the marquee currently displayed for the selected system.</summary>
-    private void RefreshSystemPreview()
-    {
-        var system = SelectedSystem();
-        var path = system.Length == 0 ? null : _media.CurrentSystemMarquee(_pluginRoot, system);
-        _systemPreview.Source = null;
-        _systemPreviewCaption.Text = system.Length == 0 ? ""
-            : path == null
-                ? L.T($"Aucun marquee système pour {system}.", $"No system marquee for {system}.")
-                : L.T($"Marquee affiché pour {system} :", $"Marquee displayed for {system}:");
-        if (path == null) return;
-        _ = Task.Run(() =>
-        {
-            try
-            {
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(path);
-                bitmap.DecodePixelWidth = 560;
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                Dispatcher.BeginInvoke(() => _systemPreview.Source = bitmap);
-            }
-            catch
-            {
-                // unreadable image: caption only
-            }
-        });
-    }
+    private readonly ComboBox _surfacePicker = Ui.ComboBox(220);
     private int _openSequence;
+
+    private string? SelectedSurfaceId()
+        => (_surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
 
     private readonly ComboBox _systems = Ui.ComboBox(180);
     private readonly TextBox _search = new() { FontSize = 12, Padding = new Thickness(8, 6, 26, 6) };
@@ -69,11 +40,14 @@ public sealed class GamesView : UserControl, IDisposable
     private readonly ListBox _results = new() { MaxHeight = 220, Margin = new Thickness(0, 4, 0, 0), Visibility = Visibility.Collapsed };
     private readonly StackPanel _gameHost = new();
     private readonly TextBlock _status = Ui.MutedLabel("", 12);
+    private readonly Action<string>? _navigate;
+    private GamePreload? _currentPreload;
     private bool _disposed;
 
-    public GamesView(string pluginRoot)
+    public GamesView(string pluginRoot, Action<string>? navigate = null)
     {
         _pluginRoot = pluginRoot;
+        _navigate = navigate;
         _media = new GameMediaCatalog(pluginRoot);
         _mem = new MemSignalCatalog(pluginRoot);
         _projects = new MarqueeProjectStore(pluginRoot);
@@ -81,8 +55,8 @@ public sealed class GamesView : UserControl, IDisposable
         var page = new StackPanel();
         page.Children.Add(Ui.Title(L.T("Mes jeux", "My games")));
         page.Children.Add(Ui.Subtitle(L.T(
-            "La fiche complète d'un jeu : composition du marquee, médias en ligne, effets ingame (politique, allocation, mes effets), lampes et profil d'éclairage.",
-            "A game's full sheet: marquee composition, online media, ingame effects (policy, allocation, my effects), lamps and light profile.")));
+            "La fiche complète d'un jeu : création graphique du marquee, médias en ligne, effets ingame (politique, allocation, mes effets), lampes et profil d'éclairage.",
+            "A game's full sheet: marquee graphic creation, online media, ingame effects (policy, allocation, my effects), lamps and light profile.")));
 
         if (!_media.IsAvailable)
         {
@@ -101,7 +75,7 @@ public sealed class GamesView : UserControl, IDisposable
         var pickerRow = new WrapPanel();
         // the system list fills once the physical-presence index is built: only
         // systems with INSTALLED roms show up ("all systems" was unusably long)
-        _systems.Items.Add(new ComboBoxItem { Content = L.T("(détection des roms…)", "(detecting roms…)"), Tag = "" });
+        _systems.Items.Add(new ComboBoxItem { Content = L.T("- sélectionner -", "- select -"), Tag = "" });
         _systems.SelectedIndex = 0;
         _systems.SelectionChanged += (_, _) =>
         {
@@ -132,17 +106,32 @@ public sealed class GamesView : UserControl, IDisposable
         };
         searchHost.Children.Add(magnifier);
         pickerRow.Children.Add(searchHost);
+
+        // surface picker (when several) + the graphic-creation entry point:
+        // each creation is INDEPENDENT per surface
+        var surfaces = new SurfacesStore(pluginRoot).Load();
+        foreach (var surface in surfaces)
+        {
+            _surfacePicker.Items.Add(new ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id });
+        }
+        if (_surfacePicker.Items.Count > 0) _surfacePicker.SelectedIndex = 0;
+        if (_surfacePicker.Items.Count > 1) pickerRow.Children.Add(_surfacePicker);
+        pickerRow.Children.Add(Ui.Button(
+            L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"), (_, _) =>
+            {
+                if (_current is { } entry)
+                {
+                    OpenComposer(entry, _currentPreload!, SelectedSurfaceId());
+                }
+                else
+                {
+                    _status.Text = L.T("Recherchez et ouvrez d'abord un jeu.", "Search and open a game first.");
+                    _status.Foreground = Ui.Error;
+                }
+            }));
         picker.Children.Add(pickerRow);
 
         picker.Children.Add(_results);
-
-        // the marquee CURRENTLY displayed for the selected system
-        _systemPreview.MaxHeight = 90;
-        _systemPreview.HorizontalAlignment = HorizontalAlignment.Left;
-        _systemPreview.Margin = new Thickness(0, 6, 0, 0);
-        picker.Children.Add(_systemPreview);
-        picker.Children.Add(_systemPreviewCaption);
-        _systems.SelectionChanged += (_, _) => RefreshSystemPreview();
         page.Children.Add(Ui.Card(picker));
 
         // ---- per-game host ----
@@ -164,17 +153,15 @@ public sealed class GamesView : UserControl, IDisposable
                 _present = present;
 
                 // fill the system picker with EVERY system that has installed
-                // roms (media presence not required; arcade family grouped)
+                // roms (media presence not required; arcade family grouped) —
+                // nothing preselected: the user picks explicitly
                 _systems.Items.Clear();
+                _systems.Items.Add(new ComboBoxItem { Content = L.T("- sélectionner -", "- select -"), Tag = "" });
                 foreach (var system in present.Keys
                              .Where(s => present[s].Count > 0)
                              .OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                 {
                     _systems.Items.Add(new ComboBoxItem { Content = system, Tag = system });
-                }
-                if (_systems.Items.Count == 0)
-                {
-                    _systems.Items.Add(new ComboBoxItem { Content = L.T("(aucune rom détectée)", "(no rom detected)"), Tag = "" });
                 }
                 _systems.SelectedIndex = 0;
             });
@@ -400,6 +387,7 @@ public sealed class GamesView : UserControl, IDisposable
         }
 
         if (_disposed || sequence != _openSequence) return;
+        _currentPreload = data;
         DisposeCards();
         _gameHost.Children.Clear();
 
@@ -434,7 +422,7 @@ public sealed class GamesView : UserControl, IDisposable
             var generated = Path.Combine(_media.GameRoot(entry.System, entry.Rom), "artwork", "marquee", "generated-marquee.png");
             if (File.Exists(generated)) backgrounds.Add((L.T("Marquee généré", "Generated marquee"), generated));
             if (_projects.HasComposition(entry.System, entry.Rom))
-                backgrounds.Add((L.T("Ma composition", "My composition"), _projects.PngPath(entry.System, entry.Rom)));
+                backgrounds.Add((L.T("Ma création graphique", "My graphic creation"), _projects.PngPath(entry.System, entry.Rom)));
             foreach (var asset in data.Assets.Where(a => a.Key is "marquee" or "screenmarquee"))
                 backgrounds.Add((asset.Label, asset.Path));
             _gameHost.Children.Add(Ui.Card(new SceneLampsCard(_pluginRoot, entry.System, entry.Rom, backgrounds)));
@@ -445,68 +433,126 @@ public sealed class GamesView : UserControl, IDisposable
             data.Signals, data.Genre, data.GenreIds, data.ApiUrl, data.MemPath)));
     }
 
+    private static Image ThumbImage(string path, double maxHeight = 84)
+    {
+        var image = new Image
+        {
+            MaxHeight = maxHeight, MaxWidth = 460,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = new Thickness(0, 0, 10, 0)
+        };
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(path);
+                bitmap.DecodePixelWidth = 640;
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                image.Dispatcher.BeginInvoke(() => image.Source = bitmap);
+            }
+            catch
+            {
+                // preview unavailable
+            }
+        });
+        return image;
+    }
+
     private void BuildComposerCard(GameEntry entry, GamePreload data)
     {
         var card = new StackPanel();
-        card.Children.Add(Ui.SectionHeader(L.T("Composer le marquee", "Compose the marquee")));
+        card.Children.Add(Ui.SectionHeader(L.T("Marquee affiché & créations graphiques", "Displayed marquee & graphic creations")));
 
-        // one composition per surface family (marquee / topper / DMD): every
-        // existing one shows here — click it to edit THAT one
-        var categories = new (string Category, string Fr, string En)[]
+        // the marquee CURRENTLY displayed for this game, resolved through the
+        // system's priority chain — never a black box
+        var assignments = new CompositionAssignments(_pluginRoot);
+        var resolved = ChainPreview.Resolve(_pluginRoot, _media, assignments, "marquee", entry.System, entry.Rom);
+        if (resolved.Path != null)
         {
-            ("marquees", "Marquee", "Marquee"),
-            ("toppers", "Topper", "Topper"),
-            ("dmd", "DMD", "DMD")
-        };
-        var found = 0;
-        foreach (var (category, fr, en) in categories)
+            var currentRow = new WrapPanel { Margin = new Thickness(0, 2, 0, 4) };
+            currentRow.Children.Add(ThumbImage(resolved.Path));
+            var side = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            var sourceLine = new TextBlock { FontSize = 12, TextWrapping = TextWrapping.Wrap };
+            sourceLine.Inlines.Add(new System.Windows.Documents.Run(L.T("Source affichée : ", "Displayed source: ")) { Foreground = Ui.Muted });
+            sourceLine.Inlines.Add(new System.Windows.Documents.Run(resolved.Label) { Foreground = Ui.Accent, FontWeight = FontWeights.SemiBold });
+            side.Children.Add(sourceLine);
+            var rules = Ui.MutedLabel(L.T("selon la règle de priorité du système — la modifier dans Mes systèmes",
+                "per the system's priority rule — change it in My systems"), 11);
+            rules.TextDecorations = TextDecorations.Underline;
+            rules.Cursor = Cursors.Hand;
+            rules.MouseLeftButtonDown += (_, _) => _navigate?.Invoke("systems");
+            side.Children.Add(rules);
+            if (resolved.Deletable)
+            {
+                var deleteRow = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+                deleteRow.Children.Add(Ui.Button(L.T("Supprimer ce marquee", "Delete this marquee"), (_, _) =>
+                {
+                    try
+                    {
+                        File.Delete(resolved.Path);
+                        if (resolved.Source == "composition")
+                        {
+                            _projects.Delete(entry.System, entry.Rom); // project json too
+                        }
+                        _status.Text = L.T("Marquee supprimé — la source suivante de la chaîne reprend la main.",
+                            "Marquee deleted — the next source in the chain takes over.");
+                        _status.Foreground = Ui.Muted;
+                    }
+                    catch (Exception ex)
+                    {
+                        _status.Text = L.T($"Suppression impossible : {ex.Message}", $"Delete failed: {ex.Message}");
+                        _status.Foreground = Ui.Error;
+                    }
+                    if (_current != null) OpenGame(_current);
+                }));
+                side.Children.Add(deleteRow);
+            }
+            currentRow.Children.Add(side);
+            card.Children.Add(currentRow);
+        }
+        else
         {
-            var store = new MarqueeProjectStore(_pluginRoot, category);
+            card.Children.Add(Ui.MutedLabel(L.T("Aucun média résolu par la chaîne pour ce jeu (le flux d'origine s'affiche).",
+                "No media resolved by the chain for this game (the stream default shows).")));
+        }
+
+        // each graphic creation is INDEPENDENT per surface: creation A on
+        // surface 1, creation B on surface 2, for the same game
+        var surfaces = new SurfacesStore(_pluginRoot).Load();
+        var creations = 0;
+        foreach (var surface in surfaces)
+        {
+            var category = surface.Category.ToLowerInvariant() switch
+            {
+                "topper" => "toppers",
+                "dmd-virtual" => "dmd",
+                _ => "marquees"
+            };
+            var store = new MarqueeProjectStore(_pluginRoot, category, surface.Id);
             if (!store.HasComposition(entry.System, entry.Rom)) continue;
-            found++;
+            creations++;
 
             var row = new WrapPanel { Margin = new Thickness(0, 4, 0, 4) };
-            var preview = new Image
-            {
-                MaxHeight = 84, MaxWidth = 420,
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = new Thickness(0, 0, 10, 0),
-                Cursor = Cursors.Hand,
-                ToolTip = L.T("Cliquer pour éditer", "Click to edit")
-            };
-            var pngPath = store.PngPath(entry.System, entry.Rom);
-            _ = Task.Run(() =>
-            {
-                try
-                {
-                    var bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(pngPath);
-                    bitmap.DecodePixelWidth = 640;
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-                    bitmap.Freeze();
-                    Dispatcher.BeginInvoke(() => preview.Source = bitmap);
-                }
-                catch
-                {
-                    // preview unavailable
-                }
-            });
-            preview.MouseLeftButtonDown += (_, _) => OpenComposer(entry, data, category);
-            row.Children.Add(preview);
-
+            var thumb = ThumbImage(store.PngPath(entry.System, entry.Rom), 64);
+            thumb.Cursor = Cursors.Hand;
+            thumb.ToolTip = L.T("Cliquer pour éditer", "Click to edit");
+            thumb.MouseLeftButtonDown += (_, _) => OpenComposer(entry, data, surface.Id);
+            row.Children.Add(thumb);
             var side = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            var label = Ui.Label(L.T(fr, en), 12);
+            var label = Ui.Label(L.T($"Création — surface {surface.Id}", $"Creation — surface {surface.Id}"), 12);
             label.FontWeight = FontWeights.Bold;
             side.Children.Add(label);
             var sideButtons = new WrapPanel();
-            sideButtons.Children.Add(Ui.Button(L.T("Éditer…", "Edit…"), (_, _) => OpenComposer(entry, data, category)));
+            sideButtons.Children.Add(Ui.Button(L.T("Éditer…", "Edit…"), (_, _) => OpenComposer(entry, data, surface.Id)));
             sideButtons.Children.Add(Ui.Button(L.T("Supprimer", "Delete"), (_, _) =>
             {
                 store.Delete(entry.System, entry.Rom);
-                _status.Text = L.T($"Composition {L.T(fr, en)} supprimée — la chaîne de sources reprend la main.",
-                    $"{L.T(fr, en)} composition deleted — the source chain takes over again.");
+                _status.Text = L.T($"Création de la surface {surface.Id} supprimée.",
+                    $"Surface {surface.Id} creation deleted.");
                 _status.Foreground = Ui.Muted;
                 if (_current != null) OpenGame(_current);
             }));
@@ -515,23 +561,23 @@ public sealed class GamesView : UserControl, IDisposable
             card.Children.Add(row);
         }
 
-        card.Children.Add(Ui.MutedLabel(found > 0
-            ? L.T("Une composition manuelle prime sur toutes les autres sources de sa catégorie.",
-                "A manual composition overrides every other source of its category.")
-            : L.T("Pas encore de composition manuelle : le compositeur assemble fanart, logo, gradients, textes et médias téléchargés — une composition par surface (marquee, topper, DMD).",
-                "No manual composition yet: the composer assembles fanart, logo, gradients, texts and downloaded media — one composition per surface (marquee, topper, DMD).")));
+        if (creations == 0)
+        {
+            card.Children.Add(Ui.MutedLabel(L.T(
+                "Pas encore de création graphique : chaque surface peut recevoir la sienne (fanart, logo, gradients, textes, médias téléchargés).",
+                "No graphic creation yet: each surface can carry its own (fanart, logo, gradients, texts, downloaded media).")));
+        }
 
         var actions = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
-        actions.Children.Add(Ui.Button(
-            found > 0 ? L.T("Nouvelle composition…", "New composition…") : L.T("Ouvrir le compositeur…", "Open the composer…"),
-            (_, _) => OpenComposer(entry, data, null), primary: true));
+        actions.Children.Add(Ui.Button(L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"),
+            (_, _) => OpenComposer(entry, data, SelectedSurfaceId()), primary: true));
         card.Children.Add(actions);
         _gameHost.Children.Add(Ui.Card(card));
     }
 
-    private void OpenComposer(GameEntry entry, GamePreload data, string? category)
+    private void OpenComposer(GameEntry entry, GamePreload data, string? surfaceId)
     {
-        var window = new Controls.GameComposerWindow(_pluginRoot, entry.System, entry.Rom, data.Name, data.Assets, category)
+        var window = new Controls.GameComposerWindow(_pluginRoot, entry.System, entry.Rom, data.Name, data.Assets, surfaceId)
         {
             Owner = Window.GetWindow(this)
         };
@@ -571,7 +617,7 @@ public sealed class GamesView : UserControl, IDisposable
     private void DeleteComposition(GameEntry entry)
     {
         _projects.Delete(entry.System, entry.Rom);
-        _status.Text = L.T("Composition supprimée — le marquee scrapé/généré reprend la main.",
+        _status.Text = L.T("Création graphique supprimée — le marquee scrapé/généré reprend la main.",
             "Composition deleted — the scraped/generated marquee takes over again.");
         _status.Foreground = Ui.Muted;
         if (_current != null)

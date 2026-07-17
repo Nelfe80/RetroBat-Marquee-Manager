@@ -1,6 +1,6 @@
 # Mon setup
 
-**Mon setup** est le plan de votre installation : chaque écran détecté y apparaît là où il est physiquement (glissez-les pour refléter votre borne, votre meuble ou votre bureau). De là, tout se configure en descendant du général au détail : **le plan → un écran → une surface → sa composition**.
+**Mon setup** est le plan de votre installation : chaque écran détecté y apparaît là où il est physiquement (glissez-les pour refléter votre borne, votre meuble ou votre bureau). De là, tout se configure en descendant du général au détail : **le plan → un écran → une surface → sa création graphique**.
 
 ![Vue Mon setup](assets/setup/setup-monsetup.png)
 
@@ -16,21 +16,24 @@ Cliquez sur un écran, choisissez son **type**, appliquez : surfaces, composants
 | **DMD virtuel** | Une fenêtre DMD plein écran |
 | **Vertical mixte** | Marquee en bandeau haut + instruction card en bas, **RetroBat/le jeu reste visible au centre** |
 | **Écran de jeu** | Rien : RetroBat est chez lui |
-| **Libre** | Une surface vide à composer |
+| **Libre** | Une surface vide à créer soi-même |
 
 L'assistant pré-suggère le type d'après la forme de l'écran (un bandeau 5:1 est probablement un marquee). L'expert retouche ensuite ce qu'il veut : « Diviser / positionner les surfaces » ouvre l'éditeur visuel de zones (glisser, redimensionner, guides magnétiques), y compris sur l'écran principal.
 
 ## Les états d'affichage
 
-Chaque composant appartient à un état : **Navigation ES**, **En jeu**, ou **Les deux** (défaut). Un tableau de scores peut ainsi n'apparaître qu'en partie, une vitrine vidéo seulement pendant la navigation. Le sélecteur d'état en haut du plan montre ce que chaque écran affichera dans chaque situation — votre borne « vit » sans rien lancer.
+Chaque **surface** et chaque composant appartient à un état : **Navigation ES**, **En jeu**, ou les deux (défaut). Une surface « En jeu seulement » disparaît complètement pendant la navigation — par exemple, rien au-dessus d'ES sur l'écran RetroBat tant qu'on navigue. Le sélecteur d'état en haut du plan montre ce que chaque écran affichera dans chaque situation ; l'état d'une surface se règle dans « Éditer les surfaces » (Visible en : …).
 
-## Composer une surface
+!!! tip "Navigation dans le plan"
+    Un **premier clic** sur un écran le sélectionne et affiche ses détails dessous ; un **deuxième clic** ouvre l'éditeur de surfaces. Le **DMD physique** apparaît comme un écran du plan (déplaçable, liseré rouge) — son deuxième clic ouvre ses réglages.
 
-« Composer » ouvre l'éditeur de composition, logique Photoshop :
+## La création graphique d'une surface
+
+« Création graphique » ouvre l'interface de création graphique de la surface, logique Photoshop :
 
 - **à gauche, les éléments** par groupes : médias (fanart, logo 50 %, vidéo du jeu…), infos du jeu (titre, année/éditeur), live (hiscores, score, timer), RetroAchievements, décoration (gradient de lisibilité, texte, web embarqué, tubes néon) — et des **composites** posés d'un clic : *Marquee* (fanart+gradient+logo), *Score complet*, *Live media*, *Chat Twitch* ;
 - **au centre, le canvas** à l'échelle réelle de la surface : glisser, poignée de redimensionnement, guides magnétiques, Suppr, Ctrl+D (dupliquer), Ctrl+Z/Y (annuler/rétablir) — avec les vrais médias d'un jeu d'exemple ;
-- **à droite, les calques** (œil pour masquer, cadenas pour verrouiller, ↑↓ pour l'ordre) et l'**inspecteur** : disposition (x, y, largeur, hauteur en fractions — la composition survit à tout changement de résolution), contenu (état de visibilité, gabarits `{name}` `{year}`…), style.
+- **à droite, les calques** (œil pour masquer, cadenas pour verrouiller, ↑↓ pour l'ordre) et l'**inspecteur** : disposition (x, y, largeur, hauteur en fractions — la création survit à tout changement de résolution), contenu (état de visibilité, gabarits `{name}` `{year}`…), style.
 
 Les onglets **Navigation ES / En jeu / Les deux** en haut filtrent l'édition par état.
 

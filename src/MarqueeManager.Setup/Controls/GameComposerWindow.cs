@@ -20,7 +20,7 @@ namespace MarqueeManager.Setup.Controls;
 /// </summary>
 public sealed class GameComposerWindow : Window
 {
-    private sealed record Target(string Label, string Category, int W, int H);
+    private sealed record Target(string Label, string Category, string SurfaceId, int W, int H);
 
     private readonly string _pluginRoot;
     private readonly string _system;
@@ -36,12 +36,13 @@ public sealed class GameComposerWindow : Window
     private MarqueeComposer _composer = null!;
     private Target _target = null!;
 
-    /// <summary>Game composition: media\marquees\&lt;system&gt;\&lt;rom&gt;.png.
-    /// System composition (system sheet): system="systems", rom=&lt;system id&gt;.
-    /// initialCategory ("marquees"|"toppers"|"dmd") preselects the target —
-    /// clicking an existing composition in the game sheet edits THAT one.</summary>
+    /// <summary>Graphic creation window. Every creation belongs to ONE surface
+    /// (media\&lt;cat&gt;\surfaces\&lt;surfaceId&gt;\&lt;system&gt;\&lt;rom&gt;.png): creation A on
+    /// surface 1 and creation B on surface 2 can coexist for the same game.
+    /// System scope: system="systems", rom=&lt;system id&gt;. initialSurfaceId binds
+    /// the target selector to the surface picked in the calling view.</summary>
     public GameComposerWindow(string pluginRoot, string system, string rom, string displayName,
-        IReadOnlyList<GameAsset> assets, string? initialCategory = null)
+        IReadOnlyList<GameAsset> assets, string? initialSurfaceId = null)
     {
         _pluginRoot = pluginRoot;
         _system = system;
@@ -51,7 +52,7 @@ public sealed class GameComposerWindow : Window
         _downloadsDir = Path.Combine(pluginRoot, "media", "marquees", "downloads", Safe(system), Safe(rom));
         _mediaRoot = Path.GetFullPath(Path.Combine(pluginRoot, "..", "APIExpose", "media", "systems"));
 
-        Title = L.T($"Composer — {displayName}", $"Compose — {displayName}");
+        Title = L.T($"Création graphique — {displayName}", $"Graphic creation — {displayName}");
         Width = 1180;
         Height = 760;
         WindowState = WindowState.Maximized;
@@ -59,8 +60,8 @@ public sealed class GameComposerWindow : Window
         Background = Ui.Background;
 
         BuildTargets();
-        _target = (initialCategory != null
-                      ? _targets.FirstOrDefault(t => t.Category.Equals(initialCategory, StringComparison.OrdinalIgnoreCase))
+        _target = (initialSurfaceId != null
+                      ? _targets.FirstOrDefault(t => t.SurfaceId.Equals(initialSurfaceId, StringComparison.OrdinalIgnoreCase))
                       : null)
                   ?? _targets[0];
 
@@ -69,7 +70,7 @@ public sealed class GameComposerWindow : Window
         // ===== top: target surface + actions =====
         var bar = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
         var barLeft = new WrapPanel();
-        var targetLabel = Ui.MutedLabel(L.T("Composer pour :", "Compose for:"));
+        var targetLabel = Ui.MutedLabel(L.T("Création pour :", "Creation for:"));
         targetLabel.Margin = new Thickness(0, 0, 6, 0);
         targetLabel.VerticalAlignment = VerticalAlignment.Center;
         barLeft.Children.Add(targetLabel);
@@ -91,7 +92,7 @@ public sealed class GameComposerWindow : Window
 
         var barRight = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         barRight.Children.Add(Ui.Button(L.T("Fermer", "Close"), (_, _) => Close()));
-        barRight.Children.Add(Ui.Button(L.T("Enregistrer ma composition", "Save my composition"), (_, _) => Save(), primary: true));
+        barRight.Children.Add(Ui.Button(L.T("Enregistrer ma création graphique", "Save my graphic creation"), (_, _) => Save(), primary: true));
         DockPanel.SetDock(barRight, Dock.Right);
         bar.Children.Add(barRight);
         DockPanel.SetDock(bar, Dock.Top);
@@ -332,9 +333,9 @@ public sealed class GameComposerWindow : Window
                 var h = surface.Height ?? (screenIndex >= 0 && screenIndex < screens.Count ? screens[screenIndex].Bounds.Height : 360);
                 if (w <= 0 || h <= 0) continue;
                 _targets.Add(new Target(
-                    L.T($"{surface.Id} ({surface.Category}) — écran {screenIndex}, {w}×{h}",
-                        $"{surface.Id} ({surface.Category}) — screen {screenIndex}, {w}×{h}"),
-                    category, w, h));
+                    L.T($"Surface {surface.Id} ({surface.Category}) — écran {screenIndex}, {w}×{h}",
+                        $"Surface {surface.Id} ({surface.Category}) — screen {screenIndex}, {w}×{h}"),
+                    category, surface.Id, w, h));
             }
         }
         catch
@@ -343,13 +344,18 @@ public sealed class GameComposerWindow : Window
         }
         if (_targets.Count == 0)
         {
-            _targets.Add(new Target(L.T("Marquee (défaut 1920×360)", "Marquee (default 1920×360)"), "marquees", 1920, 360));
+            _targets.Add(new Target(L.T("Marquee (défaut 1920×360)", "Marquee (default 1920×360)"), "marquees", "", 1920, 360));
         }
     }
 
-    private MarqueeProjectStore StoreFor(Target target) => new(_pluginRoot, target.Category);
+    /// <summary>The creation is stored PER SURFACE.</summary>
+    private MarqueeProjectStore StoreFor(Target target) => new(_pluginRoot, target.Category, target.SurfaceId);
 
-    private MarqueeProject? LoadProjectFor(Target target) => StoreFor(target).LoadProject(_system, _rom);
+    /// <summary>Surface creation first; the category-level file (legacy /
+    /// shared default) seeds the editor when the surface has none yet.</summary>
+    private MarqueeProject? LoadProjectFor(Target target)
+        => StoreFor(target).LoadProject(_system, _rom)
+           ?? new MarqueeProjectStore(_pluginRoot, target.Category).LoadProject(_system, _rom);
 
     private void MountComposer(MarqueeProject? project)
     {
@@ -373,8 +379,8 @@ public sealed class GameComposerWindow : Window
         var carried = _composer.HasLayers ? _composer.BuildProject(_system, _rom) : null;
         _target = target;
         MountComposer(LoadProjectFor(target) ?? carried);
-        _status.Text = L.T($"Cible : {target.Label} — l'enregistrement ira dans media\\{target.Category}.",
-            $"Target: {target.Label} — saving goes to media\\{target.Category}.");
+        _status.Text = L.T($"Cible : {target.Label} — la création est propre à CETTE surface.",
+            $"Target: {target.Label} — the creation belongs to THIS surface.");
         _status.Foreground = Ui.Muted;
     }
 
@@ -465,7 +471,7 @@ public sealed class GameComposerWindow : Window
 
         if (StoreFor(_target).HasComposition(_system, _rom))
         {
-            var delete = Ui.Button(L.T("Supprimer ma composition", "Delete my composition"), (_, _) => DeleteComposition());
+            var delete = Ui.Button(L.T("Supprimer ma création graphique", "Delete my graphic creation"), (_, _) => DeleteComposition());
             delete.Margin = new Thickness(0, 12, 0, 0);
             panel.Children.Add(delete);
         }
@@ -549,8 +555,8 @@ public sealed class GameComposerWindow : Window
             store.SaveProject(_composer.BuildProject(_system, _rom));
             _composer.RenderPng(store.PngPath(_system, _rom));
             _status.Text = L.T(
-                $"✔ Composition enregistrée : {store.PngPath(_system, _rom)} — affichée à la prochaine sélection.",
-                $"✔ Composition saved: {store.PngPath(_system, _rom)} — shown on the next selection.");
+                $"✔ Création graphique enregistrée pour cette surface : {store.PngPath(_system, _rom)} — affichée à la prochaine sélection.",
+                $"✔ Graphic creation saved for this surface: {store.PngPath(_system, _rom)} — shown on the next selection.");
             _status.Foreground = Ui.Ok;
         }
         catch (Exception ex)
@@ -563,8 +569,8 @@ public sealed class GameComposerWindow : Window
     private void DeleteComposition()
     {
         StoreFor(_target).Delete(_system, _rom);
-        _status.Text = L.T("Composition supprimée — le marquee scrapé/généré reprend la main.",
-            "Composition deleted — the scraped/generated marquee takes over again.");
+        _status.Text = L.T("Création graphique supprimée — la chaîne de sources reprend la main.",
+            "Graphic creation deleted — the source chain takes over again.");
         _status.Foreground = Ui.Muted;
     }
 

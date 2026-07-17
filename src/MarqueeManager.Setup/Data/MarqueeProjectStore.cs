@@ -73,10 +73,15 @@ public sealed class MarqueeProjectStore
     private readonly string _root;
 
     /// <summary>category: "marquees" (default), "toppers" or "dmd" — the media
-    /// folder the runtime's composition chains read for that surface family.</summary>
-    public MarqueeProjectStore(string pluginRoot, string category = "marquees")
+    /// folder the runtime's chains read for that surface family. surfaceId set =
+    /// the creation belongs to THAT surface only
+    /// (media\&lt;cat&gt;\surfaces\&lt;surfaceId&gt;\…) : creation A on surface 1 and
+    /// creation B on surface 2 can coexist for the same game or system.</summary>
+    public MarqueeProjectStore(string pluginRoot, string category = "marquees", string? surfaceId = null)
     {
-        _root = Path.Combine(pluginRoot, "media", category);
+        _root = surfaceId is { Length: > 0 }
+            ? Path.Combine(pluginRoot, "media", category, "surfaces", SafeName(surfaceId))
+            : Path.Combine(pluginRoot, "media", category);
     }
 
     public string PngPath(string system, string rom)

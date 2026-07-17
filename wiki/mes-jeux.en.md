@@ -1,43 +1,42 @@
 # My games
 
-**My games** is a game's full sheet: its marquee composition, its online media, its **light effects** driven by the game's signals, its lamps and its lighting profile. Search accepts the game name, the rom name or any alias.
+**My games** is a game's full sheet: the marquee it displays, its graphic creations, its online media, its **ingame effects**, its lamps and lighting.
 
 ![My games view](assets/setup/setup-games.png)
 
-## Composer
+## Finding a game
 
-Layers built from the game's media, on a canvas matching the marquee's real resolution. An inserted logo takes **50 % of the width** by default; “Auto recipe” lays fanart + gradient + logo in one click. A saved composition overrides every other source ([My systems](mes-systemes.md)).
+Pick a system (only systems with **installed games** in `roms\` show up — the arcade family is grouped), then type a game or rom name: “lunar” finds *Lunar Lander* (`llander`), even without scraped media. Names come from your gamelist, completed by the APIExpose library.
+
+## The displayed marquee
+
+The sheet shows **the marquee currently displayed** for this game and its **source** (your creation, your folder, scraped, generated…), resolved through the system's priority rule — the link opens My systems to change it. When the source is yours (creation or a file from your folder), a button **deletes** it: the next source in the chain takes over.
+
+## Graphic creations — one per surface
+
+Every **surface carries its own creation**: creation A on the marquee surface and creation B on the topper can coexist for the same game. The sheet lists the existing creations (click = edit that one); “**Open the graphic creation interface**” builds yours for the surface picked in the selector.
+
+The interface: target (screen/surface) at the top, **media by type** on the left (click = pick the version in a per-source modal, static gradients included), canvas in the middle (drag, wheel = size, Shift+wheel = rotate), **layers** on the right (eye, padlock, drag & drop for z-order) with the selected layer's inspector (size, rotation, opacity, text, mirror).
 
 ## Fetch media online
 
-Arcade Database (no key), SteamGridDB, TheGamesDB — keys in Options → Online sources. Clicking a result downloads it and adds it as a layer.
+Arcade Database (no key), SteamGridDB, TheGamesDB — keys in Options → Online sources. Click a media to import it: it becomes available in the graphic creation interface (downloaded media).
 
 ??? note "What about ScreenScraper?"
-    The ScreenScraper source only appears when the **developer** credentials are available (they are never shipped in the code); your ScreenScraper **user** account is picked up automatically from EmulationStation, or typed in Options. Day to day, APIExpose already scrapes ScreenScraper locally — this direct source is an on-demand complement, unchecked by default.
+    The ScreenScraper source only appears when the **developer** credentials are available (never shipped in the code); your **user** account is picked up from EmulationStation or typed in Options. APIExpose already scrapes ScreenScraper locally — this direct source is a complement, unchecked by default.
 
-## Light effects: “When [signal] then [effect]”
+## Ingame effects management
 
-Games with a `.MEM` definition emit **semantic signals** (HIT, LOSE_LIFE, BOSS_DEFEATED…). Each signal reads like a sentence: *When HIT then red flash*. Tweaks apply to the game, its whole system or its whole **genre** (a HIT in a shmup is not a HIT in a beat 'em up); a badge always shows where the winning rule comes from.
+Games with a `.MEM` definition ( MEM badge on the sheet) emit **semantic signals** (HIT, LOSE_LIFE, BOSS_DEFEATED…). Each row reads “When [signal] then [effect]”, with a status dot: **gray** = no effect, **orange** = default effect, **green** = your setting. Clicking a row (or “Link an effect to a signal…”) opens the dedicated editor: signal, simple effect or one of **My effects**, preview, save.
 
-### My effects — the effect composer
+### My effects
 
-**My effects…** opens the library: an effect is a **stack of sequenced actions**, each with its type (colored veil, flash, shake, strobe, sprite swarm, **your webm/gif media**), its parameters, its **start** (ms) and duration. Two actions starting at 0 play together (“red veil + shake + explosions”); staggered starts make a sequence (“red flash THEN a swarm of sprites”). The preview replays the whole sequence; the library is a plain file (`media\effects\library.json`), exportable.
+A named effect = a **stack of sequenced actions** (veil, flash, shake, strobe, sprites, your webm/gif media) with start and duration. Sprites tune their **size (up to 1000 %, crisp pixels)**, **growth** and **position** (well-spaced random, centered, evenly spread); `full_*` sprites are unique full-width backdrops. The library ships official effects (★, not deletable — duplicate them) plus yours in `media\effects\library.json`.
 
-Drop your animations (transparent webm, gif, apng) in `media\effects\user\`: a “My media” action plays them **overlaid** on the composed marquee, or temporarily **fullscreen**. The Lighting Engine's neon tubes stay alive behind.
+### Per-game policy
 
-### Allocate and disengage
+**Inherit** (genre/system defaults + your settings), **Only my effects**, or **Disable everything**. The live monitor shows firing signals while you play.
 
-On every game signal: **Simple effect** (flash, sprite… as before) or **One of my effects** (the named sequence). And per game, a three-position policy:
+## My dynamic Arcade marquee
 
-- **Inherit** — genre/system defaults + your tweaks (normal behavior);
-- **Only my effects** — every default muted, only the signals you allocated react;
-- **Disable everything** — no MEM effect on this game.
-
-### Live monitor
-
-Launch the game and play: firing signals show up live; click one to tune its effect. It is the easiest way to discover what a game can emit.
-
-## Scene, lamps and lighting
-
-- **Scene & lamps**: the rbmarquee editor (MAME layout lamps driven by `/ws/arcade`).
-- **Lighting profile**: the Lighting Engine's bulbs and cabinet, per game.
+This is the marquee shown **while playing**: the game's MAME outputs light the lamps you place, like the original cabinet's illuminated header. Background of your choice (generated marquee first), circle/rectangle lamps with precise position and dimensions, wiring to the game's outputs, a detailed list, and an **attract mode test** button (chase, alternate). The scene saves to `resources\rbmarquee\<rom>.xml` and the generator never overwrites it again.
