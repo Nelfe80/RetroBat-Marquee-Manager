@@ -28,6 +28,39 @@ public sealed class GamesView : UserControl, IDisposable
     private GameIdentityIndex? _identity;
     private readonly Dictionary<string, Dictionary<string, string>> _namesCache = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, HashSet<string>> _present = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Image _systemPreview = new();
+    private readonly TextBlock _systemPreviewCaption = Ui.MutedLabel("");
+
+    /// <summary>Shows the marquee currently displayed for the selected system.</summary>
+    private void RefreshSystemPreview()
+    {
+        var system = SelectedSystem();
+        var path = system.Length == 0 ? null : _media.CurrentSystemMarquee(_pluginRoot, system);
+        _systemPreview.Source = null;
+        _systemPreviewCaption.Text = system.Length == 0 ? ""
+            : path == null
+                ? L.T($"Aucun marquee système pour {system}.", $"No system marquee for {system}.")
+                : L.T($"Marquee affiché pour {system} :", $"Marquee displayed for {system}:");
+        if (path == null) return;
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(path);
+                bitmap.DecodePixelWidth = 560;
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                Dispatcher.BeginInvoke(() => _systemPreview.Source = bitmap);
+            }
+            catch
+            {
+                // unreadable image: caption only
+            }
+        });
+    }
     private int _openSequence;
 
     private readonly ComboBox _systems = Ui.ComboBox(180);
@@ -102,6 +135,14 @@ public sealed class GamesView : UserControl, IDisposable
         picker.Children.Add(pickerRow);
 
         picker.Children.Add(_results);
+
+        // the marquee CURRENTLY displayed for the selected system
+        _systemPreview.MaxHeight = 90;
+        _systemPreview.HorizontalAlignment = HorizontalAlignment.Left;
+        _systemPreview.Margin = new Thickness(0, 6, 0, 0);
+        picker.Children.Add(_systemPreview);
+        picker.Children.Add(_systemPreviewCaption);
+        _systems.SelectionChanged += (_, _) => RefreshSystemPreview();
         page.Children.Add(Ui.Card(picker));
 
         // ---- per-game host ----
@@ -122,10 +163,12 @@ public sealed class GamesView : UserControl, IDisposable
                 _allGames = games;
                 _present = present;
 
-                // fill the system picker with the INSTALLED systems only
+                // fill the system picker with EVERY system that has installed
+                // roms (media presence not required; arcade family grouped)
                 _systems.Items.Clear();
-                foreach (var system in _media.ListSystems()
-                             .Where(s => present.ContainsKey(s) && games.Any(g => g.System == s && present[s].Contains(g.Rom))))
+                foreach (var system in present.Keys
+                             .Where(s => present[s].Count > 0)
+                             .OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
                 {
                     _systems.Items.Add(new ComboBoxItem { Content = system, Tag = system });
                 }

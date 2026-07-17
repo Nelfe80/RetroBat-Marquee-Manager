@@ -45,12 +45,55 @@ public sealed class MesSystemesView : UserControl
             "The marquee shown when a SYSTEM is selected in ES. Compose it visually (logo, generated marquee, texts) — it overrides the automatic render.")));
         var composeRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 4, 0, 0) };
         var systemPicker = Ui.ComboBox(200);
-        foreach (var system in media.ListSystems())
+        // only systems with at least one INSTALLED game; mame/fbneo stay listed
+        // (they carry their own chains and original compositions)
+        var present = media.ListPresentRoms(pluginRoot);
+        bool HasGames(string system) => GameMediaCatalog.ArcadeAliases.Contains(system)
+            ? present.TryGetValue("arcade", out var arcade) && arcade.Count > 0
+            : present.TryGetValue(system, out var roms) && roms.Count > 0;
+        foreach (var system in media.ListSystems().Where(HasGames))
         {
             systemPicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = system, Tag = system });
         }
         if (systemPicker.Items.Count > 0) systemPicker.SelectedIndex = 0;
         composeRow.Children.Add(systemPicker);
+
+        // live preview: the marquee CURRENTLY displayed for the picked system
+        var preview = new System.Windows.Controls.Image
+        {
+            MaxHeight = 100,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+            Margin = new System.Windows.Thickness(0, 6, 0, 0)
+        };
+        var previewCaption = Ui.MutedLabel("");
+        void RefreshPreview()
+        {
+            var system = (systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
+            var path = system == null ? null : media.CurrentSystemMarquee(pluginRoot, system);
+            preview.Source = null;
+            previewCaption.Text = path == null
+                ? L.T("Aucun marquee système pour l'instant.", "No system marquee yet.")
+                : System.IO.Path.GetFileName(path).StartsWith("generated", StringComparison.OrdinalIgnoreCase)
+                    ? L.T("Affiché actuellement : marquee généré.", "Currently displayed: generated marquee.")
+                    : L.T("Affiché actuellement : votre composition.", "Currently displayed: your composition.");
+            if (path == null) return;
+            try
+            {
+                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(path);
+                bitmap.DecodePixelWidth = 640;
+                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                preview.Source = bitmap;
+            }
+            catch
+            {
+                // unreadable image: caption only
+            }
+        }
+        systemPicker.SelectionChanged += (_, _) => RefreshPreview();
         composeRow.Children.Add(Ui.Button(L.T("Composer ce système…", "Compose this system…"), (_, _) =>
         {
             if ((systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag is not string system) return;
@@ -61,6 +104,9 @@ public sealed class MesSystemesView : UserControl
             window.ShowDialog();
         }, primary: true));
         composeCard.Children.Add(composeRow);
+        composeCard.Children.Add(preview);
+        composeCard.Children.Add(previewCaption);
+        RefreshPreview();
         page.Children.Add(Ui.Card(composeCard));
 
         var templates = new StackPanel();
@@ -99,8 +145,16 @@ public sealed class MesSystemesView : UserControl
         Add("marquee", "Marquee généré", "Generated marquee", @"artwork\marquee\generated-system-marquee.png");
         Add("dmd", "DMD généré", "Generated DMD", @"artwork\marquee\generated-system-dmd.png");
 
-        // APIExpose ships no system-level fanart: fall back to the first game
-        // fanart of the system so the composer always has a background to offer
+        // system fanart: the ACTIVE ES THEME carries it (APIExpose's own cascade:
+        // art/background/<system>.* etc. — carbon ships 338 of them). Same lookup
+        // here, so the composer offers exactly what the runtime would show.
+        if (assets.All(a => a.Key != "fanart") && ThemeSystemFanart(pluginRoot, system) is { } themeFanart)
+        {
+            assets.Insert(0, new GameAsset("fanart",
+                L.T("Fanart du système (thème ES)", "System fanart (ES theme)"), themeFanart));
+        }
+
+        // very last resort: the first game fanart of the system
         if (assets.All(a => a.Key != "fanart"))
         {
             try
@@ -130,5 +184,53 @@ public sealed class MesSystemesView : UserControl
             }
         }
         return assets;
+    }
+
+    /// <summary>Mirror of APIExpose's theme fanart cascade for the ACTIVE theme
+    /// (es_settings ThemeSet): &lt;theme&gt;\&lt;sys&gt;\art\background, &lt;theme&gt;\art\background,
+    /// _systemmedia variants — first &lt;system&gt;.* image wins.</summary>
+    private static string? ThemeSystemFanart(string pluginRoot, string system)
+    {
+        try
+        {
+            var esRoot = System.IO.Path.GetFullPath(System.IO.Path.Combine(
+                pluginRoot, "..", "..", "emulationstation", ".emulationstation"));
+            var settings = System.IO.Path.Combine(esRoot, "es_settings.cfg");
+            if (!System.IO.File.Exists(settings)) return null;
+            var themeSet = System.Xml.Linq.XDocument.Load(settings).Root?
+                .Elements("string")
+                .FirstOrDefault(e => (string?)e.Attribute("name") == "ThemeSet")
+                ?.Attribute("value")?.Value;
+            if (string.IsNullOrWhiteSpace(themeSet)) return null;
+            var themeRoot = System.IO.Path.Combine(esRoot, "themes", themeSet);
+            if (!System.IO.Directory.Exists(themeRoot)) return null;
+
+            var names = GameMediaCatalog.ArcadeAliases.Contains(system)
+                ? new[] { system, "arcade" }
+                : new[] { system };
+            foreach (var name in names)
+            {
+                foreach (var directory in new[]
+                         {
+                             System.IO.Path.Combine(themeRoot, name, "art", "background"),
+                             System.IO.Path.Combine(themeRoot, name, "background"),
+                             System.IO.Path.Combine(themeRoot, "art", "background"),
+                             System.IO.Path.Combine(themeRoot, "_systemmedia", "fanartsyst"),
+                             System.IO.Path.Combine(themeRoot, "_systemmedia", "background")
+                         })
+                {
+                    if (!System.IO.Directory.Exists(directory)) continue;
+                    var match = System.IO.Directory.EnumerateFiles(directory, name + ".*")
+                        .FirstOrDefault(f => System.IO.Path.GetExtension(f).ToLowerInvariant()
+                            is ".jpg" or ".jpeg" or ".png" or ".webp");
+                    if (match != null) return match;
+                }
+            }
+        }
+        catch
+        {
+            // theme unreadable: no theme fanart
+        }
+        return null;
     }
 }

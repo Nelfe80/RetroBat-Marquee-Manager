@@ -16,8 +16,8 @@ namespace MarqueeManager.Setup.Controls;
 /// drag a lamp on the marquee image, resize it with the wheel, recolor it, and
 /// rewire it to a MAME output. Handles both lamp shapes of the format — circles
 /// (x/y/radius) and rectangles (region="x y w h"), fractional coordinates.
-/// Saving stamps generated="false": the scene is curated, the generator will
-/// never overwrite it again (.bak kept).
+/// Saving stamps generated="false": the scene is user-edited, the generator
+/// will never overwrite it again (.bak kept).
 /// </summary>
 public sealed class SceneLampsCard : UserControl
 {
@@ -70,6 +70,13 @@ public sealed class SceneLampsCard : UserControl
 
         var card = new StackPanel();
         card.Children.Add(Ui.SectionHeader(L.T("Mon marquee dynamique Arcade", "My dynamic Arcade marquee")));
+        var intro = Ui.MutedLabel(L.T(
+            "C'est le marquee affiché PENDANT LA PARTIE : les outputs MAME du jeu allument les lampes que vous posez ici, "
+            + "comme le fronton lumineux de la borne d'origine.",
+            "This is the marquee shown WHILE PLAYING: the game's MAME outputs light the lamps you place here, "
+            + "like the original cabinet's illuminated header."));
+        intro.TextWrapping = TextWrapping.Wrap;
+        card.Children.Add(intro);
 
         LoadKnownOutputs(system, rom);
         var exists = File.Exists(_scenePath);
@@ -221,7 +228,7 @@ public sealed class SceneLampsCard : UserControl
         actions.Children.Add(attract);
         _attractButton = Ui.Button(L.T("▶ Tester l'attract mode", "▶ Test attract mode"), (_, _) => ToggleAttractTest());
         actions.Children.Add(_attractButton);
-        actions.Children.Add(Ui.Button(L.T("Enregistrer la scène (curée)", "Save the scene (curated)"), (_, _) => SaveScene(), primary: true));
+        actions.Children.Add(Ui.Button(L.T("Enregistrer la scène", "Save the scene"), (_, _) => SaveScene(), primary: true));
         card.Children.Add(actions);
         card.Children.Add(Ui.MutedLabel(L.T(
             "Enregistrer marque la scène generated=\"false\" : le générateur rbmarquee ne l'écrasera plus.",
@@ -338,7 +345,7 @@ public sealed class SceneLampsCard : UserControl
             scene.Add(lamps, new XElement("bindings", maps), new XElement("attract", new XAttribute("mode", _attractMode)));
 
             var doc = new XDocument(
-                new XComment(" Curé avec MarqueeManagerSetup : ce fichier prime et le générateur ne le touche plus. "),
+                new XComment(" Édité avec MarqueeManagerSetup : ce fichier prime et le générateur ne le touche plus. "),
                 new XElement("rbmarquee",
                     new XAttribute("version", "1.2"),
                     new XAttribute("game", _rom),
@@ -706,9 +713,15 @@ public sealed class SceneLampsCard : UserControl
         {
             output.Items.Add(known);
         }
-        // the lamp's CURRENT output pre-selects in the list (free text otherwise)
-        output.SelectedItem = _knownOutputs.FirstOrDefault(k => k.Equals(lamp.Output, StringComparison.OrdinalIgnoreCase));
-        if (output.SelectedItem == null) output.Text = lamp.Output;
+        // the lamp's CURRENT output pre-selects in the list; an output the game
+        // file doesn't list (or no file at all) becomes an item so it still shows
+        if (lamp.Output.Length > 0
+            && !_knownOutputs.Any(k => k.Equals(lamp.Output, StringComparison.OrdinalIgnoreCase)))
+        {
+            output.Items.Insert(0, lamp.Output);
+        }
+        output.SelectedItem = output.Items.OfType<string>()
+            .FirstOrDefault(k => k.Equals(lamp.Output, StringComparison.OrdinalIgnoreCase));
         output.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) =>
         {
             lamp.Output = output.Text.Trim();
@@ -771,7 +784,7 @@ public sealed class SceneLampsCard : UserControl
             var text = Ui.MutedLabel(label);
             text.Margin = new Thickness(6, 0, 4, 0);
             line2.Children.Add(text);
-            var box = Ui.TextBox(get().ToString("0.###", System.Globalization.CultureInfo.InvariantCulture), 56);
+            var box = Ui.TextBox(get().ToString("0.###", System.Globalization.CultureInfo.InvariantCulture), 76);
             box.TextChanged += (_, _) =>
             {
                 if (double.TryParse(box.Text, System.Globalization.NumberStyles.Float,

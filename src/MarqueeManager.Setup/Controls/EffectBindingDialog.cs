@@ -240,7 +240,7 @@ public sealed class EffectBindingDialog : Window
             spriteLabel.Margin = new Thickness(0, 0, 6, 0);
             line2.Children.Add(spriteLabel);
             line2.Children.Add(spritePicker);
-            NumberFor(line2, L.T("Nombre", "Count"), draft.Count, v => draft.Count = Math.Clamp(v, 1, 8), 40);
+            NumberFor(line2, L.T("Nombre", "Count"), draft.Count, v => draft.Count = Math.Clamp(v, 1, 8), 64);
             PickerFor(line2, "Motion", Motions, draft.Motion, v => draft.Motion = v);
             simple.Children.Add(line2);
 

@@ -35,14 +35,16 @@ public sealed class GameMediaCatalog
 
     public bool IsAvailable => Directory.Exists(_systemsRoot);
 
-    /// <summary>Folders folded into "arcade" (APIExpose scrapes arcade media there;
-    /// the alias folders are near-empty duplicates that only confuse the pickers).</summary>
-    private static readonly HashSet<string> ArcadeAliases = new(StringComparer.OrdinalIgnoreCase)
+    /// <summary>The arcade family folders. "Mes jeux" folds them into "arcade"
+    /// (one grouped search); "Mes systèmes" keeps them apart — mame/fbneo carry
+    /// their own chains and original compositions.</summary>
+    public static readonly HashSet<string> ArcadeAliases = new(StringComparer.OrdinalIgnoreCase)
     {
         "mame", "fbneo", "fba", "hbmame"
     };
 
-    public IReadOnlyList<string> ListSystems()
+    /// <summary>foldArcadeAliases: true collapses mame/fbneo/… into "arcade".</summary>
+    public IReadOnlyList<string> ListSystems(bool foldArcadeAliases = false)
     {
         try
         {
@@ -52,7 +54,7 @@ public sealed class GameMediaCatalog
                 .OfType<string>()
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            if (systems.Contains("arcade", StringComparer.OrdinalIgnoreCase))
+            if (foldArcadeAliases && systems.Contains("arcade", StringComparer.OrdinalIgnoreCase))
             {
                 systems.RemoveAll(s => ArcadeAliases.Contains(s));
             }
@@ -64,46 +66,47 @@ public sealed class GameMediaCatalog
         }
     }
 
-    /// <summary>Rom base names physically present in RetroBat's roms\ folders, per
-    /// media system. "arcade" aggregates its alias rom folders (mame, fbneo…).
-    /// A missing roms folder yields no entry — callers then skip the filter.</summary>
+    /// <summary>Rom base names physically present in RetroBat's roms\ folders,
+    /// keyed by SYSTEM. The inventory walks roms\ itself (LedManager engine):
+    /// a system with installed roms shows up even without an APIExpose media
+    /// folder. The arcade family (mame, fbneo…) lands under the "arcade" key.</summary>
     public Dictionary<string, HashSet<string>> ListPresentRoms(string pluginRoot)
     {
         var present = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
         var romsRoot = Path.GetFullPath(Path.Combine(pluginRoot, "..", "..", "roms"));
         if (!Directory.Exists(romsRoot)) return present;
 
-        foreach (var system in ListSystems())
+        foreach (var systemDir in Directory.EnumerateDirectories(romsRoot))
         {
-            var folders = ArcadeAliases.Contains(system) || system.Equals("arcade", StringComparison.OrdinalIgnoreCase)
-                ? new[] { "arcade", "mame", "fbneo", "hbmame", "neogeo" }
-                : new[] { system };
-            var roms = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var folder in folders)
+            var folder = Path.GetFileName(systemDir);
+            if (folder.Length == 0 || folder.StartsWith('.') || folder.Contains('=')) continue;
+            var key = ArcadeAliases.Contains(folder) || folder.Equals("neogeo", StringComparison.OrdinalIgnoreCase)
+                ? "arcade"
+                : folder;
+
+            HashSet<string>? roms = null;
+            try
             {
-                var path = Path.Combine(romsRoot, folder);
-                if (!Directory.Exists(path)) continue;
-                try
+                foreach (var entry in Directory.EnumerateFileSystemEntries(systemDir))
                 {
-                    foreach (var entry in Directory.EnumerateFileSystemEntries(path))
-                    {
-                        var name = Path.GetFileNameWithoutExtension(entry);
-                        if (name is not { Length: > 0 } || name.StartsWith('.')) continue;
-                        // the roms folder also holds metadata/media noise
-                        var extension = Path.GetExtension(entry).ToLowerInvariant();
-                        if (extension is ".xml" or ".txt" or ".cfg" or ".dat" or ".ini" or ".bak" or ".srm" or ".sav" or ".nfo") continue;
-                        if (Directory.Exists(entry) && name.ToLowerInvariant()
-                                is "images" or "videos" or "video" or "manuals" or "media"
-                                or "downloaded_images" or "downloaded_videos" or "boxart") continue;
-                        roms.Add(name);
-                    }
-                }
-                catch
-                {
-                    // unreadable roms folder: skipped
+                    var name = Path.GetFileNameWithoutExtension(entry);
+                    if (name is not { Length: > 0 } || name.StartsWith('.')) continue;
+                    // the roms folder also holds metadata/media noise
+                    var extension = Path.GetExtension(entry).ToLowerInvariant();
+                    if (extension is ".xml" or ".txt" or ".cfg" or ".dat" or ".ini" or ".bak" or ".srm" or ".sav" or ".nfo") continue;
+                    if (Directory.Exists(entry) && name.ToLowerInvariant()
+                            is "images" or "videos" or "video" or "manuals" or "media"
+                            or "downloaded_images" or "downloaded_videos" or "boxart") continue;
+                    roms ??= present.TryGetValue(key, out var existing)
+                        ? existing
+                        : present[key] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    roms.Add(name);
                 }
             }
-            if (roms.Count > 0) present[system] = roms;
+            catch
+            {
+                // unreadable roms folder: skipped
+            }
         }
         return present;
     }
@@ -145,6 +148,24 @@ public sealed class GameMediaCatalog
 
     public string GameRoot(string system, string rom)
         => Path.Combine(_systemsRoot, system, "games", rom);
+
+    /// <summary>The SYSTEM marquee currently displayed when this system is
+    /// selected in ES: the manual composition wins, else the generated one
+    /// (arcade aliases fall back to the arcade render). Null = nothing yet.</summary>
+    public string? CurrentSystemMarquee(string pluginRoot, string system)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var safe = new string(system.ToLowerInvariant().Where(c => !invalid.Contains(c)).ToArray());
+        var composition = Path.Combine(pluginRoot, "media", "marquees", "systems", safe + ".png");
+        if (File.Exists(composition)) return composition;
+
+        foreach (var candidate in ArcadeAliases.Contains(system) ? new[] { system, "arcade" } : new[] { system })
+        {
+            var generated = Path.Combine(_systemsRoot, candidate, "artwork", "marquee", "generated-system-marquee.png");
+            if (File.Exists(generated)) return generated;
+        }
+        return null;
+    }
 
     /// <summary>Display name from texts\metadata-&lt;lang&gt;.json (Fields.name).</summary>
     public string? ReadDisplayName(string system, string rom)

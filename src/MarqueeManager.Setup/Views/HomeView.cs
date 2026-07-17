@@ -74,10 +74,12 @@ public sealed class HomeView : UserControl
         // ---- links ----
         var links = new StackPanel();
         links.Children.Add(Ui.SectionHeader(L.T("Documentation", "Documentation")));
+        // mkdocs i18n: FR is the default language and lives at the site ROOT,
+        // EN under /en/ (there is no /fr/ path — it 404s)
         var wiki = Ui.Button(L.T("Ouvrir le wiki en ligne", "Open the online wiki"), (_, _) => OpenUrl(
             L.French
-                ? "https://nelfe80.github.io/RetroBat-Marquee-Manager/fr/"
-                : "https://nelfe80.github.io/RetroBat-Marquee-Manager/"));
+                ? "https://nelfe80.github.io/RetroBat-Marquee-Manager/"
+                : "https://nelfe80.github.io/RetroBat-Marquee-Manager/en/"));
         var linksRow = new WrapPanel();
         linksRow.Children.Add(wiki);
         links.Children.Add(linksRow);
