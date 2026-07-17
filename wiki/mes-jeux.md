@@ -25,7 +25,7 @@ Arcade Database (sans clé), SteamGridDB, TheGamesDB — clés dans Options → 
 
 ## Gestion des effets pendant la partie
 
-Les jeux équipés d'une définition `.MEM` (badge  MEM sur la fiche) émettent des **signaux sémantiques** (HIT, LOSE_LIFE, BOSS_DEFEATED…). Chaque ligne se lit « Quand [signal] alors [effet] », avec une puce d'état : **grise** = aucun effet, **orange** = effet par défaut, **verte** = votre réglage. Cliquer une ligne (ou « Lier un effet à un signal… ») ouvre l'éditeur dédié : signal, effet simple ou un de **Mes effets**, préview, enregistrer.
+Les jeux équipés d'une définition `.MEM` (badge  MEM sur la fiche) émettent des **signaux sémantiques** (HIT, LOSE_LIFE, BOSS_DEFEATED…). Le fichier `.MEM` est retrouvé via le **référentiel d'alias** d'APIExpose (noms de dump, variantes, hashes) : le nom exact de votre fichier rom n'a pas besoin de correspondre. Chaque ligne se lit « Quand [signal] alors [effet] », avec une puce d'état : **grise** = aucun effet, **orange** = effet par défaut, **verte** = votre réglage. Cliquer une ligne (ou « Lier un effet à un signal… ») ouvre l'éditeur dédié : signal, effet simple ou un de **Mes effets**, préview, enregistrer. Pendant la partie, les effets s'affichent **quel que soit le média du marquee** — image, vidéo ou création graphique — en surimpression.
 
 ### Mes effets
 
@@ -37,4 +37,6 @@ Un effet nommé = une **pile d'actions ordonnancées** (voile, flash, secousse, 
 
 ## Mon marquee dynamique Arcade
 
-C'est le marquee affiché **pendant la partie** : les outputs MAME du jeu allument les lampes que vous posez, comme le fronton de la borne d'origine. Fond au choix (marquee généré en priorité), lampes cercle/rectangle avec position et dimensions précises, câblage aux outputs du jeu, liste détaillée, et un bouton **teste l'attract mode** (chenillard, alterné). La scène s'enregistre dans `resources\rbmarquee\<rom>.xml` et le générateur ne l'écrase plus.
+C'est le marquee affiché **pendant la partie** : les outputs MAME du jeu allument les lampes que vous posez, comme le fronton de la borne d'origine. L'aperçu prend **toute la largeur de la fiche**, fond au choix (marquee généré en priorité).
+
+Lampes cercle ou rectangle : glisser = déplacer, **poignée** (ou molette) = redimensionner, **palette de couleurs** cliquable dans l'inspecteur (le code hexa reste disponible), position et dimensions précises. Le **câblage** se choisit strictement parmi les outputs réels du jeu — et le même output peut allumer **plusieurs lampes** (les deux LOCKON d'After Burner II, par exemple), une lampe pouvant aussi écouter plusieurs outputs. Liste détaillée des lampes et bouton **teste l'attract mode** (chenillard, alterné). La scène s'enregistre dans `resources\rbmarquee\<rom>.xml` et le générateur ne l'écrase plus.

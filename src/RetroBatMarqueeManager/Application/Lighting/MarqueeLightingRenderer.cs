@@ -647,11 +647,16 @@ half4 main(float2 p) {
         {
             foreach (var state in _lampStates)
             {
-                var mapped = _lampScene.OutputMap.FirstOrDefault(pair =>
-                    pair.Value.Equals(state.Definition.Id, StringComparison.OrdinalIgnoreCase));
-                state.Target = mapped.Key != null && _arcadeOutputs.TryGetValue(mapped.Key, out var value)
-                    ? Math.Clamp(value, 0, 1)
-                    : state.Target;
+                // a lamp may listen to several outputs (and one output may drive
+                // several lamps): the strongest live value wins
+                float? target = null;
+                foreach (var pair in _lampScene.OutputMap)
+                {
+                    if (!pair.Value.Equals(state.Definition.Id, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (_arcadeOutputs.TryGetValue(pair.Key, out var value))
+                        target = Math.Max(target ?? 0f, Math.Clamp(value, 0, 1));
+                }
+                if (target is { } resolved) state.Target = resolved;
             }
         }
         else if (!_ingame && t > 2.5)

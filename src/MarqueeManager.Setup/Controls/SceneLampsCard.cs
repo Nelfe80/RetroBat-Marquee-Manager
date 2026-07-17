@@ -21,7 +21,9 @@ namespace MarqueeManager.Setup.Controls;
 /// </summary>
 public sealed class SceneLampsCard : UserControl
 {
-    private const double ViewWidth = 620;
+    // responsive: the preview takes the card column's width (SizeChanged below)
+    private double _viewWidth = 620;
+    private double ViewWidth => _viewWidth;
 
     private sealed class Lamp
     {
@@ -42,7 +44,7 @@ public sealed class SceneLampsCard : UserControl
     private string _attractMode = "none";
     private string? _imageAttr;
     private string? _backgroundPath;
-    private double _viewHeight = ViewWidth / 4;
+    private double _viewHeight = 155;
 
     private readonly Canvas _canvas = new() { ClipToBounds = true };
     private readonly StackPanel _inspector = new() { Margin = new Thickness(0, 8, 0, 0), Visibility = Visibility.Collapsed };
@@ -52,6 +54,11 @@ public sealed class SceneLampsCard : UserControl
     private bool _dragging;
     private Point _dragStart;
     private (double X, double Y) _dragOrigin;
+
+    // resize handle on the selected lamp (corner drag; the wheel still works)
+    private bool _resizing;
+    private (double W, double H) _resizeOrigin;
+    private Rect _handleBounds = Rect.Empty;
 
     // attract-mode test: animates the placed lamps like the runtime would
     private System.Windows.Threading.DispatcherTimer? _attractTimer;
@@ -67,6 +74,19 @@ public sealed class SceneLampsCard : UserControl
         _rom = rom;
         _backgrounds = backgrounds ?? Array.Empty<(string, string)>();
         _scenePath = Path.Combine(pluginRoot, "resources", "rbmarquee", rom + ".xml");
+
+        // the preview follows the column width (like the graphic creation canvas)
+        SizeChanged += (_, e) =>
+        {
+            if (_canvas.Parent == null) return;
+            var available = Math.Max(420, e.NewSize.Width - 20);
+            if (Math.Abs(available - _viewWidth) < 40) return;
+            _viewWidth = available;
+            SizeCanvasToBackground();
+            _canvas.Width = _viewWidth;
+            _canvas.Height = _viewHeight;
+            Render();
+        };
 
         var card = new StackPanel();
         card.Children.Add(Ui.SectionHeader(L.T("Mon marquee dynamique Arcade", "My dynamic Arcade marquee")));
@@ -135,8 +155,8 @@ public sealed class SceneLampsCard : UserControl
     private void BuildEditor(StackPanel card)
     {
         card.Children.Add(Ui.MutedLabel(L.T(
-            "Cliquer = sélectionner, glisser = déplacer, molette = taille. Les couleurs et le câblage output se règlent sous l'aperçu.",
-            "Click = select, drag = move, wheel = resize. Colors and output wiring live under the preview.")));
+            "Cliquer = sélectionner, glisser = déplacer, poignée ou molette = taille. Les couleurs et le câblage output se règlent sous l'aperçu.",
+            "Click = select, drag = move, handle or wheel = resize. Colors and output wiring live under the preview.")));
 
         // background picker when several marquee images exist (generated first)
         if (_backgrounds.Count > 1)
@@ -166,6 +186,8 @@ public sealed class SceneLampsCard : UserControl
             card.Children.Add(backgroundRow);
         }
 
+        // the card may be (re)built after the first layout pass: adopt the width
+        if (ActualWidth > 440) _viewWidth = Math.Max(420, ActualWidth - 20);
         SizeCanvasToBackground();
         _canvas.Width = ViewWidth;
         _canvas.Height = _viewHeight;
@@ -422,7 +444,7 @@ public sealed class SceneLampsCard : UserControl
     {
         if (_backgroundPath != null && TryLoad(_backgroundPath) is { } bitmap && bitmap.PixelWidth > 0)
         {
-            _viewHeight = Math.Clamp(ViewWidth * bitmap.PixelHeight / bitmap.PixelWidth, 60, 320);
+            _viewHeight = Math.Clamp(ViewWidth * bitmap.PixelHeight / bitmap.PixelWidth, 60, 420);
         }
     }
 
@@ -503,7 +525,45 @@ public sealed class SceneLampsCard : UserControl
             Canvas.SetTop(label, (lamp.IsRegion ? lamp.RY + lamp.RH / 2 : lamp.Y) * _viewHeight - 8);
             _canvas.Children.Add(label);
         }
+        DrawResizeHandle();
         RefreshLampList();
+    }
+
+    /// <summary>Square grab handle on the selected lamp: bottom-right corner of a
+    /// rectangle, right edge of a circle. Dragging it resizes the lamp.</summary>
+    private void DrawResizeHandle()
+    {
+        _handleBounds = Rect.Empty;
+        if (_selected == null) return;
+        double cx, cy;
+        if (_selected.IsRegion)
+        {
+            cx = (_selected.RX + _selected.RW) * ViewWidth;
+            cy = (_selected.RY + _selected.RH) * _viewHeight;
+        }
+        else
+        {
+            cx = _selected.X * ViewWidth + _selected.Radius * _viewHeight;
+            cy = _selected.Y * _viewHeight;
+        }
+        const double half = 5;
+        var handle = new Rectangle
+        {
+            Width = half * 2,
+            Height = half * 2,
+            Fill = Brushes.White,
+            Stroke = Brushes.Black,
+            StrokeThickness = 1,
+            RadiusX = 2,
+            RadiusY = 2,
+            Cursor = Cursors.SizeNWSE,
+            IsHitTestVisible = false // the canvas handles the hit itself
+        };
+        Canvas.SetLeft(handle, cx - half);
+        Canvas.SetTop(handle, cy - half);
+        _canvas.Children.Add(handle);
+        // generous hit zone: easier to grab than the visual 10 px square
+        _handleBounds = new Rect(cx - 9, cy - 9, 18, 18);
     }
 
     /// <summary>Detailed table of every lamp: shape, geometry, color, output, actions.</summary>
@@ -586,6 +646,19 @@ public sealed class SceneLampsCard : UserControl
     private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
     {
         var position = e.GetPosition(_canvas);
+
+        // the resize handle wins over lamp selection
+        if (_selected != null && _handleBounds.Contains(position))
+        {
+            _resizing = true;
+            _dragStart = position;
+            _resizeOrigin = _selected.IsRegion
+                ? (_selected.RW, _selected.RH)
+                : (_selected.Radius, _selected.Radius);
+            _canvas.CaptureMouse();
+            return;
+        }
+
         Lamp? hit = null;
         for (var i = _canvas.Children.Count - 1; i >= 0; i--)
         {
@@ -615,10 +688,27 @@ public sealed class SceneLampsCard : UserControl
 
     private void Canvas_MouseMove(object sender, MouseEventArgs e)
     {
-        if (!_dragging || _selected == null || e.LeftButton != MouseButtonState.Pressed) return;
+        if (_selected == null || e.LeftButton != MouseButtonState.Pressed) return;
         var position = e.GetPosition(_canvas);
         var dx = (position.X - _dragStart.X) / ViewWidth;
         var dy = (position.Y - _dragStart.Y) / _viewHeight;
+        if (_resizing)
+        {
+            if (_selected.IsRegion)
+            {
+                _selected.RW = Math.Clamp(_resizeOrigin.W + dx, 0.02, 1.4);
+                _selected.RH = Math.Clamp(_resizeOrigin.H + dy, 0.05, 1.4);
+            }
+            else
+            {
+                // radius is a height fraction; the handle sits on the right edge
+                _selected.Radius = Math.Clamp(
+                    _resizeOrigin.W + (position.X - _dragStart.X) / _viewHeight, 0.02, 0.6);
+            }
+            Render();
+            return;
+        }
+        if (!_dragging) return;
         if (_selected.IsRegion)
         {
             _selected.RX = Math.Clamp(_dragOrigin.X + dx, -0.2, 1.0);
@@ -634,10 +724,12 @@ public sealed class SceneLampsCard : UserControl
 
     private void EndDrag()
     {
-        if (_dragging)
+        if (_dragging || _resizing)
         {
             _dragging = false;
+            _resizing = false;
             _canvas.ReleaseMouseCapture();
+            if (_selected != null) Select(_selected); // refresh the inspector fields
         }
     }
 
@@ -740,6 +832,39 @@ public sealed class SceneLampsCard : UserControl
             Render();
         }));
         _inspector.Children.Add(line);
+
+        // quick palette: classic marquee bulb / neon tints, click = apply
+        var paletteLine = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+        var paletteLabel = Ui.MutedLabel(L.T("Palette", "Palette"));
+        paletteLabel.Margin = new Thickness(0, 0, 6, 0);
+        paletteLabel.VerticalAlignment = VerticalAlignment.Center;
+        paletteLine.Children.Add(paletteLabel);
+        foreach (var hex in new[]
+                 {
+                     "#ffd9a0", "#ffffff", "#ff3b30", "#ff9c57", "#ffd60a",
+                     "#34c759", "#32ade6", "#007aff", "#af52de", "#ff2d55"
+                 })
+        {
+            var chip = new Border
+            {
+                Width = 20, Height = 20, CornerRadius = new CornerRadius(4),
+                Background = new SolidColorBrush(ParseColor(hex)),
+                BorderBrush = hex.Equals(lamp.Color, StringComparison.OrdinalIgnoreCase) ? Ui.Accent : Ui.PanelBorder,
+                BorderThickness = new Thickness(hex.Equals(lamp.Color, StringComparison.OrdinalIgnoreCase) ? 2 : 1),
+                Margin = new Thickness(0, 0, 4, 0),
+                Cursor = Cursors.Hand,
+                ToolTip = hex
+            };
+            var chosen = hex;
+            chip.MouseLeftButtonDown += (_, e2) =>
+            {
+                colorBox.Text = chosen; // TextChanged applies color + renders
+                Select(lamp);           // refresh the palette's selected outline
+                e2.Handled = true;
+            };
+            paletteLine.Children.Add(chip);
+        }
+        _inspector.Children.Add(paletteLine);
 
         // geometry: shape, position and dimensions in fractions of the marquee
         var line2 = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };

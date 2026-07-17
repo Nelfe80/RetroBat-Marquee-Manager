@@ -29,7 +29,7 @@ Chaque **surface** et chaque composant appartient à un état : **Navigation ES*
 
 ## La création graphique d'une surface
 
-« Création graphique » ouvre l'interface de création graphique de la surface, logique Photoshop :
+Le bouton « **Configurer** » d'une surface ouvre l'interface de création graphique, logique Photoshop :
 
 - **à gauche, les éléments** par groupes : médias (fanart, logo 50 %, vidéo du jeu…), infos du jeu (titre, année/éditeur), live (hiscores, score, timer), RetroAchievements, décoration (gradient de lisibilité, texte, web embarqué, tubes néon) — et des **composites** posés d'un clic : *Marquee* (fanart+gradient+logo), *Score complet*, *Live media*, *Chat Twitch* ;
 - **au centre, le canvas** à l'échelle réelle de la surface : glisser, poignée de redimensionnement, guides magnétiques, Suppr, Ctrl+D (dupliquer), Ctrl+Z/Y (annuler/rétablir) — avec les vrais médias d'un jeu d'exemple ;

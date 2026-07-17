@@ -17,8 +17,10 @@ public sealed class RbMarqueeScene
 {
     public required string Rom { get; init; }
     public required IReadOnlyList<LampDefinition> Lamps { get; init; }
-    /// <summary>MAME output name → lamp id.</summary>
-    public required IReadOnlyDictionary<string, string> OutputMap { get; init; }
+    /// <summary>MAME output name → lamp id pairs. A LIST, not a dictionary: the
+    /// same output may drive several lamps (aburner2 wires lamp2 to both
+    /// LOCKON lamps) and a lamp may listen to several outputs.</summary>
+    public required IReadOnlyList<KeyValuePair<string, string>> OutputMap { get; init; }
     public string AttractMode { get; init; } = "chase";
     /// <summary>
     /// Calibrated artwork (resources/images) the lamp regions were measured on —
@@ -64,13 +66,13 @@ public sealed class RbMarqueeScene
                 lamps.Add(new LampDefinition(id, x, y, radius, region, r, g, b));
             }
 
-            var outputs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var outputs = new List<KeyValuePair<string, string>>();
             foreach (var map in document.Descendants("map"))
             {
                 var output = (string?)map.Attribute("output");
                 var to = ((string?)map.Attribute("to"))?.Replace("lamp:", "", StringComparison.OrdinalIgnoreCase);
                 if (!string.IsNullOrWhiteSpace(output) && !string.IsNullOrWhiteSpace(to))
-                    outputs[output] = to;
+                    outputs.Add(new KeyValuePair<string, string>(output, to));
             }
 
             if (lamps.Count == 0) return null;

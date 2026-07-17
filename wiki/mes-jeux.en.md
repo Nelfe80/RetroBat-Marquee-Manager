@@ -25,7 +25,7 @@ Arcade Database (no key), SteamGridDB, TheGamesDB — keys in Options → Online
 
 ## Ingame effects management
 
-Games with a `.MEM` definition ( MEM badge on the sheet) emit **semantic signals** (HIT, LOSE_LIFE, BOSS_DEFEATED…). Each row reads “When [signal] then [effect]”, with a status dot: **gray** = no effect, **orange** = default effect, **green** = your setting. Clicking a row (or “Link an effect to a signal…”) opens the dedicated editor: signal, simple effect or one of **My effects**, preview, save.
+Games with a `.MEM` definition ( MEM badge on the sheet) emit **semantic signals** (HIT, LOSE_LIFE, BOSS_DEFEATED…). The `.MEM` file is resolved through APIExpose's **alias referential** (dump names, variants, hashes): your rom file name does not need to match exactly. Each row reads “When [signal] then [effect]”, with a status dot: **gray** = no effect, **orange** = default effect, **green** = your setting. Clicking a row (or “Link an effect to a signal…”) opens the dedicated editor: signal, simple effect or one of **My effects**, preview, save. While playing, effects display **whatever the marquee media is** — image, video or graphic creation — as an overlay.
 
 ### My effects
 
@@ -37,4 +37,6 @@ A named effect = a **stack of sequenced actions** (veil, flash, shake, strobe, s
 
 ## My dynamic Arcade marquee
 
-This is the marquee shown **while playing**: the game's MAME outputs light the lamps you place, like the original cabinet's illuminated header. Background of your choice (generated marquee first), circle/rectangle lamps with precise position and dimensions, wiring to the game's outputs, a detailed list, and an **attract mode test** button (chase, alternate). The scene saves to `resources\rbmarquee\<rom>.xml` and the generator never overwrites it again.
+This is the marquee shown **while playing**: the game's MAME outputs light the lamps you place, like the original cabinet's illuminated header. The preview takes **the sheet's full width**, background of your choice (generated marquee first).
+
+Circle or rectangle lamps: drag = move, **handle** (or wheel) = resize, clickable **color palette** in the inspector (the hex field stays available), precise position and dimensions. The **wiring** is picked strictly from the game's real outputs — and the same output can light **several lamps** (After Burner II's two LOCKON lamps, for instance), while a lamp can also listen to several outputs. Detailed lamp list and an **attract mode test** button (chase, alternate). The scene saves to `resources\rbmarquee\<rom>.xml` and the generator never overwrites it again.

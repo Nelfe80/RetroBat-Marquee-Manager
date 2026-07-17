@@ -29,7 +29,7 @@ Every **surface** and every component belongs to a state: **ES browsing**, **Ing
 
 ## A surface's graphic creation
 
-“Graphic creation” opens the surface's graphic creation interface, Photoshop logic:
+A surface's “**Configure**” button opens the graphic creation interface, Photoshop logic:
 
 - **left, the elements** by groups: media (fanart, 50 % logo, game video…), game info (title, year/publisher), live (hiscores, score, timer), RetroAchievements, decoration (readability gradient, text, embedded web, neon tubes) — plus one-click **composites**: *Marquee* (fanart+gradient+logo), *Full score*, *Live media*, *Twitch chat*;
 - **center, the canvas** at the surface's real scale: drag, resize handle, magnetic guides, Del, Ctrl+D (duplicate), Ctrl+Z/Y (undo/redo) — with a real example game's media;
