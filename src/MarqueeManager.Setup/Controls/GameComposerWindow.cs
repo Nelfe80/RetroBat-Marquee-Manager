@@ -102,7 +102,29 @@ public sealed class GameComposerWindow : Window
         DockPanel.SetDock(palette, Dock.Left);
         root.Children.Add(palette);
 
-        // ===== center: the composer =====
+        // ===== right: layers (front → back) + inspector, RetroCreator layout =====
+        var right = new Grid { Width = 270, Margin = new Thickness(10, 0, 0, 0) };
+        right.RowDefinitions.Add(new RowDefinition { Height = new GridLength(42, GridUnitType.Star) });
+        right.RowDefinitions.Add(new RowDefinition { Height = new GridLength(58, GridUnitType.Star) });
+        var layersBox = new Border
+        {
+            Background = Ui.Panel, BorderBrush = Ui.PanelBorder, BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8), Padding = new Thickness(8), Margin = new Thickness(0, 0, 0, 8),
+            Child = new ScrollViewer { Content = _layersPanel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }
+        };
+        right.Children.Add(layersBox);
+        var inspectorBox = new Border
+        {
+            Background = Ui.Panel, BorderBrush = Ui.PanelBorder, BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8), Padding = new Thickness(10),
+            Child = new ScrollViewer { Content = _inspectorPanel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }
+        };
+        Grid.SetRow(inspectorBox, 1);
+        right.Children.Add(inspectorBox);
+        DockPanel.SetDock(right, Dock.Right);
+        root.Children.Add(right);
+
+        // ===== center: the composer canvas =====
         _composerHost.Margin = new Thickness(10, 0, 0, 0);
         root.Children.Add(new ScrollViewer
         {
@@ -113,6 +135,119 @@ public sealed class GameComposerWindow : Window
 
         Content = root;
         MountComposer(LoadProjectFor(_target));
+    }
+
+    private readonly StackPanel _layersPanel = new();
+    private readonly StackPanel _inspectorPanel = new();
+
+    // ================= right panel: layers + inspector =================
+
+    private void RenderSidePanels()
+    {
+        RenderLayersPanel();
+        RenderInspectorPanel();
+    }
+
+    private string LayerName(MarqueeLayer layer)
+        => layer.Source == "text" ? $"{L.T("Texte", "Text")} « {layer.Text} »" : layer.AssetKey;
+
+    private void RenderLayersPanel()
+    {
+        _layersPanel.Children.Clear();
+        var title = Ui.MutedLabel(L.T("CALQUES (avant → arrière)", "LAYERS (front → back)"), 10);
+        title.FontWeight = FontWeights.Bold;
+        _layersPanel.Children.Add(title);
+
+        var models = _composer.LayerModels; // back → front
+        if (models.Count == 0)
+        {
+            _layersPanel.Children.Add(Ui.MutedLabel(L.T("Aucun calque — piochez un média à gauche.",
+                "No layer yet — pick a media on the left.")));
+            return;
+        }
+
+        foreach (var layer in models.Reverse())
+        {
+            var row = new DockPanel { Margin = new Thickness(0, 1, 0, 1) };
+
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal };
+            var up = Ui.Button("↑", (_, _) => _composer.ReorderLayer(layer, +1)); // toward front
+            up.Padding = new Thickness(6, 2, 6, 2);
+            buttons.Children.Add(up);
+            var down = Ui.Button("↓", (_, _) => _composer.ReorderLayer(layer, -1));
+            down.Padding = new Thickness(6, 2, 6, 2);
+            buttons.Children.Add(down);
+            DockPanel.SetDock(buttons, Dock.Right);
+            row.Children.Add(buttons);
+
+            var isSelected = ReferenceEquals(layer, _composer.SelectedLayer);
+            var name = Ui.Label(LayerName(layer), 11);
+            name.VerticalAlignment = VerticalAlignment.Center;
+            name.TextTrimming = TextTrimming.CharacterEllipsis;
+            if (isSelected)
+            {
+                name.Foreground = Ui.Accent;
+                name.FontWeight = FontWeights.Bold;
+            }
+            name.Cursor = System.Windows.Input.Cursors.Hand;
+            name.MouseLeftButtonDown += (_, _) => _composer.SelectLayer(layer);
+            row.Children.Add(name);
+            _layersPanel.Children.Add(row);
+        }
+    }
+
+    private void RenderInspectorPanel()
+    {
+        _inspectorPanel.Children.Clear();
+        var layer = _composer.SelectedLayer;
+        if (layer == null)
+        {
+            _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Sélectionnez un calque (clic sur le canvas ou dans la liste).",
+                "Select a layer (click the canvas or the list).")));
+            return;
+        }
+
+        var header = Ui.Label(LayerName(layer), 13);
+        header.FontWeight = FontWeights.Bold;
+        _inspectorPanel.Children.Add(header);
+
+        void SliderRow(string label, double min, double max, double value, Action<double> onChange)
+        {
+            var text = Ui.MutedLabel(label, 11);
+            _inspectorPanel.Children.Add(text);
+            var slider = new Slider
+            {
+                Minimum = min, Maximum = max, Value = Math.Clamp(value, min, max),
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+            slider.ValueChanged += (_, args) => _composer.ApplyToLayer(layer, l => onChange(args.NewValue));
+            _inspectorPanel.Children.Add(slider);
+        }
+
+        SliderRow(L.T("Taille", "Size"), 0.05, 3.0, layer.Scale, v => layer.Scale = v);
+        SliderRow("Rotation", -180, 180, layer.Rotation, v => layer.Rotation = v);
+        SliderRow(L.T("Opacité", "Opacity"), 0.05, 1.0, layer.Opacity, v => layer.Opacity = v);
+
+        if (layer.Source == "text")
+        {
+            var textBox = Ui.TextBox(layer.Text ?? "", 200);
+            textBox.TextChanged += (_, _) => _composer.ApplyToLayer(layer, l => l.Text = textBox.Text);
+            _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Texte", "Text"), 11));
+            _inspectorPanel.Children.Add(textBox);
+            var colorBox = Ui.TextBox(layer.TextColor, 100);
+            colorBox.TextChanged += (_, _) => _composer.ApplyToLayer(layer, l => l.TextColor = colorBox.Text.Trim());
+            _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Couleur (#RRGGBB)", "Color (#RRGGBB)"), 11));
+            _inspectorPanel.Children.Add(colorBox);
+        }
+
+        var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+        actions.Children.Add(Ui.Button(L.T("Miroir", "Mirror"), (_, _) =>
+            _composer.ApplyToLayer(layer, l => l.FlipH = !l.FlipH)));
+        actions.Children.Add(Ui.Button(L.T("Supprimer", "Delete"), (_, _) => _composer.DeleteLayer(layer)));
+        _inspectorPanel.Children.Add(actions);
+        _inspectorPanel.Children.Add(Ui.MutedLabel(L.T(
+            "Canvas : glisser = déplacer, molette = taille, Maj+molette = rotation.",
+            "Canvas: drag = move, wheel = size, Shift+wheel = rotate."), 10));
     }
 
     // ================= targets =================
@@ -157,9 +292,14 @@ public sealed class GameComposerWindow : Window
 
     private void MountComposer(MarqueeProject? project)
     {
-        _composer = new MarqueeComposer(_target.W, _target.H, _mediaRoot);
+        _composer = new MarqueeComposer(_target.W, _target.H, _mediaRoot)
+        {
+            InlineInspector = false // the window hosts the layers panel + inspector
+        };
+        _composer.StackChanged += RenderSidePanels;
         if (project != null) _composer.LoadProject(project);
         _composerHost.Child = _composer;
+        RenderSidePanels();
     }
 
     private void SwitchTarget(Target target)

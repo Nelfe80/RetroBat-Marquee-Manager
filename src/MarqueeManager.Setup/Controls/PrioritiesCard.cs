@@ -83,7 +83,21 @@ public sealed class PrioritiesCard : UserControl
         card.Children.Add(_coverage);
         card.Children.Add(_chainPanel);
 
-        var addRow = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+        // ---- grouped actions: Chaîne / Mon dossier / Pré-génération ----
+        static StackPanel Group(Panel host, string title)
+        {
+            var header = Ui.MutedLabel(title, 10);
+            header.FontWeight = FontWeights.Bold;
+            header.Margin = new Thickness(0, 10, 0, 2);
+            host.Children.Add(header);
+            var body = new StackPanel { Margin = new Thickness(8, 0, 0, 0) };
+            host.Children.Add(body);
+            return body;
+        }
+
+        // -- CHAÎNE : modifier, valider, vérifier --
+        var chainGroup = Group(card, L.T("CHAÎNE", "CHAIN"));
+        var addRow = new WrapPanel();
         var addPicker = Ui.ComboBox(230);
         addRow.Children.Add(addPicker);
         addRow.Children.Add(Ui.Button(L.T("Ajouter la source", "Add source"), (_, _) =>
@@ -100,12 +114,9 @@ public sealed class PrioritiesCard : UserControl
             _assignments.Save();
             ReloadChain();
         }));
-        card.Children.Add(addRow);
-        _category.SelectionChanged += (_, _) => FillAddPicker(addPicker);
-        FillAddPicker(addPicker);
-
-        var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
-        actions.Children.Add(Ui.Button(L.T("Enregistrer les priorités", "Save priorities"), (_, _) =>
+        chainGroup.Children.Add(addRow);
+        var chainActions = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+        chainActions.Children.Add(Ui.Button(L.T("Enregistrer les priorités", "Save priorities"), (_, _) =>
         {
             _assignments.SetChain(Category(), ScopeSystem(), _chain);
             _assignments.Save();
@@ -114,17 +125,27 @@ public sealed class PrioritiesCard : UserControl
             _status.Foreground = Ui.Ok;
             RefreshCoverage();
         }, primary: true));
-        actions.Children.Add(Ui.Button(L.T("Ouvrir mon dossier", "Open my folder"), (_, _) => OpenUserFolder()));
-        actions.Children.Add(Ui.Button(L.T("Réindexer mon dossier", "Reindex my folder"), (_, _) => _ = ReindexAsync()));
-        actions.Children.Add(Ui.Button(L.T("Tester la chaîne", "Test the chain"), (_, _) => _ = TestChainAsync()));
-        card.Children.Add(actions);
+        chainActions.Children.Add(Ui.Button(L.T("Tester la chaîne", "Test the chain"), (_, _) => _ = TestChainAsync()));
+        chainGroup.Children.Add(chainActions);
+        _category.SelectionChanged += (_, _) => FillAddPicker(addPicker);
+        FillAddPicker(addPicker);
 
-        var pregen = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+        // -- MON DOSSIER : les médias personnels du système --
+        var folderGroup = Group(card, L.T("MON DOSSIER", "MY FOLDER"));
+        var folderRow = new WrapPanel();
+        folderRow.Children.Add(Ui.Button(L.T("Ouvrir mon dossier", "Open my folder"), (_, _) => OpenUserFolder()));
+        folderRow.Children.Add(Ui.Button(L.T("Réindexer (alias)", "Reindex (aliases)"), (_, _) => _ = ReindexAsync()));
+        folderRow.Children.Add(Ui.MutedLabel(L.T("(ou glissez-déposez vos fichiers directement sur cette carte)",
+            "(or drag & drop your files straight onto this card)")));
+        folderGroup.Children.Add(folderRow);
+
+        // -- PRÉ-GÉNÉRATION : les templates rendus d'avance --
+        var pregenGroup = Group(card, L.T("PRÉ-GÉNÉRATION DES TEMPLATES", "TEMPLATE PRE-GENERATION"));
+        var pregen = new WrapPanel();
         pregen.Children.Add(Ui.Button(L.T("Pré-générer ce système", "Pre-generate this system"), (_, _) => _ = PregenerateAsync(ScopeSystem())));
         pregen.Children.Add(Ui.Button(L.T("Pré-générer tous les systèmes affectés", "Pre-generate every assigned system"), (_, _) => _ = PregenerateAsync(null)));
-        pregen.Children.Add(Ui.MutedLabel(L.T("(compositions templatées rendues d'avance : navigation ES instantanée)",
-            "(templated compositions rendered ahead: instant ES navigation)")));
-        card.Children.Add(pregen);
+        pregen.Children.Add(Ui.MutedLabel(L.T("(navigation ES instantanée)", "(instant ES navigation)")));
+        pregenGroup.Children.Add(pregen);
 
         card.Children.Add(_testPanel);
         _status.TextWrapping = TextWrapping.Wrap;
@@ -183,29 +204,47 @@ public sealed class PrioritiesCard : UserControl
         {
             var index = i;
             var source = _chain[i];
-            var row = new WrapPanel { Margin = new Thickness(8, 2, 0, 2) };
+
+            // fixed-width columns: every badge and every button lines up
+            var row = new Grid { Margin = new Thickness(8, 2, 0, 2) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
             var badge = new Border
             {
                 Background = Ui.Brush(Color.FromRgb(0x2E, 0x2E, 0x44)),
                 CornerRadius = new CornerRadius(7),
-                Padding = new Thickness(8, 3, 8, 3),
-                Margin = new Thickness(0, 0, 8, 0),
+                Padding = new Thickness(10, 4, 10, 4),
+                Margin = new Thickness(0, 0, 10, 0),
                 Child = new TextBlock
                 {
-                    Text = $"{index + 1}. {LabelOf(source)}",
+                    Text = $"{index + 1}.  {LabelOf(source)}",
                     FontSize = 11,
                     FontWeight = FontWeights.SemiBold,
-                    Foreground = Ui.Foreground
+                    Foreground = Ui.Foreground,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextTrimming = TextTrimming.CharacterEllipsis
                 }
             };
             row.Children.Add(badge);
-            row.Children.Add(Ui.Button("↑", (_, _) => Move(index, -1)));
-            row.Children.Add(Ui.Button("↓", (_, _) => Move(index, +1)));
-            row.Children.Add(Ui.Button("✕", (_, _) =>
+
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal };
+            var up = Ui.Button("↑", (_, _) => Move(index, -1));
+            up.Padding = new Thickness(8, 3, 8, 3);
+            buttons.Children.Add(up);
+            var down = Ui.Button("↓", (_, _) => Move(index, +1));
+            down.Padding = new Thickness(8, 3, 8, 3);
+            buttons.Children.Add(down);
+            var remove = Ui.Button("✕", (_, _) =>
             {
                 _chain.RemoveAt(index);
                 RenderChain();
-            }));
+            });
+            remove.Padding = new Thickness(8, 3, 8, 3);
+            buttons.Children.Add(remove);
+            Grid.SetColumn(buttons, 1);
+            row.Children.Add(buttons);
+
             _chainPanel.Children.Add(row);
         }
     }

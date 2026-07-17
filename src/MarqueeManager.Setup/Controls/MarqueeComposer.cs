@@ -46,11 +46,69 @@ public sealed class MarqueeComposer : UserControl
 
     public event Action? Changed;
 
+    /// <summary>Raised when the selection or the layer stack changed — lets a
+    /// host window drive an external layers panel + inspector (RetroCreator
+    /// Designer layout) instead of the inline inspector row.</summary>
+    public event Action? StackChanged;
+
     private sealed class LayerVisual
     {
         public required MarqueeLayer Model { get; init; }
         public required FrameworkElement Element { get; init; }
         public double AspectRatio { get; init; } = 1.0; // width / height
+    }
+
+    // ================= external panel API =================
+
+    /// <summary>Layer models, BACK to FRONT (the canvas z-order).</summary>
+    public IReadOnlyList<MarqueeLayer> LayerModels => _layers.Select(l => l.Model).ToList();
+
+    public MarqueeLayer? SelectedLayer => _selected?.Model;
+
+    /// <summary>Hides the inline inspector row when a host window provides its own.</summary>
+    public bool InlineInspector
+    {
+        set => _externalPanel = !value;
+    }
+
+    private bool _externalPanel;
+
+    public void SelectLayer(MarqueeLayer? layer)
+    {
+        Select(layer == null ? null : _layers.FirstOrDefault(l => ReferenceEquals(l.Model, layer)));
+        Render();
+    }
+
+    public void ReorderLayer(MarqueeLayer layer, int direction)
+    {
+        var visual = _layers.FirstOrDefault(l => ReferenceEquals(l.Model, layer));
+        if (visual == null) return;
+        var index = _layers.IndexOf(visual);
+        var target = index + direction;
+        if (target < 0 || target >= _layers.Count) return;
+        (_layers[index], _layers[target]) = (_layers[target], _layers[index]);
+        Render();
+        Changed?.Invoke();
+        StackChanged?.Invoke();
+    }
+
+    public void DeleteLayer(MarqueeLayer layer)
+    {
+        var visual = _layers.FirstOrDefault(l => ReferenceEquals(l.Model, layer));
+        if (visual == null) return;
+        if (_selected == visual) Select(null);
+        _layers.Remove(visual);
+        Render();
+        Changed?.Invoke();
+        StackChanged?.Invoke();
+    }
+
+    /// <summary>Applies a change to a specific layer (external inspector).</summary>
+    public void ApplyToLayer(MarqueeLayer layer, Action<MarqueeLayer> change)
+    {
+        change(layer);
+        Render();
+        Changed?.Invoke();
     }
 
     public MarqueeComposer(int targetWidth, int targetHeight, string mediaRoot)
@@ -254,6 +312,7 @@ public sealed class MarqueeComposer : UserControl
         SyncInspector();
         Render();
         Changed?.Invoke();
+        StackChanged?.Invoke(); // external inspector sliders follow the wheel
         e.Handled = true;
     }
 
@@ -286,6 +345,7 @@ public sealed class MarqueeComposer : UserControl
         (_layers[index], _layers[target]) = (_layers[target], _layers[index]);
         Render();
         Changed?.Invoke();
+        StackChanged?.Invoke();
     }
 
     private void DeleteSelected()
@@ -304,11 +364,12 @@ public sealed class MarqueeComposer : UserControl
     private void Select(LayerVisual? layer)
     {
         _selected = layer;
-        _inspector.Visibility = layer == null ? Visibility.Collapsed : Visibility.Visible;
+        _inspector.Visibility = layer == null || _externalPanel ? Visibility.Collapsed : Visibility.Visible;
         _selectionLabel.Text = layer == null
             ? ""
             : L.T($"Calque sélectionné : {layer.Model.AssetKey}", $"Selected layer: {layer.Model.AssetKey}");
         SyncInspector();
+        StackChanged?.Invoke();
     }
 
     private void SyncInspector()
