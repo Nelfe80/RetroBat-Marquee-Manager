@@ -357,14 +357,14 @@ public sealed class MarqueeController : IDisposable
 
     /// <summary>Information overlays are keyed by owner; each owner belongs to a
     /// component type, which decides which surfaces show it.</summary>
-    private static string ComponentForOwner(string owner) => owner.ToLowerInvariant() switch
+    private static string ComponentForOwner(string owner)
     {
-        "hiscore" => "overlay.hiscore",
-        "live-score" => "overlay.live.score",
-        "live-timer" => "overlay.live.timer",
-        _ when owner.StartsWith("ra", StringComparison.OrdinalIgnoreCase) => "overlay.ra.info",
-        _ => "overlay.ra.info"
-    };
+        // Owners carry suffixes (live-score-p1, live-timer:default) — match by prefix.
+        if (owner.StartsWith("hiscore", StringComparison.OrdinalIgnoreCase)) return "overlay.hiscore";
+        if (owner.StartsWith("live-score", StringComparison.OrdinalIgnoreCase)) return "overlay.live.score";
+        if (owner.StartsWith("live-timer", StringComparison.OrdinalIgnoreCase)) return "overlay.live.timer";
+        return "overlay.ra.info";
+    }
 
     private Core.Surfaces.SurfaceDefinition? SurfaceOf(string target)
         => _surfaces.TryGetValue(target, out var surface) ? surface : null;

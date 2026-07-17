@@ -701,41 +701,37 @@ public sealed class SceneLampsCard : UserControl
         var outputLabel = Ui.MutedLabel("Output");
         outputLabel.Margin = new Thickness(0, 0, 6, 0);
         line.Children.Add(outputLabel);
-        var output = new ComboBox
-        {
-            Width = 160,
-            FontSize = 12,
-            IsEditable = true,
-            Margin = new Thickness(0, 2, 8, 2),
-            VerticalContentAlignment = VerticalAlignment.Center
-        };
+        // STRICT picker: only the outputs the game actually exposes
+        // (APIExpose resources\outputs\mame\<rom>.json) are selectable — no
+        // free text, a wrong name would never light up anyway
+        var output = Ui.ComboBox(170);
+        output.Items.Add(new ComboBoxItem { Content = L.T("(non câblée)", "(not wired)"), Tag = "" });
         foreach (var known in _knownOutputs)
         {
-            output.Items.Add(known);
+            output.Items.Add(new ComboBoxItem { Content = known, Tag = known });
         }
-        // the lamp's CURRENT output pre-selects in the list; an output the game
-        // file doesn't list (or no file at all) becomes an item so it still shows
+        // a wiring the file doesn't list (older scene) stays visible
         if (lamp.Output.Length > 0
             && !_knownOutputs.Any(k => k.Equals(lamp.Output, StringComparison.OrdinalIgnoreCase)))
         {
-            output.Items.Insert(0, lamp.Output);
+            output.Items.Add(new ComboBoxItem { Content = lamp.Output + L.T(" (inconnu)", " (unknown)"), Tag = lamp.Output });
         }
-        output.SelectedItem = output.Items.OfType<string>()
-            .FirstOrDefault(k => k.Equals(lamp.Output, StringComparison.OrdinalIgnoreCase));
-        output.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) =>
-        {
-            lamp.Output = output.Text.Trim();
-            Render();
-        }));
+        output.SelectedItem = output.Items.OfType<ComboBoxItem>()
+            .FirstOrDefault(item => (item.Tag as string ?? "").Equals(lamp.Output, StringComparison.OrdinalIgnoreCase))
+            ?? output.Items[0];
         output.SelectionChanged += (_, _) =>
         {
-            if (output.SelectedItem is string chosen)
+            if ((output.SelectedItem as ComboBoxItem)?.Tag is string chosen)
             {
                 lamp.Output = chosen;
                 Render();
             }
         };
         line.Children.Add(output);
+        if (_knownOutputs.Count == 0)
+        {
+            line.Children.Add(Ui.MutedLabel(L.T("(aucun output connu pour ce jeu)", "(no known output for this game)"), 11));
+        }
 
         line.Children.Add(Ui.Button(L.T("Supprimer", "Delete"), (_, _) =>
         {
