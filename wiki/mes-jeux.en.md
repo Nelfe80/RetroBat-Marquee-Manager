@@ -8,13 +8,11 @@
 
 Pick a system (only systems with **installed games** in `roms\` show up — the arcade family is grouped), then type a game or rom name: “lunar” finds *Lunar Lander* (`llander`), even without scraped media. Names come from your gamelist, completed by the APIExpose library.
 
-## The displayed marquee
+## My marquee
 
 The sheet shows **the marquee currently displayed** for this game and its **source** (your creation, your folder, scraped, generated…), resolved through the system's priority rule — the link opens My systems to change it. When the source is yours (creation or a file from your folder), a button **deletes** it: the next source in the chain takes over.
 
-## Graphic creations — one per surface
-
-Every **surface carries its own creation**: creation A on the marquee surface and creation B on the topper can coexist for the same game. The sheet lists the existing creations (click = edit that one); “**Open the graphic creation interface**” builds yours for the surface picked in the selector.
+Every **surface carries its own creation**: creation A on the marquee surface and creation B on the topper can coexist for the same game. Under the game name: the **surface picker**, “**Open the graphic creation interface**” and the **deletion of that surface's creation**; the sheet also lists the existing creations (click = edit that one).
 
 The interface: target (screen/surface) at the top, **media by type** on the left (click = pick the version in a per-source modal, static gradients included), canvas in the middle (drag, wheel = size, Shift+wheel = rotate), **layers** on the right (eye, padlock, drag & drop for z-order) with the selected layer's inspector (size, rotation, opacity, text, mirror).
 

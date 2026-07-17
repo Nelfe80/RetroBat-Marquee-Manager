@@ -4,9 +4,9 @@
 
 ![My systems view](assets/setup/setup-systems.png)
 
-## System graphic creation
+## My marquee
 
-The marquee shown when a **system** is selected in ES. Pick the system (only those with installed games appear; mame and fbneo keep their own creations), the **target surface** (each creation belongs to one surface), then “**Open the graphic creation interface**”. The preview shows what currently displays (your creation or the generated marquee); the **system fanart** comes from the active ES theme (carbon ships one for almost every system).
+The marquee shown when a **system** is selected in ES. Pick the system (only those with installed games appear; mame and fbneo keep their own creations): the current marquee preview, the **surface picker** (each creation belongs to one surface), “**Open the graphic creation interface**” and the **deletion of that surface's creation** then appear. The **system fanart** comes from the active ES theme (carbon ships one for almost every system).
 
 ## Per-system priorities
 

@@ -28,11 +28,11 @@ public sealed class GamesView : UserControl, IDisposable
     private GameIdentityIndex? _identity;
     private readonly Dictionary<string, Dictionary<string, string>> _namesCache = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, HashSet<string>> _present = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ComboBox _surfacePicker = Ui.ComboBox(220);
     private int _openSequence;
 
-    private string? SelectedSurfaceId()
-        => (_surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
+    /// <summary>Surface picked in the "Mon marquee" card — the graphic creation
+    /// targets THIS surface (each creation is independent per surface).</summary>
+    private string? _selectedSurfaceId;
 
     private readonly ComboBox _systems = Ui.ComboBox(180);
     private readonly TextBox _search = new() { FontSize = 12, Padding = new Thickness(8, 6, 26, 6) };
@@ -106,29 +106,6 @@ public sealed class GamesView : UserControl, IDisposable
         };
         searchHost.Children.Add(magnifier);
         pickerRow.Children.Add(searchHost);
-
-        // surface picker (when several) + the graphic-creation entry point:
-        // each creation is INDEPENDENT per surface
-        var surfaces = new SurfacesStore(pluginRoot).Load();
-        foreach (var surface in surfaces)
-        {
-            _surfacePicker.Items.Add(new ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id });
-        }
-        if (_surfacePicker.Items.Count > 0) _surfacePicker.SelectedIndex = 0;
-        if (_surfacePicker.Items.Count > 1) pickerRow.Children.Add(_surfacePicker);
-        pickerRow.Children.Add(Ui.Button(
-            L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"), (_, _) =>
-            {
-                if (_current is { } entry)
-                {
-                    OpenComposer(entry, _currentPreload!, SelectedSurfaceId());
-                }
-                else
-                {
-                    _status.Text = L.T("Recherchez et ouvrez d'abord un jeu.", "Search and open a game first.");
-                    _status.Foreground = Ui.Error;
-                }
-            }));
         picker.Children.Add(pickerRow);
 
         picker.Children.Add(_results);
@@ -462,10 +439,17 @@ public sealed class GamesView : UserControl, IDisposable
         return image;
     }
 
+    private static string CategoryOfSurface(SurfaceModel surface) => surface.Category.ToLowerInvariant() switch
+    {
+        "topper" => "toppers",
+        "dmd-virtual" => "dmd",
+        _ => "marquees"
+    };
+
     private void BuildComposerCard(GameEntry entry, GamePreload data)
     {
         var card = new StackPanel();
-        card.Children.Add(Ui.SectionHeader(L.T("Marquee affiché & créations graphiques", "Displayed marquee & graphic creations")));
+        card.Children.Add(Ui.SectionHeader(L.T("Mon marquee", "My marquee")));
 
         // the marquee CURRENTLY displayed for this game, resolved through the
         // system's priority chain — never a black box
@@ -520,18 +504,60 @@ public sealed class GamesView : UserControl, IDisposable
                 "No media resolved by the chain for this game (the stream default shows).")));
         }
 
+        // surface picker + entry point, UNDER the game: the creation targets the
+        // picked surface, and its creation can be deleted right here
+        var surfaces = new SurfacesStore(_pluginRoot).Load();
+        var surfaceRow = new WrapPanel { Margin = new Thickness(0, 8, 0, 4) };
+        var surfaceLabel = Ui.MutedLabel(L.T("Surface :", "Surface:"));
+        surfaceLabel.Margin = new Thickness(0, 0, 6, 0);
+        surfaceLabel.VerticalAlignment = VerticalAlignment.Center;
+        surfaceRow.Children.Add(surfaceLabel);
+        var surfacePicker = Ui.ComboBox(210);
+        foreach (var surface in surfaces)
+        {
+            var item = new ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id };
+            surfacePicker.Items.Add(item);
+            if (surface.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase)) surfacePicker.SelectedItem = item;
+        }
+        if (surfacePicker.SelectedItem == null && surfacePicker.Items.Count > 0) surfacePicker.SelectedIndex = 0;
+        _selectedSurfaceId = (surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
+        surfaceRow.Children.Add(surfacePicker);
+        surfaceRow.Children.Add(Ui.Button(
+            L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"),
+            (_, _) => OpenComposer(entry, data, _selectedSurfaceId), primary: true));
+
+        var deleteButton = Ui.Button(L.T("Supprimer la création de cette surface", "Delete this surface's creation"), (_, _) =>
+        {
+            var surface = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
+            if (surface == null) return;
+            new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface), surface.Id).Delete(entry.System, entry.Rom);
+            _status.Text = L.T($"Création de la surface {surface.Id} supprimée.", $"Surface {surface.Id} creation deleted.");
+            _status.Foreground = Ui.Muted;
+            if (_current != null) OpenGame(_current);
+        });
+        void RefreshDeleteButton()
+        {
+            var surface = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
+            deleteButton.Visibility = surface != null
+                && new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface), surface.Id).HasComposition(entry.System, entry.Rom)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+        surfacePicker.SelectionChanged += (_, _) =>
+        {
+            _selectedSurfaceId = (surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
+            RefreshDeleteButton();
+        };
+        surfaceRow.Children.Add(deleteButton);
+        RefreshDeleteButton();
+        card.Children.Add(surfaceRow);
+
         // each graphic creation is INDEPENDENT per surface: creation A on
         // surface 1, creation B on surface 2, for the same game
-        var surfaces = new SurfacesStore(_pluginRoot).Load();
         var creations = 0;
         foreach (var surface in surfaces)
         {
-            var category = surface.Category.ToLowerInvariant() switch
-            {
-                "topper" => "toppers",
-                "dmd-virtual" => "dmd",
-                _ => "marquees"
-            };
+            var category = CategoryOfSurface(surface);
             var store = new MarqueeProjectStore(_pluginRoot, category, surface.Id);
             if (!store.HasComposition(entry.System, entry.Rom)) continue;
             creations++;
@@ -568,10 +594,6 @@ public sealed class GamesView : UserControl, IDisposable
                 "No graphic creation yet: each surface can carry its own (fanart, logo, gradients, texts, downloaded media).")));
         }
 
-        var actions = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
-        actions.Children.Add(Ui.Button(L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"),
-            (_, _) => OpenComposer(entry, data, SelectedSurfaceId()), primary: true));
-        card.Children.Add(actions);
         _gameHost.Children.Add(Ui.Card(card));
     }
 

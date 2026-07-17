@@ -35,15 +35,16 @@ public sealed class MesSystemesView : UserControl
             return;
         }
 
-        // PER-SYSTEM graphic creation — first thing on the page: same creation
-        // window as the games, fed with the system's own media. Each creation
-        // is INDEPENDENT per surface.
+        // "Mon marquee" — same block as the game sheet: pick the SYSTEM, then
+        // the displayed marquee, the surface picker, the creation entry point
+        // and the per-surface deletion appear. Each creation is INDEPENDENT
+        // per surface.
         var composeCard = new StackPanel();
-        composeCard.Children.Add(Ui.SectionHeader(L.T("Création graphique d'un système", "System graphic creation")));
+        composeCard.Children.Add(Ui.SectionHeader(L.T("Mon marquee", "My marquee")));
         composeCard.Children.Add(Ui.MutedLabel(L.T(
             "Le marquee affiché quand un SYSTÈME est sélectionné dans ES. Créez-le visuellement (logo, marquee généré, fanart du thème, textes) — il prime sur le rendu automatique.",
             "The marquee shown when a SYSTEM is selected in ES. Create it visually (logo, generated marquee, theme fanart, texts) — it overrides the automatic render.")));
-        var composeRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 4, 0, 0) };
+        var systemRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 4, 0, 0) };
         var systemPicker = Ui.ComboBox(200);
         // nothing preselected; only systems with at least one INSTALLED game;
         // mame/fbneo stay listed (they carry their own chains and creations)
@@ -57,18 +58,11 @@ public sealed class MesSystemesView : UserControl
             systemPicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = system, Tag = system });
         }
         systemPicker.SelectedIndex = 0;
-        composeRow.Children.Add(systemPicker);
+        systemRow.Children.Add(systemPicker);
+        composeCard.Children.Add(systemRow);
 
-        // surface picker: the creation targets ONE surface
-        var surfacePicker = Ui.ComboBox(200);
-        foreach (var surface in new SurfacesStore(pluginRoot).Load())
-        {
-            surfacePicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id });
-        }
-        if (surfacePicker.Items.Count > 0) surfacePicker.SelectedIndex = 0;
-        if (surfacePicker.Items.Count > 1) composeRow.Children.Add(surfacePicker);
-
-        // live preview: the marquee CURRENTLY displayed for the picked system
+        // the whole "Mon marquee" body only shows once a system is picked
+        var body = new StackPanel { Visibility = System.Windows.Visibility.Collapsed };
         var preview = new System.Windows.Controls.Image
         {
             MaxHeight = 100,
@@ -76,53 +70,95 @@ public sealed class MesSystemesView : UserControl
             Margin = new System.Windows.Thickness(0, 6, 0, 0)
         };
         var previewCaption = Ui.MutedLabel("");
-        void RefreshPreview()
+        body.Children.Add(preview);
+        body.Children.Add(previewCaption);
+
+        var surfaces = new SurfacesStore(pluginRoot).Load();
+        var surfaceRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 6, 0, 0) };
+        var surfaceLabel = Ui.MutedLabel(L.T("Surface :", "Surface:"));
+        surfaceLabel.Margin = new System.Windows.Thickness(0, 0, 6, 0);
+        surfaceLabel.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+        surfaceRow.Children.Add(surfaceLabel);
+        var surfacePicker = Ui.ComboBox(210);
+        foreach (var surface in surfaces)
         {
-            var system = (systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
-            preview.Source = null;
-            if (system == null)
+            surfacePicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id });
+        }
+        if (surfacePicker.Items.Count > 0) surfacePicker.SelectedIndex = 0;
+        surfaceRow.Children.Add(surfacePicker);
+
+        string? SelectedSystem() => (systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
+        string? SelectedSurface() => (surfacePicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
+        SurfaceModel? SurfaceOf(string? id) => surfaces.FirstOrDefault(s => s.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        static string CategoryOf(SurfaceModel surface) => surface.Category.ToLowerInvariant() switch
+        {
+            "topper" => "toppers",
+            "dmd-virtual" => "dmd",
+            _ => "marquees"
+        };
+
+        System.Windows.Controls.Button deleteButton = null!;
+        surfaceRow.Children.Add(Ui.Button(L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"), (_, _) =>
+        {
+            if (SelectedSystem() is not { } system) return;
+            var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system), SelectedSurface())
             {
-                previewCaption.Text = ""; // nothing shown until an explicit pick
-                return;
-            }
+                Owner = System.Windows.Window.GetWindow(this)
+            };
+            window.ShowDialog();
+            Refresh();
+        }, primary: true));
+
+        deleteButton = Ui.Button(L.T("Supprimer la création de cette surface", "Delete this surface's creation"), (_, _) =>
+        {
+            if (SelectedSystem() is not { } system || SurfaceOf(SelectedSurface()) is not { } surface) return;
+            new MarqueeProjectStore(pluginRoot, CategoryOf(surface), surface.Id).Delete("systems", system);
+            Refresh();
+        });
+        surfaceRow.Children.Add(deleteButton);
+        body.Children.Add(surfaceRow);
+        composeCard.Children.Add(body);
+
+        void Refresh()
+        {
+            var system = SelectedSystem();
+            body.Visibility = system == null ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+            preview.Source = null;
+            if (system == null) return;
+
             var path = media.CurrentSystemMarquee(pluginRoot, system);
             previewCaption.Text = path == null
                 ? L.T("Aucun marquee système pour l'instant.", "No system marquee yet.")
                 : System.IO.Path.GetFileName(path).StartsWith("generated", StringComparison.OrdinalIgnoreCase)
                     ? L.T("Affiché actuellement : marquee généré.", "Currently displayed: generated marquee.")
                     : L.T("Affiché actuellement : votre création graphique.", "Currently displayed: your graphic creation.");
-            if (path == null) return;
-            try
+            if (path != null)
             {
-                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(path);
-                bitmap.DecodePixelWidth = 640;
-                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                preview.Source = bitmap;
+                try
+                {
+                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = new Uri(path);
+                    bitmap.DecodePixelWidth = 640;
+                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    preview.Source = bitmap;
+                }
+                catch
+                {
+                    // unreadable image: caption only
+                }
             }
-            catch
-            {
-                // unreadable image: caption only
-            }
+
+            deleteButton.Visibility = SurfaceOf(SelectedSurface()) is { } surface
+                && new MarqueeProjectStore(pluginRoot, CategoryOf(surface), surface.Id).HasComposition("systems", system)
+                ? System.Windows.Visibility.Visible
+                : System.Windows.Visibility.Collapsed;
         }
-        systemPicker.SelectionChanged += (_, _) => RefreshPreview();
-        composeRow.Children.Add(Ui.Button(L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"), (_, _) =>
-        {
-            if ((systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag is not string system) return;
-            var surfaceId = (surfacePicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
-            var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system), surfaceId)
-            {
-                Owner = System.Windows.Window.GetWindow(this)
-            };
-            window.ShowDialog();
-        }, primary: true));
-        composeCard.Children.Add(composeRow);
-        composeCard.Children.Add(preview);
-        composeCard.Children.Add(previewCaption);
-        RefreshPreview();
+        systemPicker.SelectionChanged += (_, _) => Refresh();
+        surfacePicker.SelectionChanged += (_, _) => Refresh();
+        Refresh();
         page.Children.Add(Ui.Card(composeCard));
 
         var templates = new StackPanel();

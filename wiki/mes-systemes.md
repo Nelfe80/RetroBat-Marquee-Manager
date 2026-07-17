@@ -4,9 +4,9 @@
 
 ![Vue Mes systèmes](assets/setup/setup-systems.png)
 
-## Création graphique d'un système
+## Mon marquee
 
-Le marquee affiché quand un **système** est sélectionné dans ES. Choisissez le système (seuls ceux avec des jeux installés apparaissent ; mame et fbneo gardent leurs créations propres), la **surface cible** (chaque création est propre à une surface), et « **Ouvrir l'interface de création graphique** ». L'aperçu montre ce qui s'affiche actuellement (votre création ou le marquee généré) ; le **fanart du système** vient du thème ES actif (carbon en fournit pour presque tous les systèmes).
+Le marquee affiché quand un **système** est sélectionné dans ES. Choisissez le système (seuls ceux avec des jeux installés apparaissent ; mame et fbneo gardent leurs créations propres) : l'aperçu du marquee actuel, le **sélecteur de surface** (chaque création est propre à une surface), « **Ouvrir l'interface de création graphique** » et la **suppression de la création de cette surface** apparaissent alors. Le **fanart du système** vient du thème ES actif (carbon en fournit pour presque tous les systèmes).
 
 ## Priorités par système
 

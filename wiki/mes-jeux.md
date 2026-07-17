@@ -8,13 +8,11 @@
 
 Choisissez un système (seuls les systèmes avec des **jeux installés** dans `roms\` apparaissent — la famille arcade est regroupée), puis tapez un nom de jeu ou de rom : « lunar » trouve *Lunar Lander* (`llander`), même sans médias scrapés. Les noms viennent de votre gamelist, complétés par la bibliothèque APIExpose.
 
-## Le marquee affiché
+## Mon marquee
 
 La fiche montre **le marquee actuellement affiché** pour ce jeu et sa **source** (votre création, votre dossier, le scrapé, le généré…), résolue par la règle de priorité du système — le lien ouvre Mes systèmes pour la modifier. Si la source vous appartient (création ou fichier de votre dossier), un bouton la **supprime** : la source suivante de la chaîne reprend la main.
 
-## Créations graphiques — une par surface
-
-Chaque **surface a sa propre création** : une création A sur la surface marquee et une création B sur le topper peuvent coexister pour le même jeu. La fiche liste les créations existantes (cliquer = éditer celle-là) ; « **Ouvrir l'interface de création graphique** » crée la vôtre pour la surface choisie dans le sélecteur.
+Chaque **surface a sa propre création** : une création A sur la surface marquee et une création B sur le topper peuvent coexister pour le même jeu. Sous le nom du jeu : le **sélecteur de surface**, « **Ouvrir l'interface de création graphique** » et la **suppression de la création de cette surface** ; la fiche liste aussi les créations existantes (cliquer = éditer celle-là).
 
 L'interface : cible (écran/surface) en haut, **médias par type** à gauche (clic = choisir la version dans une modale par source, gradients statiques inclus), canvas au centre (glisser, molette = taille, Maj+molette = rotation), **calques** à droite (œil, cadenas, glisser-déposer pour l'ordre) avec l'inspecteur du calque sélectionné (taille, rotation, opacité, texte, miroir).
 
