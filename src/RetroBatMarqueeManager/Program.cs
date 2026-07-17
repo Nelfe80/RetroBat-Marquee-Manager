@@ -30,6 +30,18 @@ public static class Program
         if (!ownsMutex) return;
 
         var config = new IniConfigService();
+
+        // The CPU lighting raster can saturate the machine and starve ES itself
+        // (its script queue spawns one process per selection): events.ini then
+        // lags minutes behind the frontend. Below-normal priority makes the
+        // marquee the first thing to slow down, never the frontend.
+        if (!config.GetValue("Settings", "ProcessPriority", "belownormal")
+                .Equals("normal", StringComparison.OrdinalIgnoreCase))
+        {
+            try { Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal; }
+            catch { /* unprivileged environments keep the default priority */ }
+        }
+
         using var host = Host.CreateDefaultBuilder(args)
             .ConfigureLogging(logging =>
             {
