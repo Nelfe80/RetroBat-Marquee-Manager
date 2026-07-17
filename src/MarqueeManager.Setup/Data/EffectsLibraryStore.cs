@@ -192,5 +192,81 @@ public sealed class EffectsLibraryStore
             new() { Kind = "shake", DurationMs = 450 },
             new() { Kind = "sprite", Sprite = "impact.gif", Count = 2, Motion = "pop", DurationMs = 700, Scale = 1.5 }
         });
+
+        // ---- built on the extended sprite pack (full_* = unique 100 %-width backdrops) ----
+        yield return ("KO !", new List<EffectRule>
+        {
+            new() { Kind = "shake", DurationMs = 500 },
+            new() { Kind = "tint", Color = "#8a0000", DurationMs = 2200, Dip = 0.35 },
+            new() { Kind = "sprite", Sprite = "KO.gif", Count = 1, Motion = "pop", DurationMs = 2000, Scale = 3.0, Grow = true, Placement = "center", DelayMs = 150 }
+        });
+        yield return ("Célébration (fond)", new List<EffectRule>
+        {
+            new() { Kind = "strobe", Color = "#ffb300", DurationMs = 900 },
+            new() { Kind = "sprite", Sprite = "full_celebrate.gif", Count = 1, DurationMs = 3500, DelayMs = 200 }
+        });
+        yield return ("Baston (fond)", new List<EffectRule>
+        {
+            new() { Kind = "sprite", Sprite = "full_fighting.gif", Count = 1, DurationMs = 3000 },
+            new() { Kind = "pulse", Color = "#ff7a18", DurationMs = 800, DelayMs = 200 }
+        });
+        yield return ("Pluie battante (fond)", new List<EffectRule>
+        {
+            new() { Kind = "tint", Color = "#10305a", DurationMs = 4000, Dip = 0.25 },
+            new() { Kind = "sprite", Sprite = "full_raining.gif", Count = 1, DurationMs = 4000 }
+        });
+        yield return ("Neige (fond + flocons)", new List<EffectRule>
+        {
+            new() { Kind = "sprite", Sprite = "full_snow.gif", Count = 1, DurationMs = 4500 },
+            new() { Kind = "sprite", Sprite = "snwoflake.gif", Count = 6, Motion = "fall", DurationMs = 3500, DelayMs = 300 }
+        });
+        yield return ("Orage (fond + éclairs)", new List<EffectRule>
+        {
+            new() { Kind = "sprite", Sprite = "full_storm.gif", Count = 1, DurationMs = 4000 },
+            new() { Kind = "strobe", Color = "#e8ecff", DurationMs = 500, DelayMs = 600 },
+            new() { Kind = "strobe", Color = "#e8ecff", DurationMs = 350, DelayMs = 2200 }
+        });
+        yield return ("Nuit étoilée (fond)", new List<EffectRule>
+        {
+            new() { Kind = "sprite", Sprite = "full_stars.gif", Count = 1, DurationMs = 4500 },
+            new() { Kind = "sprite", Sprite = "sparkles.gif", Count = 5, Motion = "pop", DurationMs = 2500, DelayMs = 500 }
+        });
+        yield return ("Champ de fleurs (fond)", new List<EffectRule>
+        {
+            new() { Kind = "sprite", Sprite = "full_flowers.gif", Count = 1, DurationMs = 4000 }
+        });
+        yield return ("Grand voyage (fond)", new List<EffectRule>
+        {
+            new() { Kind = "sprite", Sprite = "full_travel.gif", Count = 1, DurationMs = 4500 }
+        });
+        yield return ("Anneaux", new List<EffectRule>
+        {
+            new() { Kind = "pulse", Color = "#ffd944", DurationMs = 400 },
+            new() { Kind = "sprite", Sprite = "ring.gif", Count = 6, Motion = "rise", DurationMs = 1600, Placement = "spread" }
+        });
+        yield return ("Étincelles", new List<EffectRule>
+        {
+            new() { Kind = "sprite", Sprite = "sparkles.gif", Count = 5, Motion = "pop", DurationMs = 1200 }
+        });
+        yield return ("Frisson (yeux + araignée)", new List<EffectRule>
+        {
+            new() { Kind = "blackout", DurationMs = 2000, Dip = 0.85 },
+            new() { Kind = "sprite", Sprite = "eyes.gif", Count = 3, Motion = "pop", DurationMs = 2200, DelayMs = 400, Scale = 1.5 },
+            new() { Kind = "sprite", Sprite = "spider.gif", Count = 1, Motion = "fall", DurationMs = 2500, DelayMs = 900, Scale = 2.0 }
+        });
+        yield return ("Power-up", new List<EffectRule>
+        {
+            new() { Kind = "pulse", Color = "#39d353", DurationMs = 600 },
+            new() { Kind = "sprite", Sprite = "pulse.gif", Count = 1, Motion = "pop", DurationMs = 1500, Scale = 2.0, Grow = true, Placement = "center" }
+        });
+        yield return ("Étoile tournoyante", new List<EffectRule>
+        {
+            new() { Kind = "sprite", Sprite = "turning_star.gif", Count = 1, Motion = "pop", DurationMs = 1800, Scale = 3.0, Grow = true, Placement = "center" }
+        });
+        yield return ("Torches", new List<EffectRule>
+        {
+            new() { Kind = "tint", Color = "#3a1c00", DurationMs = 3000, Dip = 0.3 },
+            new() { Kind = "sprite", Sprite = "torch.gif", Count = 2, Motion = "pop", DurationMs = 3000, Scale = 2.0, Placement = "spread" }
+        });
     }
 }

@@ -247,7 +247,7 @@ public sealed class EffectBindingDialog : Window
             // size / growth / placement — the pixel-art knobs
             var line2b = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
             var scalePicker = Ui.ComboBox(110);
-            foreach (var percent in new[] { 100, 150, 200, 300 })
+            foreach (var percent in new[] { 100, 150, 200, 300, 400, 500, 750, 1000 })
             {
                 var item = new ComboBoxItem { Content = percent + " %", Tag = percent };
                 scalePicker.Items.Add(item);

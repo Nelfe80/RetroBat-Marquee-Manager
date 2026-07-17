@@ -35,19 +35,9 @@ public sealed class MesSystemesView : UserControl
             return;
         }
 
-        var templates = new StackPanel();
-        templates.Children.Add(Ui.SectionHeader(L.T("Templates de composition", "Composition templates")));
-        templates.Children.Add(Ui.MutedLabel(L.T(
-            "4 gabarits automatiques (fanart + gradient selon la luminance + logo) : 1920×360, 1280×400, 920×360 et vertical 1080×1920. "
-            + "Affectez-les dans les priorités (« Template … ») : chaque jeu du système reçoit sa composition, rendue en tâche de fond ou pré-générée en masse.",
-            "4 automatic recipes (fanart + luminance-driven gradient + logo): 1920×360, 1280×400, 920×360 and vertical 1080×1920. "
-            + "Assign them in the priorities (“Template …”): every game of the system gets its composition, rendered in the background or pre-generated in bulk.")));
-        page.Children.Add(Ui.Card(templates));
-
-        page.Children.Add(Ui.Card(new PrioritiesCard(pluginRoot, media, identity)));
-
-        // manual PER-SYSTEM composition (media\marquees\systems\<sys>.png):
-        // same composer window as the games, fed with the system's own media
+        // manual PER-SYSTEM composition (media\marquees\systems\<sys>.png) —
+        // first thing on the page: same composer window as the games, fed with
+        // the system's own media
         var composeCard = new StackPanel();
         composeCard.Children.Add(Ui.SectionHeader(L.T("Composition d'un système", "System composition")));
         composeCard.Children.Add(Ui.MutedLabel(L.T(
@@ -72,6 +62,17 @@ public sealed class MesSystemesView : UserControl
         }, primary: true));
         composeCard.Children.Add(composeRow);
         page.Children.Add(Ui.Card(composeCard));
+
+        var templates = new StackPanel();
+        templates.Children.Add(Ui.SectionHeader(L.T("Templates de composition", "Composition templates")));
+        templates.Children.Add(Ui.MutedLabel(L.T(
+            "4 gabarits automatiques (fanart + gradient selon la luminance + logo) : 1920×360, 1280×400, 920×360 et vertical 1080×1920. "
+            + "Affectez-les dans les priorités (« Template … ») : chaque jeu du système reçoit sa composition, rendue en tâche de fond ou pré-générée en masse.",
+            "4 automatic recipes (fanart + luminance-driven gradient + logo): 1920×360, 1280×400, 920×360 and vertical 1080×1920. "
+            + "Assign them in the priorities (“Template …”): every game of the system gets its composition, rendered in the background or pre-generated in bulk.")));
+        page.Children.Add(Ui.Card(templates));
+
+        page.Children.Add(Ui.Card(new PrioritiesCard(pluginRoot, media, identity)));
 
         Content = Ui.Page(page);
     }

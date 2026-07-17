@@ -55,6 +55,15 @@ public sealed class SurfaceModel
     public Dictionary<string, string> Params { get; } = new(StringComparer.OrdinalIgnoreCase);
     public List<ComponentModel> Components { get; } = new();
 
+    /// <summary>Display state the WHOLE surface participates in: "navigation"
+    /// (ES browsing), "ingame" or "both" (default). The runtime hides the
+    /// surface's window outside its state.</summary>
+    public string When { get; set; } = "both";
+
+    public bool ActiveIn(string state)
+        => When.Equals("both", StringComparison.OrdinalIgnoreCase)
+           || When.Equals(state, StringComparison.OrdinalIgnoreCase);
+
     public bool IsFullscreen => Width is null or <= 0 || Height is null or <= 0;
 }
 
@@ -138,7 +147,8 @@ public sealed class SurfacesStore
                     X = Int(element, "x"),
                     Y = Int(element, "y"),
                     Width = Int(element, "width"),
-                    Height = Int(element, "height")
+                    Height = Int(element, "height"),
+                    When = Str(element, "when", "both")
                 };
                 if (surface.Id.Length == 0) continue;
                 if (Int(element, "screen") is { } single && single >= 0) surface.Screens.Add(single);
@@ -254,6 +264,7 @@ public sealed class SurfacesStore
             element["width"] = surface.Width;
             element["height"] = surface.Height;
         }
+        if (!surface.When.Equals("both", StringComparison.OrdinalIgnoreCase)) element["when"] = surface.When;
         element["streams"] = surface.Streams;
         if (surface.Params.Count > 0) element["params"] = surface.Params;
         element["components"] = surface.Components.Select(component =>

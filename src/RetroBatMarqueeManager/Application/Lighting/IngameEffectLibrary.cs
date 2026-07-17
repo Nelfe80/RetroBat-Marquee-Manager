@@ -251,7 +251,7 @@ public sealed class IngameEffectLibrary
             Math.Clamp((int?)element.Attribute("count") ?? 1, 1, 8),
             ((string?)element.Attribute("motion") ?? "pop").ToLowerInvariant(),
             trailRaw != null ? ParseColor(trailRaw) : null,
-            Scale: Math.Clamp((double?)element.Attribute("scale") ?? 1.0, 0.25, 4.0),
+            Scale: Math.Clamp((double?)element.Attribute("scale") ?? 1.0, 0.25, 10.0),
             Grow: (bool?)element.Attribute("grow") ?? false,
             Placement: ((string?)element.Attribute("placement") ?? "random").ToLowerInvariant());
     }
@@ -378,7 +378,7 @@ public sealed class IngameEffectLibrary
             ReadInt(value, "delayMs") ?? 0,
             mediaPath,
             value.TryGetProperty("fullscreen", out var fullscreen) && fullscreen.ValueKind == JsonValueKind.True,
-            Scale: Math.Clamp(ReadDouble(value, "scale") ?? 1.0, 0.25, 4.0),
+            Scale: Math.Clamp(ReadDouble(value, "scale") ?? 1.0, 0.25, 10.0),
             Grow: value.TryGetProperty("grow", out var grow) && grow.ValueKind == JsonValueKind.True,
             Placement: ReadString(value, "placement")?.ToLowerInvariant() ?? "random");
     }

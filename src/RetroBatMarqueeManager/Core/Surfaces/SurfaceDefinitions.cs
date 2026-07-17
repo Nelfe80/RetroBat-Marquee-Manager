@@ -36,8 +36,16 @@ public sealed record SurfaceDefinition(
     TargetBounds? Bounds,
     IReadOnlyList<string> Streams,
     IReadOnlyDictionary<string, string> Params,
-    IReadOnlyList<ComponentDefinition> Components)
+    IReadOnlyList<ComponentDefinition> Components,
+    string When = "both")
 {
+    /// <summary>True when the WHOLE surface participates in the display state —
+    /// its window hides entirely otherwise (e.g. no surface over ES while
+    /// browsing, marquee band only ingame…).</summary>
+    public bool ActiveIn(string scene)
+        => When.Equals("both", StringComparison.OrdinalIgnoreCase)
+           || When.Equals(scene, StringComparison.OrdinalIgnoreCase);
+
     public bool HasComponent(string type)
         => Components.Any(c => c.Type.Equals(type, StringComparison.OrdinalIgnoreCase));
 
@@ -162,7 +170,9 @@ public static class SurfacesDocument
             }
         }
 
-        return new SurfaceDefinition(id, category, screens, bounds, streams, parameters, components);
+        var surfaceWhen = ReadString(element, "when");
+        return new SurfaceDefinition(id, category, screens, bounds, streams, parameters, components,
+            surfaceWhen.Length > 0 ? surfaceWhen : "both");
     }
 
     /// <summary>

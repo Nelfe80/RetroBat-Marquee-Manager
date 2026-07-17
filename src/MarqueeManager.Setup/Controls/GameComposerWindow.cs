@@ -37,9 +37,11 @@ public sealed class GameComposerWindow : Window
     private Target _target = null!;
 
     /// <summary>Game composition: media\marquees\&lt;system&gt;\&lt;rom&gt;.png.
-    /// System composition (system sheet): system="systems", rom=&lt;system id&gt;.</summary>
+    /// System composition (system sheet): system="systems", rom=&lt;system id&gt;.
+    /// initialCategory ("marquees"|"toppers"|"dmd") preselects the target —
+    /// clicking an existing composition in the game sheet edits THAT one.</summary>
     public GameComposerWindow(string pluginRoot, string system, string rom, string displayName,
-        IReadOnlyList<GameAsset> assets)
+        IReadOnlyList<GameAsset> assets, string? initialCategory = null)
     {
         _pluginRoot = pluginRoot;
         _system = system;
@@ -52,11 +54,15 @@ public sealed class GameComposerWindow : Window
         Title = L.T($"Composer — {displayName}", $"Compose — {displayName}");
         Width = 1180;
         Height = 760;
+        WindowState = WindowState.Maximized;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Background = Ui.Background;
 
         BuildTargets();
-        _target = _targets[0];
+        _target = (initialCategory != null
+                      ? _targets.FirstOrDefault(t => t.Category.Equals(initialCategory, StringComparison.OrdinalIgnoreCase))
+                      : null)
+                  ?? _targets[0];
 
         var root = new DockPanel { Margin = new Thickness(14) };
 
@@ -72,7 +78,7 @@ public sealed class GameComposerWindow : Window
         {
             targetPicker.Items.Add(new ComboBoxItem { Content = target.Label, Tag = target });
         }
-        targetPicker.SelectedIndex = 0;
+        targetPicker.SelectedIndex = Math.Max(0, _targets.IndexOf(_target));
         targetPicker.SelectionChanged += (_, _) =>
         {
             if ((targetPicker.SelectedItem as ComboBoxItem)?.Tag is Target target && target != _target)
@@ -165,33 +171,73 @@ public sealed class GameComposerWindow : Window
                 "No layer yet — pick a media on the left.")));
             return;
         }
+        _layersPanel.Children.Add(Ui.MutedLabel(L.T("Glissez une ligne pour changer l'ordre.",
+            "Drag a row to change the order."), 9));
 
         foreach (var layer in models.Reverse())
         {
-            var row = new DockPanel { Margin = new Thickness(0, 1, 0, 1) };
-
-            var buttons = new StackPanel { Orientation = Orientation.Horizontal };
-            var up = Ui.Button("↑", (_, _) => _composer.ReorderLayer(layer, +1)); // toward front
-            up.Padding = new Thickness(6, 2, 6, 2);
-            buttons.Children.Add(up);
-            var down = Ui.Button("↓", (_, _) => _composer.ReorderLayer(layer, -1));
-            down.Padding = new Thickness(6, 2, 6, 2);
-            buttons.Children.Add(down);
-            DockPanel.SetDock(buttons, Dock.Right);
-            row.Children.Add(buttons);
-
             var isSelected = ReferenceEquals(layer, _composer.SelectedLayer);
+            var row = new Border
+            {
+                Background = isSelected ? Ui.Brush(Color.FromRgb(0x24, 0x24, 0x36)) : Brushes.Transparent,
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(2),
+                Margin = new Thickness(0, 1, 0, 1),
+                AllowDrop = true,
+                Tag = layer
+            };
+            var line = new DockPanel();
+
+            // left icons, Photoshop style: eye (hide) + padlock (lock)
+            var eye = Ui.Button(layer.Hidden ? "◌" : "👁", (_, _) =>
+                _composer.ApplyToLayer(layer, l => l.Hidden = !l.Hidden));
+            eye.Padding = new Thickness(4, 1, 4, 1);
+            eye.ToolTip = L.T("Masquer/afficher", "Hide/show");
+            line.Children.Add(eye);
+            var padlock = Ui.Button(layer.Locked ? "🔒" : "🔓", (_, _) =>
+                _composer.ApplyToLayer(layer, l => l.Locked = !l.Locked));
+            padlock.Padding = new Thickness(4, 1, 4, 1);
+            padlock.ToolTip = L.T("Verrouiller/déverrouiller", "Lock/unlock");
+            line.Children.Add(padlock);
+
             var name = Ui.Label(LayerName(layer), 11);
             name.VerticalAlignment = VerticalAlignment.Center;
+            name.Margin = new Thickness(6, 0, 0, 0);
             name.TextTrimming = TextTrimming.CharacterEllipsis;
+            name.Opacity = layer.Hidden ? 0.45 : 1.0;
             if (isSelected)
             {
                 name.Foreground = Ui.Accent;
                 name.FontWeight = FontWeights.Bold;
             }
             name.Cursor = System.Windows.Input.Cursors.Hand;
-            name.MouseLeftButtonDown += (_, _) => _composer.SelectLayer(layer);
-            row.Children.Add(name);
+            line.Children.Add(name);
+            row.Child = line;
+
+            // click = select ; sustained move = drag & drop reorder
+            row.MouseLeftButtonDown += (_, _) => _composer.SelectLayer(layer);
+            row.MouseMove += (_, e) =>
+            {
+                if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+                {
+                    DragDrop.DoDragDrop(row, new DataObject("marquee-layer", layer), DragDropEffects.Move);
+                }
+            };
+            row.Drop += (_, e) =>
+            {
+                if (e.Data.GetData("marquee-layer") is not MarqueeLayer dragged
+                    || ReferenceEquals(dragged, layer)) return;
+                // the dragged layer takes THIS row's slot
+                var without = _composer.LayerModels.Where(l => !ReferenceEquals(l, dragged)).ToList();
+                _composer.MoveLayerTo(dragged, without.IndexOf(layer));
+                e.Handled = true;
+            };
+            row.DragOver += (_, e) =>
+            {
+                e.Effects = e.Data.GetDataPresent("marquee-layer") ? DragDropEffects.Move : DragDropEffects.None;
+                e.Handled = true;
+            };
+
             _layersPanel.Children.Add(row);
         }
     }
@@ -338,6 +384,29 @@ public sealed class GameComposerWindow : Window
             downloaded.HorizontalAlignment = HorizontalAlignment.Stretch;
             downloaded.HorizontalContentAlignment = HorizontalAlignment.Left;
             panel.Children.Add(downloaded);
+        }
+
+        // static gradients (tools\compositing): readability helpers when the
+        // logo lacks contrast against the fanart
+        foreach (var (file, fr, en) in new[]
+                 {
+                     ("gradient_black.png", "Gradient noir", "Black gradient"),
+                     ("gradient_white.png", "Gradient blanc", "White gradient")
+                 })
+        {
+            var path = Path.Combine(_pluginRoot, "tools", "compositing", file);
+            if (!File.Exists(path)) continue;
+            var gradient = Ui.Button(L.T(fr, en), (_, _) =>
+            {
+                _composer.AddMediaLayer(path, "gradient");
+                _status.Text = L.T("Gradient posé — étirez-le sur la zone du logo pour la lisibilité.",
+                    "Gradient placed — stretch it over the logo area for readability.");
+                _status.Foreground = Ui.Muted;
+            });
+            gradient.Margin = new Thickness(0, 2, 0, 2);
+            gradient.HorizontalAlignment = HorizontalAlignment.Stretch;
+            gradient.HorizontalContentAlignment = HorizontalAlignment.Left;
+            panel.Children.Add(gradient);
         }
 
         panel.Children.Add(Ui.SectionHeader(L.T("Autres", "Other")));

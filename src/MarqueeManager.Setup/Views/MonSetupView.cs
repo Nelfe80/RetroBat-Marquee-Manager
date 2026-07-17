@@ -222,10 +222,12 @@ public sealed class MonSetupView : UserControl
                 Cursor = Cursors.Hand
             };
 
-            // thumbnail: the screen's surfaces in the previewed display state
+            // thumbnail: the screen's surfaces in the previewed display state —
+            // a surface scoped to the other state vanishes, exactly like at runtime
             var thumb = new Canvas { ClipToBounds = true };
             foreach (var surface in SurfacesOf(screen))
             {
+                if (!surface.ActiveIn(_previewState)) continue;
                 var color = CategoryColors.TryGetValue(surface.Category, out var c) ? c : Colors.Gray;
                 var activeCount = surface.Components.Count(comp => comp.Visible
                     && (comp.When == "both" || comp.When.Equals(_previewState, StringComparison.OrdinalIgnoreCase)));
@@ -430,8 +432,15 @@ public sealed class MonSetupView : UserControl
                 Background = new SolidColorBrush(color), Margin = new Thickness(0, 0, 8, 0),
                 VerticalAlignment = VerticalAlignment.Center
             });
+            var whenTag = surface.When.ToLowerInvariant() switch
+            {
+                "navigation" => L.T(" · Navigation ES seulement", " · ES browsing only"),
+                "ingame" => L.T(" · En jeu seulement", " · Ingame only"),
+                _ => ""
+            };
             var info = Ui.Label($"{surface.Id} ({surface.Category})"
-                                + (surface.IsFullscreen ? L.T(" · plein écran", " · fullscreen") : $" · {surface.Width}×{surface.Height} @ {surface.X},{surface.Y}"), 12);
+                                + (surface.IsFullscreen ? L.T(" · plein écran", " · fullscreen") : $" · {surface.Width}×{surface.Height} @ {surface.X},{surface.Y}")
+                                + whenTag, 12);
             info.Width = 320;
             row.Children.Add(info);
             var activeCount = surface.Components.Count(comp => comp.Visible

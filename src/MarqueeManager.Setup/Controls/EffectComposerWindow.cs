@@ -72,6 +72,7 @@ public sealed class EffectComposerWindow : Window
         Title = L.T("Mes effets", "My effects");
         Width = 1050;
         Height = 680;
+        WindowState = WindowState.Maximized;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Background = Ui.Background;
 
@@ -387,7 +388,7 @@ public sealed class EffectComposerWindow : Window
                 spriteLabel.Margin = new Thickness(0, 0, 6, 0);
                 line2.Children.Add(spriteLabel);
                 line2.Children.Add(spritePicker);
-                NumberFor(line2, L.T("Nombre", "Count"), action.Count, v => action.Count = Math.Clamp(v, 1, 8), 40);
+                NumberFor(line2, L.T("Nombre", "Count"), action.Count, v => action.Count = Math.Clamp(v, 1, 8), 56);
                 PickerFor(line2, "Motion", Motions, action.Motion, v => action.Motion = v);
             }
         }
@@ -398,7 +399,7 @@ public sealed class EffectComposerWindow : Window
         {
             var line2b = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
             var scalePicker = Ui.ComboBox(100);
-            foreach (var percent in new[] { 100, 150, 200, 300 })
+            foreach (var percent in new[] { 100, 150, 200, 300, 400, 500, 750, 1000 })
             {
                 var item = new ComboBoxItem { Content = percent + " %", Tag = percent };
                 scalePicker.Items.Add(item);

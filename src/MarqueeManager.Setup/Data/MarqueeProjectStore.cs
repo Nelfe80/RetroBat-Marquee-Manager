@@ -22,6 +22,11 @@ public sealed class MarqueeLayer
     [JsonPropertyName("fontSize")] public double FontSize { get; set; } = 0.3; // fraction of surface height
     [JsonPropertyName("color")] public string TextColor { get; set; } = "#FFFFFF";
     [JsonPropertyName("bold")] public bool Bold { get; set; } = true;
+
+    /// <summary>Locked: selectable but not movable/resizable (template fanart).</summary>
+    [JsonPropertyName("locked")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Locked { get; set; }
+    /// <summary>Hidden: kept in the project but not rendered nor exported.</summary>
+    [JsonPropertyName("hidden")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Hidden { get; set; }
 }
 
 /// <summary>Composition background: solid color, two-color gradient, or a media

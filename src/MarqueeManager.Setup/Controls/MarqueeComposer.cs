@@ -111,6 +111,18 @@ public sealed class MarqueeComposer : UserControl
         Changed?.Invoke();
     }
 
+    /// <summary>Drag & drop reorder: moves a layer to an index of the back→front list.</summary>
+    public void MoveLayerTo(MarqueeLayer layer, int newIndex)
+    {
+        var visual = _layers.FirstOrDefault(l => ReferenceEquals(l.Model, layer));
+        if (visual == null) return;
+        _layers.Remove(visual);
+        _layers.Insert(Math.Clamp(newIndex, 0, _layers.Count), visual);
+        Render();
+        Changed?.Invoke();
+        StackChanged?.Invoke();
+    }
+
     public MarqueeComposer(int targetWidth, int targetHeight, string mediaRoot)
     {
         _targetWidth = Math.Max(64, targetWidth);
@@ -227,15 +239,21 @@ public sealed class MarqueeComposer : UserControl
         Changed?.Invoke();
     }
 
-    /// <summary>One-click APIExpose-style recipe: fanart cover background (sharp)
-    /// + the logo at half the surface width. Starting point of every template.</summary>
+    /// <summary>One-click APIExpose-style recipe: fanart as a real LOCKED cover
+    /// layer (visible in the layers panel, selectable, not movable) + the logo at
+    /// half the surface width. Starting point of every template.</summary>
     public void ApplyTemplatePreset(string? fanartPath, string? logoPath)
     {
         _layers.Clear();
         Select(null);
         if (fanartPath != null)
         {
-            SetBackground(new MarqueeBackground { Kind = "media", Source = ToRelative(fanartPath), Blur = 0 });
+            var fanart = new MarqueeLayer { Source = ToRelative(fanartPath), AssetKey = "fanart", Locked = true };
+            var visual = AddLayerVisual(fanart);
+            // cover: fills both dimensions (Scale is height-relative)
+            fanart.Scale = visual.AspectRatio > 0
+                ? Math.Clamp(Math.Max(1.0, DisplayWidth / (_displayHeight * visual.AspectRatio)), 0.05, 3.0)
+                : 1.0;
         }
         if (logoPath != null)
         {
@@ -243,6 +261,7 @@ public sealed class MarqueeComposer : UserControl
         }
         Render();
         Changed?.Invoke();
+        StackChanged?.Invoke();
     }
 
     public void AddTextLayer(string text)
@@ -259,9 +278,10 @@ public sealed class MarqueeComposer : UserControl
     private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
     {
         var position = e.GetPosition(_canvas);
-        var hit = _layers.LastOrDefault(l => Bounds(l).Contains(position));
+        var hit = _layers.LastOrDefault(l => !l.Model.Hidden && Bounds(l).Contains(position));
         Select(hit);
-        if (hit != null)
+        // locked layers stay selectable (inspector opens) but never drag
+        if (hit is { Model.Locked: false })
         {
             _dragging = true;
             _dragStart = position;
@@ -296,7 +316,7 @@ public sealed class MarqueeComposer : UserControl
 
     private void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (_selected == null)
+        if (_selected == null || _selected.Model.Locked)
         {
             return;
         }
@@ -475,6 +495,7 @@ public sealed class MarqueeComposer : UserControl
 
         foreach (var layer in _layers)
         {
+            if (layer.Model.Hidden) continue; // kept in the project, not rendered
             var bounds = Bounds(layer);
             var element = layer.Element;
             element.Opacity = layer.Model.Opacity;

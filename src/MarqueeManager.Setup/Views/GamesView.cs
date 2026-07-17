@@ -329,8 +329,8 @@ public sealed class GamesView : UserControl, IDisposable
         header.Children.Add(subtitle);
         _gameHost.Children.Add(Ui.Card(header));
 
-        BuildComposerCard(entry, data);
-
+        // card order: fetch media online FIRST (it feeds the composer), then the
+        // compositions, lamps, lighting — and the ingame effects LAST
         var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
         var scraper = new MediaScraperService(_pluginRoot, key => ini.Get("Scraper", key, ""));
         _gameHost.Children.Add(Ui.Card(new ScrapeCard(scraper, entry.System, entry.Rom, data.Name,
@@ -341,16 +341,25 @@ public sealed class GamesView : UserControl, IDisposable
                 _status.Foreground = Ui.Ok;
             })));
 
-        _gameHost.Children.Add(Ui.Card(new EffectsCard(_pluginRoot, entry.System, entry.Rom,
-            data.Signals, data.Genre, data.GenreIds, data.ApiUrl, data.MemPath)));
+        BuildComposerCard(entry, data);
 
-        // scene lamps only make sense where MAME outputs exist
+        // scene lamps only make sense where MAME outputs exist; the generated
+        // marquee is the preferred lamp background, with a selector when several
         if (entry.System is "arcade" or "mame" or "hbmame")
         {
-            var marquee = data.Assets.FirstOrDefault(a => a.Key is "marquee" or "screenmarquee")?.Path;
-            _gameHost.Children.Add(Ui.Card(new SceneLampsCard(_pluginRoot, entry.System, entry.Rom, marquee)));
+            var backgrounds = new List<(string Label, string Path)>();
+            var generated = Path.Combine(_media.GameRoot(entry.System, entry.Rom), "artwork", "marquee", "generated-marquee.png");
+            if (File.Exists(generated)) backgrounds.Add((L.T("Marquee généré", "Generated marquee"), generated));
+            if (_projects.HasComposition(entry.System, entry.Rom))
+                backgrounds.Add((L.T("Ma composition", "My composition"), _projects.PngPath(entry.System, entry.Rom)));
+            foreach (var asset in data.Assets.Where(a => a.Key is "marquee" or "screenmarquee"))
+                backgrounds.Add((asset.Label, asset.Path));
+            _gameHost.Children.Add(Ui.Card(new SceneLampsCard(_pluginRoot, entry.System, entry.Rom, backgrounds)));
         }
         _gameHost.Children.Add(Ui.Card(new LightingProfileCard(_pluginRoot, entry.System, entry.Rom)));
+
+        _gameHost.Children.Add(Ui.Card(new EffectsCard(_pluginRoot, entry.System, entry.Rom,
+            data.Signals, data.Genre, data.GenreIds, data.ApiUrl, data.MemPath)));
     }
 
     private void BuildComposerCard(GameEntry entry, GamePreload data)
@@ -358,18 +367,38 @@ public sealed class GamesView : UserControl, IDisposable
         var card = new StackPanel();
         card.Children.Add(Ui.SectionHeader(L.T("Composer le marquee", "Compose the marquee")));
 
-        var hasComposition = _projects.HasComposition(entry.System, entry.Rom);
-        if (hasComposition)
+        // one composition per surface family (marquee / topper / DMD): every
+        // existing one shows here — click it to edit THAT one
+        var categories = new (string Category, string Fr, string En)[]
         {
-            // current composition preview
-            var preview = new Image { MaxHeight = 110, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 4, 0, 4) };
+            ("marquees", "Marquee", "Marquee"),
+            ("toppers", "Topper", "Topper"),
+            ("dmd", "DMD", "DMD")
+        };
+        var found = 0;
+        foreach (var (category, fr, en) in categories)
+        {
+            var store = new MarqueeProjectStore(_pluginRoot, category);
+            if (!store.HasComposition(entry.System, entry.Rom)) continue;
+            found++;
+
+            var row = new WrapPanel { Margin = new Thickness(0, 4, 0, 4) };
+            var preview = new Image
+            {
+                MaxHeight = 84, MaxWidth = 420,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 0, 10, 0),
+                Cursor = Cursors.Hand,
+                ToolTip = L.T("Cliquer pour éditer", "Click to edit")
+            };
+            var pngPath = store.PngPath(entry.System, entry.Rom);
             _ = Task.Run(() =>
             {
                 try
                 {
                     var bitmap = new BitmapImage();
                     bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(_projects.PngPath(entry.System, entry.Rom));
+                    bitmap.UriSource = new Uri(pngPath);
                     bitmap.DecodePixelWidth = 640;
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
                     bitmap.EndInit();
@@ -381,30 +410,50 @@ public sealed class GamesView : UserControl, IDisposable
                     // preview unavailable
                 }
             });
-            card.Children.Add(preview);
+            preview.MouseLeftButtonDown += (_, _) => OpenComposer(entry, data, category);
+            row.Children.Add(preview);
+
+            var side = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            var label = Ui.Label(L.T(fr, en), 12);
+            label.FontWeight = FontWeights.Bold;
+            side.Children.Add(label);
+            var sideButtons = new WrapPanel();
+            sideButtons.Children.Add(Ui.Button(L.T("Éditer…", "Edit…"), (_, _) => OpenComposer(entry, data, category)));
+            sideButtons.Children.Add(Ui.Button(L.T("Supprimer", "Delete"), (_, _) =>
+            {
+                store.Delete(entry.System, entry.Rom);
+                _status.Text = L.T($"Composition {L.T(fr, en)} supprimée — la chaîne de sources reprend la main.",
+                    $"{L.T(fr, en)} composition deleted — the source chain takes over again.");
+                _status.Foreground = Ui.Muted;
+                if (_current != null) OpenGame(_current);
+            }));
+            side.Children.Add(sideButtons);
+            row.Children.Add(side);
+            card.Children.Add(row);
         }
-        card.Children.Add(Ui.MutedLabel(hasComposition
-            ? L.T("Ce jeu a une composition manuelle — elle prime sur toutes les autres sources.",
-                "This game has a manual composition — it overrides every other source.")
-            : L.T("Pas encore de composition manuelle : le compositeur assemble fanart, logo, textes et médias téléchargés.",
-                "No manual composition yet: the composer assembles fanart, logo, texts and downloaded media.")));
+
+        card.Children.Add(Ui.MutedLabel(found > 0
+            ? L.T("Une composition manuelle prime sur toutes les autres sources de sa catégorie.",
+                "A manual composition overrides every other source of its category.")
+            : L.T("Pas encore de composition manuelle : le compositeur assemble fanart, logo, gradients, textes et médias téléchargés — une composition par surface (marquee, topper, DMD).",
+                "No manual composition yet: the composer assembles fanart, logo, gradients, texts and downloaded media — one composition per surface (marquee, topper, DMD).")));
 
         var actions = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
-        actions.Children.Add(Ui.Button(L.T("Ouvrir le compositeur…", "Open the composer…"), (_, _) =>
-        {
-            var window = new Controls.GameComposerWindow(_pluginRoot, entry.System, entry.Rom, data.Name, data.Assets)
-            {
-                Owner = Window.GetWindow(this)
-            };
-            window.ShowDialog();
-            if (_current != null) OpenGame(_current); // refresh the preview
-        }, primary: true));
-        if (hasComposition)
-        {
-            actions.Children.Add(Ui.Button(L.T("Supprimer ma composition", "Delete my composition"), (_, _) => DeleteComposition(entry)));
-        }
+        actions.Children.Add(Ui.Button(
+            found > 0 ? L.T("Nouvelle composition…", "New composition…") : L.T("Ouvrir le compositeur…", "Open the composer…"),
+            (_, _) => OpenComposer(entry, data, null), primary: true));
         card.Children.Add(actions);
         _gameHost.Children.Add(Ui.Card(card));
+    }
+
+    private void OpenComposer(GameEntry entry, GamePreload data, string? category)
+    {
+        var window = new Controls.GameComposerWindow(_pluginRoot, entry.System, entry.Rom, data.Name, data.Assets, category)
+        {
+            Owner = Window.GetWindow(this)
+        };
+        window.ShowDialog();
+        if (_current != null) OpenGame(_current); // refresh the previews
     }
 
     /// <summary>Real marquee surface: [Screens] MarqueeBounds when set, otherwise the

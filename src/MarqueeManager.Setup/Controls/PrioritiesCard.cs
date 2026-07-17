@@ -127,12 +127,23 @@ public sealed class PrioritiesCard : UserControl
         }, primary: true));
         chainActions.Children.Add(Ui.Button(L.T("Tester la chaîne", "Test the chain"), (_, _) => _ = TestChainAsync()));
         chainGroup.Children.Add(chainActions);
+        // the test log lives INSIDE the chain block, right under its buttons
+        chainGroup.Children.Add(_testPanel);
         _category.SelectionChanged += (_, _) => FillAddPicker(addPicker);
         FillAddPicker(addPicker);
 
         // -- MON DOSSIER : les médias personnels du système --
         var folderGroup = Group(card, L.T("MON DOSSIER", "MY FOLDER"));
-        var folderRow = new WrapPanel();
+        var notice = Ui.MutedLabel(L.T(
+            "Déposez ici vos médias (images PNG/JPG ou vidéos MP4) : un fichier par jeu, nommé comme la rom "
+            + "(« mslug.png »), comme le titre du jeu (« Metal Slug (World).png ») ou n'importe quel alias — "
+            + "le nom est résolu automatiquement. Ils passent devant les autres sources dès que « Mon dossier » est dans la chaîne.",
+            "Drop your media here (PNG/JPG images or MP4 videos): one file per game, named after the rom "
+            + "(“mslug.png”), the game title (“Metal Slug (World).png”) or any alias — "
+            + "the name resolves automatically. They outrank other sources as soon as “My folder” is in the chain."));
+        notice.TextWrapping = TextWrapping.Wrap;
+        folderGroup.Children.Add(notice);
+        var folderRow = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
         folderRow.Children.Add(Ui.Button(L.T("Ouvrir mon dossier", "Open my folder"), (_, _) => OpenUserFolder()));
         folderRow.Children.Add(Ui.Button(L.T("Réindexer (alias)", "Reindex (aliases)"), (_, _) => _ = ReindexAsync()));
         folderRow.Children.Add(Ui.MutedLabel(L.T("(ou glissez-déposez vos fichiers directement sur cette carte)",
@@ -141,13 +152,20 @@ public sealed class PrioritiesCard : UserControl
 
         // -- PRÉ-GÉNÉRATION : les templates rendus d'avance --
         var pregenGroup = Group(card, L.T("PRÉ-GÉNÉRATION DES TEMPLATES", "TEMPLATE PRE-GENERATION"));
-        var pregen = new WrapPanel();
+        var pregenNotice = Ui.MutedLabel(L.T(
+            "Un « Template » est une composition automatique (fanart + gradient + logo) rendue pour CHAQUE jeu du système. "
+            + "Pour l'utiliser, ajoutez « Template … » dans la chaîne ci-dessus (le gabarit fixe le format : 1920×360, 1280×400, 920×360 ou vertical). "
+            + "Normalement le rendu se fait au premier affichage ; pré-générer rend TOUT d'avance pour une navigation ES instantanée.",
+            "A “Template” is an automatic composition (fanart + gradient + logo) rendered for EVERY game of the system. "
+            + "To use it, add “Template …” to the chain above (the recipe sets the format: 1920×360, 1280×400, 920×360 or vertical). "
+            + "Rendering normally happens on first display; pre-generating renders EVERYTHING ahead for instant ES navigation."));
+        pregenNotice.TextWrapping = TextWrapping.Wrap;
+        pregenGroup.Children.Add(pregenNotice);
+        var pregen = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
         pregen.Children.Add(Ui.Button(L.T("Pré-générer ce système", "Pre-generate this system"), (_, _) => _ = PregenerateAsync(ScopeSystem())));
         pregen.Children.Add(Ui.Button(L.T("Pré-générer tous les systèmes affectés", "Pre-generate every assigned system"), (_, _) => _ = PregenerateAsync(null)));
-        pregen.Children.Add(Ui.MutedLabel(L.T("(navigation ES instantanée)", "(instant ES navigation)")));
         pregenGroup.Children.Add(pregen);
 
-        card.Children.Add(_testPanel);
         _status.TextWrapping = TextWrapping.Wrap;
         card.Children.Add(_status);
         Content = card;

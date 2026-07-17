@@ -68,6 +68,7 @@ public sealed class CompositionEditor : Window
         Title = L.T($"Composition — {surface.Id}", $"Composition — {surface.Id}");
         Width = 1240;
         Height = 760;
+        WindowState = WindowState.Maximized;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Background = Ui.Background;
         LoadExampleMedia();

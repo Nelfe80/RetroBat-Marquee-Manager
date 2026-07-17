@@ -38,6 +38,7 @@ public sealed class SceneLampsCard : UserControl
     private readonly string _scenePath;
     private readonly List<Lamp> _lamps = new();
     private readonly List<string> _knownOutputs = new();
+    private readonly IReadOnlyList<(string Label, string Path)> _backgrounds;
     private string _attractMode = "none";
     private string? _imageAttr;
     private string? _backgroundPath;
@@ -51,10 +52,14 @@ public sealed class SceneLampsCard : UserControl
     private Point _dragStart;
     private (double X, double Y) _dragOrigin;
 
-    public SceneLampsCard(string pluginRoot, string system, string rom, string? marqueeFallbackImage)
+    /// <summary>backgrounds: candidate marquee images to place lamps on (the
+    /// generated marquee first when it exists); a selector shows when several.</summary>
+    public SceneLampsCard(string pluginRoot, string system, string rom,
+        IReadOnlyList<(string Label, string Path)>? backgrounds = null)
     {
         _pluginRoot = pluginRoot;
         _rom = rom;
+        _backgrounds = backgrounds ?? Array.Empty<(string, string)>();
         _scenePath = Path.Combine(pluginRoot, "resources", "rbmarquee", rom + ".xml");
 
         var card = new StackPanel();
@@ -76,7 +81,7 @@ public sealed class SceneLampsCard : UserControl
             }
         }
 
-        _backgroundPath = ResolveBackground(marqueeFallbackImage);
+        _backgroundPath = ResolveBackground(_backgrounds.FirstOrDefault().Path);
         if (!exists)
         {
             card.Children.Add(Ui.MutedLabel(L.T(
@@ -119,6 +124,34 @@ public sealed class SceneLampsCard : UserControl
         card.Children.Add(Ui.MutedLabel(L.T(
             "Cliquer = sélectionner, glisser = déplacer, molette = taille. Les couleurs et le câblage output se règlent sous l'aperçu.",
             "Click = select, drag = move, wheel = resize. Colors and output wiring live under the preview.")));
+
+        // background picker when several marquee images exist (generated first)
+        if (_backgrounds.Count > 1)
+        {
+            var backgroundRow = new WrapPanel { Margin = new Thickness(0, 2, 0, 4) };
+            var backgroundLabel = Ui.MutedLabel(L.T("Image de fond :", "Background image:"));
+            backgroundLabel.Margin = new Thickness(0, 0, 6, 0);
+            backgroundLabel.VerticalAlignment = VerticalAlignment.Center;
+            backgroundRow.Children.Add(backgroundLabel);
+            var backgroundPicker = Ui.ComboBox(240);
+            foreach (var (label, path) in _backgrounds)
+            {
+                var item = new ComboBoxItem { Content = label, Tag = path };
+                backgroundPicker.Items.Add(item);
+                if (path.Equals(_backgroundPath, StringComparison.OrdinalIgnoreCase)) backgroundPicker.SelectedItem = item;
+            }
+            if (backgroundPicker.SelectedItem == null) backgroundPicker.SelectedIndex = 0;
+            backgroundPicker.SelectionChanged += (_, _) =>
+            {
+                if ((backgroundPicker.SelectedItem as ComboBoxItem)?.Tag is not string path) return;
+                _backgroundPath = path;
+                SizeCanvasToBackground();
+                _canvas.Height = _viewHeight;
+                Render();
+            };
+            backgroundRow.Children.Add(backgroundPicker);
+            card.Children.Add(backgroundRow);
+        }
 
         SizeCanvasToBackground();
         _canvas.Width = ViewWidth;

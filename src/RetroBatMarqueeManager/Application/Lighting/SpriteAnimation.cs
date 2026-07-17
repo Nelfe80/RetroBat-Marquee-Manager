@@ -36,8 +36,10 @@ public sealed class SpriteAnimation : IDisposable
                     var elapsed = 0;
 
                     // blit budget: frames are pre-downscaled once at load so many
-                    // sprites can fly at the same time on the CPU raster backend
-                    const int maxHeight = 96;
+                    // sprites can fly at the same time on the CPU raster backend.
+                    // full_* backdrops render at 100 % width → keep them sharper.
+                    var maxHeight = System.IO.Path.GetFileName(path)
+                        .StartsWith("full_", StringComparison.OrdinalIgnoreCase) ? 320 : 96;
                     var scaled = info.Height > maxHeight
                         ? new SKImageInfo(Math.Max(1, info.Width * maxHeight / info.Height), maxHeight,
                             SKColorType.Bgra8888, SKAlphaType.Premul)
@@ -119,6 +121,10 @@ public sealed class SpriteInstance
 
     /// <summary>Grow effect: the sprite swells from Scale to Scale×2 over its life.</summary>
     public bool Grow { get; init; }
+
+    /// <summary>Backdrop sprite (full_*.gif): unique in the scene, spans 100 % of
+    /// the artwork width.</summary>
+    public bool FullWidth { get; init; }
 
     /// <summary>Pixel-art sprites scaled up keep their crisp pixels (nearest neighbor).</summary>
     public bool PixelCrisp { get; init; }

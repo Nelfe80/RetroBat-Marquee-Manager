@@ -172,11 +172,22 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
         /// <summary>Display state switch (navigation ↔ ingame): the dynamic
         /// components filter on their `when`, the rich overlays gate through
-        /// <see cref="IsComponentActive"/>.</summary>
+        /// <see cref="IsComponentActive"/>, and a surface scoped to one state
+        /// hides its WHOLE window in the other (e.g. nothing over ES while
+        /// browsing when the surface is ingame-only).</summary>
         public void SetDisplayScene(string scene)
         {
             _activeScene = scene;
-            Dispatcher.BeginInvoke(new Action(() => _componentHost?.ApplyScene(scene)));
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _componentHost?.ApplyScene(scene);
+                if (_surface != null && !_surface.When.Equals("both", StringComparison.OrdinalIgnoreCase))
+                {
+                    var active = _surface.ActiveIn(scene);
+                    if (active && Visibility != Visibility.Visible) Show();
+                    else if (!active && Visibility == Visibility.Visible) Hide();
+                }
+            }));
         }
 
         /// <summary>True when the surface carries the component AND it participates

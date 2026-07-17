@@ -69,6 +69,7 @@ public sealed class ScreenCompositor : Window
             $"Edit the surfaces of screen {screenIndex} — {screen.Bounds.Width}×{screen.Bounds.Height}");
         Width = 1020;
         Height = 740;
+        WindowState = WindowState.Maximized;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Background = Ui.Background;
 
@@ -230,6 +231,35 @@ public sealed class ScreenCompositor : Window
             }
         }
 
+        // display state of the WHOLE surface (ES browsing / ingame / both):
+        // e.g. no surface over ES while browsing, marquee band only ingame
+        var whenLabel = Ui.MutedLabel(L.T("Visible en :", "Visible in:"));
+        whenLabel.Margin = new Thickness(6, 0, 6, 0);
+        whenLabel.VerticalAlignment = VerticalAlignment.Center;
+        _selectionTools.Children.Add(whenLabel);
+        var whenPicker = Ui.ComboBox(200);
+        foreach (var (key, fr, en) in new[]
+                 {
+                     ("both", "Navigation ES + En jeu", "ES browsing + Ingame"),
+                     ("navigation", "Navigation ES seulement", "ES browsing only"),
+                     ("ingame", "En jeu seulement", "Ingame only")
+                 })
+        {
+            var item = new ComboBoxItem { Content = L.T(fr, en), Tag = key };
+            whenPicker.Items.Add(item);
+            if (key.Equals(surface.When, StringComparison.OrdinalIgnoreCase)) whenPicker.SelectedItem = item;
+        }
+        if (whenPicker.SelectedItem == null) whenPicker.SelectedIndex = 0;
+        whenPicker.SelectionChanged += (_, _) =>
+        {
+            if ((whenPicker.SelectedItem as ComboBoxItem)?.Tag is string when)
+            {
+                surface.When = when;
+                Render();
+            }
+        };
+        _selectionTools.Children.Add(whenPicker);
+
         _selectionTools.Children.Add(Ui.Button(L.T("Plein écran", "Fullscreen"), (_, _) =>
         {
             surface.X = null;
@@ -300,9 +330,16 @@ public sealed class ScreenCompositor : Window
             Canvas.SetTop(rect, y * _zoom);
             _canvas.Children.Add(rect);
 
+            var whenBadge = surface.When.ToLowerInvariant() switch
+            {
+                "navigation" => L.T("\n[Navigation ES seulement]", "\n[ES browsing only]"),
+                "ingame" => L.T("\n[En jeu seulement]", "\n[Ingame only]"),
+                _ => ""
+            };
             var label = new TextBlock
             {
-                Text = $"{surface.Id}\n{w}×{h} @ {x},{y}" + (surface.IsFullscreen ? L.T(" (plein écran)", " (fullscreen)") : ""),
+                Text = $"{surface.Id}\n{w}×{h} @ {x},{y}"
+                       + (surface.IsFullscreen ? L.T(" (plein écran)", " (fullscreen)") : "") + whenBadge,
                 Foreground = Ui.Foreground,
                 FontSize = 11,
                 FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal,

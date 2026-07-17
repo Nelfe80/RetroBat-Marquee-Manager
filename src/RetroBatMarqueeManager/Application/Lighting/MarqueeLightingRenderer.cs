@@ -179,13 +179,20 @@ half4 main(float2 p) {
             var animation = SpriteAnimation.Load(
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "sprites", rule.Sprite), _logger);
             if (animation == null) continue;
+            // "full_" sprites are scene backdrops: exactly ONE in the scene at a
+            // time, spanning 100 % of the artwork width
+            var fullWidth = Path.GetFileName(rule.Sprite).StartsWith("full_", StringComparison.OrdinalIgnoreCase);
+            if (fullWidth) _sprites.RemoveAll(s => s.FullWidth);
+
             var budget = SpriteBudget;
-            for (var i = 0; i < rule.Count && _sprites.Count < budget; i++)
+            var count = fullWidth ? 1 : rule.Count;
+            for (var i = 0; i < count && _sprites.Count < budget; i++)
             {
                 var duration = Math.Max(0.3, rule.DurationMs / 1000.0) * (0.85 + _fxRandom.NextDouble() * 0.3);
 
-                // placement of the SPAWN point: random (historic), centered, or
-                // evenly spread across the width (count slots)
+                // placement of the SPAWN point: random draws are STRATIFIED (one
+                // horizontal band per sprite: halves, quarters, tenths… so a
+                // swarm never clumps), or centered, or evenly spread
                 float px, py;
                 switch (rule.Placement)
                 {
@@ -194,13 +201,18 @@ half4 main(float2 p) {
                         py = 0.5f;
                         break;
                     case "spread":
-                        px = (i + 0.5f) / rule.Count;
+                        px = (i + 0.5f) / count;
                         py = 0.45f;
                         break;
                     default:
-                        px = 0.10f + (float)_fxRandom.NextDouble() * 0.80f;
+                        px = (i + 0.15f + (float)_fxRandom.NextDouble() * 0.7f) / count;
                         py = 0.18f + (float)_fxRandom.NextDouble() * 0.58f;
                         break;
+                }
+                if (fullWidth)
+                {
+                    px = 0.5f;
+                    py = 0.5f;
                 }
 
                 float x = px, y = py, vx = 0, vy = 0;
@@ -229,7 +241,7 @@ half4 main(float2 p) {
 
                 // the historic size jitter only applies in random placement — a
                 // deliberate scale (200 %…) must render exactly as asked
-                var jitter = rule.Placement == "random" && Math.Abs(rule.Scale - 1.0) < 0.01
+                var jitter = !fullWidth && rule.Placement == "random" && Math.Abs(rule.Scale - 1.0) < 0.01
                     ? 0.8f + (float)_fxRandom.NextDouble() * 0.5f
                     : 1f;
                 _sprites.Add(new SpriteInstance
@@ -237,12 +249,13 @@ half4 main(float2 p) {
                     Animation = animation,
                     X = x,
                     Y = y,
-                    VelocityX = vx,
-                    VelocityY = vy,
+                    VelocityX = fullWidth ? 0 : vx,
+                    VelocityY = fullWidth ? 0 : vy,
                     TrailColor = rule.TrailColor,
                     Scale = (float)rule.Scale * jitter,
-                    Grow = rule.Grow,
+                    Grow = !fullWidth && rule.Grow,
                     PixelCrisp = rule.Scale >= 1.5,
+                    FullWidth = fullWidth,
                     StartSeconds = t + i * (0.06 + _fxRandom.NextDouble() * 0.08),
                     DurationSeconds = duration
                 });
@@ -285,8 +298,18 @@ half4 main(float2 p) {
             }
 
             var frame = sprite.Animation.FrameAt((t - sprite.StartSeconds) * 1000);
-            var height = 0.30f * h * sprite.ScaleAt(t);
-            var width = height * frame.Width / frame.Height;
+            float width, height;
+            if (sprite.FullWidth)
+            {
+                // backdrop sprite: spans the whole artwork width
+                width = w;
+                height = width * frame.Height / frame.Width;
+            }
+            else
+            {
+                height = 0.30f * h * sprite.ScaleAt(t);
+                width = height * frame.Width / frame.Height;
+            }
             var dest = SKRect.Create(
                 _offset.X + nx * w - width / 2f,
                 _offset.Y + ny * h - height / 2f, width, height);

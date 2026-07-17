@@ -257,8 +257,26 @@ public sealed class EffectsCard : UserControl, IDisposable
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        // sentence: Quand ACTION (desc) → alors [effet]
+        // status dot: gray = no effect, orange = default effect, green = custom
+        var statusColor = origin switch
+        {
+            EffectOrigin.Game or EffectOrigin.System or EffectOrigin.GenreOverride => Color.FromRgb(0x4C, 0xC9, 0x6E),
+            EffectOrigin.GenreDefault or EffectOrigin.Default => Color.FromRgb(0xFF, 0xB3, 0x00),
+            _ => Color.FromRgb(0x6A, 0x6A, 0x7A)
+        };
+        if (rule is { Off: true }) statusColor = Color.FromRgb(0x6A, 0x6A, 0x7A);
+
+        // sentence: ● Quand ACTION (desc) → alors [effet]
         var sentence = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 8, 2) };
+        sentence.Inlines.Add(new System.Windows.Documents.InlineUIContainer(new Border
+        {
+            Width = 10,
+            Height = 10,
+            CornerRadius = new CornerRadius(5),
+            Background = new SolidColorBrush(statusColor),
+            Margin = new Thickness(0, 0, 7, 0)
+        })
+        { BaselineAlignment = System.Windows.BaselineAlignment.Center });
         sentence.Inlines.Add(new System.Windows.Documents.Run(L.T("Quand ", "When ")) { Foreground = Ui.Muted });
         sentence.Inlines.Add(new System.Windows.Documents.Run(signal.Action)
         { Foreground = Ui.Foreground, FontWeight = FontWeights.Bold });
@@ -293,20 +311,8 @@ public sealed class EffectsCard : UserControl, IDisposable
         }
         header.Children.Add(sentence);
 
-        // right side: color dot + provenance badge
+        // right side: provenance badge (the status dot at line start carries the color logic)
         var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        if (rule is { Off: false, EffectRef: null, Actions: null } && rule.Kind is not ("sprite" or "shake" or "blackout"))
-        {
-            right.Children.Add(new Border
-            {
-                Width = 12,
-                Height = 12,
-                CornerRadius = new CornerRadius(6),
-                Background = SafeBrush(rule.Color),
-                Margin = new Thickness(0, 0, 8, 0),
-                VerticalAlignment = VerticalAlignment.Center
-            });
-        }
         right.Children.Add(Badge(detail, origin));
         Grid.SetColumn(right, 1);
         header.Children.Add(right);
