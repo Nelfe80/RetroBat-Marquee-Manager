@@ -21,7 +21,9 @@ namespace MarqueeManager.Setup.Controls;
 /// </summary>
 public sealed class MarqueeComposer : UserControl
 {
-    private const double DisplayWidth = 640;
+    /// <summary>Canvas display width — the host passes the available width so the
+    /// center column fills the window (default keeps the historical inline size).</summary>
+    private readonly double DisplayWidth;
 
     private readonly int _targetWidth;
     private readonly int _targetHeight;
@@ -123,11 +125,12 @@ public sealed class MarqueeComposer : UserControl
         StackChanged?.Invoke();
     }
 
-    public MarqueeComposer(int targetWidth, int targetHeight, string mediaRoot)
+    public MarqueeComposer(int targetWidth, int targetHeight, string mediaRoot, double displayWidth = 640)
     {
         _targetWidth = Math.Max(64, targetWidth);
         _targetHeight = Math.Max(32, targetHeight);
         _mediaRoot = mediaRoot;
+        DisplayWidth = Math.Clamp(displayWidth, 320, 2400);
         _displayHeight = DisplayWidth * _targetHeight / _targetWidth;
 
         _canvas = new Canvas
@@ -148,7 +151,6 @@ public sealed class MarqueeComposer : UserControl
             Background = Ui.Viewport,
             BorderBrush = Ui.PanelBorder,
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(6),
             Padding = new Thickness(10),
             HorizontalAlignment = HorizontalAlignment.Left,
             Child = _canvas

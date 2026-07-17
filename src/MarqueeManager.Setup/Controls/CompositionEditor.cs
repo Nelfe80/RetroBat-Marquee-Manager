@@ -393,11 +393,13 @@ public sealed class CompositionEditor : Window
             var label = new TextBlock
             {
                 Text = LayerName(component) + (component.When == "both" ? "" : $" · {StateBadge(component.When)}"),
-                Foreground = Ui.Foreground,
-                FontSize = 10,
-                IsHitTestVisible = false,
-                Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 3, ShadowDepth = 0 }
+                Foreground = Brushes.White,
+                Background = new SolidColorBrush(Color.FromArgb(0x88, 0x00, 0x00, 0x00)),
+                Padding = new Thickness(3, 1, 3, 1),
+                FontSize = 12,
+                IsHitTestVisible = false
             };
+            TextOptions.SetTextFormattingMode(label, TextFormattingMode.Display);
             Canvas.SetLeft(label, component.X * width + 5);
             Canvas.SetTop(label, component.Y * height + 3);
             _canvas.Children.Add(label);

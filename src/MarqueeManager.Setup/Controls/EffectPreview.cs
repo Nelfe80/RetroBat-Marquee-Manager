@@ -19,8 +19,9 @@ namespace MarqueeManager.Setup.Controls;
 /// </summary>
 public sealed class EffectPreview : UserControl
 {
-    private const double BandWidth = 320;
-    private const double BandHeight = 72;
+    /// <summary>Preview band size — the effect composer asks for a bigger one.</summary>
+    private readonly double BandWidth;
+    private readonly double BandHeight;
 
     private readonly Grid _band;
     private readonly Rectangle _tube;
@@ -29,8 +30,10 @@ public sealed class EffectPreview : UserControl
     private readonly TranslateTransform _jolt = new();
     private readonly List<System.Windows.Threading.DispatcherTimer> _timers = new();
 
-    public EffectPreview()
+    public EffectPreview(double width = 320)
     {
+        BandWidth = Math.Clamp(width, 200, 1600);
+        BandHeight = BandWidth * 72 / 320;
         _tube = new Rectangle
         {
             Fill = new LinearGradientBrush(

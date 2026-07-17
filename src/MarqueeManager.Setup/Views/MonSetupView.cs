@@ -56,6 +56,7 @@ public sealed class MonSetupView : UserControl
     private ScreenModel? _selected;
     private ScreenModel? _dragging;
     private bool _dragMoved;
+    private bool _clickOnSelected;
     private Point _dragStart;
     private (double X, double Y) _dragOrigin;
     private double _scale = 0.06;
@@ -67,9 +68,9 @@ public sealed class MonSetupView : UserControl
         _store = new SurfacesStore(pluginRoot);
         _surfaces = _store.Load();
         _detected = ScreenProbe.Detect();
-        _plan = ReconcilePlan(_store.LoadScreens());
 
-        // a configured physical DMD joins the plan as a screen-like node
+        // the physical DMD is read BEFORE the plan: it joins it as a real,
+        // draggable screen (its position persists like the others)
         try
         {
             var ini = IniFile.Load(PluginPaths.ConfigPath(pluginRoot));
@@ -83,6 +84,7 @@ public sealed class MonSetupView : UserControl
         {
             _physicalDmd = (false, "", 128, 32);
         }
+        _plan = ReconcilePlan(_store.LoadScreens());
 
         var page = new StackPanel();
         page.Children.Add(Ui.Title(L.T("Mon setup", "My setup")));
@@ -171,11 +173,45 @@ public sealed class MonSetupView : UserControl
             known.WindowsIndex = i;
             known.Connected = true;
         }
+
+        // the physical DMD is a plan citizen: draggable, position persisted
+        var dmd = plan.FirstOrDefault(s => s.Id.Equals(PhysicalDmdId, StringComparison.OrdinalIgnoreCase));
+        if (_physicalDmd.Present)
+        {
+            if (dmd == null)
+            {
+                dmd = new ScreenModel
+                {
+                    Id = PhysicalDmdId,
+                    PhysicalX = plan.Count > 0 ? plan.Max(s => s.PhysicalX + SizeOf(s).W) + 200 : 0,
+                    PhysicalY = 0
+                };
+                plan.Add(dmd);
+            }
+            dmd.Name = $"DMD {_physicalDmd.Model}";
+            dmd.WindowsIndex = -1;
+            dmd.Usage = "dmd-physical";
+            dmd.Connected = true;
+        }
+        else if (dmd != null)
+        {
+            dmd.Connected = false;
+        }
         return plan;
     }
 
+    private const string PhysicalDmdId = "physical-dmd";
+
+    private bool IsPhysicalDmd(ScreenModel screen)
+        => screen.Id.Equals(PhysicalDmdId, StringComparison.OrdinalIgnoreCase);
+
     private (int W, int H) SizeOf(ScreenModel screen)
     {
+        if (IsPhysicalDmd(screen))
+        {
+            // rendered at 4× its real pixels — a 128×32 panel would be invisible
+            return (_physicalDmd.W * 4, _physicalDmd.H * 4);
+        }
         if (screen.Connected && screen.WindowsIndex >= 0 && screen.WindowsIndex < _detected.Count)
         {
             var bounds = _detected[screen.WindowsIndex].Bounds;
@@ -208,12 +244,14 @@ public sealed class MonSetupView : UserControl
         foreach (var screen in _plan)
         {
             var (w, h) = SizeOf(screen);
+            var isDmd = IsPhysicalDmd(screen);
             var card = new Border
             {
                 Width = Math.Max(30, w * _scale),
                 Height = Math.Max(20, h * _scale),
-                Background = Ui.Brush(Color.FromRgb(0x1A, 0x1A, 0x26)),
+                Background = Ui.Brush(isDmd ? Color.FromRgb(0x1A, 0x12, 0x12) : Color.FromRgb(0x1A, 0x1A, 0x26)),
                 BorderBrush = ReferenceEquals(screen, _selected) ? Ui.Accent
+                    : isDmd ? new SolidColorBrush(CategoryColors["dmd-virtual"])
                     : screen.Connected ? Ui.Brush(Color.FromRgb(0x3A, 0x3A, 0x52)) : Ui.Muted,
                 BorderThickness = new Thickness(ReferenceEquals(screen, _selected) ? 2.5 : 1.5),
                 CornerRadius = new CornerRadius(4),
@@ -250,15 +288,19 @@ public sealed class MonSetupView : UserControl
                 Canvas.SetTop(rect, sy * card.Height + 2);
                 thumb.Children.Add(rect);
             }
+            // viewports stay dark in both themes: labels are WHITE on a dark chip,
+            // crisp Display rendering (DropShadowEffect used to blur the text)
             var label = new TextBlock
             {
                 Text = screen.Name + (screen.Connected ? "" : L.T(" (absent)", " (absent)")),
-                Foreground = Ui.Foreground,
-                FontSize = 10,
+                Foreground = Brushes.White,
+                Background = new SolidColorBrush(Color.FromArgb(0x88, 0x00, 0x00, 0x00)),
+                Padding = new Thickness(4, 1, 4, 1),
+                FontSize = 12,
                 FontWeight = FontWeights.SemiBold,
-                IsHitTestVisible = false,
-                Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 3, ShadowDepth = 0 }
+                IsHitTestVisible = false
             };
+            TextOptions.SetTextFormattingMode(label, TextFormattingMode.Display);
             Canvas.SetLeft(label, 4);
             Canvas.SetTop(label, 2);
             thumb.Children.Add(label);
@@ -269,36 +311,6 @@ public sealed class MonSetupView : UserControl
             _map.Children.Add(card);
         }
 
-        // physical DMD node: same visual language, click = its settings.
-        // Rendered at 4× its real pixels — a 128×32 panel would be invisible.
-        if (_physicalDmd.Present)
-        {
-            var color = CategoryColors["dmd-virtual"];
-            var node = new Border
-            {
-                Width = Math.Max(40, _physicalDmd.W * 4 * _scale),
-                Height = Math.Max(16, _physicalDmd.H * 4 * _scale),
-                Background = Ui.Brush(Color.FromRgb(0x1A, 0x12, 0x12)),
-                BorderBrush = new SolidColorBrush(color),
-                BorderThickness = new Thickness(1.5),
-                CornerRadius = new CornerRadius(4),
-                Tag = "dmd",
-                Cursor = Cursors.Hand,
-                Child = new TextBlock
-                {
-                    Text = $"DMD {_physicalDmd.Model} · {_physicalDmd.W}×{_physicalDmd.H}",
-                    Foreground = new SolidColorBrush(color),
-                    FontSize = 10,
-                    FontWeight = FontWeights.SemiBold,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    IsHitTestVisible = false
-                }
-            };
-            Canvas.SetLeft(node, (maxX - minX + 240) * _scale);
-            Canvas.SetTop(node, 200 * _scale);
-            _map.Children.Add(node);
-        }
     }
 
     private void Map_MouseDown(object sender, MouseButtonEventArgs e)
@@ -307,18 +319,11 @@ public sealed class MonSetupView : UserControl
         var hit = _map.Children.OfType<Border>().Reverse()
             .FirstOrDefault(card => position.X >= Canvas.GetLeft(card) && position.X <= Canvas.GetLeft(card) + card.Width
                                     && position.Y >= Canvas.GetTop(card) && position.Y <= Canvas.GetTop(card) + card.Height);
-        if (hit?.Tag is string toolTag)
-        {
-            // pseudo-screens (physical DMD node) open their settings directly
-            if (toolTag == "dmd")
-            {
-                OpenToolWindow(L.T("DMD physique", "Physical DMD"), new DmdView(_pluginRoot));
-            }
-            e.Handled = true;
-            return;
-        }
         if (hit?.Tag is not ScreenModel screen) return;
 
+        // first click SELECTS (details below the map); a second click on the
+        // already-selected screen opens its editor (see EndDrag)
+        _clickOnSelected = ReferenceEquals(_selected, screen);
         _selected = screen;
         _dragging = screen;
         _dragStart = position;
@@ -348,11 +353,18 @@ public sealed class MonSetupView : UserControl
         _dragging = null;
         _map.ReleaseMouseCapture();
 
-        // a plain CLICK (no drag) drills straight into the surfaces editor —
-        // including the RetroBat screen (add/remove surfaces with the ES warning)
-        if (clicked is { Connected: true })
+        // second plain CLICK on the selected screen (no drag) opens its editor —
+        // the physical DMD opens its settings, the others the surfaces editor
+        if (clicked is { Connected: true } && _clickOnSelected)
         {
-            OpenDivision(clicked);
+            if (IsPhysicalDmd(clicked))
+            {
+                OpenToolWindow(L.T("DMD physique", "Physical DMD"), new DmdView(_pluginRoot));
+            }
+            else
+            {
+                OpenDivision(clicked);
+            }
         }
     }
 
@@ -363,6 +375,25 @@ public sealed class MonSetupView : UserControl
         _screenPanel.Children.Clear();
         if (_selected == null) return;
         var screen = _selected;
+
+        // the physical DMD: no surfaces here, its own settings window instead
+        if (IsPhysicalDmd(screen))
+        {
+            var dmdCard = new StackPanel();
+            var dmdTitle = Ui.Label($"{screen.Name} — {_physicalDmd.W}×{_physicalDmd.H} px", 15);
+            dmdTitle.FontWeight = FontWeights.Bold;
+            dmdCard.Children.Add(dmdTitle);
+            dmdCard.Children.Add(Ui.MutedLabel(L.T(
+                "Le panneau physique reçoit le miroir du marquee (médias DMD, scores, layouts). Recliquez sur l'écran ou utilisez le bouton pour le régler.",
+                "The physical panel mirrors the marquee (DMD media, scores, layouts). Click the screen again or use the button to configure it.")));
+            var dmdActions = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
+            dmdActions.Children.Add(Ui.Button(L.T("Réglages du DMD physique…", "Physical DMD settings…"), (_, _) =>
+                OpenToolWindow(L.T("DMD physique", "Physical DMD"), new DmdView(_pluginRoot)), primary: true));
+            dmdCard.Children.Add(dmdActions);
+            _screenPanel.Children.Add(Ui.Card(dmdCard));
+            return;
+        }
+
         var (w, h) = SizeOf(screen);
 
         var card = new StackPanel();

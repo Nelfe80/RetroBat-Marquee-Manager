@@ -52,6 +52,11 @@ public sealed class SceneLampsCard : UserControl
     private Point _dragStart;
     private (double X, double Y) _dragOrigin;
 
+    // attract-mode test: animates the placed lamps like the runtime would
+    private System.Windows.Threading.DispatcherTimer? _attractTimer;
+    private int _attractStep;
+    private Button? _attractButton;
+
     /// <summary>backgrounds: candidate marquee images to place lamps on (the
     /// generated marquee first when it exists); a selector shows when several.</summary>
     public SceneLampsCard(string pluginRoot, string system, string rom,
@@ -63,7 +68,7 @@ public sealed class SceneLampsCard : UserControl
         _scenePath = Path.Combine(pluginRoot, "resources", "rbmarquee", rom + ".xml");
 
         var card = new StackPanel();
-        card.Children.Add(Ui.SectionHeader(L.T("Scène & lampes (rbmarquee)", "Scene & lamps (rbmarquee)")));
+        card.Children.Add(Ui.SectionHeader(L.T("Mon marquee dynamique Arcade", "My dynamic Arcade marquee")));
 
         LoadKnownOutputs(system, rom);
         var exists = File.Exists(_scenePath);
@@ -112,7 +117,7 @@ public sealed class SceneLampsCard : UserControl
         if (_canvas.Parent is Border oldHost) oldHost.Child = null;
 
         var card = new StackPanel();
-        card.Children.Add(Ui.SectionHeader(L.T("Scène & lampes (rbmarquee)", "Scene & lamps (rbmarquee)")));
+        card.Children.Add(Ui.SectionHeader(L.T("Mon marquee dynamique Arcade", "My dynamic Arcade marquee")));
         BuildEditor(card);
         Content = card;
     }
@@ -210,6 +215,8 @@ public sealed class SceneLampsCard : UserControl
             if ((attract.SelectedItem as ComboBoxItem)?.Tag is string mode) _attractMode = mode;
         };
         actions.Children.Add(attract);
+        _attractButton = Ui.Button(L.T("▶ Tester l'attract mode", "▶ Test attract mode"), (_, _) => ToggleAttractTest());
+        actions.Children.Add(_attractButton);
         actions.Children.Add(Ui.Button(L.T("Enregistrer la scène (curée)", "Save the scene (curated)"), (_, _) => SaveScene(), primary: true));
         card.Children.Add(actions);
         card.Children.Add(Ui.MutedLabel(L.T(
@@ -346,6 +353,58 @@ public sealed class SceneLampsCard : UserControl
         }
     }
 
+    // ================= attract-mode test =================
+
+    /// <summary>Animates the lamps like the runtime's attract mode: chase lights
+    /// one lamp after the other, alternate blinks odd/even, none blinks together.</summary>
+    private void ToggleAttractTest()
+    {
+        if (_attractTimer != null)
+        {
+            StopAttractTest();
+            return;
+        }
+        if (_lamps.Count == 0)
+        {
+            _status.Text = L.T("Ajoutez d'abord une lampe.", "Add a lamp first.");
+            _status.Foreground = Ui.Error;
+            return;
+        }
+        _attractStep = 0;
+        _attractTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(280)
+        };
+        _attractTimer.Tick += (_, _) =>
+        {
+            _attractStep++;
+            if (_attractStep > 40) StopAttractTest(); // ~11 s then back to normal
+            else Render();
+        };
+        _attractTimer.Start();
+        _attractButton!.Content = L.T("■ Arrêter le test", "■ Stop the test");
+        _status.Text = L.T($"Attract mode « {_attractMode} » en cours sur {_lamps.Count} lampe(s).",
+            $"Attract mode “{_attractMode}” running on {_lamps.Count} lamp(s).");
+        _status.Foreground = Ui.Muted;
+        Render();
+    }
+
+    private void StopAttractTest()
+    {
+        _attractTimer?.Stop();
+        _attractTimer = null;
+        if (_attractButton != null) _attractButton.Content = L.T("▶ Tester l'attract mode", "▶ Test attract mode");
+        Render();
+    }
+
+    /// <summary>Lit state of a lamp during the attract test (full brightness vs dimmed).</summary>
+    private bool AttractLit(int index) => _attractMode switch
+    {
+        "chase" => index == _attractStep % Math.Max(1, _lamps.Count),
+        "alternate" => (index + _attractStep) % 2 == 0,
+        _ => _attractStep % 2 == 0
+    };
+
     // ================= canvas =================
 
     private void SizeCanvasToBackground()
@@ -381,9 +440,12 @@ public sealed class SceneLampsCard : UserControl
             });
         }
 
-        foreach (var lamp in _lamps)
+        var testing = _attractTimer != null;
+        for (var lampIndex = 0; lampIndex < _lamps.Count; lampIndex++)
         {
-            var fill = new SolidColorBrush(ParseColor(lamp.Color)) { Opacity = 0.45 };
+            var lamp = _lamps[lampIndex];
+            var lit = !testing || AttractLit(lampIndex);
+            var fill = new SolidColorBrush(ParseColor(lamp.Color)) { Opacity = testing ? (lit ? 0.9 : 0.10) : 0.45 };
             var stroke = new SolidColorBrush(ParseColor(lamp.Color));
             Shape shape;
             if (lamp.IsRegion)
@@ -419,11 +481,13 @@ public sealed class SceneLampsCard : UserControl
             {
                 Text = lamp.Id + (lamp.Output.Length > 0 ? $" ← {lamp.Output}" : ""),
                 Foreground = Brushes.White,
-                FontSize = 10,
+                Background = new SolidColorBrush(Color.FromArgb(0x88, 0x00, 0x00, 0x00)),
+                Padding = new Thickness(3, 1, 3, 1),
+                FontSize = 12,
                 FontWeight = FontWeights.SemiBold,
-                IsHitTestVisible = false,
-                Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 3, ShadowDepth = 0 }
+                IsHitTestVisible = false
             };
+            TextOptions.SetTextFormattingMode(label, TextFormattingMode.Display);
             Canvas.SetLeft(label, (lamp.IsRegion ? lamp.RX + lamp.RW / 2 : lamp.X) * ViewWidth - 20);
             Canvas.SetTop(label, (lamp.IsRegion ? lamp.RY + lamp.RH / 2 : lamp.Y) * _viewHeight - 8);
             _canvas.Children.Add(label);
@@ -583,19 +647,88 @@ public sealed class SceneLampsCard : UserControl
             Render();
         }));
         _inspector.Children.Add(line);
+
+        // geometry: shape, position and dimensions in fractions of the marquee
+        var line2 = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+        var shapeLabel = Ui.MutedLabel(L.T("Forme", "Shape"));
+        shapeLabel.Margin = new Thickness(0, 0, 6, 0);
+        line2.Children.Add(shapeLabel);
+        var shape = Ui.ComboBox(120);
+        shape.Items.Add(new ComboBoxItem { Content = L.T("Cercle", "Circle"), Tag = "circle" });
+        shape.Items.Add(new ComboBoxItem { Content = "Rectangle", Tag = "region" });
+        shape.SelectedIndex = lamp.IsRegion ? 1 : 0;
+        shape.SelectionChanged += (_, _) =>
+        {
+            var wantRegion = (shape.SelectedItem as ComboBoxItem)?.Tag as string == "region";
+            if (wantRegion == lamp.IsRegion) return;
+            if (wantRegion)
+            {
+                // circle → rectangle, same center
+                lamp.RH = Math.Clamp(lamp.Radius * 2, 0.05, 1.4);
+                lamp.RW = Math.Clamp(lamp.Radius * 2 * _viewHeight / ViewWidth, 0.02, 1.4);
+                lamp.RX = lamp.X - lamp.RW / 2;
+                lamp.RY = lamp.Y - lamp.RH / 2;
+            }
+            else
+            {
+                // rectangle → circle, same center
+                lamp.X = lamp.RX + lamp.RW / 2;
+                lamp.Y = lamp.RY + lamp.RH / 2;
+                lamp.Radius = Math.Clamp(lamp.RH / 2, 0.02, 0.6);
+            }
+            lamp.IsRegion = wantRegion;
+            Select(lamp); // rebuild the fields for the new shape
+            Render();
+        };
+        line2.Children.Add(shape);
+
+        void Fraction(string label, Func<double> get, Action<double> set, double min = -0.5, double max = 1.5)
+        {
+            var text = Ui.MutedLabel(label);
+            text.Margin = new Thickness(6, 0, 4, 0);
+            line2.Children.Add(text);
+            var box = Ui.TextBox(get().ToString("0.###", System.Globalization.CultureInfo.InvariantCulture), 56);
+            box.TextChanged += (_, _) =>
+            {
+                if (double.TryParse(box.Text, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+                {
+                    set(Math.Clamp(parsed, min, max));
+                    Render();
+                }
+            };
+            line2.Children.Add(box);
+        }
+
+        if (lamp.IsRegion)
+        {
+            Fraction("x", () => lamp.RX, v => lamp.RX = v);
+            Fraction("y", () => lamp.RY, v => lamp.RY = v);
+            Fraction(L.T("largeur", "width"), () => lamp.RW, v => lamp.RW = v, 0.02, 1.4);
+            Fraction(L.T("hauteur", "height"), () => lamp.RH, v => lamp.RH = v, 0.05, 1.4);
+        }
+        else
+        {
+            Fraction("x", () => lamp.X, v => lamp.X = v, 0, 1);
+            Fraction("y", () => lamp.Y, v => lamp.Y = v, 0, 1);
+            Fraction(L.T("rayon", "radius"), () => lamp.Radius, v => lamp.Radius = v, 0.02, 0.6);
+        }
+        line2.Children.Add(Ui.MutedLabel(L.T("(fractions du marquee, 0–1)", "(marquee fractions, 0–1)")));
+        _inspector.Children.Add(line2);
     }
 
     // ================= data =================
 
-    /// <summary>Output names of the game's dynpanel (APIExpose data pack) — the
-    /// same source LedManager uses for its lamp channels.</summary>
+    /// <summary>MAME output names of the game — APIExpose ships them in
+    /// resources\outputs\mame\&lt;rom&gt;.json as an "outputs" ARRAY of
+    /// { name, label, physical_type… } objects (the dynpanel files carry none).</summary>
     private void LoadKnownOutputs(string system, string rom)
     {
         try
         {
-            var root = Path.GetFullPath(Path.Combine(_pluginRoot, "..", "APIExpose", "resources", "dynpanels", "games"));
+            var root = Path.GetFullPath(Path.Combine(_pluginRoot, "..", "APIExpose", "resources", "outputs"));
             if (!Directory.Exists(root)) return;
-            var file = Path.Combine(root, rom + ".json");
+            var file = Path.Combine(root, "mame", rom + ".json");
             if (!File.Exists(file))
             {
                 file = Directory.EnumerateFiles(root, rom + ".json", SearchOption.AllDirectories).FirstOrDefault() ?? "";
@@ -604,17 +737,22 @@ public sealed class SceneLampsCard : UserControl
 
             using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(file));
             if (doc.RootElement.TryGetProperty("outputs", out var outputs)
-                && outputs.ValueKind == System.Text.Json.JsonValueKind.Object)
+                && outputs.ValueKind == System.Text.Json.JsonValueKind.Array)
             {
-                foreach (var property in outputs.EnumerateObject())
+                foreach (var output in outputs.EnumerateArray())
                 {
-                    _knownOutputs.Add(property.Name);
+                    if (output.TryGetProperty("name", out var name)
+                        && name.ValueKind == System.Text.Json.JsonValueKind.String
+                        && name.GetString() is { Length: > 0 } value)
+                    {
+                        _knownOutputs.Add(value);
+                    }
                 }
             }
         }
         catch
         {
-            // no dynpanel: free-text output only
+            // no outputs file: free-text output only
         }
     }
 

@@ -338,7 +338,10 @@ public sealed class GameComposerWindow : Window
 
     private void MountComposer(MarqueeProject? project)
     {
-        _composer = new MarqueeComposer(_target.W, _target.H, _mediaRoot)
+        // the canvas takes all the width left by the palette (200) and the
+        // layers/inspector column (270) — the window opens maximized
+        var canvasWidth = Math.Max(640, SystemParameters.WorkArea.Width - 590);
+        _composer = new MarqueeComposer(_target.W, _target.H, _mediaRoot, canvasWidth)
         {
             InlineInspector = false // the window hosts the layers panel + inspector
         };

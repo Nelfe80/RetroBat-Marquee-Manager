@@ -340,12 +340,14 @@ public sealed class ScreenCompositor : Window
             {
                 Text = $"{surface.Id}\n{w}×{h} @ {x},{y}"
                        + (surface.IsFullscreen ? L.T(" (plein écran)", " (fullscreen)") : "") + whenBadge,
-                Foreground = Ui.Foreground,
-                FontSize = 11,
+                Foreground = Brushes.White,
+                Background = new SolidColorBrush(Color.FromArgb(0x88, 0x00, 0x00, 0x00)),
+                Padding = new Thickness(4, 1, 4, 1),
+                FontSize = 13,
                 FontWeight = isSelected ? FontWeights.Bold : FontWeights.Normal,
-                IsHitTestVisible = false,
-                Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 3, ShadowDepth = 0 }
+                IsHitTestVisible = false
             };
+            TextOptions.SetTextFormattingMode(label, TextFormattingMode.Display);
             Canvas.SetLeft(label, x * _zoom + 6);
             Canvas.SetTop(label, y * _zoom + 4);
             _canvas.Children.Add(label);

@@ -179,7 +179,8 @@ public sealed class EffectsCard : UserControl, IDisposable
         }
 
         card.Children.Add(_rows);
-        BuildDefaultsSection(card);
+        // no .MEM = no signal will ever fire: the defaults table is just noise
+        if (signals.Count > 0) BuildDefaultsSection(card);
         BuildMonitorSection(card);
         _status.TextWrapping = TextWrapping.Wrap;
         card.Children.Add(_status);

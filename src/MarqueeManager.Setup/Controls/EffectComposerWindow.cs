@@ -54,7 +54,7 @@ public sealed class EffectComposerWindow : Window
 
     private readonly ListBox _names = new() { MinWidth = 210, Margin = new Thickness(0, 6, 0, 0) };
     private readonly StackPanel _actionsPanel = new();
-    private readonly EffectPreview _preview = new();
+    private readonly EffectPreview _preview = new(640); // large preview band
     private readonly TextBlock _status = Ui.MutedLabel("", 12);
     private readonly List<DispatcherTimer> _previewTimers = new();
     private string? _current;

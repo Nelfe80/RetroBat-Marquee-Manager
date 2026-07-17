@@ -66,11 +66,9 @@ public sealed class GamesView : UserControl, IDisposable
         // ---- picker: system + search ----
         var picker = new StackPanel();
         var pickerRow = new WrapPanel();
-        _systems.Items.Add(new ComboBoxItem { Content = L.T("Tous les systèmes", "All systems"), Tag = "" });
-        foreach (var system in _media.ListSystems())
-        {
-            _systems.Items.Add(new ComboBoxItem { Content = system, Tag = system });
-        }
+        // the system list fills once the physical-presence index is built: only
+        // systems with INSTALLED roms show up ("all systems" was unusably long)
+        _systems.Items.Add(new ComboBoxItem { Content = L.T("(détection des roms…)", "(detecting roms…)"), Tag = "" });
         _systems.SelectedIndex = 0;
         _systems.SelectionChanged += (_, _) =>
         {
@@ -103,13 +101,6 @@ public sealed class GamesView : UserControl, IDisposable
         pickerRow.Children.Add(searchHost);
         picker.Children.Add(pickerRow);
 
-        _results.SelectionChanged += (_, _) =>
-        {
-            if (_results.SelectedItem is ListBoxItem { Tag: GameEntry entry })
-            {
-                OpenGame(entry);
-            }
-        };
         picker.Children.Add(_results);
         page.Children.Add(Ui.Card(picker));
 
@@ -127,11 +118,22 @@ public sealed class GamesView : UserControl, IDisposable
             var present = _media.ListPresentRoms(pluginRoot);
             Dispatcher.Invoke(() =>
             {
-                if (!_disposed)
+                if (_disposed) return;
+                _allGames = games;
+                _present = present;
+
+                // fill the system picker with the INSTALLED systems only
+                _systems.Items.Clear();
+                foreach (var system in _media.ListSystems()
+                             .Where(s => present.ContainsKey(s) && games.Any(g => g.System == s && present[s].Contains(g.Rom))))
                 {
-                    _allGames = games;
-                    _present = present;
+                    _systems.Items.Add(new ComboBoxItem { Content = system, Tag = system });
                 }
+                if (_systems.Items.Count == 0)
+                {
+                    _systems.Items.Add(new ComboBoxItem { Content = L.T("(aucune rom détectée)", "(no rom detected)"), Tag = "" });
+                }
+                _systems.SelectedIndex = 0;
             });
         });
     }
@@ -234,13 +236,14 @@ public sealed class GamesView : UserControl, IDisposable
         var system = SelectedSystem();
         if (system.Length == 0)
         {
-            // "all systems": display names load per system on demand
-            foreach (var withRoms in _present.Keys) _ = EnsureNamesAsync(withRoms);
+            _results.Visibility = Visibility.Collapsed;
+            return;
         }
+        _ = EnsureNamesAsync(system);
 
         var normalized = Normalize(query);
         var matches = _allGames
-            .Where(g => system.Length == 0 || g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
+            .Where(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
             .Where(IsPresent)
             .Where(g => Normalize(g.Rom).Contains(normalized, StringComparison.OrdinalIgnoreCase)
                         || DisplayNameOf(g).Contains(query, StringComparison.OrdinalIgnoreCase)
@@ -252,14 +255,18 @@ public sealed class GamesView : UserControl, IDisposable
         foreach (var game in matches)
         {
             var name = DisplayNameOf(game);
-            _results.Items.Add(new ListBoxItem
+            var item = new ListBoxItem
             {
                 Content = name.Equals(game.Rom, StringComparison.OrdinalIgnoreCase)
                     ? $"{game.Rom} — {game.System}"
                     : $"{name} ({game.Rom}) — {game.System}",
                 Tag = game,
                 FontSize = 12
-            });
+            };
+            // open on CLICK (not SelectionChanged): re-picking the same entry or
+            // searching again after a selection always works
+            item.PreviewMouseLeftButtonUp += (_, _) => OpenGame(game);
+            _results.Items.Add(item);
         }
         _results.Visibility = matches.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -277,6 +284,8 @@ public sealed class GamesView : UserControl, IDisposable
     private void OpenGame(GameEntry entry)
     {
         _results.Visibility = Visibility.Collapsed;
+        _results.Items.Clear();
+        _results.SelectedItem = null;
         _search.Text = "";
         _current = entry;
         _status.Text = "";
