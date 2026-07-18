@@ -256,27 +256,34 @@ public sealed class OptionsView : UserControl
                      ("YouTubeApiKey", "YouTube — Data API key")
                  })
         {
-            var box = Ui.TextBox(ini.Get("Scraper", key, ""), 280);
-            _scraperKeys[key] = box;
-            online.Children.Add(Ui.Row(label, box));
+            online.Children.Add(TestableKeyRow(ini, key, label));
         }
 
-        // ScreenScraper: only the USER account is exposed here; the developer
-        // credentials resolve silently (env / APIExpose .env / build-embedded).
-        var (esUser, _) = Data.ScreenScraperCredentials.ResolveUser(pluginRoot, key => ini.Get("Scraper", key, ""));
-        foreach (var (key, label) in new[]
-                 {
-                     ("ScreenScraperUser", L.T("ScreenScraper — utilisateur", "ScreenScraper — username")),
-                     ("ScreenScraperPass", L.T("ScreenScraper — mot de passe", "ScreenScraper — password"))
-                 })
+        // ScreenScraper: the account resolves from config.ini or EmulationStation
+        // and is displayed masked, never editable here — the developer credentials
+        // resolve silently (env / APIExpose .env / build-embedded).
+        var (esUser, esPassword) = Data.ScreenScraperCredentials.ResolveUser(pluginRoot, key => ini.Get("Scraper", key, ""));
+        var fromEs = ini.Get("Scraper", "ScreenScraperUser", "").Length == 0 && esUser.Length > 0;
+        var ssUserBox = Ui.TextBox(esUser.Length > 0 ? esUser : L.T("(aucun compte détecté)", "(no account detected)"), 280);
+        ssUserBox.IsReadOnly = true;
+        online.Children.Add(Ui.Row(L.T("ScreenScraper — utilisateur", "ScreenScraper — username"), ssUserBox,
+            hint: fromEs ? L.T("(repris d'EmulationStation)", "(picked up from EmulationStation)") : null));
+        var ssPassBox = Ui.TextBox(esPassword.Length > 0 ? "********" : "", 280);
+        ssPassBox.IsReadOnly = true;
+        var ssLine = new StackPanel { Orientation = Orientation.Horizontal };
+        ssLine.Children.Add(ssPassBox);
+        var ssResult = Ui.MutedLabel("");
+        ssResult.VerticalAlignment = VerticalAlignment.Center;
+        ssLine.Children.Add(Ui.Button(L.T("Tester", "Test"), async (_, _) =>
         {
-            var box = Ui.TextBox(ini.Get("Scraper", key, ""), 280);
-            _scraperKeys[key] = box;
-            online.Children.Add(Ui.Row(label, box,
-                hint: ini.Get("Scraper", key, "").Length == 0 && esUser.Length > 0
-                    ? L.T("(repris d'EmulationStation)", "(picked up from EmulationStation)")
-                    : null));
-        }
+            ssResult.Text = L.T("test…", "testing…");
+            ssResult.Foreground = Ui.Muted;
+            var ok = await TestSourceAsync("ScreenScraper");
+            ssResult.Text = ok ? "✓" : L.T("✗ compte refusé", "✗ account rejected");
+            ssResult.Foreground = ok ? Ui.Ok : Ui.Error;
+        }));
+        ssLine.Children.Add(ssResult);
+        online.Children.Add(Ui.Row(L.T("ScreenScraper — mot de passe", "ScreenScraper — password"), ssLine));
         page.Children.Add(Ui.Card(online));
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 6) };
@@ -286,6 +293,128 @@ public sealed class OptionsView : UserControl
         page.Children.Add(_status);
 
         Content = Ui.Page(page);
+    }
+
+    private static readonly System.Net.Http.HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(8) };
+
+    /// <summary>API key field + "Tester" button: a successful probe shows ✓ and
+    /// saves the key to config.ini on the spot (no separate save step needed).</summary>
+    private UIElement TestableKeyRow(IniFile ini, string key, string label)
+    {
+        var box = Ui.TextBox(ini.Get("Scraper", key, ""), 280);
+        _scraperKeys[key] = box;
+        var result = Ui.MutedLabel("");
+        result.VerticalAlignment = VerticalAlignment.Center;
+        var line = new StackPanel { Orientation = Orientation.Horizontal };
+        line.Children.Add(box);
+        line.Children.Add(Ui.Button(L.T("Tester", "Test"), async (_, _) =>
+        {
+            result.Text = L.T("test…", "testing…");
+            result.Foreground = Ui.Muted;
+            var ok = await TestSourceAsync(key);
+            if (ok)
+            {
+                // the Twitch token needs BOTH halves: a green check stores the pair
+                SaveScraperKeys(key.StartsWith("Twitch", StringComparison.Ordinal)
+                    ? new[] { "TwitchClientId", "TwitchClientSecret" }
+                    : new[] { key });
+                result.Text = "✓ " + L.T("enregistré", "saved");
+                result.Foreground = Ui.Ok;
+            }
+            else
+            {
+                result.Text = L.T("✗ clé refusée", "✗ key rejected");
+                result.Foreground = Ui.Error;
+            }
+        }));
+        line.Children.Add(result);
+        return Ui.Row(label, line);
+    }
+
+    private void SaveScraperKeys(string[] keys)
+    {
+        var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
+        foreach (var key in keys)
+        {
+            if (_scraperKeys.TryGetValue(key, out var box))
+            {
+                ini.Set("Scraper", key, box.Text.Trim());
+            }
+        }
+        ini.Save();
+    }
+
+    /// <summary>Cheap authenticated probe of each online source: one tiny request,
+    /// valid credentials = success status.</summary>
+    private async Task<bool> TestSourceAsync(string key)
+    {
+        try
+        {
+            switch (key)
+            {
+                case "SteamGridDbApiKey":
+                {
+                    var value = _scraperKeys[key].Text.Trim();
+                    if (value.Length == 0) return false;
+                    using var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get,
+                        "https://www.steamgriddb.com/api/v2/search/autocomplete/mario");
+                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", value);
+                    using var response = await Http.SendAsync(request);
+                    return response.IsSuccessStatusCode;
+                }
+                case "TheGamesDbApiKey":
+                {
+                    var value = _scraperKeys[key].Text.Trim();
+                    if (value.Length == 0) return false;
+                    using var response = await Http.GetAsync(
+                        $"https://api.thegamesdb.net/v1.1/Games/ByGameName?apikey={Uri.EscapeDataString(value)}&name=mario");
+                    return response.IsSuccessStatusCode;
+                }
+                case "TwitchClientId":
+                case "TwitchClientSecret":
+                {
+                    var id = _scraperKeys["TwitchClientId"].Text.Trim();
+                    var secret = _scraperKeys["TwitchClientSecret"].Text.Trim();
+                    if (id.Length == 0 || secret.Length == 0) return false;
+                    using var content = new System.Net.Http.FormUrlEncodedContent(new Dictionary<string, string>
+                    {
+                        ["client_id"] = id,
+                        ["client_secret"] = secret,
+                        ["grant_type"] = "client_credentials"
+                    });
+                    using var response = await Http.PostAsync("https://id.twitch.tv/oauth2/token", content);
+                    return response.IsSuccessStatusCode;
+                }
+                case "YouTubeApiKey":
+                {
+                    var value = _scraperKeys[key].Text.Trim();
+                    if (value.Length == 0) return false;
+                    using var response = await Http.GetAsync(
+                        $"https://www.googleapis.com/youtube/v3/videos?part=id&id=dQw4w9WgXcQ&key={Uri.EscapeDataString(value)}");
+                    return response.IsSuccessStatusCode;
+                }
+                case "ScreenScraper":
+                {
+                    var (devId, devPassword) = Data.ScreenScraperCredentials.ResolveDev(_pluginRoot);
+                    var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
+                    var (user, password) = Data.ScreenScraperCredentials.ResolveUser(_pluginRoot, k => ini.Get("Scraper", k, ""));
+                    if (devId.Length == 0 || user.Length == 0) return false;
+                    var url = "https://api.screenscraper.fr/api2/ssuserInfos.php?output=json"
+                              + $"&devid={Uri.EscapeDataString(devId)}&devpassword={Uri.EscapeDataString(devPassword)}"
+                              + "&softname=RetroBat-MarqueeManager"
+                              + $"&ssid={Uri.EscapeDataString(user)}&sspassword={Uri.EscapeDataString(password)}";
+                    using var response = await Http.GetAsync(url);
+                    if (!response.IsSuccessStatusCode) return false;
+                    var body = await response.Content.ReadAsStringAsync();
+                    return body.Contains("\"ssuser\"", StringComparison.OrdinalIgnoreCase);
+                }
+            }
+        }
+        catch
+        {
+            // network failure counts as a failed probe
+        }
+        return false;
     }
 
     /// <summary>Writes the key only when the field holds a valid positive number —

@@ -208,6 +208,7 @@ public sealed class EffectBindingDialog : Window
         line1.Children.Add(colorLabel);
         line1.Children.Add(colorBox);
         line1.Children.Add(swatch);
+        line1.Children.Add(Ui.ColorPalette(colorBox));
         NumberFor(line1, L.T("Durée (ms)", "Duration (ms)"), draft.DurationMs, v => draft.DurationMs = v);
         simple.Children.Add(line1);
 

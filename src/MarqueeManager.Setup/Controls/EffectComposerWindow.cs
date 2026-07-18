@@ -350,6 +350,7 @@ public sealed class EffectComposerWindow : Window
                 line2.Children.Add(colorLabel);
                 line2.Children.Add(colorBox);
                 line2.Children.Add(swatch);
+                line2.Children.Add(Ui.ColorPalette(colorBox));
 
                 var dipSlider = new Slider
                 {

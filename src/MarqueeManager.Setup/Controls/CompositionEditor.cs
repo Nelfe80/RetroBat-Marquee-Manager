@@ -773,14 +773,27 @@ public sealed class CompositionEditor : Window
             {
                 var box = Ui.TextBox(component.Options.TryGetValue(key, out var v) ? v : "", 100);
                 box.TextChanged += (_, _) => component.Options[key] = box.Text.Trim();
-                style.Children.Add(Ui.Row(key, box, labelWidth: 90));
+                if (key == "color")
+                {
+                    var line = new WrapPanel();
+                    line.Children.Add(box);
+                    line.Children.Add(Ui.ColorPalette(box));
+                    style.Children.Add(Ui.Row(key, line, labelWidth: 90));
+                }
+                else
+                {
+                    style.Children.Add(Ui.Row(key, box, labelWidth: 90));
+                }
             }
         }
         else if (component.Type is "text.meta" or "text.custom")
         {
             var box = Ui.TextBox(component.Options.TryGetValue("color", out var v) ? v : "#FFFFFF", 100);
             box.TextChanged += (_, _) => component.Options["color"] = box.Text.Trim();
-            style.Children.Add(Ui.Row(L.T("Couleur", "Color"), box, labelWidth: 90));
+            var line = new WrapPanel();
+            line.Children.Add(box);
+            line.Children.Add(Ui.ColorPalette(box));
+            style.Children.Add(Ui.Row(L.T("Couleur", "Color"), line, labelWidth: 90));
         }
         else if (component.Type.StartsWith("media."))
         {

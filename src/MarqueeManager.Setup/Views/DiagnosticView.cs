@@ -45,10 +45,24 @@ public sealed class DiagnosticView : UserControl
         _sources.TextWrapping = TextWrapping.Wrap;
         page.Children.Add(Ui.Card(_sources));
 
-        page.Children.Add(Ui.SectionHeader(L.T("Derniers événements du runtime", "Latest runtime events")));
+        // the runtime log tail is HIDDEN by default: a toggle reveals it on demand
         _logs.TextWrapping = TextWrapping.Wrap;
         _logs.FontFamily = new System.Windows.Media.FontFamily("Consolas");
-        page.Children.Add(Ui.Card(_logs));
+        var logsSection = new StackPanel { Visibility = Visibility.Collapsed };
+        logsSection.Children.Add(Ui.SectionHeader(L.T("Derniers événements du runtime", "Latest runtime events")));
+        logsSection.Children.Add(Ui.Card(_logs));
+        Button logsToggle = null!;
+        logsToggle = Ui.Button(L.T("Afficher les derniers événements du runtime", "Show the latest runtime events"), (_, _) =>
+        {
+            var show = logsSection.Visibility != Visibility.Visible;
+            logsSection.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            logsToggle.Content = show
+                ? L.T("Masquer les derniers événements du runtime", "Hide the latest runtime events")
+                : L.T("Afficher les derniers événements du runtime", "Show the latest runtime events");
+        });
+        logsToggle.Margin = new Thickness(0, 8, 0, 0);
+        page.Children.Add(logsToggle);
+        page.Children.Add(logsSection);
 
         Content = Ui.Page(page);
         _ = RefreshAsync();

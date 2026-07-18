@@ -831,17 +831,21 @@ half4 main(float2 p) {
         if (_tubeVisual == null || _tubeVisualOpacity <= 0 || _profile.Bulb.SolidState) return;
         var w = _maps!.Width;
         var h = _maps.Height;
-        // preserve the tube's own aspect ratio — never deform it
-        var tubeWidth = 0.94f * w;
-        var tubeHeight = Math.Min(tubeWidth * _tubeVisual.Height / _tubeVisual.Width, 0.30f * h);
-        tubeWidth = tubeHeight * _tubeVisual.Width / _tubeVisual.Height;
+        // the glass tube spans exactly between the two electrode glows (the
+        // "lights" DrawElectrodeGlow paints at 4.5 % / 95.5 % of the width);
+        // stretching along the tube axis is correct — only the thickness must
+        // stay believable (a real T8 in a marquee is a thin bar, not a slab)
+        var left = 0.045f * w;
+        var tubeWidth = 0.955f * w - left;
+        var maxThickness = (_backlightProfile.TwoTubes ? 0.11f : 0.14f) * h;
+        var tubeHeight = Math.Min(maxThickness, tubeWidth * _tubeVisual.Height / _tubeVisual.Width);
         for (var i = 0; i < _tubes.Length; i++)
         {
             var intensity = (float)Math.Clamp(_tubes[i].Intensity, 0, 1);
             if (intensity < 0.02f) continue;
             var tubeY = i == 0 ? _backlightProfile.TubeY1 : _backlightProfile.TubeY2;
             var centerY = _offset.Y + tubeY * h;
-            var dest = SKRect.Create(_offset.X + (w - tubeWidth) / 2f, centerY - tubeHeight / 2f, tubeWidth, tubeHeight);
+            var dest = SKRect.Create(_offset.X + left, centerY - tubeHeight / 2f, tubeWidth, tubeHeight);
             _glowPaint.Color = SKColors.White.WithAlpha((byte)(intensity * _tubeVisualOpacity * 255));
             canvas.DrawBitmap(_tubeVisual, dest, _glowPaint);
         }

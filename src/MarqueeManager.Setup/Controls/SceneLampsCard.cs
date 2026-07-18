@@ -839,31 +839,7 @@ public sealed class SceneLampsCard : UserControl
         paletteLabel.Margin = new Thickness(0, 0, 6, 0);
         paletteLabel.VerticalAlignment = VerticalAlignment.Center;
         paletteLine.Children.Add(paletteLabel);
-        foreach (var hex in new[]
-                 {
-                     "#ffd9a0", "#ffffff", "#ff3b30", "#ff9c57", "#ffd60a",
-                     "#34c759", "#32ade6", "#007aff", "#af52de", "#ff2d55"
-                 })
-        {
-            var chip = new Border
-            {
-                Width = 20, Height = 20, CornerRadius = new CornerRadius(4),
-                Background = new SolidColorBrush(ParseColor(hex)),
-                BorderBrush = hex.Equals(lamp.Color, StringComparison.OrdinalIgnoreCase) ? Ui.Accent : Ui.PanelBorder,
-                BorderThickness = new Thickness(hex.Equals(lamp.Color, StringComparison.OrdinalIgnoreCase) ? 2 : 1),
-                Margin = new Thickness(0, 0, 4, 0),
-                Cursor = Cursors.Hand,
-                ToolTip = hex
-            };
-            var chosen = hex;
-            chip.MouseLeftButtonDown += (_, e2) =>
-            {
-                colorBox.Text = chosen; // TextChanged applies color + renders
-                Select(lamp);           // refresh the palette's selected outline
-                e2.Handled = true;
-            };
-            paletteLine.Children.Add(chip);
-        }
+        paletteLine.Children.Add(Ui.ColorPalette(colorBox));
         _inspector.Children.Add(paletteLine);
 
         // geometry: shape, position and dimensions in fractions of the marquee

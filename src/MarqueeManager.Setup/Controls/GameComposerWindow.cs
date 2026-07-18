@@ -298,8 +298,11 @@ public sealed class GameComposerWindow : Window
             _inspectorPanel.Children.Add(textBox);
             var colorBox = Ui.TextBox(layer.TextColor, 100);
             colorBox.TextChanged += (_, _) => _composer.ApplyToLayer(layer, l => l.TextColor = colorBox.Text.Trim());
-            _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Couleur (#RRGGBB)", "Color (#RRGGBB)"), 11));
+            _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Couleur", "Color"), 11));
             _inspectorPanel.Children.Add(colorBox);
+            var palette = Ui.ColorPalette(colorBox);
+            palette.Margin = new Thickness(0, 4, 0, 0);
+            _inspectorPanel.Children.Add(palette);
         }
 
         var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };

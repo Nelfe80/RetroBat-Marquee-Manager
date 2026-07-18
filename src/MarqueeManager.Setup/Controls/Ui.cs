@@ -246,6 +246,56 @@ public static class Ui
         HorizontalAlignment = HorizontalAlignment.Left
     };
 
+    /// <summary>Classic marquee bulb / neon tints offered wherever a color is picked.</summary>
+    public static readonly string[] PaletteColors =
+    {
+        "#ffd9a0", "#ffffff", "#ff3b30", "#ff9c57", "#ffd60a",
+        "#34c759", "#32ade6", "#007aff", "#af52de", "#ff2d55"
+    };
+
+    /// <summary>Row of clickable color chips bound to a hex TextBox: a click writes
+    /// the hex into the box (its TextChanged applies the color), the chip matching
+    /// the current value stays outlined. The hex field remains the escape hatch.</summary>
+    public static WrapPanel ColorPalette(TextBox colorBox)
+    {
+        var panel = new WrapPanel { VerticalAlignment = VerticalAlignment.Center };
+        var chips = new List<Border>();
+        void RefreshOutlines()
+        {
+            var current = colorBox.Text.Trim();
+            foreach (var chip in chips)
+            {
+                var selected = (chip.Tag as string ?? "").Equals(current, StringComparison.OrdinalIgnoreCase);
+                chip.BorderBrush = selected ? Accent : PanelBorder;
+                chip.BorderThickness = new Thickness(selected ? 2 : 1);
+            }
+        }
+        foreach (var hex in PaletteColors)
+        {
+            var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
+            var chip = new Border
+            {
+                Width = 20, Height = 20, CornerRadius = new CornerRadius(4),
+                Background = new System.Windows.Media.SolidColorBrush(color),
+                Margin = new Thickness(0, 0, 4, 0),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                ToolTip = hex,
+                Tag = hex
+            };
+            var chosen = hex;
+            chip.MouseLeftButtonDown += (_, e) =>
+            {
+                colorBox.Text = chosen;
+                e.Handled = true;
+            };
+            chips.Add(chip);
+            panel.Children.Add(chip);
+        }
+        colorBox.TextChanged += (_, _) => RefreshOutlines();
+        RefreshOutlines();
+        return panel;
+    }
+
     /// <summary>Indeterminate progress row shown while a sheet loads off-thread.</summary>
     public static StackPanel Spinner(string text)
     {

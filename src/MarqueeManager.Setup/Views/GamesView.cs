@@ -89,7 +89,9 @@ public sealed class GamesView : UserControl, IDisposable
         _search.TextChanged += (_, _) => RefreshResults();
         _search.PreviewKeyDown += Search_KeyDown;
         searchHost.Children.Add(_search);
-        _searchPlaceholder.Margin = new Thickness(10, 0, 0, 0);
+        // border 1 px + padding 8 = the caret sits at 9 px; the placeholder must
+        // sit at the exact same x or the text "jumps" on the first keystroke
+        _searchPlaceholder.Margin = new Thickness(9, 0, 0, 0);
         _searchPlaceholder.IsHitTestVisible = false;
         _searchPlaceholder.VerticalAlignment = VerticalAlignment.Center;
         searchHost.Children.Add(_searchPlaceholder);
