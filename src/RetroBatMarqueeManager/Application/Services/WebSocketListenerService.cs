@@ -374,7 +374,9 @@ public sealed class WebSocketListenerService : BackgroundService
             ["screenmarquee"] = MediaPath(media, "ScreenMarquee"),
             ["screenmarquee-small"] = MediaPath(media, "ScreenMarqueeSmall"),
             ["topper"] = MediaPath(media, "Topper"),
-            ["video"] = ResolveGameVideo(meta)
+            // APIExpose 1.3.5+ carries Media.Video in the snapshot; the disk
+            // walk stays as fallback for older APIs.
+            ["video"] = MediaPath(media, "Video") ?? ResolveGameVideo(meta)
         };
 
         var metaValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -500,8 +502,9 @@ public sealed class WebSocketListenerService : BackgroundService
         return id == null ? null : $"https://www.youtube.com/embed/{id}?autoplay=1&mute=1&controls=0&loop=1&playlist={id}";
     }
 
-    /// <summary>games\&lt;rom&gt;\video.mp4 lives in the APIExpose media library
-    /// (sibling plugin) and is not part of the ws snapshot.</summary>
+    /// <summary>Fallback for APIExpose &lt; 1.3.5 (snapshot without Media.Video):
+    /// games\&lt;rom&gt;\video.mp4 lives in the APIExpose media library (sibling
+    /// plugin) and is walked on disk.</summary>
     private string? ResolveGameVideo(Application.Lighting.LightingSceneMeta? meta)
     {
         if (meta?.System is not { Length: > 0 } || meta.Rom is not { Length: > 0 }) return null;
