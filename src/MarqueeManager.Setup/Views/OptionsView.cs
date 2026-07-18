@@ -27,7 +27,6 @@ public sealed class OptionsView : UserControl
     private readonly TextBlock _fillHeightLabel = Ui.MutedLabel("");
     private readonly Slider _glass;
     private readonly TextBlock _glassLabel = Ui.MutedLabel("");
-    private readonly CheckBox _preferGenerated;
     private readonly CheckBox _dmdMirror;
     private readonly CheckBox _sound;
     private readonly Slider _soundVolume;
@@ -100,6 +99,11 @@ public sealed class OptionsView : UserControl
                 "Enable the lighting render (fluorescent ignition, living backlight)"),
             ini.GetBool("Lighting", "Enabled", false));
         lighting.Children.Add(_lightingEnabled);
+        lighting.Children.Add(Ui.MutedLabel(L.T(
+            "Interrupteur général — le rendu vit sur les surfaces qui portent le composant « Rendu lumineux », "
+            + "réglable par surface et par état d'affichage dans Mon setup.",
+            "Master switch — the render lives on the surfaces carrying the “Lighting” component, "
+            + "set per surface and per display state in My setup.")));
 
         (_renderScale, var renderLine) = PercentSlider(ini.GetDouble("Lighting", "RenderScale", 0.75), 0.25, 1.0,
             _renderScaleLabel, v => $"{(int)(v * 100)} % — " + L.T("qualité/performance", "quality/performance"));
@@ -118,9 +122,6 @@ public sealed class OptionsView : UserControl
                 : $"{(v * 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)} %");
         lighting.Children.Add(Ui.Row(L.T("Reflet de la vitre", "Glass reflection"), glassLine));
 
-        _preferGenerated = Ui.CheckBox(L.T("Préférer le marquee généré au scan réel", "Prefer the generated marquee over the real scan"),
-            ini.GetBool("Lighting", "PreferGeneratedMarquee", false));
-        lighting.Children.Add(_preferGenerated);
         _dmdMirror = Ui.CheckBox(L.T("Miroir de l'animation lumineuse sur le DMD physique (sinon média dédié, recommandé décoché)",
                 "Mirror the lighting animation on the physical DMD (otherwise dedicated media, recommended unchecked)"),
             ini.GetBool("Lighting", "DmdMirror", false));
@@ -135,9 +136,10 @@ public sealed class OptionsView : UserControl
 
         (_tubeOpacity, var tubeLine) = PercentSlider(ini.GetDouble("Lighting", "TubeVisualOpacity", 0.0), 0.0, 1.0,
             _tubeOpacityLabel, v => v <= 0
-                ? L.T("tube invisible (recommandé)", "invisible tube (recommended)")
+                ? L.T("tube invisible", "invisible tube")
                 : $"{(int)(v * 100)} %");
-        lighting.Children.Add(Ui.Row(L.T("Tube néon visible", "Visible neon tube"), tubeLine));
+        lighting.Children.Add(Ui.Row(L.T("Tube néon visible", "Visible neon tube"), tubeLine,
+            L.T("halo + tube entrevu derrière l'affiche quand il vacille", "halo + tube glimpsed behind the print when it flickers")));
 
         _fpsLimit = Ui.ComboBox(120);
         foreach (var fps in new[] { 30, 45, 60 })
@@ -161,16 +163,21 @@ public sealed class OptionsView : UserControl
         lighting.Children.Add(Ui.Row(L.T("Cadence maximale", "Frame rate cap"), fpsLine));
         page.Children.Add(Ui.Card(lighting));
 
-        // --- DOF / layouts MAME ---
-        page.Children.Add(Ui.SectionHeader(L.T("Layouts MAME (.lay)", "MAME layouts (.lay)")));
+        // --- layouts MAME (.lay), section [DOF] historique du config.ini ---
+        page.Children.Add(Ui.SectionHeader(L.T("Compatibilité .lay (layouts MAME)", ".lay compatibility (MAME layouts)")));
         var dof = new StackPanel();
+        dof.Children.Add(Ui.MutedLabel(L.T(
+            "Le marquee d'un jeu est porté par sa scène lumineuse quand elle existe (Mon marquee dynamique Arcade) ; "
+            + "le .lay garde alors uniquement sa vue DMD dédiée. Sans scène, ses vues marquee/topper/iccard restent servies.",
+            "A game's marquee is owned by its light scene when one exists (My dynamic Arcade marquee); "
+            + "the .lay then only keeps its dedicated DMD view. Without a scene, its marquee/topper/iccard views still serve.")));
         _dofEnabled = Ui.CheckBox(L.T("Lire les fichiers .lay MAME (marquee, topper, iccard, DMD)",
                 "Read MAME .lay files (marquee, topper, iccard, DMD)"),
             ini.GetBool("DOF", "Enabled", true));
         dof.Children.Add(_dofEnabled);
-        _dofMarquee = Ui.CheckBox(L.T("Autoriser les vues .lay sur les surfaces WPF", "Allow .lay views on the WPF surfaces"), ini.GetBool("DOF", "MarqueeEnabled", true));
+        _dofMarquee = Ui.CheckBox(L.T("Autoriser les vues .lay sur les surfaces", "Allow .lay views on the surfaces"), ini.GetBool("DOF", "MarqueeEnabled", true));
         dof.Children.Add(_dofMarquee);
-        _dofDmd = Ui.CheckBox(L.T("Autoriser les frames .lay DMD", "Allow .lay DMD frames"), ini.GetBool("DOF", "DmdEnabled", true));
+        _dofDmd = Ui.CheckBox(L.T("Autoriser les frames .lay sur le DMD", "Allow .lay frames on the DMD"), ini.GetBool("DOF", "DmdEnabled", true));
         dof.Children.Add(_dofDmd);
         page.Children.Add(Ui.Card(dof));
 
@@ -181,6 +188,9 @@ public sealed class OptionsView : UserControl
                 "Show RetroAchievements (through APIExpose, no direct connection)"),
             ini.GetBool("RetroAchievements", "Enabled", false));
         ra.Children.Add(_raEnabled);
+        ra.Children.Add(Ui.MutedLabel(L.T(
+            "Ici on active les flux ; l'endroit où ils s'affichent se choisit par surface dans Mon setup (composants RetroAchievements).",
+            "This enables the feeds; where they display is chosen per surface in My setup (RetroAchievements components).")));
         _raMarquee = Ui.CheckBox(L.T("Sur le marquee", "On the marquee"), ini.GetBool("RetroAchievements", "MarqueeEnabled", true));
         ra.Children.Add(_raMarquee);
         _raDmd = Ui.CheckBox(L.T("Sur le DMD", "On the DMD"), ini.GetBool("RetroAchievements", "DmdEnabled", true));
@@ -225,6 +235,9 @@ public sealed class OptionsView : UserControl
         // --- LiveData ---
         page.Children.Add(Ui.SectionHeader(L.T("Score et timer live", "Live score and timer")));
         var live = new StackPanel();
+        live.Children.Add(Ui.MutedLabel(L.T(
+            "Ici on active les flux ; l'endroit où ils s'affichent se choisit par surface dans Mon setup (composants Score / Timer).",
+            "This enables the feeds; where they display is chosen per surface in My setup (Score / Timer components).")));
         _liveScore = Ui.CheckBox(L.T("Score live", "Live score"), ini.GetBool("LiveData", "ScoreEnabled", true));
         live.Children.Add(_liveScore);
         _liveTimer = Ui.CheckBox(L.T("Timer live", "Live timer"), ini.GetBool("LiveData", "TimerEnabled", true));
@@ -486,7 +499,8 @@ public sealed class OptionsView : UserControl
         ini.Set("Lighting", "RenderScale", D(_renderScale));
         ini.Set("Lighting", "FillHeightMaxCrop", D(_fillHeight));
         ini.Set("Lighting", "GlassReflection", D(_glass));
-        ini.Set("Lighting", "PreferGeneratedMarquee", B(_preferGenerated));
+        // PreferGeneratedMarquee : plus exposé ici — l'ordre de la chaîne de
+        // sources (Mes systèmes) porte cette intention ; la clé ini reste honorée
         ini.Set("Lighting", "DmdMirror", B(_dmdMirror));
         ini.Set("Lighting", "SoundEnabled", B(_sound));
         ini.Set("Lighting", "SoundVolume", D(_soundVolume));

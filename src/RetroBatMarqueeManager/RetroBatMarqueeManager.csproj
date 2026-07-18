@@ -30,7 +30,6 @@
     <None Include="..\..\resources\fonts\nokiafc22.ttf" Link="resources\fonts\nokiafc22.ttf"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
     <None Include="..\..\resources\lighting\bulbs.xml" Link="resources\lighting\bulbs.xml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
     <None Include="..\..\resources\lighting\cabinets.xml" Link="resources\lighting\cabinets.xml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
-    <None Include="..\..\resources\lighting\neon_fond_transparent.png" Link="resources\lighting\neon_fond_transparent.png"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
   </ItemGroup>
 
   <Target Name="ForceCleanOutput" AfterTargets="Clean">

@@ -427,7 +427,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     var libraries = Application.Lighting.LightingLibraries.Load(lightingDir, _logger);
                     _lightingRenderer = new Application.Lighting.MarqueeLightingRenderer(_logger, libraries,
                         _lightingOptions.FillHeightMaxCrop, sound, _lightingOptions.GlassReflection,
-                        Path.Combine(lightingDir, "neon_fond_transparent.png"), _lightingOptions.TubeVisualOpacity);
+                        _lightingOptions.TubeVisualOpacity);
                     if (_dmdMirror != null) _lightingHost.FrameRendered = MirrorFrameToDmd;
                     this.Loaded += (_, _) =>
                     {

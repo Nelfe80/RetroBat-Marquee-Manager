@@ -48,7 +48,6 @@ half4 main(float2 p) {
     private readonly SKPaint _paint = new();
     private readonly SKPaint _glowPaint = new() { BlendMode = SKBlendMode.Plus };
     private readonly SKPaint _glassPaint = new();
-    private readonly SKBitmap? _tubeVisual;
 
     // requested by the UI thread, consumed by the render thread
     private volatile MarqueeRequest? _requested;
@@ -102,7 +101,7 @@ half4 main(float2 p) {
 
     public MarqueeLightingRenderer(ILogger logger, LightingLibraries libraries, double fillHeightMaxCrop = 0.30,
         Infrastructure.Audio.LightingSoundService? sound = null, double glassReflection = 0.06,
-        string? tubeVisualPath = null, double tubeVisualOpacity = 0.0)
+        double tubeVisualOpacity = 0.0)
     {
         _logger = logger;
         _libraries = libraries;
@@ -112,8 +111,6 @@ half4 main(float2 p) {
         _tubeVisualOpacity = (float)Math.Clamp(tubeVisualOpacity, 0.0, 0.5);
         _effect = SKRuntimeEffect.CreateShader(Sksl, out var errors)
                   ?? throw new InvalidOperationException($"SKSL compilation failed: {errors}");
-        if (_tubeVisualOpacity > 0 && tubeVisualPath != null && File.Exists(tubeVisualPath))
-            _tubeVisual = SKBitmap.Decode(tubeVisualPath);
     }
 
     /// <summary>
@@ -828,28 +825,73 @@ half4 main(float2 p) {
     /// </summary>
     private void DrawTubeVisual(SKCanvas canvas)
     {
-        if (_tubeVisual == null || _tubeVisualOpacity <= 0 || _profile.Bulb.SolidState) return;
+        if (_tubeVisualOpacity <= 0 || _profile.Bulb.SolidState) return;
         var w = _maps!.Width;
         var h = _maps.Height;
-        // the glass tube spans exactly between the two electrode glows (the
-        // "lights" DrawElectrodeGlow paints at 4.5 % / 95.5 % of the width);
-        // stretching along the tube axis is correct — only the thickness must
-        // stay believable (a real T8 in a marquee is a thin bar, not a slab)
-        var left = 0.045f * w;
-        var tubeWidth = 0.955f * w - left;
-        var maxThickness = (_backlightProfile.TwoTubes ? 0.11f : 0.14f) * h;
-        var tubeHeight = Math.Min(maxThickness, tubeWidth * _tubeVisual.Height / _tubeVisual.Width);
+        // fully vector tube (no bitmap, crisp at any resolution), spanning exactly
+        // between the two electrode glows (4.5 % / 95.5 % of the width). The eye
+        // mostly sees the HALO the tube throws; the glass body itself only shows
+        // through when the tube dims — glimpsed behind the print during flicker,
+        // drowned in its own light at full glow.
+        var left = _offset.X + 0.045f * w;
+        var right = _offset.X + 0.955f * w;
+        var thickness = (_backlightProfile.TwoTubes ? 0.075f : 0.09f) * h;
+        var warm = new SKColor(255, 233, 199);
         for (var i = 0; i < _tubes.Length; i++)
         {
             var intensity = (float)Math.Clamp(_tubes[i].Intensity, 0, 1);
-            if (intensity < 0.02f) continue;
             var tubeY = i == 0 ? _backlightProfile.TubeY1 : _backlightProfile.TubeY2;
             var centerY = _offset.Y + tubeY * h;
-            var dest = SKRect.Create(_offset.X + left, centerY - tubeHeight / 2f, tubeWidth, tubeHeight);
-            _glowPaint.Color = SKColors.White.WithAlpha((byte)(intensity * _tubeVisualOpacity * 255));
-            canvas.DrawBitmap(_tubeVisual, dest, _glowPaint);
+
+            // 1. halo: the light around the tube, what the marquee actually shows
+            var haloAlpha = (byte)(intensity * _tubeVisualOpacity * 120);
+            if (haloAlpha > 2)
+            {
+                var haloHalf = thickness * 1.9f;
+                using var halo = SKShader.CreateLinearGradient(
+                    new SKPoint(left, centerY - haloHalf), new SKPoint(left, centerY + haloHalf),
+                    new[] { warm.WithAlpha(0), warm.WithAlpha(haloAlpha), warm.WithAlpha(0) },
+                    null, SKShaderTileMode.Clamp);
+                _glowPaint.Shader = halo;
+                _glowPaint.BlendMode = SKBlendMode.Screen;
+                canvas.DrawRect(SKRect.Create(left, centerY - haloHalf, right - left, haloHalf * 2f), _glowPaint);
+                _glowPaint.Shader = null;
+            }
+
+            // 2. glass body: barely there at full glow, glimpsed when it flickers
+            var glimpse = _tubeVisualOpacity * (0.18f + 0.60f * (1f - intensity));
+            if (glimpse > 0.01f)
+            {
+                var body = SKRect.Create(left, centerY - thickness / 2f, right - left, thickness);
+                var rim = new SKColor(70, 84, 92);       // cool glass edge
+                var phosphor = new SKColor(214, 224, 226); // powder coating inside
+                using var glass = SKShader.CreateLinearGradient(
+                    new SKPoint(left, body.Top), new SKPoint(left, body.Bottom),
+                    new[]
+                    {
+                        rim.WithAlpha((byte)(glimpse * 150)),
+                        phosphor.WithAlpha((byte)(glimpse * 110)),
+                        rim.WithAlpha((byte)(glimpse * 150))
+                    },
+                    new[] { 0f, 0.5f, 1f }, SKShaderTileMode.Clamp);
+                _glowPaint.Shader = glass;
+                _glowPaint.BlendMode = SKBlendMode.SrcOver;
+                canvas.DrawRoundRect(body, thickness / 2f, thickness / 2f, _glowPaint);
+                _glowPaint.Shader = null;
+            }
+
+            // 3. thin phosphor core while lit, fused into the halo
+            var coreAlpha = (byte)(intensity * _tubeVisualOpacity * 150);
+            if (coreAlpha > 2)
+            {
+                var core = SKRect.Create(left, centerY - thickness * 0.16f, right - left, thickness * 0.32f);
+                _glowPaint.Color = warm.WithAlpha(coreAlpha);
+                _glowPaint.BlendMode = SKBlendMode.Screen;
+                canvas.DrawRoundRect(core, core.Height / 2f, core.Height / 2f, _glowPaint);
+            }
         }
         _glowPaint.Color = SKColors.White;
+        _glowPaint.BlendMode = SKBlendMode.Plus;
     }
 
     /// <summary>
@@ -1074,7 +1116,6 @@ half4 main(float2 p) {
         _paint.Dispose();
         _glowPaint.Dispose();
         _glassPaint.Dispose();
-        _tubeVisual?.Dispose();
         _effect.Dispose();
     }
 }
