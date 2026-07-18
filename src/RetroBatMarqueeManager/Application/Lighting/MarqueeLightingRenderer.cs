@@ -101,7 +101,8 @@ half4 main(float2 p) {
 
     public MarqueeLightingRenderer(ILogger logger, LightingLibraries libraries, double fillHeightMaxCrop = 0.30,
         Infrastructure.Audio.LightingSoundService? sound = null, double glassReflection = 0.06,
-        double tubeVisualOpacity = 0.0)
+        double tubeVisualOpacity = 0.0, double tubeThickness = 1.0, double tubeBlur = 1.0,
+        double tubeEndFade = 0.10, string? tubeColor = null)
     {
         _logger = logger;
         _libraries = libraries;
@@ -109,8 +110,26 @@ half4 main(float2 p) {
         _fillHeightMaxCrop = Math.Clamp(fillHeightMaxCrop, 0.0, 0.6);
         _glassReflection = (float)Math.Clamp(glassReflection, 0.0, 0.3);
         _tubeVisualOpacity = (float)Math.Clamp(tubeVisualOpacity, 0.0, 0.5);
+        _tubeThickness = (float)Math.Clamp(tubeThickness, 0.4, 2.0);
+        _tubeBlur = (float)Math.Clamp(tubeBlur, 0.0, 2.0);
+        _tubeEndFade = (float)Math.Clamp(tubeEndFade, 0.0, 0.45);
+        _tubeColor = ParseTubeColor(tubeColor, new SKColor(255, 224, 178));
         _effect = SKRuntimeEffect.CreateShader(Sksl, out var errors)
                   ?? throw new InvalidOperationException($"SKSL compilation failed: {errors}");
+    }
+
+    private readonly float _tubeThickness;
+    private readonly float _tubeBlur;
+    private readonly float _tubeEndFade;
+    private readonly SKColor _tubeColor;
+
+    private static SKColor ParseTubeColor(string? hex, SKColor fallback)
+    {
+        if (string.IsNullOrWhiteSpace(hex)) return fallback;
+        var raw = hex.Trim().TrimStart('#');
+        return raw.Length == 6 && uint.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out var value)
+            ? new SKColor((byte)(value >> 16 & 0xFF), (byte)(value >> 8 & 0xFF), (byte)(value & 0xFF))
+            : fallback;
     }
 
     /// <summary>
@@ -835,9 +854,27 @@ half4 main(float2 p) {
         // when the tube dims — glimpsed behind the print during flicker.
         var left = _offset.X + 0.045f * w;
         var right = _offset.X + 0.955f * w;
-        var thickness = (_backlightProfile.TwoTubes ? 0.13f : 0.16f) * h;
-        var warm = new SKColor(255, 224, 178);
-        var hot = new SKColor(255, 248, 236);
+        var thickness = (_backlightProfile.TwoTubes ? 0.13f : 0.16f) * h * _tubeThickness;
+        var warm = _tubeColor;
+        // overexposed core: the tube color pushed most of the way to white
+        var hot = new SKColor(
+            (byte)(warm.Red + (255 - warm.Red) * 0.78f),
+            (byte)(warm.Green + (255 - warm.Green) * 0.78f),
+            (byte)(warm.Blue + (255 - warm.Blue) * 0.78f));
+
+        // aging tube: the extremities no longer light up cleanly — the layer
+        // alphas ramp down toward both rounded ends
+        SKShader? EndFade(SKColor color, byte alpha)
+            => _tubeEndFade > 0.01f
+                ? SKShader.CreateLinearGradient(
+                    new SKPoint(left, 0), new SKPoint(right, 0),
+                    new[]
+                    {
+                        color.WithAlpha((byte)(alpha * 0.12f)), color.WithAlpha(alpha),
+                        color.WithAlpha(alpha), color.WithAlpha((byte)(alpha * 0.12f))
+                    },
+                    new[] { 0f, _tubeEndFade, 1f - _tubeEndFade, 1f }, SKShaderTileMode.Clamp)
+                : null;
         for (var i = 0; i < _tubes.Length; i++)
         {
             var intensity = (float)Math.Clamp(_tubes[i].Intensity, 0, 1);
@@ -865,20 +902,29 @@ half4 main(float2 p) {
             var columnAlpha = (byte)(intensity * _tubeVisualOpacity * 170);
             if (columnAlpha > 2)
             {
-                using var soft = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, thickness * 0.22f);
+                var columnSigma = thickness * 0.22f * _tubeBlur;
+                using var soft = columnSigma > 0.3f ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, columnSigma) : null;
                 _glowPaint.MaskFilter = soft;
                 _glowPaint.BlendMode = SKBlendMode.Screen;
-                _glowPaint.Color = warm.WithAlpha(columnAlpha);
+                using var columnFade = EndFade(warm, columnAlpha);
+                if (columnFade != null) _glowPaint.Shader = columnFade;
+                else _glowPaint.Color = warm.WithAlpha(columnAlpha);
                 canvas.DrawRoundRect(body, thickness / 2f, thickness / 2f, _glowPaint);
+                _glowPaint.Shader = null;
 
                 // 3. overexposed white core, almost half the diameter, melting
                 // into the column (heavier relative blur on a thinner bar)
                 var core = SKRect.Create(left + thickness * 0.4f, centerY - thickness * 0.23f,
                     right - left - thickness * 0.8f, thickness * 0.46f);
-                using var coreSoft = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, thickness * 0.16f);
+                var coreSigma = thickness * 0.16f * _tubeBlur;
+                using var coreSoft = coreSigma > 0.3f ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, coreSigma) : null;
                 _glowPaint.MaskFilter = coreSoft;
-                _glowPaint.Color = hot.WithAlpha((byte)(intensity * _tubeVisualOpacity * 235));
+                var coreAlpha = (byte)(intensity * _tubeVisualOpacity * 235);
+                using var coreFade = EndFade(hot, coreAlpha);
+                if (coreFade != null) _glowPaint.Shader = coreFade;
+                else _glowPaint.Color = hot.WithAlpha(coreAlpha);
                 canvas.DrawRoundRect(core, core.Height / 2f, core.Height / 2f, _glowPaint);
+                _glowPaint.Shader = null;
                 _glowPaint.MaskFilter = null;
             }
 

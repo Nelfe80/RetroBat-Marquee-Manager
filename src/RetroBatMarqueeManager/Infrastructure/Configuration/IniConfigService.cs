@@ -79,6 +79,10 @@ public sealed class IniConfigService : IConfigService
     public double LightingSoundVolume => Math.Clamp(Double("Lighting", "SoundVolume", 0.30), 0.0, 0.30);
     public double LightingGlassReflection => Math.Clamp(Double("Lighting", "GlassReflection", 0.06), 0.0, 0.3);
     public double LightingTubeVisualOpacity => Math.Clamp(Double("Lighting", "TubeVisualOpacity", 0.0), 0.0, 0.5);
+    public double LightingTubeThickness => Math.Clamp(Double("Lighting", "TubeThickness", 1.0), 0.4, 2.0);
+    public double LightingTubeBlur => Math.Clamp(Double("Lighting", "TubeBlur", 1.0), 0.0, 2.0);
+    public double LightingTubeEndFade => Math.Clamp(Double("Lighting", "TubeEndFade", 0.10), 0.0, 0.45);
+    public string LightingTubeColor => Get("Lighting", "TubeColor", "#FFE0B2");
     public bool LightingPreferGeneratedMarquee => Bool("Lighting", "PreferGeneratedMarquee", false);
     public bool LightingDmdMirror => Bool("Lighting", "DmdMirror", false);
 
@@ -279,6 +283,14 @@ public sealed class IniConfigService : IConfigService
         sb.AppendLine("GlassReflection=0.06");
         sb.AppendLine("; Visibilite du tube physique derriere la vitre (0 a 0.5). 0 = invisible.");
         sb.AppendLine("TubeVisualOpacity=0");
+        sb.AppendLine("; Epaisseur du tube (multiplicateur 0.4 a 2.0, 1.0 = defaut).");
+        sb.AppendLine("TubeThickness=1.0");
+        sb.AppendLine("; Flou des bords du tube (multiplicateur 0 a 2.0, 1.0 = defaut).");
+        sb.AppendLine("TubeBlur=1.0");
+        sb.AppendLine("; Extremites assombries facon tube vieillissant (0 a 0.45 de la longueur par cote).");
+        sb.AppendLine("TubeEndFade=0.10");
+        sb.AppendLine("; Couleur du neon (hex #RRGGBB), blanc chaud par defaut.");
+        sb.AppendLine("TubeColor=#FFE0B2");
         sb.AppendLine("; false = prefere le marquee scrape reel au generated quand les deux existent.");
         sb.AppendLine("; true = garde le generated (utile si le scan reel est de mauvaise qualite).");
         sb.AppendLine("PreferGeneratedMarquee=false");

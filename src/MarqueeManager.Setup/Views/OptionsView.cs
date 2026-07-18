@@ -1,9 +1,11 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
 using MarqueeManager.Setup.Detection;
 using MarqueeManager.Setup.Localization;
+using Path = System.IO.Path;
 
 namespace MarqueeManager.Setup.Views;
 
@@ -33,6 +35,19 @@ public sealed class OptionsView : UserControl
     private readonly TextBlock _soundVolumeLabel = Ui.MutedLabel("");
     private readonly Slider _tubeOpacity;
     private readonly TextBlock _tubeOpacityLabel = Ui.MutedLabel("");
+    private readonly Slider _tubeThickness;
+    private readonly TextBlock _tubeThicknessLabel = Ui.MutedLabel("");
+    private readonly Slider _tubeBlur;
+    private readonly TextBlock _tubeBlurLabel = Ui.MutedLabel("");
+    private readonly Slider _tubeEndFade;
+    private readonly TextBlock _tubeEndFadeLabel = Ui.MutedLabel("");
+    private readonly TextBox _tubeColorBox;
+    private readonly Image _tubePreviewImage = new() { Stretch = System.Windows.Media.Stretch.Fill, Opacity = 0.9 };
+    private readonly Canvas _tubePreviewCanvas = new() { ClipToBounds = true, IsHitTestVisible = false };
+    private readonly Grid _tubePreviewHost = new();
+    private const double TubePreviewWidth = 560;
+    private double _tubePreviewHeight = 140;
+    private bool _tubePreviewTwoTubes;
     private readonly ComboBox _fpsLimit;
     private readonly CheckBox _showFps;
     private readonly CheckBox _dofEnabled;
@@ -140,6 +155,55 @@ public sealed class OptionsView : UserControl
                 : $"{(int)(v * 100)} %");
         lighting.Children.Add(Ui.Row(L.T("Tube néon visible", "Visible neon tube"), tubeLine,
             L.T("halo + tube entrevu derrière l'affiche quand il vacille", "halo + tube glimpsed behind the print when it flickers")));
+
+        (_tubeThickness, var thicknessLine) = PercentSlider(ini.GetDouble("Lighting", "TubeThickness", 1.0), 0.4, 2.0,
+            _tubeThicknessLabel, v => $"{(int)(v * 100)} %");
+        lighting.Children.Add(Ui.Row(L.T("Épaisseur du tube", "Tube thickness"), thicknessLine));
+
+        (_tubeBlur, var blurLine) = PercentSlider(ini.GetDouble("Lighting", "TubeBlur", 1.0), 0.0, 2.0,
+            _tubeBlurLabel, v => v <= 0 ? L.T("bords nets", "sharp edges") : $"{(int)(v * 100)} %");
+        lighting.Children.Add(Ui.Row(L.T("Flou du tube", "Tube blur"), blurLine,
+            L.T("un néon n'est jamais un trait net", "a neon is never a sharp line")));
+
+        (_tubeEndFade, var endFadeLine) = PercentSlider(ini.GetDouble("Lighting", "TubeEndFade", 0.10), 0.0, 0.45,
+            _tubeEndFadeLabel, v => v <= 0
+                ? L.T("extrémités pleines", "full-length glow")
+                : L.T($"{(int)(v * 100)} % par côté", $"{(int)(v * 100)} % per side"));
+        lighting.Children.Add(Ui.Row(L.T("Extrémités assombries", "Dimmed ends"), endFadeLine,
+            L.T("un tube vieillissant n'éclaire plus franchement ses extrémités", "an aging tube no longer lights its ends cleanly")));
+
+        _tubeColorBox = Ui.TextBox(ini.Get("Lighting", "TubeColor", "#FFE0B2"), 100);
+        var tubeColorLine = new WrapPanel();
+        tubeColorLine.Children.Add(_tubeColorBox);
+        tubeColorLine.Children.Add(Ui.ColorPalette(_tubeColorBox));
+        lighting.Children.Add(Ui.Row(L.T("Couleur du néon", "Neon color"), tubeColorLine));
+
+        // live preview of the tube over the marquee currently displayed by the runtime
+        _tubePreviewHost.Width = TubePreviewWidth;
+        _tubePreviewHost.Height = _tubePreviewHeight;
+        _tubePreviewHost.Children.Add(_tubePreviewImage);
+        _tubePreviewHost.Children.Add(_tubePreviewCanvas);
+        lighting.Children.Add(new Border
+        {
+            Background = Ui.Viewport,
+            BorderBrush = Ui.PanelBorder,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(0),
+            Margin = new Thickness(0, 8, 0, 2),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Child = _tubePreviewHost
+        });
+        lighting.Children.Add(Ui.MutedLabel(L.T(
+            "Prévisualisation (approchée) sur le marquee actuellement affiché par le runtime.",
+            "Preview (approximate) over the marquee the runtime currently displays.")));
+        LoadTubePreviewBackground();
+        foreach (var slider in new[] { _tubeOpacity, _tubeThickness, _tubeBlur, _tubeEndFade })
+        {
+            slider.ValueChanged += (_, _) => RenderTubePreview();
+        }
+        _tubeColorBox.TextChanged += (_, _) => RenderTubePreview();
+        RenderTubePreview();
 
         _fpsLimit = Ui.ComboBox(120);
         foreach (var fps in new[] { 30, 45, 60 })
@@ -309,6 +373,158 @@ public sealed class OptionsView : UserControl
     }
 
     private static readonly System.Net.Http.HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(8) };
+
+    // ================= neon tube preview =================
+
+    /// <summary>The marquee the RUNTIME currently displays, read from the tail of
+    /// its log ("Displaying image on target marquee … : path"). Best effort.</summary>
+    private string? FindCurrentMarqueePath()
+    {
+        try
+        {
+            var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
+            var logPath = Path.Combine(_pluginRoot, ini.Get("Settings", "LogFilePath", @".log\debug.log"));
+            if (!File.Exists(logPath)) return null;
+            using var stream = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            stream.Seek(Math.Max(0, stream.Length - 262_144), SeekOrigin.Begin);
+            using var reader = new StreamReader(stream);
+            string? found = null;
+            while (reader.ReadLine() is { } line)
+            {
+                if (!line.Contains("Displaying image on target marquee", StringComparison.OrdinalIgnoreCase)) continue;
+                var marker = line.LastIndexOf("): ", StringComparison.Ordinal);
+                if (marker > 0) found = line[(marker + 3)..].Trim();
+            }
+            return found != null && File.Exists(found) ? found : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void LoadTubePreviewBackground()
+    {
+        var path = FindCurrentMarqueePath();
+        if (path == null) return;
+        try
+        {
+            var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri(path);
+            bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+            _tubePreviewImage.Source = bitmap;
+            if (bitmap.PixelWidth > 0)
+            {
+                _tubePreviewHeight = Math.Clamp(TubePreviewWidth * bitmap.PixelHeight / bitmap.PixelWidth, 80, 220);
+                _tubePreviewHost.Height = _tubePreviewHeight;
+                // same rule as the runtime: wide marquee = one center tube, tall = two
+                _tubePreviewTwoTubes = (double)bitmap.PixelWidth / bitmap.PixelHeight < 2.2;
+            }
+        }
+        catch
+        {
+            // unreadable image: the dark viewport stays as background
+        }
+    }
+
+    /// <summary>WPF approximation of the runtime's vector tube (halo, blurred gas
+    /// column, overexposed core, dimmed ends) refreshed on every slider move.</summary>
+    private void RenderTubePreview()
+    {
+        var canvas = _tubePreviewCanvas;
+        canvas.Children.Clear();
+        var opacity = _tubeOpacity.Value;
+        if (opacity <= 0) return;
+        var w = TubePreviewWidth;
+        var h = _tubePreviewHeight;
+        var color = ParsePreviewColor(_tubeColorBox.Text);
+        var hot = System.Windows.Media.Color.FromRgb(
+            (byte)(color.R + (255 - color.R) * 0.78), (byte)(color.G + (255 - color.G) * 0.78),
+            (byte)(color.B + (255 - color.B) * 0.78));
+        var thickness = (_tubePreviewTwoTubes ? 0.13 : 0.16) * h * _tubeThickness.Value;
+        var blur = _tubeBlur.Value;
+        var endFade = _tubeEndFade.Value;
+        var left = 0.045 * w;
+        var width = 0.91 * w;
+
+        System.Windows.Media.LinearGradientBrush? endFadeMask = null;
+        if (endFade > 0.01)
+        {
+            endFadeMask = new System.Windows.Media.LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0.5), EndPoint = new Point(1, 0.5)
+            };
+            endFadeMask.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(30, 255, 255, 255), 0));
+            endFadeMask.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Colors.White, endFade));
+            endFadeMask.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Colors.White, 1 - endFade));
+            endFadeMask.GradientStops.Add(new System.Windows.Media.GradientStop(System.Windows.Media.Color.FromArgb(30, 255, 255, 255), 1));
+            endFadeMask.Freeze();
+        }
+
+        foreach (var tubeY in _tubePreviewTwoTubes ? new[] { 0.30, 0.70 } : new[] { 0.50 })
+        {
+            var centerY = tubeY * h;
+
+            // halo bathing the print
+            var haloHalf = thickness * 2.4;
+            var halo = new System.Windows.Shapes.Rectangle
+            {
+                Width = width, Height = haloHalf * 2,
+                Fill = new System.Windows.Media.LinearGradientBrush(
+                    new System.Windows.Media.GradientStopCollection
+                    {
+                        new(System.Windows.Media.Color.FromArgb(0, color.R, color.G, color.B), 0),
+                        new(System.Windows.Media.Color.FromArgb((byte)(opacity * 110), color.R, color.G, color.B), 0.5),
+                        new(System.Windows.Media.Color.FromArgb(0, color.R, color.G, color.B), 1)
+                    }, 90)
+            };
+            Canvas.SetLeft(halo, left);
+            Canvas.SetTop(halo, centerY - haloHalf);
+            canvas.Children.Add(halo);
+
+            // blurred gas column
+            var column = new System.Windows.Shapes.Rectangle
+            {
+                Width = width, Height = thickness,
+                RadiusX = thickness / 2, RadiusY = thickness / 2,
+                Fill = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromArgb((byte)(opacity * 170), color.R, color.G, color.B))
+            };
+            if (blur > 0.01) column.Effect = new System.Windows.Media.Effects.BlurEffect { Radius = thickness * 0.5 * blur };
+            if (endFadeMask != null) column.OpacityMask = endFadeMask;
+            Canvas.SetLeft(column, left);
+            Canvas.SetTop(column, centerY - thickness / 2);
+            canvas.Children.Add(column);
+
+            // overexposed core
+            var core = new System.Windows.Shapes.Rectangle
+            {
+                Width = Math.Max(4, width - thickness * 0.8), Height = thickness * 0.46,
+                RadiusX = thickness * 0.23, RadiusY = thickness * 0.23,
+                Fill = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromArgb((byte)(opacity * 235), hot.R, hot.G, hot.B))
+            };
+            if (blur > 0.01) core.Effect = new System.Windows.Media.Effects.BlurEffect { Radius = thickness * 0.35 * blur };
+            if (endFadeMask != null) core.OpacityMask = endFadeMask;
+            Canvas.SetLeft(core, left + thickness * 0.4);
+            Canvas.SetTop(core, centerY - thickness * 0.23);
+            canvas.Children.Add(core);
+        }
+    }
+
+    private static System.Windows.Media.Color ParsePreviewColor(string hex)
+    {
+        try
+        {
+            return (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex.Trim());
+        }
+        catch
+        {
+            return System.Windows.Media.Color.FromRgb(255, 224, 178);
+        }
+    }
 
     /// <summary>API key field + "Tester" button: a successful probe shows ✓ and
     /// saves the key to config.ini on the spot (no separate save step needed).</summary>
@@ -505,6 +721,14 @@ public sealed class OptionsView : UserControl
         ini.Set("Lighting", "SoundEnabled", B(_sound));
         ini.Set("Lighting", "SoundVolume", D(_soundVolume));
         ini.Set("Lighting", "TubeVisualOpacity", D(_tubeOpacity));
+        ini.Set("Lighting", "TubeThickness", D(_tubeThickness));
+        ini.Set("Lighting", "TubeBlur", D(_tubeBlur));
+        ini.Set("Lighting", "TubeEndFade", D(_tubeEndFade));
+        var tubeColor = _tubeColorBox.Text.Trim();
+        if (tubeColor.StartsWith('#') && tubeColor.Length == 7)
+        {
+            ini.Set("Lighting", "TubeColor", tubeColor);
+        }
         if ((_fpsLimit.SelectedItem as ComboBoxItem)?.Tag is int fps)
         {
             ini.Set("Lighting", "FpsLimit", fps.ToString());

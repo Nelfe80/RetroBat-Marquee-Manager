@@ -44,7 +44,7 @@ public sealed class MarqueeController : IDisposable
                     i, screens[i].DeviceName, screens[i].Primary, screens[i].Bounds, screens[i].WorkingArea);
 
             var lightingOptions = _config.LightingEnabled
-                ? new LightingSurfaceOptions(_config.LightingTestPattern, _config.LightingFpsLimit, _config.LightingShowFps, _config.LightingRenderScale, _config.LightingFillHeightMaxCrop, _config.LightingSoundEnabled, _config.LightingSoundVolume, _config.LightingGlassReflection, _config.LightingTubeVisualOpacity)
+                ? new LightingSurfaceOptions(_config.LightingTestPattern, _config.LightingFpsLimit, _config.LightingShowFps, _config.LightingRenderScale, _config.LightingFillHeightMaxCrop, _config.LightingSoundEnabled, _config.LightingSoundVolume, _config.LightingGlassReflection, _config.LightingTubeVisualOpacity, _config.LightingTubeThickness, _config.LightingTubeBlur, _config.LightingTubeEndFade, _config.LightingTubeColor)
                 : null;
 
             // dynamic surfaces (state\surfaces.json) or their legacy [Screens] equivalent

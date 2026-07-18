@@ -77,6 +77,10 @@ public interface IConfigService
     double LightingSoundVolume { get; }
     double LightingGlassReflection { get; }
     double LightingTubeVisualOpacity { get; }
+    double LightingTubeThickness { get; }
+    double LightingTubeBlur { get; }
+    double LightingTubeEndFade { get; }
+    string LightingTubeColor { get; }
     bool LightingPreferGeneratedMarquee { get; }
     bool LightingDmdMirror { get; }
 

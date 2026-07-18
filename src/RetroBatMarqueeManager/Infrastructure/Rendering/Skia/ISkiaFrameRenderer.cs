@@ -22,4 +22,4 @@ public interface ISkiaFrameRenderer : IDisposable
 /// upscaled by WPF. Compensates the CPU raster backend until the GPU backend lands (§17.4).</param>
 /// <param name="FillHeightMaxCrop">Max acceptable horizontal material loss (0–0.6) when
 /// filling the window height instead of letterboxing; 0 disables fill-height framing.</param>
-public sealed record LightingSurfaceOptions(bool TestPattern, int FpsLimit, bool ShowFps, double RenderScale, double FillHeightMaxCrop, bool SoundEnabled, double SoundVolume, double GlassReflection, double TubeVisualOpacity);
+public sealed record LightingSurfaceOptions(bool TestPattern, int FpsLimit, bool ShowFps, double RenderScale, double FillHeightMaxCrop, bool SoundEnabled, double SoundVolume, double GlassReflection, double TubeVisualOpacity, double TubeThickness = 1.0, double TubeBlur = 1.0, double TubeEndFade = 0.10, string TubeColor = "#FFE0B2");
