@@ -828,26 +828,27 @@ half4 main(float2 p) {
         if (_tubeVisualOpacity <= 0 || _profile.Bulb.SolidState) return;
         var w = _maps!.Width;
         var h = _maps.Height;
-        // fully vector tube (no bitmap, crisp at any resolution), spanning exactly
-        // between the two electrode glows (4.5 % / 95.5 % of the width). The eye
-        // mostly sees the HALO the tube throws; the glass body itself only shows
-        // through when the tube dims — glimpsed behind the print during flicker,
-        // drowned in its own light at full glow.
+        // Fully vector tube, built like the real thing photographs: a wide soft
+        // halo, a thick glowing gas column with SOFT edges (nothing is ever a
+        // sharp line on a lit tube), and an overexposed white core filling
+        // almost half the diameter. The glass body itself only shows through
+        // when the tube dims — glimpsed behind the print during flicker.
         var left = _offset.X + 0.045f * w;
         var right = _offset.X + 0.955f * w;
-        var thickness = (_backlightProfile.TwoTubes ? 0.075f : 0.09f) * h;
-        var warm = new SKColor(255, 233, 199);
+        var thickness = (_backlightProfile.TwoTubes ? 0.13f : 0.16f) * h;
+        var warm = new SKColor(255, 224, 178);
+        var hot = new SKColor(255, 248, 236);
         for (var i = 0; i < _tubes.Length; i++)
         {
             var intensity = (float)Math.Clamp(_tubes[i].Intensity, 0, 1);
             var tubeY = i == 0 ? _backlightProfile.TubeY1 : _backlightProfile.TubeY2;
             var centerY = _offset.Y + tubeY * h;
 
-            // 1. halo: the light around the tube, what the marquee actually shows
-            var haloAlpha = (byte)(intensity * _tubeVisualOpacity * 120);
+            // 1. wide ambient halo: the light bathing the print around the tube
+            var haloAlpha = (byte)(intensity * _tubeVisualOpacity * 110);
             if (haloAlpha > 2)
             {
-                var haloHalf = thickness * 1.9f;
+                var haloHalf = thickness * 2.4f;
                 using var halo = SKShader.CreateLinearGradient(
                     new SKPoint(left, centerY - haloHalf), new SKPoint(left, centerY + haloHalf),
                     new[] { warm.WithAlpha(0), warm.WithAlpha(haloAlpha), warm.WithAlpha(0) },
@@ -858,36 +859,51 @@ half4 main(float2 p) {
                 _glowPaint.Shader = null;
             }
 
-            // 2. glass body: barely there at full glow, glimpsed when it flickers
-            var glimpse = _tubeVisualOpacity * (0.18f + 0.60f * (1f - intensity));
+            var body = SKRect.Create(left, centerY - thickness / 2f, right - left, thickness);
+
+            // 2. glowing gas column: the colored tube itself, blurred edges
+            var columnAlpha = (byte)(intensity * _tubeVisualOpacity * 170);
+            if (columnAlpha > 2)
+            {
+                using var soft = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, thickness * 0.22f);
+                _glowPaint.MaskFilter = soft;
+                _glowPaint.BlendMode = SKBlendMode.Screen;
+                _glowPaint.Color = warm.WithAlpha(columnAlpha);
+                canvas.DrawRoundRect(body, thickness / 2f, thickness / 2f, _glowPaint);
+
+                // 3. overexposed white core, almost half the diameter, melting
+                // into the column (heavier relative blur on a thinner bar)
+                var core = SKRect.Create(left + thickness * 0.4f, centerY - thickness * 0.23f,
+                    right - left - thickness * 0.8f, thickness * 0.46f);
+                using var coreSoft = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, thickness * 0.16f);
+                _glowPaint.MaskFilter = coreSoft;
+                _glowPaint.Color = hot.WithAlpha((byte)(intensity * _tubeVisualOpacity * 235));
+                canvas.DrawRoundRect(core, core.Height / 2f, core.Height / 2f, _glowPaint);
+                _glowPaint.MaskFilter = null;
+            }
+
+            // 4. glass body glimpsed when the tube dims or flickers
+            var glimpse = _tubeVisualOpacity * (0.16f + 0.55f * (1f - intensity));
             if (glimpse > 0.01f)
             {
-                var body = SKRect.Create(left, centerY - thickness / 2f, right - left, thickness);
-                var rim = new SKColor(70, 84, 92);       // cool glass edge
+                var rim = new SKColor(70, 84, 92);         // cool glass edge
                 var phosphor = new SKColor(214, 224, 226); // powder coating inside
                 using var glass = SKShader.CreateLinearGradient(
                     new SKPoint(left, body.Top), new SKPoint(left, body.Bottom),
                     new[]
                     {
-                        rim.WithAlpha((byte)(glimpse * 150)),
-                        phosphor.WithAlpha((byte)(glimpse * 110)),
-                        rim.WithAlpha((byte)(glimpse * 150))
+                        rim.WithAlpha((byte)(glimpse * 140)),
+                        phosphor.WithAlpha((byte)(glimpse * 100)),
+                        rim.WithAlpha((byte)(glimpse * 140))
                     },
                     new[] { 0f, 0.5f, 1f }, SKShaderTileMode.Clamp);
+                using var glassSoft = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, thickness * 0.08f);
                 _glowPaint.Shader = glass;
+                _glowPaint.MaskFilter = glassSoft;
                 _glowPaint.BlendMode = SKBlendMode.SrcOver;
                 canvas.DrawRoundRect(body, thickness / 2f, thickness / 2f, _glowPaint);
                 _glowPaint.Shader = null;
-            }
-
-            // 3. thin phosphor core while lit, fused into the halo
-            var coreAlpha = (byte)(intensity * _tubeVisualOpacity * 150);
-            if (coreAlpha > 2)
-            {
-                var core = SKRect.Create(left, centerY - thickness * 0.16f, right - left, thickness * 0.32f);
-                _glowPaint.Color = warm.WithAlpha(coreAlpha);
-                _glowPaint.BlendMode = SKBlendMode.Screen;
-                canvas.DrawRoundRect(core, core.Height / 2f, core.Height / 2f, _glowPaint);
+                _glowPaint.MaskFilter = null;
             }
         }
         _glowPaint.Color = SKColors.White;
