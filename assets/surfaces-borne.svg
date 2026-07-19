@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 560" font-family="Segoe UI, Arial, sans-serif">
+  <!-- cabinet silhouette -->
+  <path d="M 200 60 L 520 60 L 520 200 L 545 300 L 545 470 L 500 530 L 220 530 L 175 470 L 175 300 L 200 200 Z"
+        fill="#1d1d2a" stroke="#3a3a48" stroke-width="3"/>
+
+  <!-- topper -->
+  <rect x="230" y="72" width="260" height="52" rx="4" fill="#2a2440" stroke="#8a2be2" stroke-width="2.5"/>
+  <text x="360" y="104" text-anchor="middle" fill="#c9a6ff" font-size="17" font-weight="bold">TOPPER</text>
+  <line x1="490" y1="98" x2="640" y2="98" stroke="#8a2be2" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="648" y="94" fill="#c9a6ff" font-size="13" font-weight="bold">topper</text>
+  <text x="648" y="110" fill="#8a8a9a" font-size="11">fanart, visuels</text>
+
+  <!-- marquee -->
+  <rect x="222" y="134" width="276" height="46" rx="4" fill="#3d2f10" stroke="#ffb300" stroke-width="2.5"/>
+  <text x="360" y="163" text-anchor="middle" fill="#ffd97a" font-size="17" font-weight="bold">MARQUEE</text>
+  <line x1="498" y1="157" x2="640" y2="157" stroke="#ffb300" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="648" y="153" fill="#ffd97a" font-size="13" font-weight="bold">marquee</text>
+  <text x="648" y="169" fill="#8a8a9a" font-size="11">bandeau lumineux</text>
+
+  <!-- main game screen (not managed) -->
+  <rect x="225" y="215" width="270" height="165" rx="6" fill="#10101a" stroke="#3a3a48" stroke-width="2"/>
+  <text x="360" y="295" text-anchor="middle" fill="#55556a" font-size="13">écran de jeu / game screen</text>
+  <text x="360" y="313" text-anchor="middle" fill="#3f3f52" font-size="11">(non géré / not managed)</text>
+
+  <!-- DMD strip under the screen -->
+  <rect x="272" y="392" width="176" height="30" rx="4" fill="#301518" stroke="#ff5c5c" stroke-width="2.5"/>
+  <text x="360" y="412" text-anchor="middle" fill="#ff9d9d" font-size="13" font-weight="bold">DMD</text>
+  <line x1="448" y1="407" x2="640" y2="407" stroke="#ff5c5c" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="648" y="403" fill="#ff9d9d" font-size="13" font-weight="bold">dmd</text>
+  <text x="648" y="419" fill="#8a8a9a" font-size="11">ZeDMD ou fenêtre WPF</text>
+
+  <!-- control panel with instruction card -->
+  <path d="M 175 470 L 545 470 L 500 530 L 220 530 Z" fill="#22222f" stroke="#3a3a48" stroke-width="2"/>
+  <rect x="262" y="480" width="196" height="38" rx="4" fill="#0f2a1e" stroke="#30e850" stroke-width="2.5"/>
+  <text x="360" y="505" text-anchor="middle" fill="#8deda2" font-size="14" font-weight="bold">INSTRUCTION CARD</text>
+  <line x1="458" y1="499" x2="640" y2="499" stroke="#30e850" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="648" y="495" fill="#8deda2" font-size="13" font-weight="bold">iccard</text>
+  <text x="648" y="511" fill="#8a8a9a" font-size="11">tactile, proche du joueur</text>
+
+  <!-- lcd side note -->
+  <rect x="60" y="230" width="90" height="64" rx="4" fill="#0f2030" stroke="#30a0e8" stroke-width="2.5"/>
+  <text x="105" y="258" text-anchor="middle" fill="#8ecdf5" font-size="13" font-weight="bold">LCD</text>
+  <text x="105" y="276" text-anchor="middle" fill="#8a8a9a" font-size="10">scores, layouts</text>
+  <line x1="150" y1="262" x2="225" y2="290" stroke="#30a0e8" stroke-width="1.5" stroke-dasharray="4 3"/>
+</svg>
