@@ -1,6 +1,6 @@
 # License
 
-MarqueeManager is **offered by Nelfe to the RetroBat community**.
+MarqueeManager is **developed by Nelfe for the RetroBat community**.
 
 Use it freely — cabinet, bartop, living-room setup, game nights with friends: install it, customize it, share the fun. No license to buy, nothing to activate.
 

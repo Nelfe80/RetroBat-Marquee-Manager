@@ -1,6 +1,6 @@
 # Licence
 
-MarqueeManager est **offert par Nelfe à la communauté RetroBat**.
+MarqueeManager est **développé par Nelfe pour la communauté RetroBat**.
 
 Utilisez-le librement — borne, bartop, setup de salon, salle entre amis : installez, personnalisez, partagez le plaisir. Aucune licence à acheter, rien à activer.
 
