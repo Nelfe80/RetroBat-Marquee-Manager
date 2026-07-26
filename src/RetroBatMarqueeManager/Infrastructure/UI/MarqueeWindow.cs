@@ -640,13 +640,26 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         {
             _latestImagePath = path;
             var seq = System.Threading.Interlocked.Increment(ref _marqueeSeq);
-            var scheduledAt = System.Diagnostics.Stopwatch.GetTimestamp();
-            // Decode OFF the UI thread. A marquee decode is 100-234 ms at the window
-            // width; doing it on the dispatcher froze navigation and let stale frames
-            // pile up, so an old marquee could "come back over" the current one. A
-            // short debounce also skips the games flown past during a fast scroll —
-            // only the settled selection is decoded — and the sequence id guarantees
-            // that a late decode never overwrites a newer one.
+
+            // The DYNAMIC marquee (lighting scene) must track EVERY selection right
+            // away — attract and ingame. The call is trivial (it only records the
+            // request; the renderer generates on its own background thread and
+            // coalesces to the latest), so it is never debounced nor gated. Gating it
+            // by sequence made the lit marquee vanish during selection bursts.
+            _ = this.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _mediaElement.Stop();
+                _mediaElement.Visibility = Visibility.Collapsed;
+                _layViewbox.Visibility = Visibility.Collapsed;
+                _logoImage.Visibility = Visibility.Collapsed;
+                _lightingRenderer?.SetMarqueeImage(path, lightingMeta);
+            }));
+
+            // The WPF fallback image (shown when lighting is off, or beneath the lit
+            // layer) is the expensive part: a 100-234 ms decode. Do it OFF the UI
+            // thread with a short debounce (skip games flown past) and a sequence
+            // guard (a late decode never overwrites a newer selection). This is what
+            // froze navigation and let a stale marquee "come back over" the current.
             _ = System.Threading.Tasks.Task.Run(async () =>
             {
                 try
@@ -655,35 +668,20 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     if (System.Threading.Interlocked.Read(ref _marqueeSeq) != seq) return; // flown past
                     if (!File.Exists(path)) return;
 
-                    // window width captured at positioning — NO UI-thread call here
-                    var decodeWidth = _windowPixelWidth;
-
-                    var decodeStart = System.Diagnostics.Stopwatch.GetTimestamp();
+                    var decodeWidth = _windowPixelWidth; // captured at positioning, no UI call
                     var bitmap = new BitmapImage();
                     bitmap.BeginInit();
                     bitmap.UriSource = new Uri(path);
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    // decode at the window's on-screen width, not the image's native
-                    // resolution (a 2100 px marquee decoded full-size cost 200 ms each)
                     if (decodeWidth > 0) bitmap.DecodePixelWidth = decodeWidth;
                     bitmap.EndInit();
                     bitmap.Freeze(); // the decode happens here, on this background thread
-                    var decodeMs = (System.Diagnostics.Stopwatch.GetTimestamp() - decodeStart) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
 
                     _ = this.Dispatcher.BeginInvoke(new Action(() =>
                     {
                         if (System.Threading.Interlocked.Read(ref _marqueeSeq) != seq) return; // a newer marquee won
-                        _mediaElement.Stop();
-                        _mediaElement.Visibility = Visibility.Collapsed;
-                        _layViewbox.Visibility = Visibility.Collapsed;
-                        _logoImage.Visibility = Visibility.Collapsed;
                         _backgroundImage.Source = bitmap;
                         _backgroundImage.Visibility = Visibility.Visible;
-                        _lightingRenderer?.SetMarqueeImage(path, lightingMeta);
-                        var totalMs = (System.Diagnostics.Stopwatch.GetTimestamp() - scheduledAt) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
-                        _logger.LogInformation(
-                            "[MarqueeUpdate] screen {Screen}: decode={Decode:F1}ms total={Total:F1}ms {W}x{H} {File}",
-                            _targetScreen, decodeMs, totalMs, bitmap.PixelWidth, bitmap.PixelHeight, Path.GetFileName(path));
                     }));
                 }
                 catch (Exception ex)
