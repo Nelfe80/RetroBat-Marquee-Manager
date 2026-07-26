@@ -94,10 +94,13 @@ half4 main(float2 p) {
     private SKBitmap? _shapeRow;
     private byte[]? _shapeBuffer;
 
-    // background generation handoff
+    // background generation handoff. Rom lets the adoption tell "same game, new
+    // resolution/framing" (preserve lamps, outputs, effects, tubes) from "new game"
+    // (full reset) — a mere adaptive-scale change must never drop live state (§5).
     private readonly object _resultLock = new();
-    private (string Path, LightingMaps Maps, SKPoint Offset, int W, int H, ResolvedLightProfile Profile, BacklightProfile Backlight, RbMarqueeScene? LampScene)? _pendingResult;
+    private (string Path, LightingMaps Maps, SKPoint Offset, int W, int H, ResolvedLightProfile Profile, BacklightProfile Backlight, RbMarqueeScene? LampScene, string? Rom)? _pendingResult;
     private volatile bool _generating;
+    private string? _currentSceneRom;
 
     public MarqueeLightingRenderer(ILogger logger, LightingLibraries libraries, double fillHeightMaxCrop = 0.30,
         Infrastructure.Audio.LightingSoundService? sound = null, double glassReflection = 0.06,
@@ -1060,7 +1063,7 @@ half4 main(float2 p) {
                 lock (_resultLock)
                 {
                     _pendingResult?.Item2.Dispose();
-                    _pendingResult = (request.Path, maps, offset, surfaceWidth, surfaceHeight, profile, backlight, lampScene);
+                    _pendingResult = (request.Path, maps, offset, surfaceWidth, surfaceHeight, profile, backlight, lampScene, request.Meta?.Rom);
                     _generating = false;
                     _dirty = true;
                 }
@@ -1095,20 +1098,31 @@ half4 main(float2 p) {
 
     private void AdoptPendingResult(TimeSpan elapsed)
     {
-        (string, LightingMaps, SKPoint, int, int, ResolvedLightProfile, BacklightProfile, RbMarqueeScene?)? result;
+        (string Path, LightingMaps Maps, SKPoint Offset, int W, int H, ResolvedLightProfile Profile, BacklightProfile Backlight, RbMarqueeScene? LampScene, string? Rom)? result;
         lock (_resultLock)
         {
             result = _pendingResult;
             _pendingResult = null;
         }
         if (result == null) return;
+        var (path, maps, offset, w, h, profile, backlight, lampScene, rom) = result.Value;
 
-        ClearScene();
-        var (path, maps, offset, w, h, profile, backlight, lampScene) = result.Value;
-        _lampScene = lampScene;
-        _lampStates = lampScene?.Lamps.Select(def => new LampState { Definition = def }).ToArray()
-                      ?? Array.Empty<LampState>();
+        // Same game, only a new LightingMap (resize / adaptive scale / reframe):
+        // the dynamic state — arcade outputs, lamp intensities, running effects,
+        // sprites, tube life — must survive. Only a genuine game change resets it (§5).
+        var sameGame = _maps != null
+                       && rom is { Length: > 0 }
+                       && string.Equals(rom, _currentSceneRom, StringComparison.OrdinalIgnoreCase);
+        var previousLamps = _lampStates;
+        var keepTubes = sameGame && _tubes.Length > 0
+                        && _backlightProfile.TwoTubes == backlight.TwoTubes
+                        && string.Equals(_profile.Bulb.Id, profile.Bulb.Id, StringComparison.OrdinalIgnoreCase);
+
+        // swap only the graphics; the dynamic state is handled explicitly below
+        DisposeSceneGraphics();
         _currentPath = path;
+        _currentSceneRom = rom;
+        _lampScene = lampScene;
         _maps = maps;
         _offset = offset;
         _surfaceWidth = w;
@@ -1121,11 +1135,41 @@ half4 main(float2 p) {
         (_tubeRow1, _tubeRow2) = AutoMapGenerator.ComputeTubeRows(maps.Height, backlight);
         _shapeRow = new SKBitmap(new SKImageInfo(1, maps.Height, SKColorType.Bgra8888, SKAlphaType.Premul));
         _shapeBuffer = null;
-        _sceneReadyAt = elapsed.TotalSeconds;
-        // sceneless overlay sprites live on the absolute clock; the scene clock
-        // restarts here, so their timestamps would be meaningless
-        _sprites.Clear();
-        CreateTubeSimulators();
+
+        // rebuild lamp states from the new definitions, carrying the live intensity
+        // of any lamp whose id survives (arcade outputs keep driving them)
+        _lampStates = lampScene?.Lamps.Select(def =>
+        {
+            var state = new LampState { Definition = def };
+            if (sameGame)
+            {
+                var previous = previousLamps.FirstOrDefault(p => p.Definition.Id.Equals(def.Id, StringComparison.OrdinalIgnoreCase));
+                if (previous != null) { state.Current = previous.Current; state.Target = previous.Target; }
+            }
+            return state;
+        }).ToArray() ?? Array.Empty<LampState>();
+
+        if (sameGame)
+        {
+            // preserve arcade outputs, running effects and the scene clock; sprites
+            // live on the absolute clock so they carry over untouched
+            if (keepTubes)
+            {
+                // same tubes: keep their temporal life, only the geometry changed
+            }
+            else
+            {
+                _sceneReadyAt = elapsed.TotalSeconds;
+                CreateTubeSimulators();
+            }
+        }
+        else
+        {
+            // genuine new scene: reset every dynamic trace and re-ignite the tubes
+            ResetGameSession();
+            _sceneReadyAt = elapsed.TotalSeconds;
+            CreateTubeSimulators();
+        }
     }
 
     /// <summary>
@@ -1151,7 +1195,10 @@ half4 main(float2 p) {
         }
     }
 
-    private void ClearScene()
+    /// <summary>Disposes the per-scene GRAPHICS only (shaders, shape row, maps).
+    /// Leaves the dynamic session state (outputs, lamps, effects, sprites, tubes)
+    /// untouched — see <see cref="ResetGameSession"/> (§5 resource split).</summary>
+    private void DisposeSceneGraphics()
     {
         _unlitShader?.Dispose();
         _litShader?.Dispose();
@@ -1161,8 +1208,13 @@ half4 main(float2 p) {
         _shapeBuffer = null;
         _maps?.Dispose();
         _maps = null;
-        _currentPath = null;
-        _tubes = Array.Empty<TubeLifeSimulator>();
+    }
+
+    /// <summary>Clears every DYNAMIC trace of the current game: arcade outputs,
+    /// lamp states, running/pending effects, sprites, audio sequence. Graphics are
+    /// handled separately so a same-game resolution change can keep this state.</summary>
+    private void ResetGameSession()
+    {
         _lampScene = null;
         _lampStates = Array.Empty<LampState>();
         _arcadeOutputs.Clear();
@@ -1172,6 +1224,15 @@ half4 main(float2 p) {
         _blackoutUntil = -1;
         _sprites.Clear();
         lock (_fxLock) { _activeFx = null; _pendingSprites.Clear(); }
+    }
+
+    private void ClearScene()
+    {
+        DisposeSceneGraphics();
+        ResetGameSession();
+        _currentPath = null;
+        _currentSceneRom = null;
+        _tubes = Array.Empty<TubeLifeSimulator>();
     }
 
     public void Dispose()

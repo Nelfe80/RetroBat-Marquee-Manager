@@ -37,6 +37,10 @@ public sealed class WebSocketListenerService : BackgroundService
     private string? _selectedSystem;
     private string? _selectedRom;
     private string? _runningRom;
+    // Deferred ingame effects (sequenced actions) belong to the current play
+    // session: a sprite scheduled 1.5 s out must NOT fire after the game ended or
+    // another game started (§5 "Effets différés").
+    private CancellationTokenSource _effectSessionCts = new();
     private bool _pinballDmdActive;
     private readonly Application.Lighting.IngameEffectLibrary _ingameEffects;
     private readonly Application.Lighting.GenreMap _genreMap;
@@ -679,6 +683,7 @@ public sealed class WebSocketListenerService : BackgroundService
             _lay.Clear();
             _presentation.MarkGameEnded();
             _runningRom = null;
+            CancelDeferredEffects();
             if (_pinballDmdActive) ReleasePinballDmd("game ended");
             // back to the frontend: sounds return, audible re-ignition
             _surfaces.SetLightingIngame(false);
@@ -686,6 +691,8 @@ public sealed class WebSocketListenerService : BackgroundService
             return;
         }
         if (!type.Equals("ui.game.started", StringComparison.OrdinalIgnoreCase) && !type.Equals("ui.game.started.raw", StringComparison.OrdinalIgnoreCase)) return;
+        // a new play session: drop any effect still pending from the previous one
+        CancelDeferredEffects();
         _surfaces.SetDisplayScene("ingame");
         _presentation.MarkGameStarted();
         // game launch drama: silent power cycle — the play session stays clean
@@ -794,10 +801,25 @@ public sealed class WebSocketListenerService : BackgroundService
             }
             else
             {
-                // sequenced action ("flash PUIS nuée de sprites"): fire after its delay
-                _ = Task.Delay(rule.DelayMs).ContinueWith(_ => FireEffect(rule), TaskScheduler.Default);
+                // sequenced action ("flash PUIS nuée de sprites"): fire after its
+                // delay, but only if the play session is still the same one
+                var token = _effectSessionCts.Token;
+                _ = Task.Delay(rule.DelayMs, token).ContinueWith(t =>
+                {
+                    if (!t.IsCanceled && !token.IsCancellationRequested) FireEffect(rule);
+                }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             }
         }
+    }
+
+    /// <summary>Cancels every effect still waiting on its delay and arms a fresh
+    /// token for the next play session.</summary>
+    private void CancelDeferredEffects()
+    {
+        var previous = _effectSessionCts;
+        _effectSessionCts = new CancellationTokenSource();
+        try { previous.Cancel(); } catch { /* already disposed */ }
+        previous.Dispose();
     }
 
     private void FireEffect(Application.Lighting.IngameEffectRule rule)
