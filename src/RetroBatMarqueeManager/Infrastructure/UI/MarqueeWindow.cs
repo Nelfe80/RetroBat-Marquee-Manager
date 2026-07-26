@@ -272,6 +272,10 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         // Monotonic marquee request id: a slow/late decode (or a stale snapshot that
         // "comes back over" the current one) is discarded when a newer request exists.
         private long _marqueeSeq;
+        // Window width in physical pixels, captured when the window is positioned, so
+        // the background decode thread caps the decode size WITHOUT touching the UI
+        // thread (a blocking Dispatcher.Invoke from the pool starved it → freezes).
+        private volatile int _windowPixelWidth;
 
         // Win32 API to position window without DPI issues
         [DllImport("user32.dll", SetLastError = true)]
@@ -542,6 +546,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     height = Math.Min(_bounds.Height, screen.Bounds.Bottom - top);
                 }
                 _logger.LogInformation($"[WPF Player] Target Screen Index: {screenIndex}. Screen Bounds: {screen.Bounds}. Window: {left},{top} {width}x{height}");
+                _windowPixelWidth = width; // physical px, read by the background decode
 
                 var helper = new System.Windows.Interop.WindowInteropHelper(this);
                 SetWindowPos(
@@ -650,8 +655,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     if (System.Threading.Interlocked.Read(ref _marqueeSeq) != seq) return; // flown past
                     if (!File.Exists(path)) return;
 
-                    var decodeWidth = this.Dispatcher.Invoke(DisplayDecodeWidth);
-                    if (System.Threading.Interlocked.Read(ref _marqueeSeq) != seq) return;
+                    // window width captured at positioning — NO UI-thread call here
+                    var decodeWidth = _windowPixelWidth;
 
                     var decodeStart = System.Diagnostics.Stopwatch.GetTimestamp();
                     var bitmap = new BitmapImage();
