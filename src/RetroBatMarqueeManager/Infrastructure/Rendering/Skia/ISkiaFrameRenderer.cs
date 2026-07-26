@@ -15,6 +15,12 @@ public interface ISkiaFrameRenderer : IDisposable
     /// identical to the last one; the host then skips rendering and presenting.
     /// </summary>
     bool WantsFrame(TimeSpan elapsed) => true;
+
+    /// <summary>Lot 0 diagnostics (docs\Update.txt §4): live sprite count and the
+    /// duration of the most recent lighting-map generation, in milliseconds.
+    /// Default 0 for renderers that carry neither (e.g. the test pattern).</summary>
+    int ActiveSpriteCount => 0;
+    double LastMapGenerationMs => 0;
 }
 
 /// <summary>Options passed to marquee windows when the lighting engine layer is enabled.</summary>

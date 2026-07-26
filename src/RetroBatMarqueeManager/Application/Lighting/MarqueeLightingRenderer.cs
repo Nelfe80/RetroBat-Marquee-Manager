@@ -984,9 +984,15 @@ half4 main(float2 p) {
         _glassPaint.Shader = null;
     }
 
+    // Lot 0 diagnostics (docs\Update.txt §4): surfaced to the host's RenderMetrics.
+    private double _lastMapGenerationMs;
+    public int ActiveSpriteCount => _sprites.Count;
+    public double LastMapGenerationMs => Volatile.Read(ref _lastMapGenerationMs);
+
     private void StartGeneration(MarqueeRequest request, int surfaceWidth, int surfaceHeight)
     {
         _generating = true;
+        var generationClock = System.Diagnostics.Stopwatch.StartNew();
         Task.Run(() =>
         {
             try
@@ -1050,6 +1056,7 @@ half4 main(float2 p) {
                     profile.Bulb.Id, profile.Source, profile.Aging, backlight.TwoTubes ? 2 : 1, framing.Label,
                     lampScene != null ? $", {lampScene.Lamps.Count} DOF lamp(s)" : "");
 
+                Volatile.Write(ref _lastMapGenerationMs, generationClock.Elapsed.TotalMilliseconds);
                 lock (_resultLock)
                 {
                     _pendingResult?.Item2.Dispose();

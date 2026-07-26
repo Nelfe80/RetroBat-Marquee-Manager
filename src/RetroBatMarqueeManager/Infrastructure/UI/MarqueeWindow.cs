@@ -631,9 +631,14 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         public void DisplayImage(string path, Application.Lighting.LightingSceneMeta? lightingMeta = null)
         {
             _latestImagePath = path;
+            // Lot 0 diagnostics (docs\Update.txt §4): with lighting OFF the marquee
+            // is a plain WPF Image — its update latency lives HERE, not in the Skia
+            // host. Measure UI-thread dispatch latency and the full-resolution decode.
+            var scheduledAt = System.Diagnostics.Stopwatch.GetTimestamp();
             this.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (_latestImagePath != path) return;
+                var dispatchMs = (System.Diagnostics.Stopwatch.GetTimestamp() - scheduledAt) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
                 try
                 {
                     _mediaElement.Stop();
@@ -643,15 +648,21 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
                     if (!File.Exists(path)) return;
 
+                    var decodeStart = System.Diagnostics.Stopwatch.GetTimestamp();
                     var bitmap = new BitmapImage();
                     bitmap.BeginInit();
                     bitmap.UriSource = new Uri(path);
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
                     bitmap.EndInit();
+                    var decodeMs = (System.Diagnostics.Stopwatch.GetTimestamp() - decodeStart) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
 
                     _backgroundImage.Source = bitmap;
                     _backgroundImage.Visibility = Visibility.Visible;
                     _lightingRenderer?.SetMarqueeImage(path, lightingMeta);
+
+                    _logger.LogInformation(
+                        "[MarqueeUpdate] screen {Screen}: uiDispatch={Dispatch:F1}ms decode={Decode:F1}ms {W}x{H} {File}",
+                        _targetScreen, dispatchMs, decodeMs, bitmap.PixelWidth, bitmap.PixelHeight, Path.GetFileName(path));
                 }
                 catch (Exception ex)
                 {

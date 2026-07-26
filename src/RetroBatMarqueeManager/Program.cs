@@ -69,6 +69,10 @@ public static class Program
 
         var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
         logger.LogInformation("MarqueeManager {Version} starting; APIExpose is the only media and data source", typeof(Program).Assembly.GetName().Version);
+        // Lot 0 A/B (docs\Update.txt §4): record the effective priority so the two
+        // runs (ProcessPriority=belownormal vs normal) can be told apart in the log.
+        logger.LogInformation("[Lot0] effective process priority: {Priority} (config ProcessPriority={Config})",
+            Process.GetCurrentProcess().PriorityClass, config.GetValue("Settings", "ProcessPriority", "belownormal"));
         await host.StartAsync();
 
         if (Process.GetProcessesByName("explorer").Length > 0 && config.MinimizeToTray)

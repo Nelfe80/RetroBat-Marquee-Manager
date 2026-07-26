@@ -39,6 +39,12 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     private SKPaint? _fpsPaint;
     private SKFont? _fpsFont;
 
+    // Lot 0 instrumentation (docs\Update.txt §4): measures the pipeline, changes nothing.
+    private readonly RenderMetrics _metrics = new();
+    public RenderMetrics Metrics => _metrics;
+    private double _presentedFps;
+    private bool _idle;
+
     /// <summary>Adaptive resolution: when the CPU raster cannot hold the frame
     /// budget (sprite bursts force full-frame renders), the surface renders at a
     /// reduced internal scale (down to 0.5) and WPF stretches it back — smooth
@@ -139,17 +145,28 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 {
                     try
                     {
+                        var renderStart = Stopwatch.GetTimestamp();
                         RenderFrame(width, height, clock.Elapsed);
+                        _metrics.RecordRender((Stopwatch.GetTimestamp() - renderStart) * 1000.0 / Stopwatch.Frequency);
+                        _metrics.RecordSpriteCount(_renderer.ActiveSpriteCount);
+                        _metrics.RecordMapGeneration(_renderer.LastMapGenerationMs);
                         SchedulePresent();
                         _lastRenderedWidth = width;
                         _lastRenderedHeight = height;
                         fpsFrames++;
+                        _idle = false;
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Skia lighting frame failed; surface loop continues");
                         Thread.Sleep(500);
                     }
+                }
+                else
+                {
+                    // renderer skipped a visually identical frame (§17.5)
+                    _metrics.RecordSkip();
+                    _idle = true;
                 }
             }
             var now = clock.ElapsedTicks;
@@ -170,12 +187,13 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                         _adaptiveScale = Math.Min(1.0, _adaptiveScale * 1.12);
                     }
                 }
+                _presentedFps = Interlocked.Exchange(ref _presentsThisWindow, 0) * (double)Stopwatch.Frequency / (now - fpsWindowStart);
                 fpsFrames = 0;
                 fpsWindowStart = now;
                 if (now - lastFpsLog >= 5 * Stopwatch.Frequency)
                 {
                     lastFpsLog = now;
-                    _logger.LogInformation("Skia lighting surface {Width}x{Height} (scale {Scale:P0}): {Fps:F1} rendered FPS (identical frames skipped)", width, height, _adaptiveScale, CurrentFps);
+                    _logger.LogInformation("{Line}", _metrics.SnapshotLine(_adaptiveScale, width, height));
                 }
             }
 
@@ -218,20 +236,33 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     {
         _fpsFont ??= new SKFont(SKTypeface.Default, 18);
         _fpsPaint ??= new SKPaint { Color = SKColors.Lime, IsAntialias = true };
-        canvas.DrawText($"{CurrentFps:F0} FPS", 10, 24, _fpsFont, _fpsPaint);
+        // §4: show frames actually PRESENTED by WPF, or IDLE when the renderer is
+        // deliberately skipping visually identical frames — not the computed count
+        var text = _idle ? "IDLE" : $"{_presentedFps:F0} FPS";
+        canvas.DrawText(text, 10, 24, _fpsFont, _fpsPaint);
     }
+
+    private int _presentsThisWindow;
 
     private void SchedulePresent()
     {
-        if (Interlocked.Exchange(ref _presentQueued, 1) == 1) return;
+        // a present was already queued but not yet run: the frame it would have
+        // shown is now superseded — count it as a dropped present (§4)
+        if (Interlocked.Exchange(ref _presentQueued, 1) == 1)
+        {
+            _metrics.RecordDroppedPresent();
+            return;
+        }
         Dispatcher.BeginInvoke(Present, DispatcherPriority.Render);
     }
 
     private void Present()
     {
         Interlocked.Exchange(ref _presentQueued, 0);
+        var waitStart = Stopwatch.GetTimestamp();
         lock (_swapLock)
         {
+            var lockAcquired = Stopwatch.GetTimestamp();
             if (_front == null) return;
             var w = _front.Width;
             var h = _front.Height;
@@ -241,6 +272,11 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 Source = _writeable;
             }
             _writeable.WritePixels(new Int32Rect(0, 0, w, h), _front.GetPixels(), _front.RowBytes * h, _front.RowBytes);
+            var done = Stopwatch.GetTimestamp();
+            Interlocked.Increment(ref _presentsThisWindow);
+            _metrics.RecordPresent(
+                (lockAcquired - waitStart) * 1000.0 / Stopwatch.Frequency,
+                (done - lockAcquired) * 1000.0 / Stopwatch.Frequency);
         }
     }
 
