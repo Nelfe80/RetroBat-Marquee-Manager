@@ -400,16 +400,18 @@ half4 main(float2 p) {
     private double _renderMsAverage = 8;
 
     /// <summary>
-    /// FPS guard: how many sprites the current frame budget can afford. Below
-    /// ~55% of the 24 Hz budget everything is allowed; past the budget, spawning
-    /// stops entirely until frames recover.
+    /// FPS guard: how many sprites the current frame budget can afford. Fewer when
+    /// the CPU raster is already slow — but NEVER zero. On a large/heavy surface the
+    /// steady render can sit above 40 ms (≈20 fps); cutting sprites to 0 there made
+    /// ingame effects vanish entirely ("one ring then nothing"). A floor keeps the
+    /// effects the user came for; adaptive resolution handles the frame-rate guard.
     /// </summary>
     private int SpriteBudget => _renderMsAverage switch
     {
         < 23 => 20,
-        < 32 => 10,
-        < 40 => 4,
-        _ => 0
+        < 32 => 12,
+        < 44 => 6,
+        _ => 3
     };
 
     public void Render(SKCanvas canvas, int width, int height, TimeSpan elapsed)
