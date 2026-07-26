@@ -258,6 +258,9 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         // Achievement Takeover
         private bool _takeoverActive;
         private readonly Queue<Action> _takeoverQueue = new();
+        // Guaranteed teardown of an unlock banner even if the choreography hiccups.
+        private DispatcherTimer? _takeoverFallback;
+        private const int TakeoverSlideMs = 300;
 
         // OSD Text Layer
         private TextBlock _osdText = null!;
@@ -1343,15 +1346,34 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             ScheduleDelay(enterMs + holdMs, () =>
             {
                 AnimateDouble(bannerSlide, TranslateTransform.XProperty, 0,
-                    this.ActualWidth > 0 ? this.ActualWidth : 2000, exitMs, true, () =>
-                    {
-                        _mainGrid.Children.Remove(banner);
-                        AnimateDouble(_informationPanelSlide, TranslateTransform.YProperty, 220, 0, slideMs, false);
-                        AnimateDouble(_badgeTraySlide, TranslateTransform.YProperty, 220, 0, slideMs, false);
-                        _takeoverActive = false;
-                        if (_takeoverQueue.Count > 0) _takeoverQueue.Dequeue()();
-                    });
+                    this.ActualWidth > 0 ? this.ActualWidth : 2000, exitMs, true, () => FinishTakeover(banner));
             });
+
+            // safety net: whatever happens to the choreography above, force the banner
+            // out after its full duration + margin so an unlock can never get stuck.
+            _takeoverFallback?.Stop();
+            _takeoverFallback = new DispatcherTimer(DispatcherPriority.Normal)
+            {
+                Interval = TimeSpan.FromMilliseconds(durationMs + 1500)
+            };
+            _takeoverFallback.Tick += (_, _) => FinishTakeover(banner);
+            _takeoverFallback.Start();
+        }
+
+        /// <summary>Idempotent teardown of an unlock banner: removes it, restores the
+        /// live blocks, releases the takeover and starts the next queued one. Called by
+        /// both the normal exit animation and the safety-net timer; the first to run
+        /// wins (the banner is gone for the second, which then no-ops).</summary>
+        private void FinishTakeover(FrameworkElement banner)
+        {
+            _takeoverFallback?.Stop();
+            _takeoverFallback = null;
+            if (!_mainGrid.Children.Contains(banner)) return; // already torn down
+            _mainGrid.Children.Remove(banner);
+            AnimateDouble(_informationPanelSlide, TranslateTransform.YProperty, 220, 0, TakeoverSlideMs, false);
+            AnimateDouble(_badgeTraySlide, TranslateTransform.YProperty, 220, 0, TakeoverSlideMs, false);
+            _takeoverActive = false;
+            if (_takeoverQueue.Count > 0) _takeoverQueue.Dequeue()();
         }
 
         private void LegacyShowAchievementTakeoverCore(string title, string detail, int points, string? badgePath)
@@ -1559,7 +1581,11 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         {
             element.Opacity = from;
             var startTime = DateTime.UtcNow;
-            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+            // Normal priority, NOT the DispatcherTimer default (Background): during
+            // gameplay the UI thread is saturated (lighting presents at Render + live
+            // overlays), which starved Background ticks — the unlock banner then never
+            // reached its exit and stayed on screen forever.
+            var timer = new DispatcherTimer(DispatcherPriority.Normal) { Interval = TimeSpan.FromMilliseconds(16) };
             timer.Tick += (_, _) =>
             {
                 var elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds;
@@ -1572,7 +1598,9 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
         private void ScheduleDelay(int delayMs, Action callback)
         {
-            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(Math.Max(1, delayMs)) };
+            // Normal priority (see FadeElement): the takeover's hold/exit delay must
+            // fire even while the lighting engine saturates the UI thread.
+            var timer = new DispatcherTimer(DispatcherPriority.Normal) { Interval = TimeSpan.FromMilliseconds(Math.Max(1, delayMs)) };
             timer.Tick += (_, _) => { timer.Stop(); callback(); };
             timer.Start();
         }
