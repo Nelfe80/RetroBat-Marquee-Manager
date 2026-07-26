@@ -16,6 +16,12 @@ public interface ISkiaFrameRenderer : IDisposable
     /// </summary>
     bool WantsFrame(TimeSpan elapsed) => true;
 
+    /// <summary>The cadence the current content actually needs (§6): a still or
+    /// tube-only scene wants 24, dynamic sprites want 30. The host caps at
+    /// min(configuredFps, DesiredFps), so a 24 Hz scene is judged against 24 — not
+    /// against a 30 target it can never reach.</summary>
+    int DesiredFps => 24;
+
     /// <summary>Lot 0 diagnostics (docs\Update.txt §4): live sprite count and the
     /// duration of the most recent lighting-map generation, in milliseconds.
     /// Default 0 for renderers that carry neither (e.g. the test pattern).</summary>

@@ -33,8 +33,6 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
 
     private volatile int _targetWidth;
     private volatile int _targetHeight;
-    private int _lastRenderedWidth;
-    private int _lastRenderedHeight;
 
     private SKPaint? _fpsPaint;
     private SKFont? _fpsFont;
@@ -122,10 +120,14 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         }
     }
 
+    private int _lastLogicalWidth;
+    private int _lastLogicalHeight;
+    private int _lastPhysicalWidth;
+    private int _lastPhysicalHeight;
+
     private void RenderLoopCore(CancellationToken ct)
     {
         var clock = Stopwatch.StartNew();
-        var frameTicks = Stopwatch.Frequency / _fpsLimit;
         var fpsFrames = 0;
         var fpsWindowStart = 0L;
         var lastFpsLog = 0L;
@@ -133,26 +135,36 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         while (!ct.IsCancellationRequested)
         {
             var frameStart = clock.ElapsedTicks;
-            var width = (int)Math.Round(_targetWidth * _adaptiveScale);
-            var height = (int)Math.Round(_targetHeight * _adaptiveScale);
+            // §6: pace to what the content actually needs, never above the config cap
+            var targetFps = Math.Clamp(Math.Min(_fpsLimit, _renderer?.DesiredFps ?? _fpsLimit), 1, 240);
+            var frameTicks = Stopwatch.Frequency / targetFps;
 
-            if (width > 0 && height > 0 && _renderer != null)
+            // §6 "Dimensions logiques stables": the renderer always sees the FULL
+            // logical size; adaptive scale only shrinks the physical buffer, applied
+            // through canvas.Scale. A scale change no longer regenerates the maps.
+            var logicalWidth = _targetWidth;
+            var logicalHeight = _targetHeight;
+            var physicalWidth = Math.Max(1, (int)Math.Round(logicalWidth * _adaptiveScale));
+            var physicalHeight = Math.Max(1, (int)Math.Round(logicalHeight * _adaptiveScale));
+
+            if (logicalWidth > 0 && logicalHeight > 0 && _renderer != null)
             {
-                // always render on size change; otherwise let the renderer skip
-                // visually identical frames (§17.5) to spare CPU
-                var sizeChanged = width != _lastRenderedWidth || height != _lastRenderedHeight;
+                var sizeChanged = logicalWidth != _lastLogicalWidth || logicalHeight != _lastLogicalHeight
+                                  || physicalWidth != _lastPhysicalWidth || physicalHeight != _lastPhysicalHeight;
                 if (sizeChanged || _renderer.WantsFrame(clock.Elapsed))
                 {
                     try
                     {
                         var renderStart = Stopwatch.GetTimestamp();
-                        RenderFrame(width, height, clock.Elapsed);
+                        RenderFrame(logicalWidth, logicalHeight, physicalWidth, physicalHeight, clock.Elapsed);
                         _metrics.RecordRender((Stopwatch.GetTimestamp() - renderStart) * 1000.0 / Stopwatch.Frequency);
                         _metrics.RecordSpriteCount(_renderer.ActiveSpriteCount);
                         _metrics.RecordMapGeneration(_renderer.LastMapGenerationMs);
                         SchedulePresent();
-                        _lastRenderedWidth = width;
-                        _lastRenderedHeight = height;
+                        _lastLogicalWidth = logicalWidth;
+                        _lastLogicalHeight = logicalHeight;
+                        _lastPhysicalWidth = physicalWidth;
+                        _lastPhysicalHeight = physicalHeight;
                         fpsFrames++;
                         _idle = false;
                     }
@@ -173,16 +185,16 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
             if (now - fpsWindowStart >= Stopwatch.Frequency)
             {
                 CurrentFps = fpsFrames * (double)Stopwatch.Frequency / (now - fpsWindowStart);
-                // adaptive resolution: only judge windows where we actually
-                // rendered continuously (idle skipping reads as low FPS)
-                if (fpsFrames >= _fpsLimit / 3)
+                // §6: adaptive resolution judged against the CONTENT cadence, so a
+                // 24 Hz scene can recover; only windows with continuous rendering count
+                if (fpsFrames >= targetFps / 3)
                 {
-                    if (CurrentFps < _fpsLimit * 0.70 && _adaptiveScale > 0.5)
+                    if (CurrentFps < targetFps * 0.70 && _adaptiveScale > 0.5)
                     {
                         _adaptiveScale = Math.Max(0.5, _adaptiveScale * 0.8);
-                        _logger.LogInformation("Lighting surface overloaded ({Fps:F1} FPS): render scale lowered to {Scale:P0}", CurrentFps, _adaptiveScale);
+                        _logger.LogInformation("Lighting surface overloaded ({Fps:F1}/{Target} FPS): render scale lowered to {Scale:P0}", CurrentFps, targetFps, _adaptiveScale);
                     }
-                    else if (CurrentFps > _fpsLimit * 0.92 && _adaptiveScale < 1.0)
+                    else if (CurrentFps > targetFps * 0.92 && _adaptiveScale < 1.0)
                     {
                         _adaptiveScale = Math.Min(1.0, _adaptiveScale * 1.12);
                     }
@@ -193,7 +205,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 if (now - lastFpsLog >= 5 * Stopwatch.Frequency)
                 {
                     lastFpsLog = now;
-                    _logger.LogInformation("{Line}", _metrics.SnapshotLine(_adaptiveScale, width, height));
+                    _logger.LogInformation("{Line}", _metrics.SnapshotLine(_adaptiveScale, physicalWidth, physicalHeight));
                 }
             }
 
@@ -205,20 +217,28 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         }
     }
 
-    private void RenderFrame(int width, int height, TimeSpan elapsed)
+    /// <summary>Renders at the STABLE logical size into a physical buffer that may
+    /// be smaller (adaptive scale). The canvas is pre-scaled so the renderer draws
+    /// in logical coordinates; WPF then stretches the physical buffer to the window.
+    /// Maps therefore never regenerate just because the scale changed (§6).</summary>
+    private void RenderFrame(int logicalWidth, int logicalHeight, int physicalWidth, int physicalHeight, TimeSpan elapsed)
     {
-        if (_back == null || _back.Width != width || _back.Height != height)
+        if (_back == null || _back.Width != physicalWidth || _back.Height != physicalHeight)
         {
             _back?.Dispose();
-            _back = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Premul));
+            _back = new SKBitmap(new SKImageInfo(physicalWidth, physicalHeight, SKColorType.Bgra8888, SKAlphaType.Premul));
         }
 
-        var info = new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Premul);
+        var info = new SKImageInfo(physicalWidth, physicalHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
         using (var surface = SKSurface.Create(info, _back.GetPixels(), _back.RowBytes))
         {
-            _renderer!.Render(surface.Canvas, width, height, elapsed);
-            if (_showFps) DrawFps(surface.Canvas);
-            surface.Canvas.Flush();
+            var canvas = surface.Canvas;
+            canvas.Save();
+            canvas.Scale(physicalWidth / (float)logicalWidth, physicalHeight / (float)logicalHeight);
+            _renderer!.Render(canvas, logicalWidth, logicalHeight, elapsed);
+            canvas.Restore();
+            if (_showFps) DrawFps(canvas);
+            canvas.Flush();
         }
 
         lock (_swapLock)

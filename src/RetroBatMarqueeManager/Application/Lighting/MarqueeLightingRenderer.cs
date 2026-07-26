@@ -992,6 +992,17 @@ half4 main(float2 p) {
     public int ActiveSpriteCount => _sprites.Count;
     public double LastMapGenerationMs => Volatile.Read(ref _lastMapGenerationMs);
 
+    /// <summary>§6: 30 while dynamic sprites/effects run, 24 for the steady
+    /// fluorescent scene. Read on the render thread (same as the sprite mutations).</summary>
+    public int DesiredFps
+    {
+        get
+        {
+            if (_sprites.Count > 0) return 30;
+            lock (_fxLock) { return _activeFx != null || _pendingSprites.Count > 0 ? 30 : 24; }
+        }
+    }
+
     private void StartGeneration(MarqueeRequest request, int surfaceWidth, int surfaceHeight)
     {
         _generating = true;
