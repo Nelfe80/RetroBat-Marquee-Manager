@@ -1223,13 +1223,13 @@ half4 main(float2 p) {
         _maps = null;
     }
 
-    /// <summary>Clears every DYNAMIC trace of the current game: arcade outputs,
-    /// lamp states, running/pending effects, sprites, audio sequence. Graphics are
-    /// handled separately so a same-game resolution change can keep this state.</summary>
+    /// <summary>Resets the RUNTIME state of a play session: arcade outputs, running/
+    /// pending effects, sprites, audio sequence. Does NOT touch the lamp scene/states
+    /// — those belong to the adopted scene (a new-game adoption sets them just before
+    /// calling this; wiping them here left every new game with zero lamps → no attract,
+    /// no ingame lamps). Lamps are cleared only by <see cref="ClearScene"/>.</summary>
     private void ResetGameSession()
     {
-        _lampScene = null;
-        _lampStates = Array.Empty<LampState>();
         _arcadeOutputs.Clear();
         _arcadeLive = false;
         if (_sequence != null) { _sound?.StopSequence(_sequence); _sequence = null; }
@@ -1243,6 +1243,8 @@ half4 main(float2 p) {
     {
         DisposeSceneGraphics();
         ResetGameSession();
+        _lampScene = null;
+        _lampStates = Array.Empty<LampState>();
         _currentPath = null;
         _currentSceneRom = null;
         _tubes = Array.Empty<TubeLifeSimulator>();
