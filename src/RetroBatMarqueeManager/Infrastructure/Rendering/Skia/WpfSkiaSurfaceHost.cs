@@ -91,7 +91,11 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         {
             IsBackground = true,
             Name = "MarqueeManager.SkiaRender",
-            Priority = ThreadPriority.AboveNormal
+            // Normal, not AboveNormal: the render thread must not outrank the
+            // WebSocket ingestion / UI threads of this same process, and the whole
+            // process already runs BelowNormal so the marquee yields to ES (verified
+            // by A/B — running the process at Normal starves ES navigation).
+            Priority = ThreadPriority.Normal
         };
         _renderThread.Start();
         _logger.LogInformation("Skia lighting surface started (fps limit {FpsLimit})", _fpsLimit);
@@ -209,11 +213,13 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 }
             }
 
+            // pace with a plain sleep — no busy spin. The former spin-wait pinned a
+            // CPU core for the last ~1-2 ms of EVERY frame just to hit the deadline
+            // precisely; at 24-30 fps that precision is worthless and the burned core
+            // is time stolen from ES. timeBeginPeriod(1) keeps Sleep granularity ~1 ms.
             var remaining = frameTicks - (clock.ElapsedTicks - frameStart);
             var remainingMs = (int)(remaining * 1000 / Stopwatch.Frequency);
-            if (remainingMs > 2) Thread.Sleep(remainingMs - 1);
-            while (clock.ElapsedTicks - frameStart < frameTicks && !ct.IsCancellationRequested)
-                Thread.SpinWait(120);
+            if (remainingMs > 0) Thread.Sleep(remainingMs);
         }
     }
 
