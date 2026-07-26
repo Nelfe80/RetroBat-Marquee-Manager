@@ -653,6 +653,12 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     bitmap.BeginInit();
                     bitmap.UriSource = new Uri(path);
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    // decode at the window's on-screen width, not the image's native
+                    // resolution: a 1920x1080 fanart shown on a marquee strip cost a
+                    // full-size decode + GPU upload on EVERY navigation. The image is
+                    // Uniform-stretched, so it is never displayed wider than the window.
+                    var decodeWidth = DisplayDecodeWidth();
+                    if (decodeWidth > 0) bitmap.DecodePixelWidth = decodeWidth;
                     bitmap.EndInit();
                     var decodeMs = (System.Diagnostics.Stopwatch.GetTimestamp() - decodeStart) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
 
@@ -669,6 +675,16 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     _logger.LogError($"[WPF Player] DisplayImage error: {ex.Message}");
                 }
             }));
+        }
+
+        /// <summary>The marquee window's on-screen width in pixels, used to cap image
+        /// decode resolution. 0 before the first layout pass (full decode, one image).</summary>
+        private int DisplayDecodeWidth()
+        {
+            if (this.ActualWidth <= 0) return 0;
+            var dpiScale = 1.0;
+            try { dpiScale = VisualTreeHelper.GetDpi(this).DpiScaleX; } catch { /* not yet connected */ }
+            return (int)Math.Ceiling(this.ActualWidth * dpiScale);
         }
 
         public void DisplayVideo(string path)
