@@ -269,6 +269,9 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         // Latest-wins: only the last requested path is rendered — checked at dispatch time
         private volatile string? _latestImagePath;
         private volatile string? _latestVideoPath;
+        // Monotonic marquee request id: a slow/late decode (or a stale snapshot that
+        // "comes back over" the current one) is discarded when a newer request exists.
+        private long _marqueeSeq;
 
         // Win32 API to position window without DPI issues
         [DllImport("user32.dll", SetLastError = true)]
@@ -631,22 +634,24 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         public void DisplayImage(string path, Application.Lighting.LightingSceneMeta? lightingMeta = null)
         {
             _latestImagePath = path;
-            // Lot 0 diagnostics (docs\Update.txt §4): with lighting OFF the marquee
-            // is a plain WPF Image — its update latency lives HERE, not in the Skia
-            // host. Measure UI-thread dispatch latency and the full-resolution decode.
+            var seq = System.Threading.Interlocked.Increment(ref _marqueeSeq);
             var scheduledAt = System.Diagnostics.Stopwatch.GetTimestamp();
-            this.Dispatcher.BeginInvoke(new Action(() =>
+            // Decode OFF the UI thread. A marquee decode is 100-234 ms at the window
+            // width; doing it on the dispatcher froze navigation and let stale frames
+            // pile up, so an old marquee could "come back over" the current one. A
+            // short debounce also skips the games flown past during a fast scroll —
+            // only the settled selection is decoded — and the sequence id guarantees
+            // that a late decode never overwrites a newer one.
+            _ = System.Threading.Tasks.Task.Run(async () =>
             {
-                if (_latestImagePath != path) return;
-                var dispatchMs = (System.Diagnostics.Stopwatch.GetTimestamp() - scheduledAt) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
                 try
                 {
-                    _mediaElement.Stop();
-                    _mediaElement.Visibility = Visibility.Collapsed;
-                    _layViewbox.Visibility = Visibility.Collapsed;
-                    _logoImage.Visibility = Visibility.Collapsed;
-
+                    await System.Threading.Tasks.Task.Delay(70).ConfigureAwait(false);
+                    if (System.Threading.Interlocked.Read(ref _marqueeSeq) != seq) return; // flown past
                     if (!File.Exists(path)) return;
+
+                    var decodeWidth = this.Dispatcher.Invoke(DisplayDecodeWidth);
+                    if (System.Threading.Interlocked.Read(ref _marqueeSeq) != seq) return;
 
                     var decodeStart = System.Diagnostics.Stopwatch.GetTimestamp();
                     var bitmap = new BitmapImage();
@@ -654,27 +659,33 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     bitmap.UriSource = new Uri(path);
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
                     // decode at the window's on-screen width, not the image's native
-                    // resolution: a 1920x1080 fanart shown on a marquee strip cost a
-                    // full-size decode + GPU upload on EVERY navigation. The image is
-                    // Uniform-stretched, so it is never displayed wider than the window.
-                    var decodeWidth = DisplayDecodeWidth();
+                    // resolution (a 2100 px marquee decoded full-size cost 200 ms each)
                     if (decodeWidth > 0) bitmap.DecodePixelWidth = decodeWidth;
                     bitmap.EndInit();
+                    bitmap.Freeze(); // the decode happens here, on this background thread
                     var decodeMs = (System.Diagnostics.Stopwatch.GetTimestamp() - decodeStart) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
 
-                    _backgroundImage.Source = bitmap;
-                    _backgroundImage.Visibility = Visibility.Visible;
-                    _lightingRenderer?.SetMarqueeImage(path, lightingMeta);
-
-                    _logger.LogInformation(
-                        "[MarqueeUpdate] screen {Screen}: uiDispatch={Dispatch:F1}ms decode={Decode:F1}ms {W}x{H} {File}",
-                        _targetScreen, dispatchMs, decodeMs, bitmap.PixelWidth, bitmap.PixelHeight, Path.GetFileName(path));
+                    _ = this.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        if (System.Threading.Interlocked.Read(ref _marqueeSeq) != seq) return; // a newer marquee won
+                        _mediaElement.Stop();
+                        _mediaElement.Visibility = Visibility.Collapsed;
+                        _layViewbox.Visibility = Visibility.Collapsed;
+                        _logoImage.Visibility = Visibility.Collapsed;
+                        _backgroundImage.Source = bitmap;
+                        _backgroundImage.Visibility = Visibility.Visible;
+                        _lightingRenderer?.SetMarqueeImage(path, lightingMeta);
+                        var totalMs = (System.Diagnostics.Stopwatch.GetTimestamp() - scheduledAt) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+                        _logger.LogInformation(
+                            "[MarqueeUpdate] screen {Screen}: decode={Decode:F1}ms total={Total:F1}ms {W}x{H} {File}",
+                            _targetScreen, decodeMs, totalMs, bitmap.PixelWidth, bitmap.PixelHeight, Path.GetFileName(path));
+                    }));
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError($"[WPF Player] DisplayImage error: {ex.Message}");
                 }
-            }));
+            });
         }
 
         /// <summary>The marquee window's on-screen width in pixels, used to cap image
@@ -690,6 +701,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         public void DisplayVideo(string path)
         {
             _latestVideoPath = path;
+            // supersede any marquee image decode still in flight (video wins now)
+            System.Threading.Interlocked.Increment(ref _marqueeSeq);
             this.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (_latestVideoPath != path) return;
