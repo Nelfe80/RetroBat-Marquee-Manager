@@ -9,11 +9,36 @@ namespace RetroBatMarqueeManager.Application.Lighting;
 public sealed class SpriteAnimation : IDisposable
 {
     public required SKBitmap[] Frames { get; init; }
+    /// <summary>One immutable SKImage per frame, built ONCE at load and reused every
+    /// frame (docs\Update.txt §7). The render loop must never call SKImage.FromBitmap
+    /// — at 20 sprites × 24 fps that was ~480 image allocations per second. The images
+    /// share the (immutable) bitmap pixels, so this does not double the native memory.</summary>
+    public required SKImage[] Images { get; init; }
     public required int[] CumulativeMs { get; init; }
     public int TotalMs => CumulativeMs.Length > 0 ? CumulativeMs[^1] : 0;
     public bool Opaque { get; init; }
 
     private static readonly Dictionary<string, SpriteAnimation?> Cache = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Decodes the ordinary sprites (all but the heavy full_* backdrops) on a
+    /// background thread after startup, so the first ingame effect never stalls the
+    /// render thread on a cold decode (§7). Safe to call more than once (cache hit).</summary>
+    public static void PreloadOrdinary(string spritesDirectory, ILogger logger)
+    {
+        try
+        {
+            if (!Directory.Exists(spritesDirectory)) return;
+            foreach (var path in Directory.EnumerateFiles(spritesDirectory, "*.gif"))
+            {
+                if (System.IO.Path.GetFileName(path).StartsWith("full_", StringComparison.OrdinalIgnoreCase)) continue;
+                Load(path, logger);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogDebug(ex, "Sprite preload skipped");
+        }
+    }
 
     public static SpriteAnimation? Load(string path, ILogger logger)
     {
@@ -69,9 +94,17 @@ public sealed class SpriteAnimation : IDisposable
                         elapsed += Math.Max(20, frameInfo[i].Duration);
                         cumulative[i] = elapsed;
                     }
+                    // build the immutable SKImage views once (shared pixels)
+                    var images = new SKImage[frames.Length];
+                    for (var i = 0; i < frames.Length; i++)
+                    {
+                        frames[i].SetImmutable();
+                        images[i] = SKImage.FromBitmap(frames[i]);
+                    }
                     animation = new SpriteAnimation
                     {
                         Frames = frames,
+                        Images = images,
                         CumulativeMs = cumulative,
                         Opaque = codec.Info.AlphaType == SKAlphaType.Opaque
                     };
@@ -86,16 +119,22 @@ public sealed class SpriteAnimation : IDisposable
         return animation;
     }
 
-    public SKBitmap FrameAt(double elapsedMs)
+    private int FrameIndexAt(double elapsedMs)
     {
         var wrapped = TotalMs > 0 ? elapsedMs % TotalMs : 0;
         for (var i = 0; i < CumulativeMs.Length; i++)
-            if (wrapped < CumulativeMs[i]) return Frames[i];
-        return Frames[^1];
+            if (wrapped < CumulativeMs[i]) return i;
+        return CumulativeMs.Length - 1;
     }
+
+    public SKBitmap FrameAt(double elapsedMs) => Frames[FrameIndexAt(elapsedMs)];
+
+    /// <summary>The prebuilt immutable image for the frame at this time — no allocation.</summary>
+    public SKImage ImageAt(double elapsedMs) => Images[FrameIndexAt(elapsedMs)];
 
     public void Dispose()
     {
+        foreach (var image in Images) image.Dispose();
         foreach (var frame in Frames) frame.Dispose();
     }
 }

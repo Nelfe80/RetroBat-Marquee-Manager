@@ -76,6 +76,13 @@ public sealed class MarqueeController : IDisposable
                 }
             }
             _ready.TrySetResult();
+            // §7: warm the sprite cache off-thread once the surfaces are up, so the
+            // first ingame effect never stalls the render thread on a cold decode
+            if (lightingOptions != null)
+            {
+                var spritesDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "sprites");
+                Task.Run(() => Application.Lighting.SpriteAnimation.PreloadOrdinary(spritesDir, _logger));
+            }
             if (_windows.Count > 0) System.Windows.Threading.Dispatcher.Run();
         }
         catch (Exception ex)
