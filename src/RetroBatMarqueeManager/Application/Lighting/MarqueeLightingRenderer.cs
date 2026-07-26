@@ -314,30 +314,34 @@ half4 main(float2 p) {
                 }
             }
 
-            // prebuilt immutable image — no per-frame SKImage allocation (§7)
-            var image = sprite.Animation.ImageAt((t - sprite.StartSeconds) * 1000);
+            var frame = sprite.Animation.FrameAt((t - sprite.StartSeconds) * 1000);
             float width, height;
             if (sprite.FullWidth)
             {
                 // backdrop sprite: spans the whole artwork width
                 width = w;
-                height = width * image.Height / image.Width;
+                height = width * frame.Height / frame.Width;
             }
             else
             {
                 height = 0.30f * h * sprite.ScaleAt(t);
-                width = height * image.Width / image.Height;
+                width = height * frame.Width / frame.Height;
             }
             var dest = SKRect.Create(
                 offset.X + nx * w - width / 2f,
                 offset.Y + ny * h - height / 2f, width, height);
             _glowPaint.BlendMode = sprite.Animation.Opaque ? SKBlendMode.Screen : SKBlendMode.SrcOver;
             _glowPaint.Color = SKColors.White.WithAlpha((byte)(alpha * 255));
-            // pixel-crisp keeps the pixel-art look on deliberate upscales; others smooth
-            var sampling = sprite.PixelCrisp
-                ? new SKSamplingOptions(SKFilterMode.Nearest)
-                : new SKSamplingOptions(SKFilterMode.Linear);
-            canvas.DrawImage(image, dest, sampling, _glowPaint);
+            if (sprite.PixelCrisp)
+            {
+                // deliberate upscales keep the pixel-art look
+                using var image = SKImage.FromBitmap(frame);
+                canvas.DrawImage(image, dest, new SKSamplingOptions(SKFilterMode.Nearest), _glowPaint);
+            }
+            else
+            {
+                canvas.DrawBitmap(frame, dest, _glowPaint);
+            }
         }
         _glowPaint.Color = SKColors.White;
         _glowPaint.BlendMode = SKBlendMode.Plus;
