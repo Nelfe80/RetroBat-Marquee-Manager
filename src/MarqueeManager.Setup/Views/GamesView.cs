@@ -4,9 +4,11 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using MarqueeManager.Compositions.Core.Resolution;
 using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
 using MarqueeManager.Setup.Data;
+using MarqueeManager.Setup.Detection;
 using MarqueeManager.Setup.Localization;
 
 namespace MarqueeManager.Setup.Views;
@@ -557,6 +559,21 @@ public sealed class GamesView : UserControl, IDisposable
         surfaceRow.Children.Add(deleteButton);
         RefreshDeleteButton();
         card.Children.Add(surfaceRow);
+
+        // shared block card: what displays for THIS game on the picked surface, and
+        // the per-source "Use" overrides — persisted PER GAME in media-presentation.json
+        var engine = new MediaResolutionPreview(_pluginRoot, _media, assignments);
+        var screens = ScreenProbe.Detect();
+        var resolutionCard = new ResolutionCard(engine);
+        void UpdateResolutionCard()
+        {
+            var surface = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
+            ResolutionContext? ctx = surface != null ? engine.GameContext(surface, screens, entry.System, entry.Rom) : null;
+            resolutionCard.Update(ctx, composePersonal: () => OpenComposer(entry, data, _selectedSurfaceId));
+        }
+        surfacePicker.SelectionChanged += (_, _) => UpdateResolutionCard();
+        UpdateResolutionCard();
+        card.Children.Add(resolutionCard);
 
         // each graphic creation is INDEPENDENT per surface: creation A on
         // surface 1, creation B on surface 2, for the same game

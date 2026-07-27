@@ -389,7 +389,10 @@ public sealed class MesSystemesView : UserControl
     /// <summary>System-level media: theme logo (wheel), generated marquee/DMD, fanart when present.</summary>
     private static IReadOnlyList<GameAsset> SystemAssets(string pluginRoot, string system)
     {
-        var root = System.IO.Path.GetFullPath(System.IO.Path.Combine(pluginRoot, "..", "APIExpose", "media", "systems", system));
+        // arcade family (mame, fbneo…): its media — wheel/logo, generated marquee,
+        // fanart — lives under the canonical "arcade" folder, not under the frontend.
+        var mediaSystem = GameMediaCatalog.ArcadeAliases.Contains(system) ? "arcade" : system;
+        var root = System.IO.Path.GetFullPath(System.IO.Path.Combine(pluginRoot, "..", "APIExpose", "media", "systems", mediaSystem));
         var assets = new List<GameAsset>();
         void Add(string key, string fr, string en, params string[] relative)
         {
