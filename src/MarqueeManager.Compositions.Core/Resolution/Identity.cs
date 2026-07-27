@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using MarqueeManager.Compositions.Core.Fit;
 using MarqueeManager.Compositions.Core.Geometry;
 
 namespace MarqueeManager.Compositions.Core.Resolution;
@@ -27,6 +28,12 @@ public sealed record ResolutionContext(
     string DisplayState)
 {
     public PixelSize Target => new(TargetWidth, TargetHeight);
+
+    /// <summary>When set, the target is lighting-pinned: the resolver frames EVERY
+    /// link with this policy instead of the per-source fit, so lamp/tube/map
+    /// coordinates stay aligned to the original framing (user decision — keep the
+    /// framing of lighting-enabled games). Null on ordinary targets.</summary>
+    public FitPolicy? PinnedFit { get; init; }
 
     /// <summary>The system key used for system settings and compositions: the
     /// frontend system, never silently the canonical one — MAME and FBNeo must

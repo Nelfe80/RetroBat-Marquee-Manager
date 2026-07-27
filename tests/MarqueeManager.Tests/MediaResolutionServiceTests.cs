@@ -211,4 +211,19 @@ public sealed class MediaResolutionServiceTests
         Assert.True(Traced(r, ResolutionSource.None, TraceCodes.IdentityFrontendMissing));
         Assert.Equal(ResolutionSource.Scraped, r.Source);
     }
+
+    // Decision 2: a lighting-pinned target frames every link with the pinned policy,
+    // ignoring the per-source fit, so lamp coordinates stay aligned.
+    [Fact]
+    public void PinnedFit_OverridesPerSourceFit()
+    {
+        var (svc, assets, _, _) = Build();
+        assets.Have(MediaScope.System, SourceKind.Scraped); // source policy is Contain
+        var ctx = SysCtx() with { PinnedFit = new FitPolicy(FitMode.FillWidth) };
+
+        var r = svc.Resolve(ctx);
+
+        Assert.Equal(ResolutionSource.Scraped, r.Source);
+        Assert.Equal(FitMode.FillWidth, r.Fit!.RequestedMode); // pinned, not the source's Contain
+    }
 }

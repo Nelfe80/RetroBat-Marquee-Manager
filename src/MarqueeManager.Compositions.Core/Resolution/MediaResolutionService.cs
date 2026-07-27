@@ -143,13 +143,14 @@ public sealed class MediaResolutionService : IMediaResolutionService
         return true;
     }
 
-    // A media (non-logo) is framed with the link's fit policy. The logo's safe-zone
-    // layout is applied by the logo layout step; here it starts from its Contain fit.
+    // A media is framed with the link's fit policy — unless the target is
+    // lighting-pinned, in which case EVERY link uses the pinned policy so the lamp
+    // coordinates never move (user decision on lighting games).
     private FitDecision? ComputeFit(MediaAsset asset, SourceSettings settings, ResolutionContext context)
     {
-        if (asset.Size is not { IsValid: true } size || settings.Fit is not { } policy)
-            return null;
-        return _fit.Calculate(size, context.Target, policy, asset.Protected ?? ProtectedRegions.None);
+        if (asset.Size is not { IsValid: true } size) return null;
+        var policy = context.PinnedFit ?? settings.Fit;
+        return policy is null ? null : _fit.Calculate(size, context.Target, policy, asset.Protected ?? ProtectedRegions.None);
     }
 
     private static bool IsLowResolution(FitDecision? fit) => fit is { Scale: > 1.0 + 1e-6 };
