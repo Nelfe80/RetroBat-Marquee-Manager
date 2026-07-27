@@ -1,5 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using MarqueeManager.Compositions.Core.Fit;
+using MarqueeManager.Compositions.Core.Geometry;
 using MarqueeManager.Compositions.Core.Policy;
 using MarqueeManager.Compositions.Core.Resolution;
 using MarqueeManager.Setup.Data;
@@ -8,38 +12,49 @@ using MarqueeManager.Setup.Localization;
 namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
-/// The shared "Résolution" block card: one adapted preview of what displays on the
-/// surface, then one row per chain link with a green ✓ on the winner and a
-/// "Utiliser" toggle that PERSISTS an override for this exact target. Reused by
-/// Mes systèmes (system scope) and Mes jeux (game scope) — same engine, same UI.
+/// The shared "Résolution" card: dedicated SOURCE CARDS from the most general to
+/// the most precise, each with its own framed preview and edit button. Clicking a
+/// card FORCES that source for the selected target (persisted); the green ✓ marks
+/// what is used. Reused by Mes systèmes (system) and Mes jeux (game).
 /// </summary>
 public sealed class ResolutionCard : UserControl
 {
+    private static readonly Dictionary<SourceKind, int> DisplayRank = new()
+    {
+        [SourceKind.Generated] = 0,   // general template, all systems
+        [SourceKind.Personal] = 1,    // this system / this game
+        [SourceKind.Scraped] = 2,
+        [SourceKind.Logo] = 3,
+        [SourceKind.SystemFallback] = 4
+    };
+
     private readonly MediaResolutionPreview _engine;
     private readonly StackPanel _body = new();
     private ResolutionContext? _context;
     private Action? _compose;
+    private Action? _editGabarit;
     private Action? _onChanged;
 
     public ResolutionCard(MediaResolutionPreview engine)
     {
         _engine = engine;
         var panel = new StackPanel();
-        panel.Children.Add(Ui.SectionHeader(L.T("Résolution (aperçu du moteur partagé)", "Resolution (shared engine preview)")));
+        panel.Children.Add(Ui.SectionHeader(L.T("Résolution — clique une carte pour l'utiliser", "Resolution — click a card to use it")));
         panel.Children.Add(Ui.MutedLabel(L.T(
-            "Ce qui s'affiche sur cette surface, et pourquoi. « Utiliser » = source retenue ; ✓ = ce qui s'applique. Aperçu seulement — rien n'est généré.",
-            "What shows on this surface, and why. 'Use' = kept source; ✓ = what applies. Preview only — nothing is generated.")));
+            "Du plus général (gabarit) au plus précis (ta création). ✓ = ce qui s'affiche. Aperçu seulement — rien n'est généré.",
+            "From the most general (template) to the most precise (your creation). ✓ = what shows. Preview only — nothing is generated.")));
         panel.Children.Add(_body);
         Content = Ui.Card(panel);
     }
 
     /// <summary>Point the card at a target (null blanks it). <paramref name="composePersonal"/>
-    /// wires the "Composer" button on the personal block; <paramref name="onChanged"/> fires
-    /// after an override toggle so the host can refresh siblings.</summary>
-    public void Update(ResolutionContext? context, Action? composePersonal = null, Action? onChanged = null)
+    /// edits the personal creation; <paramref name="editGabarit"/> edits the general template
+    /// (button hidden when null); <paramref name="onChanged"/> fires after a change.</summary>
+    public void Update(ResolutionContext? context, Action? composePersonal = null, Action? editGabarit = null, Action? onChanged = null)
     {
         _context = context;
         _compose = composePersonal;
+        _editGabarit = editGabarit;
         _onChanged = onChanged;
         Render();
     }
@@ -53,98 +68,102 @@ public sealed class ResolutionCard : UserControl
             return;
         }
 
-        var result = _engine.Resolve(ctx);
-        var media = result.Media;
+        var target = _engine.Resolve(ctx).Target;
+        _body.Children.Add(Ui.MutedLabel($"{L.T("Surface", "Surface")} : {ctx.SurfaceId} — {target.Width}×{target.Height}"));
 
-        _body.Children.Add(Ui.MutedLabel($"{L.T("Surface", "Surface")} : {ctx.SurfaceId} — {result.Target.Width}×{result.Target.Height}"));
-        _body.Children.Add(BuildAdaptedPreview(result));
-
-        var source = media.Source == ResolutionSource.Neutral
-            ? L.T("Affiché : fond neutre", "Displayed: neutral background")
-            : $"{L.T("Affiché", "Displayed")} : {ResolutionText.Link(media.Source)}";
-        var sourceLabel = Ui.Label(source, 13);
-        sourceLabel.FontWeight = FontWeights.Bold;
-        _body.Children.Add(sourceLabel);
-
-        if (media.OriginalSize is { } src)
-        {
-            var dims = $"{src.Width}×{src.Height} → {result.Target.Width}×{result.Target.Height} · {ResolutionText.Status(result.Dimensions.Status)}";
-            if (result.Dimensions.CropY > 0) dims += $" · {L.T("crop vertical", "vertical crop")} {result.Dimensions.CropY * 100:0.#}%";
-            if (result.Dimensions.CropX > 0) dims += $" · {L.T("crop horizontal", "horizontal crop")} {result.Dimensions.CropX * 100:0.#}%";
-            if (result.Dimensions.HighMagnification) dims += $" · {L.T("agrandissement", "magnified")} ×{result.Dimensions.Magnification:0.#}";
-            _body.Children.Add(Ui.MutedLabel(dims));
-        }
-
-        _body.Children.Add(Ui.SectionHeader(L.T("Comment c'est décidé   ( ✓ = ce qui s'applique )", "How it's decided   ( ✓ = what applies )")));
-        foreach (var link in _engine.DescribeChain(ctx))
-            _body.Children.Add(BuildLinkRow(ctx, link));
+        foreach (var link in _engine.DescribeChain(ctx).OrderBy(l => DisplayRank.GetValueOrDefault(l.Kind, 9)))
+            _body.Children.Add(BuildSourceCard(ctx, link, target));
 
         if (_engine.HasOverride(ctx))
         {
-            var reset = Ui.Button(L.T("Rétablir les réglages de la surface", "Reset to surface settings"), (_, _) =>
+            var reset = Ui.Button(L.T("Automatique (rétablir la surface)", "Automatic (reset to surface)"), (_, _) =>
             {
                 _engine.ResetTarget(ctx);
                 Render();
                 _onChanged?.Invoke();
             });
-            reset.Margin = new Thickness(0, 6, 0, 0);
+            reset.Margin = new Thickness(0, 8, 0, 0);
             _body.Children.Add(reset);
         }
     }
 
-    private FrameworkElement BuildLinkRow(ResolutionContext ctx, ChainLink link)
+    private FrameworkElement BuildSourceCard(ResolutionContext ctx, ChainLink link, PixelSize target)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 3, 0, 0) };
+        var panel = new StackPanel();
 
-        var use = Ui.CheckBox(L.T("Utiliser", "Use"), link.Enabled);
-        use.Width = 78;
-        use.VerticalAlignment = VerticalAlignment.Center;
-        use.Checked += (_, _) => { _engine.SetSourceEnabled(ctx, link.Kind, true); Render(); _onChanged?.Invoke(); };
-        use.Unchecked += (_, _) => { _engine.SetSourceEnabled(ctx, link.Kind, false); Render(); _onChanged?.Invoke(); };
-        row.Children.Add(use);
-
-        var mark = new TextBlock
+        var titleRow = new StackPanel { Orientation = Orientation.Horizontal };
+        titleRow.Children.Add(new TextBlock
         {
             Text = link.IsWinner ? "✓" : "○",
             Foreground = link.IsWinner ? Ui.Ok : Ui.Muted,
             FontWeight = FontWeights.Bold,
-            Width = 20,
-            TextAlignment = TextAlignment.Center,
+            Width = 18,
             VerticalAlignment = VerticalAlignment.Center
-        };
-        row.Children.Add(mark);
+        });
+        var title = Ui.Label(CardTitle(ctx, link.Kind), 13);
+        title.VerticalAlignment = VerticalAlignment.Center;
+        if (link.IsWinner) title.FontWeight = FontWeights.Bold;
+        titleRow.Children.Add(title);
+        panel.Children.Add(titleRow);
 
-        var state = !link.Enabled ? L.T("désactivée", "disabled")
-            : link.IsWinner ? L.T("utilisée", "used")
-            : link.Present ? L.T("disponible (une source au-dessus prime)", "available (a source above wins)")
-            : L.T("absente", "absent");
-        var name = Ui.Label($"{ResolutionText.Link(link.Source)} — {state}", 12);
-        name.VerticalAlignment = VerticalAlignment.Center;
-        if (link.IsWinner) name.FontWeight = FontWeights.Bold;
-        else if (!link.Enabled || !link.Present) name.Foreground = Ui.Muted;
-        row.Children.Add(name);
+        if (link.Present && link.Path is { } path && link.Fit is { } fit)
+            panel.Children.Add(BuildAdaptedPreview(path, fit, target));
+        else
+            panel.Children.Add(Ui.MutedLabel(link.Present
+                ? L.T("(aperçu indisponible)", "(no preview)")
+                : L.T("absent — rien à afficher", "absent — nothing to show")));
 
-        // the personal block carries the composer entry point
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
         if (link.Kind == SourceKind.Personal && _compose is { } compose)
+            actions.Children.Add(Ui.Button(link.Present ? L.T("Modifier", "Edit") : L.T("Composer", "Compose"), (_, _) => compose()));
+        if (link.Kind == SourceKind.Generated && _editGabarit is { } editGabarit)
+            actions.Children.Add(Ui.Button(L.T("Modifier le gabarit général", "Edit the general template"), (_, _) => editGabarit()));
+        if (actions.Children.Count > 0) panel.Children.Add(actions);
+
+        var selectable = link.Present && link.Kind != SourceKind.SystemFallback;
+        var border = new Border
         {
-            var composeButton = Ui.Button(L.T("Composer", "Compose"), (_, _) => compose());
-            composeButton.Margin = new Thickness(10, 0, 0, 0);
-            row.Children.Add(composeButton);
-        }
-        return row;
+            Child = panel,
+            Padding = new Thickness(10),
+            Margin = new Thickness(0, 5, 0, 0),
+            CornerRadius = new CornerRadius(6),
+            Background = Brushes.Transparent, // transparent still hit-tests → whole card clickable
+            BorderBrush = link.IsWinner ? Ui.Ok : Ui.PanelBorder,
+            BorderThickness = new Thickness(link.IsWinner ? 2 : 1),
+            Cursor = selectable ? Cursors.Hand : Cursors.Arrow
+        };
+        if (selectable)
+            border.MouseLeftButtonUp += (_, _) =>
+            {
+                _engine.SelectSource(ctx, link.Kind);
+                Render();
+                _onChanged?.Invoke();
+            };
+        return border;
     }
 
-    /// <summary>Thumbnail at the SURFACE ratio, media framed exactly as the fit
-    /// decided (crop clipped, letterbox on the neutral background).</summary>
-    private static FrameworkElement BuildAdaptedPreview(PreviewResult result)
+    private static string CardTitle(ResolutionContext ctx, SourceKind kind) => kind switch
     {
-        double scale = Math.Min(360.0 / result.Target.Width, 220.0 / result.Target.Height);
-        double boxW = Math.Floor(Math.Max(40, result.Target.Width * scale));
-        double boxH = Math.Floor(Math.Max(20, result.Target.Height * scale));
+        SourceKind.Generated => L.T("Gabarit général — tous les systèmes", "General template — all systems"),
+        SourceKind.Personal => ctx.Scope == MediaScope.Game
+            ? L.T("Ma création pour ce jeu", "My creation for this game")
+            : L.T("Ma création pour ce système", "My creation for this system"),
+        SourceKind.Scraped => L.T("Marquee scrapé", "Scraped marquee"),
+        SourceKind.Logo => L.T("Logo mis en page", "Laid-out logo"),
+        SourceKind.SystemFallback => L.T("Rendu du système", "System render"),
+        _ => kind.ToString()
+    };
+
+    /// <summary>Thumbnail at the SURFACE ratio, media framed exactly as its fit
+    /// decided (crop clipped, letterbox on the neutral background).</summary>
+    private static FrameworkElement BuildAdaptedPreview(string path, FitDecision fit, PixelSize target)
+    {
+        double scale = Math.Min(320.0 / target.Width, 180.0 / target.Height);
+        double boxW = Math.Floor(Math.Max(40, target.Width * scale));
+        double boxH = Math.Floor(Math.Max(20, target.Height * scale));
 
         var canvas = new Canvas { Width = boxW, Height = boxH, ClipToBounds = true };
-        var media = result.Media;
-        if (media.Fit is { } fit && media.EffectivePath is { } path && System.IO.File.Exists(path))
+        if (System.IO.File.Exists(path))
         {
             try
             {
@@ -158,7 +177,7 @@ public sealed class ResolutionCard : UserControl
                 var image = new Image
                 {
                     Source = bitmap,
-                    Stretch = System.Windows.Media.Stretch.Fill,
+                    Stretch = Stretch.Fill,
                     Width = fit.TargetRect.Width * scale,
                     Height = fit.TargetRect.Height * scale
                 };
@@ -176,15 +195,16 @@ public sealed class ResolutionCard : UserControl
         {
             Width = boxW,
             Height = boxH,
-            Background = System.Windows.Media.Brushes.Black,
+            Background = Brushes.Black,
             BorderBrush = Ui.PanelBorder,
             BorderThickness = new Thickness(1),
             HorizontalAlignment = HorizontalAlignment.Left,
-            Margin = new Thickness(0, 2, 0, 6),
+            Margin = new Thickness(0, 2, 0, 2),
             Child = canvas,
             ClipToBounds = true,
             UseLayoutRounding = true,
-            SnapsToDevicePixels = true
+            SnapsToDevicePixels = true,
+            IsHitTestVisible = false // clicks pass through to the card
         };
     }
 }

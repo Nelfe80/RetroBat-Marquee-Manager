@@ -80,7 +80,7 @@ public sealed class MesSystemesView : UserControl
         var previewCaption = Ui.MutedLabel("");
         body.Children.Add(preview);
         body.Children.Add(previewCaption);
-        var resolutionBody = new StackPanel();
+        var resolutionCard = new ResolutionCard(engine);
 
         var surfacesStore = new SurfacesStore(pluginRoot);
         var surfaces = surfacesStore.Load();
@@ -210,93 +210,24 @@ public sealed class MesSystemesView : UserControl
                 : System.Windows.Visibility.Collapsed;
         }
 
-        // The VISIBLE slice of the refonte: run the shared resolver for the picked
-        // system on the picked surface and show what wins, its dimensional fit and
-        // the full traced chain — the same decision the runtime will make.
+        // Point the shared block card at the picked system + surface.
         void UpdateResolution()
         {
-            resolutionBody.Children.Clear();
             var system = SelectedSystem();
             var surface = SurfaceOf(SelectedSurface());
-            if (system == null || surface == null)
+            ResolutionContext? ctx = (system != null && surface != null)
+                ? engine.SystemContext(surface, detectedScreens, system)
+                : null;
+            resolutionCard.Update(ctx, composePersonal: () =>
             {
-                resolutionBody.Children.Add(Ui.MutedLabel(L.T("Sélectionnez un système et une surface.", "Select a system and a surface.")));
-                return;
-            }
-
-            var ctx = engine.SystemContext(surface, detectedScreens, system);
-            var result = engine.Resolve(ctx);
-            var media = result.Media;
-
-            // 1 — what actually displays
-            resolutionBody.Children.Add(Ui.MutedLabel($"{L.T("Surface", "Surface")} : {surface.Id} — {result.Target.Width}×{result.Target.Height}"));
-            resolutionBody.Children.Add(BuildAdaptedPreview(result));
-            var source = media.Source == ResolutionSource.Neutral
-                ? L.T("Affiché : fond neutre", "Displayed: neutral background")
-                : $"{L.T("Affiché", "Displayed")} : {ResolutionText.Link(media.Source)}";
-            var sourceLabel = Ui.Label(source, 13);
-            sourceLabel.FontWeight = System.Windows.FontWeights.Bold;
-            resolutionBody.Children.Add(sourceLabel);
-            if (media.OriginalSize is { } src)
-            {
-                var dims = $"{src.Width}×{src.Height} → {result.Target.Width}×{result.Target.Height} · {ResolutionText.Status(result.Dimensions.Status)}";
-                if (result.Dimensions.CropY > 0) dims += $" · {L.T("crop vertical", "vertical crop")} {result.Dimensions.CropY * 100:0.#}%";
-                if (result.Dimensions.CropX > 0) dims += $" · {L.T("crop horizontal", "horizontal crop")} {result.Dimensions.CropX * 100:0.#}%";
-                if (result.Dimensions.HighMagnification) dims += $" · {L.T("agrandissement", "magnified")} ×{result.Dimensions.Magnification:0.#}";
-                resolutionBody.Children.Add(Ui.MutedLabel(dims));
-            }
-
-            // 2 — how it's decided: one row per link, ✓ on the winner, "Utiliser" toggles
-            resolutionBody.Children.Add(Ui.SectionHeader(L.T("Comment c'est décidé   ( ✓ = ce qui s'applique )", "How it's decided   ( ✓ = what applies )")));
-            foreach (var link in engine.DescribeChain(ctx))
-                resolutionBody.Children.Add(BuildLinkRow(ctx, link));
-
-            if (engine.HasOverride(ctx))
-            {
-                var reset = Ui.Button(L.T("Rétablir les réglages de la surface", "Reset to surface settings"), (_, _) =>
+                if (system == null) return;
+                var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system), SelectedSurface())
                 {
-                    engine.ResetTarget(ctx);
-                    Refresh();
-                });
-                reset.Margin = new System.Windows.Thickness(0, 6, 0, 0);
-                resolutionBody.Children.Add(reset);
-            }
-        }
-
-        // One source block: [Utiliser] checkbox + ✓/○ winner mark + name + state.
-        System.Windows.FrameworkElement BuildLinkRow(ResolutionContext ctx, ChainLink link)
-        {
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new System.Windows.Thickness(0, 3, 0, 0) };
-
-            var use = Ui.CheckBox(L.T("Utiliser", "Use"), link.Enabled);
-            use.Width = 78;
-            use.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            use.Checked += (_, _) => { engine.SetSourceEnabled(ctx, link.Kind, true); Refresh(); };
-            use.Unchecked += (_, _) => { engine.SetSourceEnabled(ctx, link.Kind, false); Refresh(); };
-            row.Children.Add(use);
-
-            var mark = new TextBlock
-            {
-                Text = link.IsWinner ? "✓" : "○",
-                Foreground = link.IsWinner ? Ui.Ok : Ui.Muted,
-                FontWeight = System.Windows.FontWeights.Bold,
-                Width = 20,
-                TextAlignment = System.Windows.TextAlignment.Center,
-                VerticalAlignment = System.Windows.VerticalAlignment.Center
-            };
-            row.Children.Add(mark);
-
-            var state = !link.Enabled ? L.T("désactivée", "disabled")
-                : link.IsWinner ? L.T("utilisée", "used")
-                : link.Present ? L.T("disponible (une source au-dessus prime)", "available (a source above wins)")
-                : L.T("absente", "absent");
-            var name = Ui.Label($"{ResolutionText.Link(link.Source)} — {state}", 12);
-            name.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            if (link.IsWinner) name.FontWeight = System.Windows.FontWeights.Bold;
-            else if (!link.Enabled || !link.Present) name.Foreground = Ui.Muted;
-            row.Children.Add(name);
-
-            return row;
+                    Owner = System.Windows.Window.GetWindow(this)
+                };
+                window.ShowDialog();
+                Refresh();
+            });
         }
 
         showSuspended.Checked += (_, _) => { RebuildSurfacePicker(); Refresh(); };
@@ -307,13 +238,7 @@ public sealed class MesSystemesView : UserControl
         Refresh();
         page.Children.Add(Ui.Card(composeCard));
 
-        var resolutionCard = new StackPanel();
-        resolutionCard.Children.Add(Ui.SectionHeader(L.T("Résolution (aperçu du moteur partagé)", "Resolution (shared engine preview)")));
-        resolutionCard.Children.Add(Ui.MutedLabel(L.T(
-            "Ce que le runtime afficherait pour ce système sur la surface choisie, et pourquoi. Aperçu seulement — rien n'est généré.",
-            "What the runtime would show for this system on the chosen surface, and why. Preview only — nothing is generated.")));
-        resolutionCard.Children.Add(resolutionBody);
-        page.Children.Add(Ui.Card(resolutionCard));
+        page.Children.Add(resolutionCard);
 
         var templates = new StackPanel();
         templates.Children.Add(Ui.SectionHeader(L.T("Templates de composition", "Composition templates")));
@@ -327,63 +252,6 @@ public sealed class MesSystemesView : UserControl
         page.Children.Add(Ui.Card(new PrioritiesCard(pluginRoot, media, identity)));
 
         Content = Ui.Page(page);
-    }
-
-    /// <summary>A thumbnail at the SURFACE ratio showing the resolved media framed
-    /// exactly as the shared fit decided — crop clipped, letterbox on the neutral
-    /// background: what will actually appear on that surface.</summary>
-    private static System.Windows.FrameworkElement BuildAdaptedPreview(PreviewResult result)
-    {
-        double scale = Math.Min(360.0 / result.Target.Width, 220.0 / result.Target.Height);
-        double boxW = Math.Floor(Math.Max(40, result.Target.Width * scale));
-        double boxH = Math.Floor(Math.Max(20, result.Target.Height * scale));
-
-        var canvas = new System.Windows.Controls.Canvas { Width = boxW, Height = boxH, ClipToBounds = true };
-        var media = result.Media;
-        if (media.Fit is { } fit && media.EffectivePath is { } path && System.IO.File.Exists(path))
-        {
-            try
-            {
-                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(path);
-                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                bitmap.DecodePixelWidth = Math.Max(8, (int)(fit.TargetRect.Width * scale));
-                bitmap.EndInit();
-                bitmap.Freeze();
-                // exact rect from the homothetic fit; Stretch.Fill maps the whole
-                // image into it WITHOUT distortion because the rect keeps its aspect
-                var image = new System.Windows.Controls.Image
-                {
-                    Source = bitmap,
-                    Stretch = System.Windows.Media.Stretch.Fill,
-                    Width = fit.TargetRect.Width * scale,
-                    Height = fit.TargetRect.Height * scale
-                };
-                System.Windows.Controls.Canvas.SetLeft(image, fit.TargetRect.X * scale);
-                System.Windows.Controls.Canvas.SetTop(image, fit.TargetRect.Y * scale);
-                canvas.Children.Add(image);
-            }
-            catch
-            {
-                // unreadable media: the neutral box stands on its own
-            }
-        }
-
-        return new System.Windows.Controls.Border
-        {
-            Width = boxW,
-            Height = boxH,
-            Background = System.Windows.Media.Brushes.Black, // the neutral background
-            BorderBrush = Ui.PanelBorder,
-            BorderThickness = new System.Windows.Thickness(1),
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
-            Margin = new System.Windows.Thickness(0, 2, 0, 6),
-            Child = canvas,
-            ClipToBounds = true,
-            UseLayoutRounding = true,
-            SnapsToDevicePixels = true
-        };
     }
 
     /// <summary>System-level media: theme logo (wheel), generated marquee/DMD, fanart when present.</summary>

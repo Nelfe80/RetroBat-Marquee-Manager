@@ -172,9 +172,12 @@ public sealed class PreviewGenerationPlanner : IGenerationPlanner
 /// <summary>The result of a preview resolution for one surface + scope + target.</summary>
 public sealed record PreviewResult(ResolvedMedia Media, DimensionalReport Dimensions, PixelSize Target);
 
-/// <summary>One chain link's live state for the block UI: is it enabled for this
-/// target, does its media exist, and is it the one currently displayed.</summary>
-public sealed record ChainLink(SourceKind Kind, ResolutionSource Source, bool Enabled, bool Present, bool IsWinner);
+/// <summary>One chain link's live state for the card UI: enabled for this target,
+/// media present, currently displayed, plus its OWN framed preview (path + fit) so
+/// each card shows what picking it would give.</summary>
+public sealed record ChainLink(
+    SourceKind Kind, ResolutionSource Source, bool Enabled, bool Present, bool IsWinner,
+    string? Path, MarqueeManager.Compositions.Core.Fit.FitDecision? Fit);
 
 /// <summary>
 /// Setup-facing facade: builds the resolution context from a surface and runs the
@@ -240,21 +243,38 @@ public sealed class MediaResolutionPreview
     {
         var policy = _policies.PolicyFor(context);
         var winner = _resolver.Resolve(context).Source;
-        var kinds = context.Scope == MediaScope.System
-            ? new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo }
-            : new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback };
+        var target = context.Target;
         var links = new List<ChainLink>();
-        foreach (var kind in kinds)
+        foreach (var kind in ChainOrder(context.Scope))
         {
-            var present = kind == SourceKind.SystemFallback || _assets.Resolve(kind, context).Asset != null;
-            links.Add(new ChainLink(kind, ToSource(kind), policy.IsEnabled(kind), present, ToSource(kind) == winner));
+            var asset = _assets.Resolve(kind, context).Asset;
+            var present = asset != null || kind == SourceKind.SystemFallback;
+            MarqueeManager.Compositions.Core.Fit.FitDecision? fit = null;
+            if (asset?.Size is { IsValid: true } size && policy.Source(kind)?.Fit is { } fp)
+                fit = _fit.Calculate(size, target, fp, asset.Protected ?? MarqueeManager.Compositions.Core.Fit.ProtectedRegions.None);
+            links.Add(new ChainLink(kind, ToSource(kind), policy.IsEnabled(kind), present,
+                ToSource(kind) == winner, asset?.Path, fit));
         }
         return links;
     }
 
+    private static SourceKind[] ChainOrder(MediaScope scope) => scope == MediaScope.System
+        ? new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo }
+        : new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback };
+
     public bool HasOverride(ResolutionContext context) => MediaPresentationEdits.HasOverride(_document, context);
 
-    /// <summary>Persist a "use this source" override for the exact target, then reload.</summary>
+    /// <summary>Cliquer une card = FORCER cette source : on active ce maillon et tout
+    /// ce qui est en dessous, on désactive ce qui est au-dessus, donc il gagne s'il
+    /// est présent. Persisté puis rechargé.</summary>
+    public void SelectSource(ResolutionContext context, SourceKind kind)
+    {
+        _document = MediaPresentationEdits.SelectSource(_document, context, kind, ChainOrder(context.Scope));
+        _store.Save(_document);
+        Rebuild();
+    }
+
+    /// <summary>Persist a single "use this source" toggle (kept for completeness).</summary>
     public void SetSourceEnabled(ResolutionContext context, SourceKind kind, bool enabled)
     {
         _document = MediaPresentationEdits.SetSourceEnabled(_document, context, kind, enabled);

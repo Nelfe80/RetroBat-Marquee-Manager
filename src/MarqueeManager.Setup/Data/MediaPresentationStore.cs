@@ -94,6 +94,35 @@ public static class MediaPresentationEdits
         return document with { TargetPolicies = targets };
     }
 
+    /// <summary>
+    /// FORCE a source for the target: enable the selected link and every link BELOW
+    /// it in the chain, disable every link ABOVE — so the selected one wins when
+    /// present (spec §7, no reordering; equivalent to the user clicking that card).
+    /// </summary>
+    public static MediaPresentationDocument SelectSource(
+        MediaPresentationDocument document, ResolutionContext context, SourceKind selected, IReadOnlyList<SourceKind> chainOrder)
+    {
+        var selectedIndex = Math.Max(0, chainOrder.ToList().IndexOf(selected));
+        var targets = document.TargetPolicies.ToList();
+        var index = targets.FindIndex(t => SameTarget(t, context));
+        var merged = index >= 0 && targets[index].Delta.Sources is { } existing
+            ? new Dictionary<SourceKind, SourceSettingsDelta>(existing)
+            : new Dictionary<SourceKind, SourceSettingsDelta>();
+
+        for (var i = 0; i < chainOrder.Count; i++)
+        {
+            var kind = chainOrder[i];
+            var source = merged.TryGetValue(kind, out var sd) ? sd : new SourceSettingsDelta();
+            merged[kind] = source with { Enabled = i >= selectedIndex };
+        }
+
+        if (index >= 0)
+            targets[index] = targets[index] with { Delta = targets[index].Delta with { Sources = merged } };
+        else
+            targets.Add(NewTarget(context, new ScopePolicyDelta(Sources: merged)));
+        return document with { TargetPolicies = targets };
+    }
+
     /// <summary>Removes every override for this exact target (reset to the surface).</summary>
     public static MediaPresentationDocument ResetTarget(MediaPresentationDocument document, ResolutionContext context)
         => document with { TargetPolicies = document.TargetPolicies.Where(t => !SameTarget(t, context)).ToList() };
