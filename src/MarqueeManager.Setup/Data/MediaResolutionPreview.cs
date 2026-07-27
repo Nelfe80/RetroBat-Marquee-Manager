@@ -2,6 +2,7 @@ using System.IO;
 using MarqueeManager.Compositions.Core.Fit;
 using MarqueeManager.Compositions.Core.Geometry;
 using MarqueeManager.Compositions.Core.Policy;
+using MarqueeManager.Compositions.Core.Presentation;
 using MarqueeManager.Compositions.Core.Resolution;
 using MarqueeManager.Setup.Detection;
 using MarqueeManager.Setup.Localization;
@@ -171,6 +172,10 @@ public sealed class PreviewGenerationPlanner : IGenerationPlanner
 /// <summary>The result of a preview resolution for one surface + scope + target.</summary>
 public sealed record PreviewResult(ResolvedMedia Media, DimensionalReport Dimensions, PixelSize Target);
 
+/// <summary>One chain link's live state for the block UI: is it enabled for this
+/// target, does its media exist, and is it the one currently displayed.</summary>
+public sealed record ChainLink(SourceKind Kind, ResolutionSource Source, bool Enabled, bool Present, bool IsWinner);
+
 /// <summary>
 /// Setup-facing facade: builds the resolution context from a surface and runs the
 /// SHARED resolver with the Setup adapters. This is what the new "Mes systèmes /
@@ -179,45 +184,101 @@ public sealed record PreviewResult(ResolvedMedia Media, DimensionalReport Dimens
 /// </summary>
 public sealed class MediaResolutionPreview
 {
-    private readonly IMediaResolutionService _resolver;
+    private readonly SetupMediaAssetResolver _assets;
+    private readonly PreviewGenerationPlanner _planner = new();
+    private readonly IFitCalculator _fit = new FitCalculator();
+    private readonly MediaPresentationStore _store;
+    private MediaPresentationDocument _document;
+    private IPresentationPolicyProvider _policies = null!;
+    private IMediaResolutionService _resolver = null!;
 
     public MediaResolutionPreview(string pluginRoot, GameMediaCatalog media, CompositionAssignments assignments)
     {
-        _resolver = new MediaResolutionService(
-            new DefaultPresentationPolicyProvider(),
-            new SetupMediaAssetResolver(pluginRoot, media, assignments),
-            new PreviewGenerationPlanner(),
-            new FitCalculator());
+        _assets = new SetupMediaAssetResolver(pluginRoot, media, assignments);
+        _store = new MediaPresentationStore(pluginRoot);
+        _document = _store.Load();
+        Rebuild();
     }
 
-    public PreviewResult ResolveSystem(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens, string system)
-        => Resolve(surface, screens, MediaScope.System, system, null);
+    private void Rebuild()
+    {
+        _policies = new MediaPresentationPolicyProvider(_document);
+        _resolver = new MediaResolutionService(_policies, _assets, _planner, _fit);
+    }
 
-    public PreviewResult ResolveGame(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens, string system, string rom)
-        => Resolve(surface, screens, MediaScope.Game, system, rom);
+    public ResolutionContext SystemContext(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens, string system)
+        => Context(surface, screens, MediaScope.System, system, null);
 
-    private PreviewResult Resolve(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens, MediaScope scope, string system, string? rom)
+    public ResolutionContext GameContext(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens, string system, string rom)
+        => Context(surface, screens, MediaScope.Game, system, rom);
+
+    private static ResolutionContext Context(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens, MediaScope scope, string system, string? rom)
     {
         var target = TargetOf(surface, screens);
         // arcade family (mame, fbneo…) keeps its own settings under the frontend key,
         // but its media lives under the canonical "arcade" folder — carry both.
         var canonical = GameMediaCatalog.ArcadeAliases.Contains(system) ? "arcade" : system;
-        var context = new ResolutionContext(
-            surface.Id,
-            surface.Category,
-            target.Width,
-            target.Height,
-            scope,
-            FrontendSystem: system,
-            CanonicalSystem: canonical,
+        return new ResolutionContext(surface.Id, surface.Category, target.Width, target.Height, scope,
+            FrontendSystem: system, CanonicalSystem: canonical,
             StableGameId: rom is null ? null : StableGameIds.FromRomPath($"{system}/{rom}"),
-            Rom: rom,
-            DisplayState: "navigation");
-
-        var media = _resolver.Resolve(context);
-        var dimensions = DimensionalAnalyzer.Analyze(media.OriginalSize, target, media.Fit, media.Generation);
-        return new PreviewResult(media, dimensions, target);
+            Rom: rom, DisplayState: "navigation");
     }
+
+    public PreviewResult Resolve(ResolutionContext context)
+    {
+        var media = _resolver.Resolve(context);
+        var dimensions = DimensionalAnalyzer.Analyze(media.OriginalSize, context.Target, media.Fit, media.Generation);
+        return new PreviewResult(media, dimensions, context.Target);
+    }
+
+    public PreviewResult ResolveSystem(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens, string system)
+        => Resolve(SystemContext(surface, screens, system));
+
+    /// <summary>Per-link state of the whole chain for one target: enabled, present
+    /// and which one currently WINS — powers the block UI with its winner check.</summary>
+    public IReadOnlyList<ChainLink> DescribeChain(ResolutionContext context)
+    {
+        var policy = _policies.PolicyFor(context);
+        var winner = _resolver.Resolve(context).Source;
+        var kinds = context.Scope == MediaScope.System
+            ? new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo }
+            : new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback };
+        var links = new List<ChainLink>();
+        foreach (var kind in kinds)
+        {
+            var present = kind == SourceKind.SystemFallback || _assets.Resolve(kind, context).Asset != null;
+            links.Add(new ChainLink(kind, ToSource(kind), policy.IsEnabled(kind), present, ToSource(kind) == winner));
+        }
+        return links;
+    }
+
+    public bool HasOverride(ResolutionContext context) => MediaPresentationEdits.HasOverride(_document, context);
+
+    /// <summary>Persist a "use this source" override for the exact target, then reload.</summary>
+    public void SetSourceEnabled(ResolutionContext context, SourceKind kind, bool enabled)
+    {
+        _document = MediaPresentationEdits.SetSourceEnabled(_document, context, kind, enabled);
+        _store.Save(_document);
+        Rebuild();
+    }
+
+    /// <summary>Drop every override for this target (reset to the surface defaults).</summary>
+    public void ResetTarget(ResolutionContext context)
+    {
+        _document = MediaPresentationEdits.ResetTarget(_document, context);
+        _store.Save(_document);
+        Rebuild();
+    }
+
+    private static ResolutionSource ToSource(SourceKind kind) => kind switch
+    {
+        SourceKind.Personal => ResolutionSource.Personal,
+        SourceKind.Generated => ResolutionSource.Generated,
+        SourceKind.Scraped => ResolutionSource.Scraped,
+        SourceKind.Logo => ResolutionSource.Logo,
+        SourceKind.SystemFallback => ResolutionSource.SystemFallback,
+        _ => ResolutionSource.None
+    };
 
     /// <summary>The physical target size of a surface: its explicit bounds, else
     /// the targeted Windows screen's dimensions, else a marquee-shaped default.</summary>

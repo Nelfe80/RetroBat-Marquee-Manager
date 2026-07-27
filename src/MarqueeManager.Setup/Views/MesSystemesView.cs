@@ -1,4 +1,6 @@
 using System.Windows.Controls;
+using MarqueeManager.Compositions.Core.Policy;
+using MarqueeManager.Compositions.Core.Resolution;
 using MarqueeManager.Setup.Config;
 using MarqueeManager.Setup.Controls;
 using MarqueeManager.Setup.Data;
@@ -222,18 +224,19 @@ public sealed class MesSystemesView : UserControl
                 return;
             }
 
-            var result = engine.ResolveSystem(surface, detectedScreens, system);
+            var ctx = engine.SystemContext(surface, detectedScreens, system);
+            var result = engine.Resolve(ctx);
             var media = result.Media;
 
-            resolutionBody.Children.Add(Ui.Label($"{L.T("Surface", "Surface")} : {surface.Id} — {result.Target.Width}×{result.Target.Height}", 13));
-
-            var winner = media.Source == Compositions.Core.Resolution.ResolutionSource.Neutral
+            // 1 — what actually displays
+            resolutionBody.Children.Add(Ui.MutedLabel($"{L.T("Surface", "Surface")} : {surface.Id} — {result.Target.Width}×{result.Target.Height}"));
+            resolutionBody.Children.Add(BuildAdaptedPreview(result));
+            var source = media.Source == ResolutionSource.Neutral
                 ? L.T("Affiché : fond neutre", "Displayed: neutral background")
                 : $"{L.T("Affiché", "Displayed")} : {ResolutionText.Link(media.Source)}";
-            var winLabel = Ui.Label(winner, 14);
-            winLabel.FontWeight = System.Windows.FontWeights.Bold;
-            resolutionBody.Children.Add(winLabel);
-
+            var sourceLabel = Ui.Label(source, 13);
+            sourceLabel.FontWeight = System.Windows.FontWeights.Bold;
+            resolutionBody.Children.Add(sourceLabel);
             if (media.OriginalSize is { } src)
             {
                 var dims = $"{src.Width}×{src.Height} → {result.Target.Width}×{result.Target.Height} · {ResolutionText.Status(result.Dimensions.Status)}";
@@ -243,12 +246,57 @@ public sealed class MesSystemesView : UserControl
                 resolutionBody.Children.Add(Ui.MutedLabel(dims));
             }
 
-            resolutionBody.Children.Add(Ui.MutedLabel(L.T("Aperçu adapté à la surface :", "Adapted to the surface:")));
-            resolutionBody.Children.Add(BuildAdaptedPreview(result));
+            // 2 — how it's decided: one row per link, ✓ on the winner, "Utiliser" toggles
+            resolutionBody.Children.Add(Ui.SectionHeader(L.T("Comment c'est décidé   ( ✓ = ce qui s'applique )", "How it's decided   ( ✓ = what applies )")));
+            foreach (var link in engine.DescribeChain(ctx))
+                resolutionBody.Children.Add(BuildLinkRow(ctx, link));
 
-            resolutionBody.Children.Add(Ui.MutedLabel(L.T("Chaîne :", "Chain:")));
-            foreach (var entry in media.Trace)
-                resolutionBody.Children.Add(Ui.MutedLabel("   " + ResolutionText.Trace(entry)));
+            if (engine.HasOverride(ctx))
+            {
+                var reset = Ui.Button(L.T("Rétablir les réglages de la surface", "Reset to surface settings"), (_, _) =>
+                {
+                    engine.ResetTarget(ctx);
+                    Refresh();
+                });
+                reset.Margin = new System.Windows.Thickness(0, 6, 0, 0);
+                resolutionBody.Children.Add(reset);
+            }
+        }
+
+        // One source block: [Utiliser] checkbox + ✓/○ winner mark + name + state.
+        System.Windows.FrameworkElement BuildLinkRow(ResolutionContext ctx, ChainLink link)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new System.Windows.Thickness(0, 3, 0, 0) };
+
+            var use = Ui.CheckBox(L.T("Utiliser", "Use"), link.Enabled);
+            use.Width = 78;
+            use.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+            use.Checked += (_, _) => { engine.SetSourceEnabled(ctx, link.Kind, true); Refresh(); };
+            use.Unchecked += (_, _) => { engine.SetSourceEnabled(ctx, link.Kind, false); Refresh(); };
+            row.Children.Add(use);
+
+            var mark = new TextBlock
+            {
+                Text = link.IsWinner ? "✓" : "○",
+                Foreground = link.IsWinner ? Ui.Ok : Ui.Muted,
+                FontWeight = System.Windows.FontWeights.Bold,
+                Width = 20,
+                TextAlignment = System.Windows.TextAlignment.Center,
+                VerticalAlignment = System.Windows.VerticalAlignment.Center
+            };
+            row.Children.Add(mark);
+
+            var state = !link.Enabled ? L.T("désactivée", "disabled")
+                : link.IsWinner ? L.T("utilisée", "used")
+                : link.Present ? L.T("disponible (une source au-dessus prime)", "available (a source above wins)")
+                : L.T("absente", "absent");
+            var name = Ui.Label($"{ResolutionText.Link(link.Source)} — {state}", 12);
+            name.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+            if (link.IsWinner) name.FontWeight = System.Windows.FontWeights.Bold;
+            else if (!link.Enabled || !link.Present) name.Foreground = Ui.Muted;
+            row.Children.Add(name);
+
+            return row;
         }
 
         showSuspended.Checked += (_, _) => { RebuildSurfacePicker(); Refresh(); };
