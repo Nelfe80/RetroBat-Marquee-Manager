@@ -98,8 +98,7 @@ public sealed class MesSystemesView : UserControl
         surfaceRow.Children.Add(surfaceLabel);
         var surfacePicker = Ui.ComboBox(240);
         var showSuspended = Ui.CheckBox(L.T("Afficher les surfaces suspendues", "Show suspended surfaces"), false);
-        showSuspended.Margin = new System.Windows.Thickness(10, 0, 0, 0);
-        showSuspended.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+        showSuspended.Margin = new System.Windows.Thickness(0, 6, 0, 0);
 
         void RebuildSurfacePicker()
         {
@@ -120,7 +119,6 @@ public sealed class MesSystemesView : UserControl
         }
 
         surfaceRow.Children.Add(surfacePicker);
-        surfaceRow.Children.Add(showSuspended);
 
         string? SelectedSystem() => (systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
         string? SelectedSurface() => (surfacePicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
@@ -157,6 +155,7 @@ public sealed class MesSystemesView : UserControl
         });
         surfaceRow.Children.Add(deleteButton);
         body.Children.Add(surfaceRow);
+        body.Children.Add(showSuspended);
         composeCard.Children.Add(body);
 
         void Refresh()
@@ -288,8 +287,8 @@ public sealed class MesSystemesView : UserControl
     private static System.Windows.FrameworkElement BuildAdaptedPreview(PreviewResult result)
     {
         double scale = Math.Min(360.0 / result.Target.Width, 220.0 / result.Target.Height);
-        double boxW = Math.Max(40, result.Target.Width * scale);
-        double boxH = Math.Max(20, result.Target.Height * scale);
+        double boxW = Math.Floor(Math.Max(40, result.Target.Width * scale));
+        double boxH = Math.Floor(Math.Max(20, result.Target.Height * scale));
 
         var canvas = new System.Windows.Controls.Canvas { Width = boxW, Height = boxH, ClipToBounds = true };
         var media = result.Media;
@@ -332,7 +331,10 @@ public sealed class MesSystemesView : UserControl
             BorderThickness = new System.Windows.Thickness(1),
             HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
             Margin = new System.Windows.Thickness(0, 2, 0, 6),
-            Child = canvas
+            Child = canvas,
+            ClipToBounds = true,
+            UseLayoutRounding = true,
+            SnapsToDevicePixels = true
         };
     }
 
