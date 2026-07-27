@@ -109,12 +109,13 @@ public sealed class ResolutionCard : UserControl
         titleRow.Children.Add(title);
         panel.Children.Add(titleRow);
 
-        if (link.Present && link.Path is { } path && link.Fit is { } fit)
-            panel.Children.Add(BuildAdaptedPreview(path, fit, target));
-        else
-            panel.Children.Add(Ui.MutedLabel(link.Present
-                ? L.T("(aperçu indisponible)", "(no preview)")
-                : L.T("absent — rien à afficher", "absent — nothing to show")));
+        // every card shows a box at the surface ratio — greyed when the media is
+        // absent — so the composition stays balanced
+        var preview = BuildAdaptedPreview(link.Path, link.Fit, target);
+        if (!link.Present) preview.Opacity = 0.4;
+        panel.Children.Add(preview);
+        if (!link.Present)
+            panel.Children.Add(Ui.MutedLabel(L.T("absent — aucun média", "absent — no media")));
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
         if (link.Kind == SourceKind.Personal && _compose is { } compose)
@@ -159,21 +160,24 @@ public sealed class ResolutionCard : UserControl
         _ => kind.ToString()
     };
 
-    /// <summary>Thumbnail at the SURFACE ratio, media framed exactly as its fit
-    /// decided (crop clipped, letterbox on the neutral background).</summary>
-    private static FrameworkElement BuildAdaptedPreview(string path, FitDecision fit, PixelSize target)
+    /// <summary>Thumbnail at the SURFACE ratio. When a media is given it is framed
+    /// exactly as its fit decided (crop clipped, letterbox on the neutral
+    /// background); otherwise an empty neutral box (kept for a balanced layout).</summary>
+    private static FrameworkElement BuildAdaptedPreview(string? path, FitDecision? fit, PixelSize target)
     {
         double scale = Math.Min(320.0 / target.Width, 180.0 / target.Height);
         double boxW = Math.Floor(Math.Max(40, target.Width * scale));
         double boxH = Math.Floor(Math.Max(20, target.Height * scale));
 
         var canvas = new Canvas { Width = boxW, Height = boxH, ClipToBounds = true };
-        if (System.IO.File.Exists(path))
+        if (path is not null && fit is not null && System.IO.File.Exists(path))
         {
             try
             {
                 var bitmap = new System.Windows.Media.Imaging.BitmapImage();
                 bitmap.BeginInit();
+                // IgnoreImageCache so a creation JUST saved by the composer shows now
+                bitmap.CreateOptions = System.Windows.Media.Imaging.BitmapCreateOptions.IgnoreImageCache;
                 bitmap.UriSource = new Uri(path);
                 bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
                 bitmap.DecodePixelWidth = Math.Max(8, (int)(fit.TargetRect.Width * scale));
