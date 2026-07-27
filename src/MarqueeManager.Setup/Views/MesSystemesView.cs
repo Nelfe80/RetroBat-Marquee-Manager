@@ -212,6 +212,9 @@ public sealed class MesSystemesView : UserControl
                 resolutionBody.Children.Add(Ui.MutedLabel(dims));
             }
 
+            resolutionBody.Children.Add(Ui.MutedLabel(L.T("Aperçu adapté à la surface :", "Adapted to the surface:")));
+            resolutionBody.Children.Add(BuildAdaptedPreview(result));
+
             resolutionBody.Children.Add(Ui.MutedLabel(L.T("Chaîne :", "Chain:")));
             foreach (var entry in media.Trace)
                 resolutionBody.Children.Add(Ui.MutedLabel("   " + ResolutionText.Trace(entry)));
@@ -242,6 +245,60 @@ public sealed class MesSystemesView : UserControl
         page.Children.Add(Ui.Card(new PrioritiesCard(pluginRoot, media, identity)));
 
         Content = Ui.Page(page);
+    }
+
+    /// <summary>A thumbnail at the SURFACE ratio showing the resolved media framed
+    /// exactly as the shared fit decided — crop clipped, letterbox on the neutral
+    /// background: what will actually appear on that surface.</summary>
+    private static System.Windows.FrameworkElement BuildAdaptedPreview(PreviewResult result)
+    {
+        double scale = Math.Min(360.0 / result.Target.Width, 220.0 / result.Target.Height);
+        double boxW = Math.Max(40, result.Target.Width * scale);
+        double boxH = Math.Max(20, result.Target.Height * scale);
+
+        var canvas = new System.Windows.Controls.Canvas { Width = boxW, Height = boxH, ClipToBounds = true };
+        var media = result.Media;
+        if (media.Fit is { } fit && media.EffectivePath is { } path && System.IO.File.Exists(path))
+        {
+            try
+            {
+                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(path);
+                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bitmap.DecodePixelWidth = Math.Max(8, (int)(fit.TargetRect.Width * scale));
+                bitmap.EndInit();
+                bitmap.Freeze();
+                // exact rect from the homothetic fit; Stretch.Fill maps the whole
+                // image into it WITHOUT distortion because the rect keeps its aspect
+                var image = new System.Windows.Controls.Image
+                {
+                    Source = bitmap,
+                    Stretch = System.Windows.Media.Stretch.Fill,
+                    Width = fit.TargetRect.Width * scale,
+                    Height = fit.TargetRect.Height * scale
+                };
+                System.Windows.Controls.Canvas.SetLeft(image, fit.TargetRect.X * scale);
+                System.Windows.Controls.Canvas.SetTop(image, fit.TargetRect.Y * scale);
+                canvas.Children.Add(image);
+            }
+            catch
+            {
+                // unreadable media: the neutral box stands on its own
+            }
+        }
+
+        return new System.Windows.Controls.Border
+        {
+            Width = boxW,
+            Height = boxH,
+            Background = System.Windows.Media.Brushes.Black, // the neutral background
+            BorderBrush = Ui.PanelBorder,
+            BorderThickness = new System.Windows.Thickness(1),
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+            Margin = new System.Windows.Thickness(0, 2, 0, 6),
+            Child = canvas
+        };
     }
 
     /// <summary>System-level media: theme logo (wheel), generated marquee/DMD, fanart when present.</summary>

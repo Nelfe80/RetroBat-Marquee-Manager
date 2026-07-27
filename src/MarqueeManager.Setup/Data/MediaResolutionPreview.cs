@@ -72,23 +72,41 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
 
     private AssetLookup ResolveSystem(SourceKind kind, string category, string categoryRoot, ResolutionContext ctx)
     {
-        var system = ctx.SystemKey ?? "";
+        var frontend = ctx.SystemKey ?? "";
+        var canonical = ctx.CanonicalSystem ?? frontend;
         switch (kind)
         {
             case SourceKind.Personal:
                 var perSurface = new MarqueeProjectStore(_pluginRoot, categoryRoot, ctx.SurfaceId);
-                if (perSurface.HasComposition("systems", system)) return Found(perSurface.PngPath("systems", system), "creation");
+                if (perSurface.HasComposition("systems", frontend)) return Found(perSurface.PngPath("systems", frontend), "creation");
                 var shared = new MarqueeProjectStore(_pluginRoot, categoryRoot);
-                if (shared.HasComposition("systems", system)) return Found(shared.PngPath("systems", system), "creation");
+                if (shared.HasComposition("systems", frontend)) return Found(shared.PngPath("systems", frontend), "creation");
                 return AssetLookup.Missing;
             case SourceKind.Generated:
-                return FromLibrary(SystemMediaRoot(system), "generated",
+                return FromRoots(SystemRoots(frontend, canonical), "generated",
                     category == "dmd" ? @"artwork\marquee\generated-system-dmd.png" : @"artwork\marquee\generated-system-marquee.png");
             case SourceKind.Logo:
-                return FromLibrary(SystemMediaRoot(system), "logo", @"ui\wheels\wheel.png");
+                return FromRoots(SystemRoots(frontend, canonical), "logo", @"ui\wheels\wheel.png");
             default:
                 return AssetLookup.Missing; // no scraped system marquee in the library
         }
+    }
+
+    private IEnumerable<string> SystemRoots(string frontend, string canonical)
+    {
+        yield return SystemMediaRoot(frontend);
+        if (!string.Equals(frontend, canonical, StringComparison.OrdinalIgnoreCase))
+            yield return SystemMediaRoot(canonical);
+    }
+
+    private AssetLookup FromRoots(IEnumerable<string> roots, string provenance, params string[] relatives)
+    {
+        foreach (var root in roots)
+        {
+            var found = FromLibrary(root, provenance, relatives);
+            if (found.Asset is not null) return found;
+        }
+        return AssetLookup.Missing;
     }
 
     private AssetLookup ResolveGame(SourceKind kind, string category, ResolutionContext ctx)
@@ -181,6 +199,9 @@ public sealed class MediaResolutionPreview
     private PreviewResult Resolve(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens, MediaScope scope, string system, string? rom)
     {
         var target = TargetOf(surface, screens);
+        // arcade family (mame, fbneo…) keeps its own settings under the frontend key,
+        // but its media lives under the canonical "arcade" folder — carry both.
+        var canonical = GameMediaCatalog.ArcadeAliases.Contains(system) ? "arcade" : system;
         var context = new ResolutionContext(
             surface.Id,
             surface.Category,
@@ -188,7 +209,7 @@ public sealed class MediaResolutionPreview
             target.Height,
             scope,
             FrontendSystem: system,
-            CanonicalSystem: system,
+            CanonicalSystem: canonical,
             StableGameId: rom is null ? null : StableGameIds.FromRomPath($"{system}/{rom}"),
             Rom: rom,
             DisplayState: "navigation");
@@ -198,7 +219,9 @@ public sealed class MediaResolutionPreview
         return new PreviewResult(media, dimensions, target);
     }
 
-    private static PixelSize TargetOf(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens)
+    /// <summary>The physical target size of a surface: its explicit bounds, else
+    /// the targeted Windows screen's dimensions, else a marquee-shaped default.</summary>
+    public static PixelSize TargetOf(SurfaceModel surface, IReadOnlyList<ScreenInfo> screens)
     {
         if (!surface.IsFullscreen && surface.Width is > 0 and int w && surface.Height is > 0 and int h)
             return new PixelSize(w, h);
