@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Shared composition/resolution DOMAIN. No WPF, no Skia, no I/O: pure rules
+    (fixed chains, homothety, trace, identity) referenced verbatim by both
+    MarqueeManager.Setup and RetroBatMarqueeManager so the Setup preview and the
+    runtime always decide identically.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>MarqueeManager.Compositions.Core</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+</Project>
