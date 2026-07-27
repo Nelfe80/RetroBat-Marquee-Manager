@@ -569,7 +569,16 @@ public sealed class GamesView : UserControl, IDisposable
         {
             var surface = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
             ResolutionContext? ctx = surface != null ? engine.GameContext(surface, screens, entry.System, entry.Rom) : null;
-            resolutionCard.Update(ctx, composePersonal: () => OpenComposer(entry, data, _selectedSurfaceId));
+            resolutionCard.Update(ctx,
+                composePersonal: () => OpenComposer(entry, data, _selectedSurfaceId),
+                deletePersonal: () =>
+                {
+                    var target = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
+                    if (target == null) return;
+                    new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(target), target.Id).Delete(entry.System, entry.Rom);
+                    new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(target)).Delete(entry.System, entry.Rom);
+                    if (_current != null) OpenGame(_current);
+                });
         }
         surfacePicker.SelectionChanged += (_, _) => UpdateResolutionCard();
         UpdateResolutionCard();

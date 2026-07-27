@@ -250,8 +250,8 @@ public sealed class MediaResolutionPreview
             var asset = _assets.Resolve(kind, context).Asset;
             var present = asset != null || kind == SourceKind.SystemFallback;
             MarqueeManager.Compositions.Core.Fit.FitDecision? fit = null;
-            if (asset?.Size is { IsValid: true } size && policy.Source(kind)?.Fit is { } fp)
-                fit = _fit.Calculate(size, target, fp, asset.Protected ?? MarqueeManager.Compositions.Core.Fit.ProtectedRegions.None);
+            if (asset?.Size is { IsValid: true } size && policy.Source(kind) is { } settings)
+                fit = LinkFraming.Compute(_fit, kind, size, target, settings, asset.Protected, context.PinnedFit);
             links.Add(new ChainLink(kind, ToSource(kind), policy.IsEnabled(kind), present,
                 ToSource(kind) == winner, asset?.Path, fit));
         }

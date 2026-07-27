@@ -32,6 +32,7 @@ public sealed class ResolutionCard : UserControl
     private readonly StackPanel _body = new();
     private ResolutionContext? _context;
     private Action? _compose;
+    private Action? _deletePersonal;
     private Action? _editGabarit;
     private Action? _onChanged;
 
@@ -50,11 +51,13 @@ public sealed class ResolutionCard : UserControl
     /// <summary>Point the card at a target (null blanks it). <paramref name="composePersonal"/>
     /// edits the personal creation; <paramref name="editGabarit"/> edits the general template
     /// (button hidden when null); <paramref name="onChanged"/> fires after a change.</summary>
-    public void Update(ResolutionContext? context, Action? composePersonal = null, Action? editGabarit = null, Action? onChanged = null)
+    public void Update(ResolutionContext? context, Action? composePersonal = null, Action? editGabarit = null,
+        Action? deletePersonal = null, Action? onChanged = null)
     {
         _context = context;
         _compose = composePersonal;
         _editGabarit = editGabarit;
+        _deletePersonal = deletePersonal;
         _onChanged = onChanged;
         Render();
     }
@@ -116,6 +119,8 @@ public sealed class ResolutionCard : UserControl
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
         if (link.Kind == SourceKind.Personal && _compose is { } compose)
             actions.Children.Add(Ui.Button(link.Present ? L.T("Modifier", "Edit") : L.T("Composer", "Compose"), (_, _) => compose()));
+        if (link.Kind == SourceKind.Personal && link.Present && _deletePersonal is { } delete)
+            actions.Children.Add(Ui.Button(L.T("Supprimer", "Delete"), (_, _) => delete()));
         if (link.Kind == SourceKind.Generated && _editGabarit is { } editGabarit)
             actions.Children.Add(Ui.Button(L.T("Modifier le gabarit général", "Edit the general template"), (_, _) => editGabarit()));
         if (actions.Children.Count > 0) panel.Children.Add(actions);

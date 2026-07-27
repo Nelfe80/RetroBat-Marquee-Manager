@@ -48,10 +48,10 @@ public sealed class MesSystemesView : UserControl
         // and the per-surface deletion appear. Each creation is INDEPENDENT
         // per surface.
         var composeCard = new StackPanel();
-        composeCard.Children.Add(Ui.SectionHeader(L.T("Mon marquee", "My marquee")));
+        composeCard.Children.Add(Ui.SectionHeader(L.T("Système & surface", "System & surface")));
         composeCard.Children.Add(Ui.MutedLabel(L.T(
-            "Le marquee affiché quand un SYSTÈME est sélectionné dans ES. Créez-le visuellement (logo, marquee généré, fanart du thème, textes) — il prime sur le rendu automatique.",
-            "The marquee shown when a SYSTEM is selected in ES. Create it visually (logo, generated marquee, theme fanart, texts) — it overrides the automatic render.")));
+            "Choisis le système et la surface ; tout se règle dans les cartes ci-dessous (clique une carte pour l'utiliser, ou compose ta création).",
+            "Pick the system and the surface; everything is set in the cards below (click a card to use it, or compose your creation).")));
         var systemRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 4, 0, 0) };
         var systemPicker = Ui.ComboBox(200);
         // nothing preselected; only systems with at least one INSTALLED game;
@@ -69,17 +69,6 @@ public sealed class MesSystemesView : UserControl
         systemRow.Children.Add(systemPicker);
         composeCard.Children.Add(systemRow);
 
-        // the whole "Mon marquee" body only shows once a system is picked
-        var body = new StackPanel { Visibility = System.Windows.Visibility.Collapsed };
-        var preview = new System.Windows.Controls.Image
-        {
-            MaxHeight = 100,
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
-            Margin = new System.Windows.Thickness(0, 6, 0, 0)
-        };
-        var previewCaption = Ui.MutedLabel("");
-        body.Children.Add(preview);
-        body.Children.Add(previewCaption);
         var resolutionCard = new ResolutionCard(engine);
 
         var surfacesStore = new SurfacesStore(pluginRoot);
@@ -132,85 +121,13 @@ public sealed class MesSystemesView : UserControl
             _ => "marquees"
         };
 
-        System.Windows.Controls.Button deleteButton = null!;
-        System.Windows.Controls.Button openButton = null!;
-        openButton = Ui.Button(L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"), (_, _) =>
-        {
-            if (SelectedSystem() is not { } system) return;
-            var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system), SelectedSurface())
-            {
-                Owner = System.Windows.Window.GetWindow(this)
-            };
-            window.ShowDialog();
-            Refresh();
-        }, primary: true);
-        surfaceRow.Children.Add(openButton);
+        composeCard.Children.Add(surfaceRow);
+        composeCard.Children.Add(showSuspended);
 
-        deleteButton = Ui.Button(L.T("Supprimer la création de cette surface", "Delete this surface's creation"), (_, _) =>
-        {
-            if (SelectedSystem() is not { } system || SurfaceOf(SelectedSurface()) is not { } surface) return;
-            // the creation may live per-surface OR at the category level
-            // (pre-per-surface saves): delete BOTH or it keeps coming back
-            new MarqueeProjectStore(pluginRoot, CategoryOf(surface), surface.Id).Delete("systems", system);
-            new MarqueeProjectStore(pluginRoot, CategoryOf(surface)).Delete("systems", system);
-            Refresh();
-        });
-        surfaceRow.Children.Add(deleteButton);
-        body.Children.Add(surfaceRow);
-        body.Children.Add(showSuspended);
-        composeCard.Children.Add(body);
+        void Refresh() => UpdateResolution();
 
-        void Refresh()
-        {
-            UpdateResolution();
-            // a suspended surface (ignored screen) is not an active edit target (§5)
-            openButton.IsEnabled = SurfaceOf(SelectedSurface()) is { } activeSurface && !IsSuspended(activeSurface);
-            var system = SelectedSystem();
-            body.Visibility = system == null ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
-            preview.Source = null;
-            if (system == null) return;
-
-            // the SELECTED surface's creation wins, then the shared category
-            // file, then the generated marquee — like the runtime
-            string? path = null;
-            if (SurfaceOf(SelectedSurface()) is { } previewSurface)
-            {
-                var surfaceStore = new MarqueeProjectStore(pluginRoot, CategoryOf(previewSurface), previewSurface.Id);
-                if (surfaceStore.HasComposition("systems", system)) path = surfaceStore.PngPath("systems", system);
-            }
-            path ??= media.CurrentSystemMarquee(pluginRoot, system);
-            previewCaption.Text = path == null
-                ? L.T("Aucun marquee système pour l'instant.", "No system marquee yet.")
-                : System.IO.Path.GetFileName(path).StartsWith("generated", StringComparison.OrdinalIgnoreCase)
-                    ? L.T("Affiché actuellement : marquee généré.", "Currently displayed: generated marquee.")
-                    : L.T("Affiché actuellement : votre création graphique.", "Currently displayed: your graphic creation.");
-            if (path != null)
-            {
-                try
-                {
-                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(path);
-                    bitmap.DecodePixelWidth = 640;
-                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-                    bitmap.Freeze();
-                    preview.Source = bitmap;
-                }
-                catch
-                {
-                    // unreadable image: caption only
-                }
-            }
-
-            deleteButton.Visibility = SurfaceOf(SelectedSurface()) is { } surface
-                && (new MarqueeProjectStore(pluginRoot, CategoryOf(surface), surface.Id).HasComposition("systems", system)
-                    || new MarqueeProjectStore(pluginRoot, CategoryOf(surface)).HasComposition("systems", system))
-                ? System.Windows.Visibility.Visible
-                : System.Windows.Visibility.Collapsed;
-        }
-
-        // Point the shared block card at the picked system + surface.
+        // Point the shared block card at the picked system + surface. The composer
+        // and delete actions live on the "Ma création" card, not up here.
         void UpdateResolution()
         {
             var system = SelectedSystem();
@@ -218,16 +135,25 @@ public sealed class MesSystemesView : UserControl
             ResolutionContext? ctx = (system != null && surface != null)
                 ? engine.SystemContext(surface, detectedScreens, system)
                 : null;
-            resolutionCard.Update(ctx, composePersonal: () =>
-            {
-                if (system == null) return;
-                var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system), SelectedSurface())
+            resolutionCard.Update(ctx,
+                composePersonal: () =>
                 {
-                    Owner = System.Windows.Window.GetWindow(this)
-                };
-                window.ShowDialog();
-                Refresh();
-            });
+                    if (system == null) return;
+                    var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system), SelectedSurface())
+                    {
+                        Owner = System.Windows.Window.GetWindow(this)
+                    };
+                    window.ShowDialog();
+                    Refresh();
+                },
+                deletePersonal: () =>
+                {
+                    if (system == null || surface == null) return;
+                    // the creation may live per-surface OR at the category level
+                    new MarqueeProjectStore(pluginRoot, CategoryOf(surface), surface.Id).Delete("systems", system);
+                    new MarqueeProjectStore(pluginRoot, CategoryOf(surface)).Delete("systems", system);
+                    Refresh();
+                });
         }
 
         showSuspended.Checked += (_, _) => { RebuildSurfacePicker(); Refresh(); };

@@ -109,7 +109,7 @@ public sealed class MediaResolutionService : IMediaResolutionService
         }
 
         var settings = policy.Source(kind)!;
-        var fit = ComputeFit(asset, settings, context);
+        var fit = ComputeFit(kind, asset, settings, context);
         var plan = _planner.Plan(kind, asset, fit, context);
 
         switch (plan.State)
@@ -143,14 +143,13 @@ public sealed class MediaResolutionService : IMediaResolutionService
         return true;
     }
 
-    // A media is framed with the link's fit policy — unless the target is
-    // lighting-pinned, in which case EVERY link uses the pinned policy so the lamp
-    // coordinates never move (user decision on lighting games).
-    private FitDecision? ComputeFit(MediaAsset asset, SourceSettings settings, ResolutionContext context)
+    // Framing is delegated to the shared LinkFraming so the Setup preview and the
+    // runtime agree: pinned target → pinned policy; logo → safe-zone layout (§11);
+    // otherwise the link's fit policy.
+    private FitDecision? ComputeFit(SourceKind kind, MediaAsset asset, SourceSettings settings, ResolutionContext context)
     {
         if (asset.Size is not { IsValid: true } size) return null;
-        var policy = context.PinnedFit ?? settings.Fit;
-        return policy is null ? null : _fit.Calculate(size, context.Target, policy, asset.Protected ?? ProtectedRegions.None);
+        return LinkFraming.Compute(_fit, kind, size, context.Target, settings, asset.Protected, context.PinnedFit);
     }
 
     private static bool IsLowResolution(FitDecision? fit) => fit is { Scale: > 1.0 + 1e-6 };
