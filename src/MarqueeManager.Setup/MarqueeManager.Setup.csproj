@@ -17,6 +17,12 @@
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
   </ItemGroup>
 
+  <!-- Shared composition/resolution domain (no WPF/Skia): the Setup preview and
+       the runtime resolve identically through it. -->
+  <ItemGroup>
+    <ProjectReference Include="..\MarqueeManager.Compositions.Core\MarqueeManager.Compositions.Core.csproj" />
+  </ItemGroup>
+
   <!-- Le SDK WinForms injecte ces usings globaux : ils rendent ambigus tous les
        contrôles WPF (Button, CheckBox, MessageBox...). Le code qualifie WinForms. -->
   <ItemGroup>

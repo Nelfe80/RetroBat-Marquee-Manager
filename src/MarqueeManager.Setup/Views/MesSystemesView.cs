@@ -35,6 +35,12 @@ public sealed class MesSystemesView : UserControl
             return;
         }
 
+        // shared resolution engine (lot 1 domain) fed by read-only Setup adapters:
+        // the preview below shows exactly what the runtime would resolve.
+        var assignments = new CompositionAssignments(pluginRoot);
+        var detectedScreens = MarqueeManager.Setup.Detection.ScreenProbe.Detect();
+        var engine = new MediaResolutionPreview(pluginRoot, media, assignments);
+
         // "Mon marquee" — same block as the game sheet: pick the SYSTEM, then
         // the displayed marquee, the surface picker, the creation entry point
         // and the per-surface deletion appear. Each creation is INDEPENDENT
@@ -72,6 +78,7 @@ public sealed class MesSystemesView : UserControl
         var previewCaption = Ui.MutedLabel("");
         body.Children.Add(preview);
         body.Children.Add(previewCaption);
+        var resolutionBody = new StackPanel();
 
         var surfaces = new SurfacesStore(pluginRoot).Load();
         var surfaceRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 6, 0, 0) };
@@ -124,6 +131,7 @@ public sealed class MesSystemesView : UserControl
 
         void Refresh()
         {
+            UpdateResolution();
             var system = SelectedSystem();
             body.Visibility = system == null ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
             preview.Source = null;
@@ -168,10 +176,59 @@ public sealed class MesSystemesView : UserControl
                 ? System.Windows.Visibility.Visible
                 : System.Windows.Visibility.Collapsed;
         }
+
+        // The VISIBLE slice of the refonte: run the shared resolver for the picked
+        // system on the picked surface and show what wins, its dimensional fit and
+        // the full traced chain — the same decision the runtime will make.
+        void UpdateResolution()
+        {
+            resolutionBody.Children.Clear();
+            var system = SelectedSystem();
+            var surface = SurfaceOf(SelectedSurface());
+            if (system == null || surface == null)
+            {
+                resolutionBody.Children.Add(Ui.MutedLabel(L.T("Sélectionnez un système et une surface.", "Select a system and a surface.")));
+                return;
+            }
+
+            var result = engine.ResolveSystem(surface, detectedScreens, system);
+            var media = result.Media;
+
+            resolutionBody.Children.Add(Ui.Label($"{L.T("Surface", "Surface")} : {surface.Id} — {result.Target.Width}×{result.Target.Height}", 13));
+
+            var winner = media.Source == Compositions.Core.Resolution.ResolutionSource.Neutral
+                ? L.T("Affiché : fond neutre", "Displayed: neutral background")
+                : $"{L.T("Affiché", "Displayed")} : {ResolutionText.Link(media.Source)}";
+            var winLabel = Ui.Label(winner, 14);
+            winLabel.FontWeight = System.Windows.FontWeights.Bold;
+            resolutionBody.Children.Add(winLabel);
+
+            if (media.OriginalSize is { } src)
+            {
+                var dims = $"{src.Width}×{src.Height} → {result.Target.Width}×{result.Target.Height} · {ResolutionText.Status(result.Dimensions.Status)}";
+                if (result.Dimensions.CropY > 0) dims += $" · {L.T("crop vertical", "vertical crop")} {result.Dimensions.CropY * 100:0.#}%";
+                if (result.Dimensions.CropX > 0) dims += $" · {L.T("crop horizontal", "horizontal crop")} {result.Dimensions.CropX * 100:0.#}%";
+                if (result.Dimensions.HighMagnification) dims += $" · {L.T("agrandissement", "magnified")} ×{result.Dimensions.Magnification:0.#}";
+                resolutionBody.Children.Add(Ui.MutedLabel(dims));
+            }
+
+            resolutionBody.Children.Add(Ui.MutedLabel(L.T("Chaîne :", "Chain:")));
+            foreach (var entry in media.Trace)
+                resolutionBody.Children.Add(Ui.MutedLabel("   " + ResolutionText.Trace(entry)));
+        }
+
         systemPicker.SelectionChanged += (_, _) => Refresh();
         surfacePicker.SelectionChanged += (_, _) => Refresh();
         Refresh();
         page.Children.Add(Ui.Card(composeCard));
+
+        var resolutionCard = new StackPanel();
+        resolutionCard.Children.Add(Ui.SectionHeader(L.T("Résolution (aperçu du moteur partagé)", "Resolution (shared engine preview)")));
+        resolutionCard.Children.Add(Ui.MutedLabel(L.T(
+            "Ce que le runtime afficherait pour ce système sur la surface choisie, et pourquoi. Aperçu seulement — rien n'est généré.",
+            "What the runtime would show for this system on the chosen surface, and why. Preview only — nothing is generated.")));
+        resolutionCard.Children.Add(resolutionBody);
+        page.Children.Add(Ui.Card(resolutionCard));
 
         var templates = new StackPanel();
         templates.Children.Add(Ui.SectionHeader(L.T("Templates de composition", "Composition templates")));
