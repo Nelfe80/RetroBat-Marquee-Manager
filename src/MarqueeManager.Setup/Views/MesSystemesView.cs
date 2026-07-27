@@ -80,19 +80,47 @@ public sealed class MesSystemesView : UserControl
         body.Children.Add(previewCaption);
         var resolutionBody = new StackPanel();
 
-        var surfaces = new SurfacesStore(pluginRoot).Load();
+        var surfacesStore = new SurfacesStore(pluginRoot);
+        var surfaces = surfacesStore.Load();
+        // A surface whose screen(s) the user excluded from MarqueeManager is
+        // SUSPENDED: not offered as an active target (spec §5) unless the user asks.
+        var unmanagedScreens = surfacesStore.LoadScreens()
+            .Where(s => !s.ManagedByMarqueeManager && s.WindowsIndex >= 0)
+            .Select(s => s.WindowsIndex)
+            .ToHashSet();
+        bool IsSuspended(SurfaceModel surface)
+            => surface.Screens.Count > 0 && surface.Screens.All(unmanagedScreens.Contains);
+
         var surfaceRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 6, 0, 0) };
         var surfaceLabel = Ui.MutedLabel(L.T("Surface :", "Surface:"));
         surfaceLabel.Margin = new System.Windows.Thickness(0, 0, 6, 0);
         surfaceLabel.VerticalAlignment = System.Windows.VerticalAlignment.Center;
         surfaceRow.Children.Add(surfaceLabel);
-        var surfacePicker = Ui.ComboBox(210);
-        foreach (var surface in surfaces)
+        var surfacePicker = Ui.ComboBox(240);
+        var showSuspended = Ui.CheckBox(L.T("Afficher les surfaces suspendues", "Show suspended surfaces"), false);
+        showSuspended.Margin = new System.Windows.Thickness(10, 0, 0, 0);
+        showSuspended.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+
+        void RebuildSurfacePicker()
         {
-            surfacePicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id });
+            var previous = SelectedSurface();
+            surfacePicker.Items.Clear();
+            foreach (var surface in surfaces)
+            {
+                var suspended = IsSuspended(surface);
+                if (suspended && showSuspended.IsChecked != true) continue;
+                var dims = MediaResolutionPreview.TargetOf(surface, detectedScreens);
+                var label = $"{surface.Id} ({surface.Category}) — {dims.Width}×{dims.Height}"
+                            + (suspended ? L.T("  · suspendue", "  · suspended") : "");
+                var item = new System.Windows.Controls.ComboBoxItem { Content = label, Tag = surface.Id };
+                surfacePicker.Items.Add(item);
+                if (surface.Id.Equals(previous, StringComparison.OrdinalIgnoreCase)) surfacePicker.SelectedItem = item;
+            }
+            if (surfacePicker.SelectedItem == null && surfacePicker.Items.Count > 0) surfacePicker.SelectedIndex = 0;
         }
-        if (surfacePicker.Items.Count > 0) surfacePicker.SelectedIndex = 0;
+
         surfaceRow.Children.Add(surfacePicker);
+        surfaceRow.Children.Add(showSuspended);
 
         string? SelectedSystem() => (systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
         string? SelectedSurface() => (surfacePicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
@@ -105,7 +133,8 @@ public sealed class MesSystemesView : UserControl
         };
 
         System.Windows.Controls.Button deleteButton = null!;
-        surfaceRow.Children.Add(Ui.Button(L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"), (_, _) =>
+        System.Windows.Controls.Button openButton = null!;
+        openButton = Ui.Button(L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"), (_, _) =>
         {
             if (SelectedSystem() is not { } system) return;
             var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system), SelectedSurface())
@@ -114,7 +143,8 @@ public sealed class MesSystemesView : UserControl
             };
             window.ShowDialog();
             Refresh();
-        }, primary: true));
+        }, primary: true);
+        surfaceRow.Children.Add(openButton);
 
         deleteButton = Ui.Button(L.T("Supprimer la création de cette surface", "Delete this surface's creation"), (_, _) =>
         {
@@ -132,6 +162,8 @@ public sealed class MesSystemesView : UserControl
         void Refresh()
         {
             UpdateResolution();
+            // a suspended surface (ignored screen) is not an active edit target (§5)
+            openButton.IsEnabled = SurfaceOf(SelectedSurface()) is { } activeSurface && !IsSuspended(activeSurface);
             var system = SelectedSystem();
             body.Visibility = system == null ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
             preview.Source = null;
@@ -220,6 +252,9 @@ public sealed class MesSystemesView : UserControl
                 resolutionBody.Children.Add(Ui.MutedLabel("   " + ResolutionText.Trace(entry)));
         }
 
+        showSuspended.Checked += (_, _) => { RebuildSurfacePicker(); Refresh(); };
+        showSuspended.Unchecked += (_, _) => { RebuildSurfacePicker(); Refresh(); };
+        RebuildSurfacePicker();
         systemPicker.SelectionChanged += (_, _) => Refresh();
         surfacePicker.SelectionChanged += (_, _) => Refresh();
         Refresh();
