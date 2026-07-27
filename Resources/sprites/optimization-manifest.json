@@ -1,0 +1,806 @@
+{
+    "schema":  "marqueemanager.sprite-runtime-optimization.v1",
+    "generatedAtUtc":  "2026-07-26T12:12:19.1023482Z",
+    "imageMagick":  "Version: ImageMagick 7.1.1-25 Q16 x86 98e7513:20231230 https://imagemagick.org",
+    "targetFps":  24,
+    "ordinaryMaxHeight":  96,
+    "backdropMaxHeight":  320,
+    "minimumFrameDelayMs":  20,
+    "fullCanvasFrames":  true,
+    "exactDuplicateFramesRemoved":  true,
+    "totalConversionMs":  130653,
+    "sprites":  [
+                    {
+                        "name":  "blood.gif",
+                        "masterSha256":  "540C46D29400CFC5780B024305FEAE4E0DA77480D94B781B80671226231D6820",
+                        "runtimeSha256":  "6E5D543DBDF80FDEF2D64148369B935E85C0D48C2284015623253C00897A388E",
+                        "source":  {
+                                       "bytes":  12339,
+                                       "width":  512,
+                                       "height":  512,
+                                       "frames":  10,
+                                       "effectiveDurationMs":  500,
+                                       "decodedBytes":  10485760
+                                   },
+                        "runtime":  {
+                                        "bytes":  1815,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  10,
+                                        "effectiveDurationMs":  500,
+                                        "decodedBytes":  368640
+                                    },
+                        "conversionMs":  898
+                    },
+                    {
+                        "name":  "blood_hit.gif",
+                        "masterSha256":  "3EACB3866BA5ECB370625C09E9D77FF981ACE3E24484774BF32E14BA397B0839",
+                        "runtimeSha256":  "BF8411410F894F279E802E3B3F55E36F981D9D18DCCC386828DB3B07346D325E",
+                        "source":  {
+                                       "bytes":  161810,
+                                       "width":  1024,
+                                       "height":  1024,
+                                       "frames":  60,
+                                       "effectiveDurationMs":  1200,
+                                       "decodedBytes":  251658240
+                                   },
+                        "runtime":  {
+                                        "bytes":  6533,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  19,
+                                        "effectiveDurationMs":  1200,
+                                        "decodedBytes":  700416
+                                    },
+                        "conversionMs":  9241
+                    },
+                    {
+                        "name":  "bombexplode.gif",
+                        "masterSha256":  "55A0CB523373AB4696BEE6F6E57037560AA3A80D24FAA58DD085844832E117B2",
+                        "runtimeSha256":  "3EBAE01A094D28939ADAD447EEB74064EDDC454D6CAF3A462CA86A67225A8349",
+                        "source":  {
+                                       "bytes":  35662,
+                                       "width":  200,
+                                       "height":  240,
+                                       "frames":  15,
+                                       "effectiveDurationMs":  1500,
+                                       "decodedBytes":  2880000
+                                   },
+                        "runtime":  {
+                                        "bytes":  39501,
+                                        "width":  80,
+                                        "height":  96,
+                                        "frames":  15,
+                                        "effectiveDurationMs":  1500,
+                                        "decodedBytes":  460800
+                                    },
+                        "conversionMs":  689
+                    },
+                    {
+                        "name":  "celebrate.gif",
+                        "masterSha256":  "B1CFB33B922086CEB134D5E643561A73A36D41D10D6DFC02E9C4E56687428CA3",
+                        "runtimeSha256":  "9401BA8B8B440D943CE705B09C85764FD2FC55009C35EA1AF4E02CC488091E1D",
+                        "source":  {
+                                       "bytes":  128096,
+                                       "width":  480,
+                                       "height":  480,
+                                       "frames":  23,
+                                       "effectiveDurationMs":  2250,
+                                       "decodedBytes":  21196800
+                                   },
+                        "runtime":  {
+                                        "bytes":  12024,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  23,
+                                        "effectiveDurationMs":  2250,
+                                        "decodedBytes":  847872
+                                    },
+                        "conversionMs":  1409
+                    },
+                    {
+                        "name":  "championcup.gif",
+                        "masterSha256":  "22DEEEFA860C00649D583FFD0EF266D3C587BC4BF5BCD0A5CFD43B3E03AE22B3",
+                        "runtimeSha256":  "1C4718D82E4F50979F6694A8CE83A23D6FF7EBFCB03CE062C87B83031DA0210D",
+                        "source":  {
+                                       "bytes":  274642,
+                                       "width":  480,
+                                       "height":  480,
+                                       "frames":  60,
+                                       "effectiveDurationMs":  2400,
+                                       "decodedBytes":  55296000
+                                   },
+                        "runtime":  {
+                                        "bytes":  106578,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  57,
+                                        "effectiveDurationMs":  2400,
+                                        "decodedBytes":  2101248
+                                    },
+                        "conversionMs":  3945
+                    },
+                    {
+                        "name":  "coins.gif",
+                        "masterSha256":  "E54621B572878E3CD3752280F6A3BEE6E44A1BDED4AFE8522F78D7946A6A0ADC",
+                        "runtimeSha256":  "B15A28002F625A2EA288450A5E73502FCA2E4D0CD7661575E0FC0987EEB84DBA",
+                        "source":  {
+                                       "bytes":  13033,
+                                       "width":  256,
+                                       "height":  256,
+                                       "frames":  8,
+                                       "effectiveDurationMs":  1600,
+                                       "decodedBytes":  2097152
+                                   },
+                        "runtime":  {
+                                        "bytes":  7147,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  8,
+                                        "effectiveDurationMs":  1600,
+                                        "decodedBytes":  294912
+                                    },
+                        "conversionMs":  394
+                    },
+                    {
+                        "name":  "explode.gif",
+                        "masterSha256":  "CBD33ED952F2EF3BD4CFAF6E955535545B39B67B5DADB66F9196E04993C6B9C5",
+                        "runtimeSha256":  "D708EAE0AC8DF4C5EBFA69A9F3588D252B72CA086682CF91A29B0B3AF81AE9D9",
+                        "source":  {
+                                       "bytes":  50096,
+                                       "width":  300,
+                                       "height":  300,
+                                       "frames":  12,
+                                       "effectiveDurationMs":  1200,
+                                       "decodedBytes":  4320000
+                                   },
+                        "runtime":  {
+                                        "bytes":  45323,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  12,
+                                        "effectiveDurationMs":  1200,
+                                        "decodedBytes":  442368
+                                    },
+                        "conversionMs":  569
+                    },
+                    {
+                        "name":  "eyes.gif",
+                        "masterSha256":  "F6AF0FE0CD9EB4A48487818A2C9DF71ED465C8D2E7BF9429A374181F7E1A0394",
+                        "runtimeSha256":  "2D855C9A1C43000989CF81150BDAA138BB842E69FC7EF074D1554259B1026CCE",
+                        "source":  {
+                                       "bytes":  22383,
+                                       "width":  500,
+                                       "height":  370,
+                                       "frames":  13,
+                                       "effectiveDurationMs":  2500,
+                                       "decodedBytes":  9620000
+                                   },
+                        "runtime":  {
+                                        "bytes":  21805,
+                                        "width":  129,
+                                        "height":  96,
+                                        "frames":  13,
+                                        "effectiveDurationMs":  2500,
+                                        "decodedBytes":  643968
+                                    },
+                        "conversionMs":  838
+                    },
+                    {
+                        "name":  "fight.gif",
+                        "masterSha256":  "8FBB90194ACE66145669EA3627825255682C378B5D62D812D03A57DB0A50D678",
+                        "runtimeSha256":  "1BA206A718B7B7806565E3812759146A2BC0D8FAC75F780AEC62A49552C06A58",
+                        "source":  {
+                                       "bytes":  473466,
+                                       "width":  480,
+                                       "height":  360,
+                                       "frames":  16,
+                                       "effectiveDurationMs":  3200,
+                                       "decodedBytes":  11059200
+                                   },
+                        "runtime":  {
+                                        "bytes":  76938,
+                                        "width":  128,
+                                        "height":  96,
+                                        "frames":  16,
+                                        "effectiveDurationMs":  3200,
+                                        "decodedBytes":  786432
+                                    },
+                        "conversionMs":  1144
+                    },
+                    {
+                        "name":  "fireball.gif",
+                        "masterSha256":  "DE689870CE5004FA9388925C2A1E2213A8904484918ADB9341E18BA082A8453E",
+                        "runtimeSha256":  "6AC66DD348FB39ADF22D6433B0FA04CBA55C19143B0C3E63A38551F21863C5C2",
+                        "source":  {
+                                       "bytes":  10800,
+                                       "width":  215,
+                                       "height":  300,
+                                       "frames":  12,
+                                       "effectiveDurationMs":  1200,
+                                       "decodedBytes":  3096000
+                                   },
+                        "runtime":  {
+                                        "bytes":  15425,
+                                        "width":  68,
+                                        "height":  96,
+                                        "frames":  12,
+                                        "effectiveDurationMs":  1200,
+                                        "decodedBytes":  313344
+                                    },
+                        "conversionMs":  658
+                    },
+                    {
+                        "name":  "flash.gif",
+                        "masterSha256":  "1EFB4748EB133BCAEC5AB6B3708F3C6A55CC1EA1BA00695605943A9468E05B92",
+                        "runtimeSha256":  "8F64A2B912A886C8DF72E7B161405D807381182E1BA011AE79A66BF1EBF56C4F",
+                        "source":  {
+                                       "bytes":  8591,
+                                       "width":  200,
+                                       "height":  200,
+                                       "frames":  6,
+                                       "effectiveDurationMs":  2800,
+                                       "decodedBytes":  960000
+                                   },
+                        "runtime":  {
+                                        "bytes":  6072,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  6,
+                                        "effectiveDurationMs":  2800,
+                                        "decodedBytes":  221184
+                                    },
+                        "conversionMs":  353
+                    },
+                    {
+                        "name":  "full_celebrate.gif",
+                        "masterSha256":  "FF1F197120617C51328EC1839EAFEF7A281EF7A72E35E041409E4B87D48B6611",
+                        "runtimeSha256":  "A756D48F9A617A85E5574F0D63B211DC43A2FB8536D9E978164B9F67684A9E90",
+                        "source":  {
+                                       "bytes":  346464,
+                                       "width":  480,
+                                       "height":  320,
+                                       "frames":  75,
+                                       "effectiveDurationMs":  2730,
+                                       "decodedBytes":  46080000
+                                   },
+                        "runtime":  {
+                                        "bytes":  282304,
+                                        "width":  480,
+                                        "height":  320,
+                                        "frames":  54,
+                                        "effectiveDurationMs":  2730,
+                                        "decodedBytes":  33177600
+                                    },
+                        "conversionMs":  8259
+                    },
+                    {
+                        "name":  "full_fighting.gif",
+                        "masterSha256":  "880185EBCF0E2C3C351E1B602EB82B2AE5EA3D6FF5B36782403C5BC683259BF6",
+                        "runtimeSha256":  "F9DC3223EC653FFC3BE18D3EA08014E1741D9A5596A7EBBC37511D6334C46E48",
+                        "source":  {
+                                       "bytes":  94078,
+                                       "width":  370,
+                                       "height":  320,
+                                       "frames":  63,
+                                       "effectiveDurationMs":  2520,
+                                       "decodedBytes":  29836800
+                                   },
+                        "runtime":  {
+                                        "bytes":  126229,
+                                        "width":  370,
+                                        "height":  320,
+                                        "frames":  60,
+                                        "effectiveDurationMs":  2520,
+                                        "decodedBytes":  28416000
+                                    },
+                        "conversionMs":  14529
+                    },
+                    {
+                        "name":  "full_flowers.gif",
+                        "masterSha256":  "87BF7CD34E05FE18E95B4A159BE3A1B9A510B53FE96370A77161215CD8F30E2E",
+                        "runtimeSha256":  "D3F513F84D99F53E79040EF9A2F9D83FE7B50A9550DC912AE1D61861187C6D1C",
+                        "source":  {
+                                       "bytes":  30057,
+                                       "width":  386,
+                                       "height":  240,
+                                       "frames":  23,
+                                       "effectiveDurationMs":  1840,
+                                       "decodedBytes":  8522880
+                                   },
+                        "runtime":  {
+                                        "bytes":  30408,
+                                        "width":  386,
+                                        "height":  240,
+                                        "frames":  23,
+                                        "effectiveDurationMs":  1840,
+                                        "decodedBytes":  8522880
+                                    },
+                        "conversionMs":  2476
+                    },
+                    {
+                        "name":  "full_raining.gif",
+                        "masterSha256":  "C4708133095FBF824CCCC2F5D49DBEF587C9308C426F39246EA0A9D5DB6A642D",
+                        "runtimeSha256":  "41D92C00A32FD8473C1255691774B5CF67BD94B8F602AC81744BCE20A6A3E0C9",
+                        "source":  {
+                                       "bytes":  220561,
+                                       "width":  255,
+                                       "height":  480,
+                                       "frames":  189,
+                                       "effectiveDurationMs":  5670,
+                                       "decodedBytes":  92534400
+                                   },
+                        "runtime":  {
+                                        "bytes":  148819,
+                                        "width":  170,
+                                        "height":  320,
+                                        "frames":  136,
+                                        "effectiveDurationMs":  5670,
+                                        "decodedBytes":  29593600
+                                    },
+                        "conversionMs":  18367
+                    },
+                    {
+                        "name":  "full_snow.gif",
+                        "masterSha256":  "C73C812A7FE14048530AF9D9F038FC695EA1A846748642CC8785E14B6043B802",
+                        "runtimeSha256":  "4033D5BC81708260433E48AB73924B6A33D86CAE58BD51A416534B9AD067BD48",
+                        "source":  {
+                                       "bytes":  29601,
+                                       "width":  200,
+                                       "height":  200,
+                                       "frames":  20,
+                                       "effectiveDurationMs":  1400,
+                                       "decodedBytes":  3200000
+                                   },
+                        "runtime":  {
+                                        "bytes":  29435,
+                                        "width":  200,
+                                        "height":  200,
+                                        "frames":  20,
+                                        "effectiveDurationMs":  1400,
+                                        "decodedBytes":  3200000
+                                    },
+                        "conversionMs":  1207
+                    },
+                    {
+                        "name":  "full_stars.gif",
+                        "masterSha256":  "EC1B7046A22EA9C87BF967E83329F0CB0611114F3AE2C0C9A5BC1EA68A8A586C",
+                        "runtimeSha256":  "81C744620EC853F34FBC90B3CB3502A20F5BD376E35938A19CB3CF41F363AE4A",
+                        "source":  {
+                                       "bytes":  13301,
+                                       "width":  304,
+                                       "height":  234,
+                                       "frames":  6,
+                                       "effectiveDurationMs":  540,
+                                       "decodedBytes":  1707264
+                                   },
+                        "runtime":  {
+                                        "bytes":  16347,
+                                        "width":  304,
+                                        "height":  234,
+                                        "frames":  6,
+                                        "effectiveDurationMs":  540,
+                                        "decodedBytes":  1707264
+                                    },
+                        "conversionMs":  552
+                    },
+                    {
+                        "name":  "full_storm.gif",
+                        "masterSha256":  "5FF1010E97ECF647790ADCFBCF0BB92257E9D12560E37676D6CF5C94E361B8F7",
+                        "runtimeSha256":  "19865E4ED33F877FD19881DA38D56B4B6B307FC06AC3E202836A7CBF139A6B87",
+                        "source":  {
+                                       "bytes":  42653,
+                                       "width":  480,
+                                       "height":  480,
+                                       "frames":  22,
+                                       "effectiveDurationMs":  1100,
+                                       "decodedBytes":  20275200
+                                   },
+                        "runtime":  {
+                                        "bytes":  19215,
+                                        "width":  320,
+                                        "height":  320,
+                                        "frames":  22,
+                                        "effectiveDurationMs":  1100,
+                                        "decodedBytes":  9011200
+                                    },
+                        "conversionMs":  3262
+                    },
+                    {
+                        "name":  "full_travel.gif",
+                        "masterSha256":  "A447B6C8C72238D59376AD39CEE8DB1049A308F459FFF6FE57E79C7F35821167",
+                        "runtimeSha256":  "FD244C54C1B521483A40D54CBF854EB0A7CB4464AC814E5F8A9E450CB1DC1548",
+                        "source":  {
+                                       "bytes":  125971,
+                                       "width":  480,
+                                       "height":  320,
+                                       "frames":  59,
+                                       "effectiveDurationMs":  1770,
+                                       "decodedBytes":  36249600
+                                   },
+                        "runtime":  {
+                                        "bytes":  105064,
+                                        "width":  480,
+                                        "height":  320,
+                                        "frames":  42,
+                                        "effectiveDurationMs":  1770,
+                                        "decodedBytes":  25804800
+                                    },
+                        "conversionMs":  8650
+                    },
+                    {
+                        "name":  "heart.gif",
+                        "masterSha256":  "3480F6782874578610329B00ECA47171F1DF6EBC5814AB3CD3FFE7B1602769EA",
+                        "runtimeSha256":  "936A3131653170422EBF32FE7CE6D9DAFFEAF214327B224551A30ED21FC16F81",
+                        "source":  {
+                                       "bytes":  7431,
+                                       "width":  300,
+                                       "height":  284,
+                                       "frames":  2,
+                                       "effectiveDurationMs":  400,
+                                       "decodedBytes":  681600
+                                   },
+                        "runtime":  {
+                                        "bytes":  6911,
+                                        "width":  101,
+                                        "height":  96,
+                                        "frames":  2,
+                                        "effectiveDurationMs":  400,
+                                        "decodedBytes":  77568
+                                    },
+                        "conversionMs":  416
+                    },
+                    {
+                        "name":  "hit.gif",
+                        "masterSha256":  "235D51F85752AFEB4E0D0408125BEF752AA833B8DE459BE725DF3CFAA7D5D5BB",
+                        "runtimeSha256":  "183534CF22CD6655EAA3F28F4E8CE709F09ED7F56F49AF29F8F8DEAD5DBCD23A",
+                        "source":  {
+                                       "bytes":  5744,
+                                       "width":  256,
+                                       "height":  256,
+                                       "frames":  12,
+                                       "effectiveDurationMs":  1200,
+                                       "decodedBytes":  3145728
+                                   },
+                        "runtime":  {
+                                        "bytes":  5100,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  11,
+                                        "effectiveDurationMs":  1200,
+                                        "decodedBytes":  405504
+                                    },
+                        "conversionMs":  1115
+                    },
+                    {
+                        "name":  "impact.gif",
+                        "masterSha256":  "275CA46489073E2F669ECB243520191C34CC6FEA6D95254B303ED25E06C8AB79",
+                        "runtimeSha256":  "E020282C6C5E73DA0B81F752B37E41AB731EA9D49E6087D2DACD8CB363E31F9A",
+                        "source":  {
+                                       "bytes":  20517,
+                                       "width":  480,
+                                       "height":  480,
+                                       "frames":  7,
+                                       "effectiveDurationMs":  560,
+                                       "decodedBytes":  6451200
+                                   },
+                        "runtime":  {
+                                        "bytes":  6421,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  7,
+                                        "effectiveDurationMs":  560,
+                                        "decodedBytes":  258048
+                                    },
+                        "conversionMs":  573
+                    },
+                    {
+                        "name":  "KO.gif",
+                        "masterSha256":  "D0552E6227D0E7F7B61E46729E708E7D3D17E0AE7162097D9DFDAA0387E94C8D",
+                        "runtimeSha256":  "66563D5E9696E49DF28361809E42A33BAD1A14F4BF3CCC82F5445C887C2301C3",
+                        "source":  {
+                                       "bytes":  780724,
+                                       "width":  460,
+                                       "height":  460,
+                                       "frames":  57,
+                                       "effectiveDurationMs":  1920,
+                                       "decodedBytes":  48244800
+                                   },
+                        "runtime":  {
+                                        "bytes":  149942,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  40,
+                                        "effectiveDurationMs":  1920,
+                                        "decodedBytes":  1474560
+                                    },
+                        "conversionMs":  2529
+                    },
+                    {
+                        "name":  "oneup.gif",
+                        "masterSha256":  "8B1F651AD0F6175ADAD1E0AB8D96A642CA1C0886822280FCEA6E6BE9B61E6204",
+                        "runtimeSha256":  "FCD54B7A34A50CB9FB90DCA2B438BDC7622CD94483631EA47B28FEAFBA0338C8",
+                        "source":  {
+                                       "bytes":  1283117,
+                                       "width":  808,
+                                       "height":  803,
+                                       "frames":  200,
+                                       "effectiveDurationMs":  10000,
+                                       "decodedBytes":  519059200
+                                   },
+                        "runtime":  {
+                                        "bytes":  262968,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  200,
+                                        "effectiveDurationMs":  10000,
+                                        "decodedBytes":  7372800
+                                    },
+                        "conversionMs":  30516
+                    },
+                    {
+                        "name":  "particles.gif",
+                        "masterSha256":  "71387C052D38753A1E331E2AC2E644E21E4994413E2347395C5E987716F76016",
+                        "runtimeSha256":  "5A2EDEDC0D85DD755480454FD72F411C1251CD5CCBB45B891CB01801586D6A7B",
+                        "source":  {
+                                       "bytes":  266830,
+                                       "width":  400,
+                                       "height":  400,
+                                       "frames":  120,
+                                       "effectiveDurationMs":  2400,
+                                       "decodedBytes":  76800000
+                                   },
+                        "runtime":  {
+                                        "bytes":  72166,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  57,
+                                        "effectiveDurationMs":  2400,
+                                        "decodedBytes":  2101248
+                                    },
+                        "conversionMs":  4948
+                    },
+                    {
+                        "name":  "pulse.gif",
+                        "masterSha256":  "2C95C6A1672045BFE4A6B6E9B6C418AC600F28E702A3158BDD4C187EA5C71F84",
+                        "runtimeSha256":  "3AAE4F45809F54D22BBB25A5BE5ED3B77548365606AF3D455FF435BFDBFD8274",
+                        "source":  {
+                                       "bytes":  15918,
+                                       "width":  440,
+                                       "height":  460,
+                                       "frames":  19,
+                                       "effectiveDurationMs":  380,
+                                       "decodedBytes":  15382400
+                                   },
+                        "runtime":  {
+                                        "bytes":  10211,
+                                        "width":  91,
+                                        "height":  96,
+                                        "frames":  8,
+                                        "effectiveDurationMs":  380,
+                                        "decodedBytes":  279552
+                                    },
+                        "conversionMs":  641
+                    },
+                    {
+                        "name":  "rainbow.gif",
+                        "masterSha256":  "6E1F98BC20D73A679896F112BA8331DEF28190D82F1CD12BE246566A6F8CCF57",
+                        "runtimeSha256":  "D03E4FE3616250BE561F5E8183F0B0007F656B30419B113EA6D532B3F86A73A2",
+                        "source":  {
+                                       "bytes":  15178,
+                                       "width":  107,
+                                       "height":  480,
+                                       "frames":  4,
+                                       "effectiveDurationMs":  400,
+                                       "decodedBytes":  821760
+                                   },
+                        "runtime":  {
+                                        "bytes":  5375,
+                                        "width":  21,
+                                        "height":  96,
+                                        "frames":  4,
+                                        "effectiveDurationMs":  400,
+                                        "decodedBytes":  32256
+                                    },
+                        "conversionMs":  357
+                    },
+                    {
+                        "name":  "recharging.gif",
+                        "masterSha256":  "473DC5411E99A9A610F2F67A0C3F274231AF074E3E624EF6081713C29E72976D",
+                        "runtimeSha256":  "21AE745D9E2C42512D3970AADA4DB99947911F12CAD24B1E76C8AD8C544D1497",
+                        "source":  {
+                                       "bytes":  1884,
+                                       "width":  160,
+                                       "height":  160,
+                                       "frames":  13,
+                                       "effectiveDurationMs":  530,
+                                       "decodedBytes":  1331200
+                                   },
+                        "runtime":  {
+                                        "bytes":  2297,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  11,
+                                        "effectiveDurationMs":  530,
+                                        "decodedBytes":  405504
+                                    },
+                        "conversionMs":  807
+                    },
+                    {
+                        "name":  "ring.gif",
+                        "masterSha256":  "A4EFE0E7BA9E9211CE4F1EA1C22FA23524ADA93D3FB4EE0ECCC58AE1FD9F312C",
+                        "runtimeSha256":  "4C6946467A8E88AD52804F98642E1BE2F194C82F4B42B2B8B550660A278677DF",
+                        "source":  {
+                                       "bytes":  11837,
+                                       "width":  256,
+                                       "height":  256,
+                                       "frames":  6,
+                                       "effectiveDurationMs":  600,
+                                       "decodedBytes":  1572864
+                                   },
+                        "runtime":  {
+                                        "bytes":  5944,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  6,
+                                        "effectiveDurationMs":  600,
+                                        "decodedBytes":  221184
+                                    },
+                        "conversionMs":  422
+                    },
+                    {
+                        "name":  "smoke.gif",
+                        "masterSha256":  "48D20DACA77A6944178491005836DB38473C281E48F7B14555BDF59ED28C4952",
+                        "runtimeSha256":  "DE487813F3C4D0C4595FBD81B513F894F8D46B01BB0F4566B46F3F70570CC1E6",
+                        "source":  {
+                                       "bytes":  28589,
+                                       "width":  480,
+                                       "height":  480,
+                                       "frames":  10,
+                                       "effectiveDurationMs":  800,
+                                       "decodedBytes":  9216000
+                                   },
+                        "runtime":  {
+                                        "bytes":  12651,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  10,
+                                        "effectiveDurationMs":  800,
+                                        "decodedBytes":  368640
+                                    },
+                        "conversionMs":  700
+                    },
+                    {
+                        "name":  "snwoflake.gif",
+                        "masterSha256":  "618903E3C01D0DB1F838F2F3D92DCA62579B2F4590173B2E6C1EC59ADDA906AD",
+                        "runtimeSha256":  "91A90DAD0BF44783FC5FF4167B7E3C77FE198B6CEA57BEF267CA881D27207645",
+                        "source":  {
+                                       "bytes":  14087,
+                                       "width":  300,
+                                       "height":  285,
+                                       "frames":  6,
+                                       "effectiveDurationMs":  600,
+                                       "decodedBytes":  2052000
+                                   },
+                        "runtime":  {
+                                        "bytes":  11574,
+                                        "width":  101,
+                                        "height":  96,
+                                        "frames":  6,
+                                        "effectiveDurationMs":  600,
+                                        "decodedBytes":  232704
+                                    },
+                        "conversionMs":  549
+                    },
+                    {
+                        "name":  "sparkles.gif",
+                        "masterSha256":  "8B04E917E6B951CC9C8FDF828335D5D1F2170F151D01F1E2B9A0211704DFD306",
+                        "runtimeSha256":  "19B023A84259131551EE33F1C6AFBDFA833E14F45EFD133AE7757E7148B78EE9",
+                        "source":  {
+                                       "bytes":  5401,
+                                       "width":  200,
+                                       "height":  200,
+                                       "frames":  8,
+                                       "effectiveDurationMs":  1280,
+                                       "decodedBytes":  1280000
+                                   },
+                        "runtime":  {
+                                        "bytes":  5307,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  8,
+                                        "effectiveDurationMs":  1280,
+                                        "decodedBytes":  294912
+                                    },
+                        "conversionMs":  506
+                    },
+                    {
+                        "name":  "spider.gif",
+                        "masterSha256":  "76A95B61D3F80CA702562A29AA33893C4019753CEE486A30C34EDD0F41F69471",
+                        "runtimeSha256":  "73D3BCCE7FF3DA94E80A92A8C72FB4AF984C2958D900D7907F0A67E2F17048B6",
+                        "source":  {
+                                       "bytes":  14018,
+                                       "width":  384,
+                                       "height":  480,
+                                       "frames":  3,
+                                       "effectiveDurationMs":  750,
+                                       "decodedBytes":  2211840
+                                   },
+                        "runtime":  {
+                                        "bytes":  1828,
+                                        "width":  76,
+                                        "height":  96,
+                                        "frames":  3,
+                                        "effectiveDurationMs":  750,
+                                        "decodedBytes":  87552
+                                    },
+                        "conversionMs":  316
+                    },
+                    {
+                        "name":  "star.gif",
+                        "masterSha256":  "015BE5E9ADE72C70C487CE564B6B3F9205EB9E7C30FDAE19DDD7C969E9BBBA2B",
+                        "runtimeSha256":  "03307FAF98EA0F7040C71F501FE3345F7702A9CF00AF9CD6CE4921F0BBB7F2A2",
+                        "source":  {
+                                       "bytes":  47916,
+                                       "width":  500,
+                                       "height":  500,
+                                       "frames":  8,
+                                       "effectiveDurationMs":  1490,
+                                       "decodedBytes":  8000000
+                                   },
+                        "runtime":  {
+                                        "bytes":  21640,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  8,
+                                        "effectiveDurationMs":  1490,
+                                        "decodedBytes":  294912
+                                    },
+                        "conversionMs":  708
+                    },
+                    {
+                        "name":  "torch.gif",
+                        "masterSha256":  "11C92B0302A397F376B44A0B9F9F2C24BD04AB6C2CDC096A6DE36F743BB02AC3",
+                        "runtimeSha256":  "CF022D025961B2DB0ABAB769C1CA442A9AD626794A6363FB94928DE0A63B2E01",
+                        "source":  {
+                                       "bytes":  10492,
+                                       "width":  320,
+                                       "height":  320,
+                                       "frames":  6,
+                                       "effectiveDurationMs":  600,
+                                       "decodedBytes":  2457600
+                                   },
+                        "runtime":  {
+                                        "bytes":  6896,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  6,
+                                        "effectiveDurationMs":  600,
+                                        "decodedBytes":  221184
+                                    },
+                        "conversionMs":  357
+                    },
+                    {
+                        "name":  "turning_star.gif",
+                        "masterSha256":  "865FA9E65057511E9210577BB567DF785639B594F0F3EC497C6A961271D427C7",
+                        "runtimeSha256":  "EF10C8973DA288920BE92D1FF36865296FFD34988561283FD312BDBCA4A3EF10",
+                        "source":  {
+                                       "bytes":  7485,
+                                       "width":  280,
+                                       "height":  280,
+                                       "frames":  12,
+                                       "effectiveDurationMs":  240,
+                                       "decodedBytes":  3763200
+                                   },
+                        "runtime":  {
+                                        "bytes":  6431,
+                                        "width":  96,
+                                        "height":  96,
+                                        "frames":  5,
+                                        "effectiveDurationMs":  240,
+                                        "decodedBytes":  184320
+                                    },
+                        "conversionMs":  542
+                    }
+                ]
+}

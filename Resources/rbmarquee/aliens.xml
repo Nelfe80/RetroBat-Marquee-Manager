@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Curé avec MarqueeManagerSetup : ce fichier prime et le générateur ne le touche plus. -->
+<rbmarquee version="1.2" game="aliens" system="mame" generated="false">
+  <scene target="marquee">
+    <lamps>
+      <lamp id="L0" x="0.2503" y="0.5102" radius="0.1200" color="#ffd9a0" />
+      <lamp id="L1" x="0.7306" y="0.5205" radius="0.1200" color="#ffd9a0" />
+      <lamp id="L2" x="0.4871" y="0.5000" radius="0.1200" color="#ffd9a0" />
+    </lamps>
+    <bindings>
+      <arcadeOutputs />
+    </bindings>
+    <attract mode="chase" />
+  </scene>
+</rbmarquee>
