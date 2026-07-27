@@ -455,61 +455,10 @@ public sealed class GamesView : UserControl, IDisposable
         var card = new StackPanel();
         card.Children.Add(Ui.SectionHeader(L.T("Mon marquee", "My marquee")));
 
-        // the marquee CURRENTLY displayed for this game, resolved through the
-        // system's priority chain — never a black box
         var assignments = new CompositionAssignments(_pluginRoot);
-        var resolved = ChainPreview.Resolve(_pluginRoot, _media, assignments, "marquee", entry.System, entry.Rom);
-        if (resolved.Path != null)
-        {
-            var currentRow = new WrapPanel { Margin = new Thickness(0, 2, 0, 4) };
-            currentRow.Children.Add(ThumbImage(resolved.Path));
-            var side = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            var sourceLine = new TextBlock { FontSize = 12, TextWrapping = TextWrapping.Wrap };
-            sourceLine.Inlines.Add(new System.Windows.Documents.Run(L.T("Source affichée : ", "Displayed source: ")) { Foreground = Ui.Muted });
-            sourceLine.Inlines.Add(new System.Windows.Documents.Run(resolved.Label) { Foreground = Ui.Accent, FontWeight = FontWeights.SemiBold });
-            side.Children.Add(sourceLine);
-            var rules = Ui.MutedLabel(L.T("selon la règle de priorité du système — la modifier dans Mes systèmes",
-                "per the system's priority rule — change it in My systems"), 11);
-            rules.TextDecorations = TextDecorations.Underline;
-            rules.Cursor = Cursors.Hand;
-            rules.MouseLeftButtonDown += (_, _) => _navigate?.Invoke("systems");
-            side.Children.Add(rules);
-            if (resolved.Deletable)
-            {
-                var deleteRow = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
-                deleteRow.Children.Add(Ui.Button(L.T("Supprimer ce marquee", "Delete this marquee"), (_, _) =>
-                {
-                    try
-                    {
-                        File.Delete(resolved.Path);
-                        if (resolved.Source == "composition")
-                        {
-                            _projects.Delete(entry.System, entry.Rom); // project json too
-                        }
-                        _status.Text = L.T("Marquee supprimé — la source suivante de la chaîne reprend la main.",
-                            "Marquee deleted — the next source in the chain takes over.");
-                        _status.Foreground = Ui.Muted;
-                    }
-                    catch (Exception ex)
-                    {
-                        _status.Text = L.T($"Suppression impossible : {ex.Message}", $"Delete failed: {ex.Message}");
-                        _status.Foreground = Ui.Error;
-                    }
-                    if (_current != null) OpenGame(_current);
-                }));
-                side.Children.Add(deleteRow);
-            }
-            currentRow.Children.Add(side);
-            card.Children.Add(currentRow);
-        }
-        else
-        {
-            card.Children.Add(Ui.MutedLabel(L.T("Aucun média résolu par la chaîne pour ce jeu (le flux d'origine s'affiche).",
-                "No media resolved by the chain for this game (the stream default shows).")));
-        }
 
-        // surface picker + entry point, UNDER the game: the creation targets the
-        // picked surface, and its creation can be deleted right here
+        // surface picker only — the preview and the compose/delete actions live on
+        // the resolution cards below (like Mes systèmes)
         var surfaces = new SurfacesStore(_pluginRoot).Load();
         var surfaceRow = new WrapPanel { Margin = new Thickness(0, 8, 0, 4) };
         var surfaceLabel = Ui.MutedLabel(L.T("Surface :", "Surface:"));
@@ -526,38 +475,6 @@ public sealed class GamesView : UserControl, IDisposable
         if (surfacePicker.SelectedItem == null && surfacePicker.Items.Count > 0) surfacePicker.SelectedIndex = 0;
         _selectedSurfaceId = (surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
         surfaceRow.Children.Add(surfacePicker);
-        surfaceRow.Children.Add(Ui.Button(
-            L.T("Ouvrir l'interface de création graphique", "Open the graphic creation interface"),
-            (_, _) => OpenComposer(entry, data, _selectedSurfaceId), primary: true));
-
-        var deleteButton = Ui.Button(L.T("Supprimer la création de cette surface", "Delete this surface's creation"), (_, _) =>
-        {
-            var surface = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
-            if (surface == null) return;
-            // per-surface file AND the category-level legacy file: deleting
-            // only one lets the other come back through the chain/editor seed
-            new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface), surface.Id).Delete(entry.System, entry.Rom);
-            new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface)).Delete(entry.System, entry.Rom);
-            _status.Text = L.T($"Création de la surface {surface.Id} supprimée.", $"Surface {surface.Id} creation deleted.");
-            _status.Foreground = Ui.Muted;
-            if (_current != null) OpenGame(_current);
-        });
-        void RefreshDeleteButton()
-        {
-            var surface = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
-            deleteButton.Visibility = surface != null
-                && (new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface), surface.Id).HasComposition(entry.System, entry.Rom)
-                    || new MarqueeProjectStore(_pluginRoot, CategoryOfSurface(surface)).HasComposition(entry.System, entry.Rom))
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-        }
-        surfacePicker.SelectionChanged += (_, _) =>
-        {
-            _selectedSurfaceId = (surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
-            RefreshDeleteButton();
-        };
-        surfaceRow.Children.Add(deleteButton);
-        RefreshDeleteButton();
         card.Children.Add(surfaceRow);
 
         // shared block card: what displays for THIS game on the picked surface, and
@@ -580,7 +497,11 @@ public sealed class GamesView : UserControl, IDisposable
                     if (_current != null) OpenGame(_current);
                 });
         }
-        surfacePicker.SelectionChanged += (_, _) => UpdateResolutionCard();
+        surfacePicker.SelectionChanged += (_, _) =>
+        {
+            _selectedSurfaceId = (surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
+            UpdateResolutionCard();
+        };
         UpdateResolutionCard();
         card.Children.Add(resolutionCard);
 
