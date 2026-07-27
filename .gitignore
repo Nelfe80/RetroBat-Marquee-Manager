@@ -88,3 +88,12 @@ site/
 
 # Internal product/UX planning docs stay local.
 RetroBat-Marquee-Manager-Plan-*.md
+
+# Backups (config/lamp/xml .bak written by the Setup and by editors)
+*.bak
+
+# Per-machine user overrides (effects/lighting profiles written by the Setup)
+/overrides/
+
+# Nested duplicate produced by a bad publish copy (never a real folder)
+/Resources/Resources/

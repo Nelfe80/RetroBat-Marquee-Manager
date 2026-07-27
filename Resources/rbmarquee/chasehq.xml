@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
-<rbmarquee version="1.2" game="chasehq" system="mame" generated="true">
+<!-- Édité avec MarqueeManagerSetup : ce fichier prime et le générateur ne le touche plus. -->
+<rbmarquee version="1.2" game="chasehq" system="mame" generated="false">
   <scene target="marquee" image="chasehq.png">
     <lamps>
-      <lamp id="genout5" region="0.7708 0.0000 0.2292 1.0000" color="#ff90a9" />
-      <lamp id="genout6" region="0.0000 0.0000 0.2292 1.0000" color="#60e8ff" />
+      <lamp id="genout5" region="0.7708 0.0000 0.2292 1.0000" color="#ff3b30" />
+      <lamp id="genout6" region="0.0000 0.0000 0.2235 0.9949" color="#32ade6" />
     </lamps>
     <bindings>
       <arcadeOutputs>
