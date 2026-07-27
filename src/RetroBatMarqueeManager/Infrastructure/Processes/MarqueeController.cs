@@ -47,6 +47,13 @@ public sealed class MarqueeController : IDisposable
                 ? new LightingSurfaceOptions(_config.LightingTestPattern, _config.LightingFpsLimit, _config.LightingShowFps, _config.LightingRenderScale, _config.LightingFillHeightMaxCrop, _config.LightingSoundEnabled, _config.LightingSoundVolume, _config.LightingGlassReflection, _config.LightingTubeVisualOpacity, _config.LightingTubeThickness, _config.LightingTubeBlur, _config.LightingTubeEndFade, _config.LightingTubeColor)
                 : null;
 
+            // screens the user excluded from MarqueeManager (Mon setup → "use this
+            // screen" unchecked): no window is created on them, their surfaces stay
+            // in the document but are suspended.
+            var unmanaged = _config.GetUnmanagedScreenIndices();
+            if (unmanaged.Count > 0)
+                _logger.LogInformation("Screens excluded from MarqueeManager: {Screens}", string.Join(", ", unmanaged));
+
             // dynamic surfaces (state\surfaces.json) or their legacy [Screens] equivalent
             foreach (var surface in _config.GetSurfaces())
             {
@@ -56,6 +63,21 @@ public sealed class MarqueeController : IDisposable
 
                 foreach (var screen in surface.Screens)
                 {
+                    // an out-of-range index is IGNORED (never silently redirected to
+                    // screen 0), and an excluded screen never gets a window
+                    if (screen < 0 || screen >= screens.Length)
+                    {
+                        _logger.LogWarning("Surface {Id}: screen index {Screen} is out of range (0..{Max}); ignored, no window",
+                            surface.Id, screen, screens.Length - 1);
+                        continue;
+                    }
+                    if (unmanaged.Contains(screen))
+                    {
+                        _logger.LogInformation("Surface {Id}: screen {Screen} is excluded from MarqueeManager; suspended, no window",
+                            surface.Id, screen);
+                        continue;
+                    }
+
                     var lighting = surface.HasComponent("lighting.engine") ? lightingOptions : null;
                     var window = new MarqueeWindow(screen, _logger,
                         lighting,

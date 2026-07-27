@@ -39,6 +39,12 @@ public sealed class ScreenModel
     public int Rotation { get; set; }              // 0/90/180/270 on the plan
     public bool Connected { get; set; } = true;    // recomputed at load
     public string Usage { get; set; } = "";        // marquee/topper/iccard/dmd/game/mixed/custom
+
+    /// <summary>Independent of <see cref="Usage"/>: when false, MarqueeManager
+    /// creates NO window for this screen (its surfaces are kept but suspended, and
+    /// it is offered to no composer). Defaults to true so every existing document
+    /// — which has no such field — keeps every screen managed.</summary>
+    public bool ManagedByMarqueeManager { get; set; } = true;
 }
 
 /// <summary>A dynamic surface as edited by the Setup.</summary>
@@ -106,7 +112,9 @@ public sealed class SurfacesStore
                     PhysicalX = Dbl(element, "physicalX") ?? 0,
                     PhysicalY = Dbl(element, "physicalY") ?? 0,
                     Rotation = Int(element, "rotation") ?? 0,
-                    Usage = Str(element, "usage")
+                    Usage = Str(element, "usage"),
+                    // absent = managed (existing documents predate this field)
+                    ManagedByMarqueeManager = Bool(element, "managedByMarqueeManager") ?? true
                 };
                 if (screen.Id.Length > 0) screens.Add(screen);
             }
@@ -228,7 +236,8 @@ public sealed class SurfacesStore
                 ["physicalX"] = screen.PhysicalX,
                 ["physicalY"] = screen.PhysicalY,
                 ["rotation"] = screen.Rotation,
-                ["usage"] = screen.Usage
+                ["usage"] = screen.Usage,
+                ["managedByMarqueeManager"] = screen.ManagedByMarqueeManager
             }).ToList(),
             ["surfaces"] = surfaces.Select(Serialize).ToList()
         };
@@ -422,5 +431,10 @@ public sealed class SurfacesStore
     private static double? Dbl(JsonElement element, string name)
         => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number
             ? value.GetDouble()
+            : null;
+
+    private static bool? Bool(JsonElement element, string name)
+        => element.TryGetProperty(name, out var value) && (value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.False)
+            ? value.GetBoolean()
             : null;
 }

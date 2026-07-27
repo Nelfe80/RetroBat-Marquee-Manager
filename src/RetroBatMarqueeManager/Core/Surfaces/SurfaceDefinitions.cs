@@ -98,7 +98,15 @@ public static class SurfacesDocument
                 if (surface != null) result.Add(surface);
             }
 
-            if (result.Count == 0) return null;
+            // A valid, Setup-owned document is authoritative even when it holds zero
+            // surfaces (e.g. every screen excluded): it must stay empty, NOT fall
+            // back to the historical [Screens] behavior. Only an absent/invalid/
+            // unreadable document (the null returns above) triggers the legacy path.
+            if (result.Count == 0)
+            {
+                logger.LogInformation("Dynamic surfaces document is valid but empty: {Path} — nothing rendered (legacy [Screens] not used)", path);
+                return result;
+            }
             logger.LogInformation("Dynamic surfaces loaded: {Count} surface(s) from {Path}",
                 result.Count, path);
             return result;
@@ -108,6 +116,43 @@ public static class SurfacesDocument
             logger.LogWarning(ex, "Unreadable surfaces.json; legacy [Screens] used");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Screen indices (Screen.AllScreens order, i.e. <c>windowsIndex</c>) the user
+    /// explicitly EXCLUDED from MarqueeManager (screens[].managedByMarqueeManager ==
+    /// false). The runtime creates no window on them; their surfaces stay in the
+    /// document but are suspended. An absent file or no screens[] array = none
+    /// excluded (every screen managed), which keeps un-migrated installs untouched.
+    /// </summary>
+    public static IReadOnlyCollection<int> UnmanagedScreenIndices(string path, ILogger logger)
+    {
+        var excluded = new HashSet<int>();
+        try
+        {
+            if (!File.Exists(path)) return excluded;
+            using var doc = JsonDocument.Parse(File.ReadAllText(path));
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object
+                || !root.TryGetProperty("screens", out var screens)
+                || screens.ValueKind != JsonValueKind.Array)
+                return excluded;
+            foreach (var screen in screens.EnumerateArray())
+            {
+                if (screen.ValueKind != JsonValueKind.Object) continue;
+                // only an EXPLICIT false excludes — absent/true stays managed
+                if (screen.TryGetProperty("managedByMarqueeManager", out var managed)
+                    && managed.ValueKind == JsonValueKind.False
+                    && screen.TryGetProperty("windowsIndex", out var index)
+                    && index.TryGetInt32(out var value) && value >= 0)
+                    excluded.Add(value);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Unreadable surfaces.json screens[]; every screen treated as managed");
+        }
+        return excluded;
     }
 
     private static SurfaceDefinition? ParseSurface(JsonElement element)

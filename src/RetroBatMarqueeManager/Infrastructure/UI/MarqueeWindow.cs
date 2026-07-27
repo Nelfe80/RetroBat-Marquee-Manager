@@ -531,7 +531,15 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             {
                 var screens = System.Windows.Forms.Screen.AllScreens;
                 int screenIndex = _targetScreen;
-                if (screenIndex < 0 || screenIndex >= screens.Length) screenIndex = 0;
+                if (screenIndex < 0 || screenIndex >= screens.Length)
+                {
+                    // an invalid target is IGNORED, never silently redirected to
+                    // screen 0: hide this window rather than paint the wrong display
+                    _logger.LogWarning("[WPF Player] Target screen index {Index} is invalid ({Count} screen(s) detected); window hidden",
+                        screenIndex, screens.Length);
+                    Hide();
+                    return;
+                }
 
                 var screen = screens[screenIndex];
 

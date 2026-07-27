@@ -139,6 +139,7 @@ public sealed class IniConfigService : IConfigService
             .ToArray();
 
     private IReadOnlyList<Core.Surfaces.SurfaceDefinition>? _surfaces;
+    private IReadOnlyCollection<int>? _unmanagedScreens;
 
     public IReadOnlyList<Core.Surfaces.SurfaceDefinition> GetSurfaces()
     {
@@ -149,6 +150,11 @@ public sealed class IniConfigService : IConfigService
                     ?? Core.Surfaces.SurfacesDocument.FromLegacy(this);
         return _surfaces;
     }
+
+    public IReadOnlyCollection<int> GetUnmanagedScreenIndices()
+        => _unmanagedScreens ??= Core.Surfaces.SurfacesDocument.UnmanagedScreenIndices(
+            Core.Surfaces.SurfacesDocument.PathFor(BaseDirectory),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
 
     public string GetValue(string section, string key, string fallback = "")
         => Get(section, key, fallback);

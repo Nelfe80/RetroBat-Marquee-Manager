@@ -29,6 +29,11 @@ public interface IConfigService
     /// [Screens] equivalent — the runtime always consumes this shape.</summary>
     IReadOnlyList<Core.Surfaces.SurfaceDefinition> GetSurfaces();
 
+    /// <summary>Screen indices (Screen.AllScreens order) the user excluded from
+    /// MarqueeManager (screens[].managedByMarqueeManager == false). No window is
+    /// created on them. Empty for legacy/un-migrated installs.</summary>
+    IReadOnlyCollection<int> GetUnmanagedScreenIndices();
+
     bool DmdEnabled { get; }
     string DmdModel { get; }
     string DmdExePath { get; }

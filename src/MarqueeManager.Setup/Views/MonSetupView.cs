@@ -245,6 +245,9 @@ public sealed class MonSetupView : UserControl
         {
             var (w, h) = SizeOf(screen);
             var isDmd = IsPhysicalDmd(screen);
+            // a connected screen the user excluded from MarqueeManager: dimmed like
+            // an absent one and stamped "Ignoré" (distinct from grayed = absent)
+            var ignored = !isDmd && !screen.ManagedByMarqueeManager;
             var card = new Border
             {
                 Width = Math.Max(30, w * _scale),
@@ -252,10 +255,11 @@ public sealed class MonSetupView : UserControl
                 Background = Ui.Brush(isDmd ? Color.FromRgb(0x1A, 0x12, 0x12) : Color.FromRgb(0x1A, 0x1A, 0x26)),
                 BorderBrush = ReferenceEquals(screen, _selected) ? Ui.Accent
                     : isDmd ? new SolidColorBrush(CategoryColors["dmd-virtual"])
-                    : screen.Connected ? Ui.Brush(Color.FromRgb(0x3A, 0x3A, 0x52)) : Ui.Muted,
+                    : !screen.Connected || ignored ? Ui.Muted
+                    : Ui.Brush(Color.FromRgb(0x3A, 0x3A, 0x52)),
                 BorderThickness = new Thickness(ReferenceEquals(screen, _selected) ? 2.5 : 1.5),
                 CornerRadius = new CornerRadius(4),
-                Opacity = screen.Connected ? 1.0 : 0.45,
+                Opacity = !screen.Connected ? 0.45 : ignored ? 0.5 : 1.0,
                 Tag = screen,
                 Cursor = Cursors.Hand
             };
@@ -304,6 +308,24 @@ public sealed class MonSetupView : UserControl
             Canvas.SetLeft(label, 4);
             Canvas.SetTop(label, 2);
             thumb.Children.Add(label);
+
+            if (ignored)
+            {
+                var badge = new TextBlock
+                {
+                    Text = L.T("IGNORÉ", "IGNORED"),
+                    Foreground = Brushes.White,
+                    Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x80, 0x30, 0x30)),
+                    Padding = new Thickness(5, 1, 5, 1),
+                    FontSize = 10,
+                    FontWeight = FontWeights.Bold,
+                    IsHitTestVisible = false
+                };
+                TextOptions.SetTextFormattingMode(badge, TextFormattingMode.Display);
+                Canvas.SetLeft(badge, 4);
+                Canvas.SetTop(badge, Math.Max(18, card.Height - 20));
+                thumb.Children.Add(badge);
+            }
             card.Child = thumb;
 
             Canvas.SetLeft(card, (screen.PhysicalX - minX + 200) * _scale);
@@ -395,12 +417,30 @@ public sealed class MonSetupView : UserControl
         }
 
         var (w, h) = SizeOf(screen);
+        var active = screen.ManagedByMarqueeManager;
 
         var card = new StackPanel();
         var title = Ui.Label($"{screen.Name} — {w}×{h}"
-                             + (screen.Connected ? $"  ·  {L.T("écran Windows", "Windows screen")} {screen.WindowsIndex}" : L.T("  ·  absent", "  ·  absent")), 15);
+                             + (screen.Connected ? $"  ·  {L.T("écran Windows", "Windows screen")} {screen.WindowsIndex}" : L.T("  ·  absent", "  ·  absent"))
+                             + (active ? "" : L.T("  ·  IGNORÉ", "  ·  IGNORED")), 15);
         title.FontWeight = FontWeights.Bold;
+        if (!active) title.Foreground = Ui.Muted;
         card.Children.Add(title);
+
+        // "managed" switch — INDEPENDENT of the screen type below. Unchecked: the
+        // runtime creates no window for this screen (surfaces kept but suspended),
+        // and it is offered to no composer. Distinct from usage "game".
+        var managed = Ui.CheckBox(L.T("Utiliser cet écran avec MarqueeManager", "Use this screen with MarqueeManager"), active);
+        managed.Margin = new Thickness(0, 4, 0, 0);
+        var managedHint = Ui.MutedLabel(L.T(
+            "Ignoré — aucune fenêtre de rendu ne sera créée. Les surfaces sont conservées mais suspendues.",
+            "Ignored — no render window will be created. Surfaces are kept but suspended."));
+        managedHint.Margin = new Thickness(22, 0, 0, 4);
+        managedHint.Visibility = active ? Visibility.Collapsed : Visibility.Visible;
+        managed.Checked += (_, _) => { screen.ManagedByMarqueeManager = true; RenderMap(); RenderScreenPanel(); };
+        managed.Unchecked += (_, _) => { screen.ManagedByMarqueeManager = false; RenderMap(); RenderScreenPanel(); };
+        card.Children.Add(managed);
+        card.Children.Add(managedHint);
 
         // rename + identify + test pattern
         var tools = new WrapPanel { Margin = new Thickness(0, 4, 0, 4) };
@@ -434,20 +474,24 @@ public sealed class MonSetupView : UserControl
         }
         if (typePicker.SelectedItem == null) typePicker.SelectedIndex = SuggestTypeIndex(screen);
         typeRow.Children.Add(typePicker);
-        typeRow.Children.Add(Ui.Button(L.T("Appliquer le type (tout configurer)", "Apply type (configure everything)"), (_, _) =>
+        var applyType = Ui.Button(L.T("Appliquer le type (tout configurer)", "Apply type (configure everything)"), (_, _) =>
         {
             if ((typePicker.SelectedItem as ComboBoxItem)?.Tag is string type)
             {
                 ApplyScreenType(screen, type);
             }
-        }, primary: true));
+        }, primary: true);
+        applyType.IsEnabled = active; // an ignored screen is offered to no composer
+        typeRow.Children.Add(applyType);
         card.Children.Add(typeRow);
         card.Children.Add(Ui.MutedLabel(L.T(
             "Choisir un type pose surface(s), composants et flux par défaut — fonctionnel immédiatement, retouchable ensuite.",
             "Picking a type lays default surface(s), components and streams — functional at once, tweakable after.")));
 
         // surfaces of this screen
-        card.Children.Add(Ui.SectionHeader(L.T("Surfaces de cet écran", "This screen's surfaces")));
+        card.Children.Add(Ui.SectionHeader(active
+            ? L.T("Surfaces de cet écran", "This screen's surfaces")
+            : L.T("Surfaces de cet écran (suspendues — écran ignoré)", "This screen's surfaces (suspended — screen ignored)")));
         var hosted = SurfacesOf(screen).ToList();
         if (hosted.Count == 0)
         {
@@ -479,6 +523,7 @@ public sealed class MonSetupView : UserControl
             row.Children.Add(Ui.MutedLabel(L.T($"{activeCount} composant(s) en {StateLabel()}", $"{activeCount} component(s) in {StateLabel()}")));
             var configure = Ui.Button(L.T("Configurer", "Configure"), (_, _) => OpenComposition(surface));
             configure.Margin = new Thickness(10, 0, 8, 0);
+            configure.IsEnabled = active;
             row.Children.Add(configure);
             card.Children.Add(row);
         }
@@ -486,7 +531,9 @@ public sealed class MonSetupView : UserControl
         var actions = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
         if (screen.Connected)
         {
-            actions.Children.Add(Ui.Button(L.T("Éditer les surfaces de cet écran", "Edit this screen's surfaces"), (_, _) => OpenDivision(screen)));
+            var edit = Ui.Button(L.T("Éditer les surfaces de cet écran", "Edit this screen's surfaces"), (_, _) => OpenDivision(screen));
+            edit.IsEnabled = active; // ignored screen: not a composition target
+            actions.Children.Add(edit);
         }
         if (!screen.Connected)
         {
