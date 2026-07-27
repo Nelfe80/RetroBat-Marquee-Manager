@@ -146,6 +146,16 @@ public sealed class MesSystemesView : UserControl
                     window.ShowDialog();
                     Refresh();
                 },
+                editGabarit: () =>
+                {
+                    if (surface == null) return;
+                    var t = MediaResolutionPreview.TargetOf(surface, detectedScreens);
+                    new GabaritEditorWindow(pluginRoot, surface.Id, GabaritStore.SystemScope, t.Width, t.Height)
+                    {
+                        Owner = System.Windows.Window.GetWindow(this)
+                    }.ShowDialog();
+                    Refresh();
+                },
                 deletePersonal: () =>
                 {
                     if (system == null || surface == null) return;

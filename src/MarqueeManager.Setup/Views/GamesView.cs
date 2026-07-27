@@ -488,6 +488,17 @@ public sealed class GamesView : UserControl, IDisposable
             ResolutionContext? ctx = surface != null ? engine.GameContext(surface, screens, entry.System, entry.Rom) : null;
             resolutionCard.Update(ctx,
                 composePersonal: () => OpenComposer(entry, data, _selectedSurfaceId),
+                editGabarit: () =>
+                {
+                    var s = surfaces.FirstOrDefault(x => x.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
+                    if (s == null) return;
+                    var t = MediaResolutionPreview.TargetOf(s, screens);
+                    new GabaritEditorWindow(_pluginRoot, s.Id, GabaritStore.GameScope, t.Width, t.Height)
+                    {
+                        Owner = Window.GetWindow(this)
+                    }.ShowDialog();
+                    if (_current != null) OpenGame(_current);
+                },
                 deletePersonal: () =>
                 {
                     var target = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
