@@ -68,7 +68,7 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
         var (category, categoryRoot) = MediaCategory(context.Category);
         return context.Scope == MediaScope.System
             ? ResolveSystem(kind, category, categoryRoot, context)
-            : ResolveGame(kind, category, context);
+            : ResolveGame(kind, category, categoryRoot, context);
     }
 
     private AssetLookup ResolveSystem(SourceKind kind, string category, string categoryRoot, ResolutionContext ctx)
@@ -114,7 +114,7 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
         return AssetLookup.Missing;
     }
 
-    private AssetLookup ResolveGame(SourceKind kind, string category, ResolutionContext ctx)
+    private AssetLookup ResolveGame(SourceKind kind, string category, string categoryRoot, ResolutionContext ctx)
     {
         var system = ctx.CanonicalSystem ?? ctx.SystemKey ?? "";
         var rom = ctx.Rom ?? "";
@@ -125,6 +125,10 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
                 var composition = _assignments.CompositionPath(category, system, rom);
                 return File.Exists(composition) ? Found(composition, "creation") : AssetLookup.Missing;
             case SourceKind.Generated:
+                // the surface's game gabarit rendered for THIS game wins over the
+                // APIExpose autogen when it has been rendered to the cache
+                var gabaritCache = GabaritRenderer.GameCachePath(_pluginRoot, categoryRoot, ctx.SurfaceId, system, rom);
+                if (File.Exists(gabaritCache)) return Found(gabaritCache, "gabarit");
                 return FromLibrary(root, "generated", @"artwork\marquee\generated-marquee.png", @"artwork\marquee\generated-dmd.png");
             case SourceKind.Scraped:
                 return FromLibrary(root, "scraped", @"artwork\marquee\marquee.png", @"artwork\marquee\marquee.jpg", @"artwork\marquee\screenmarquee.png");

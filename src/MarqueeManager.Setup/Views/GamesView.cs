@@ -485,6 +485,18 @@ public sealed class GamesView : UserControl, IDisposable
         void UpdateResolutionCard()
         {
             var surface = surfaces.FirstOrDefault(s => s.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
+            // render the surface's game gabarit for THIS game once (cached) so the
+            // "Générée" card reflects the general template, like Mes systèmes
+            if (surface != null)
+            {
+                var cat = CategoryOfSurface(surface);
+                if (GabaritRenderer.HasGabarit(_pluginRoot, cat, surface.Id, GabaritIdentity.GameScope)
+                    && !System.IO.File.Exists(GabaritRenderer.GameCachePath(_pluginRoot, cat, surface.Id, entry.System, entry.Rom)))
+                {
+                    var dims = MediaResolutionPreview.TargetOf(surface, screens);
+                    GabaritRenderer.RenderGame(_pluginRoot, cat, surface.Id, entry.System, entry.Rom, dims.Width, dims.Height, data.Assets);
+                }
+            }
             ResolutionContext? ctx = surface != null ? engine.GameContext(surface, screens, entry.System, entry.Rom) : null;
             resolutionCard.Update(ctx,
                 composePersonal: () => OpenComposer(entry, data, _selectedSurfaceId),
@@ -500,6 +512,8 @@ public sealed class GamesView : UserControl, IDisposable
                     {
                         Owner = Window.GetWindow(this)
                     }.ShowDialog();
+                    // the recipe changed → drop the cached renders so they regenerate
+                    GabaritRenderer.InvalidateSurface(_pluginRoot, CategoryOfSurface(s), s.Id);
                     if (_current != null) OpenGame(_current);
                 },
                 deletePersonal: () =>
