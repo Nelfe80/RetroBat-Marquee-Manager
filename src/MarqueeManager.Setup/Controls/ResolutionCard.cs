@@ -160,7 +160,9 @@ public sealed class ResolutionCard : UserControl
 
     private static string CardTitle(ResolutionContext ctx, SourceKind kind) => kind switch
     {
-        SourceKind.Generated => L.T("Gabarit général — tous les systèmes", "General template — all systems"),
+        SourceKind.Generated => ctx.Scope == MediaScope.Game
+            ? L.T("Gabarit général — tous les jeux de ce système", "General template — all games of this system")
+            : L.T("Gabarit général — tous les systèmes", "General template — all systems"),
         SourceKind.Personal => ctx.Scope == MediaScope.Game
             ? L.T("Ma création pour ce jeu", "My creation for this game")
             : L.T("Ma création pour ce système", "My creation for this system"),

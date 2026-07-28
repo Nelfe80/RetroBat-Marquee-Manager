@@ -68,7 +68,7 @@ public static class GabaritRenderer
         int targetWidth, int targetHeight, IReadOnlyList<GameAsset> gameAssets)
     {
         var project = new MarqueeProjectStore(pluginRoot, categoryRoot, surfaceId)
-            .LoadProject(GabaritIdentity.SystemId, GabaritIdentity.GameScope);
+            .LoadProject(GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(system));
         if (project == null || !project.Layers.Any(l => !l.Hidden) || targetWidth <= 0 || targetHeight <= 0)
             return null;
 

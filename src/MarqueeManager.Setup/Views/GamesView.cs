@@ -495,7 +495,7 @@ public sealed class GamesView : UserControl, IDisposable
             if (surface != null)
             {
                 var cat = CategoryOfSurface(surface);
-                if (GabaritRenderer.HasGabarit(_pluginRoot, cat, surface.Id, GabaritIdentity.GameScope)
+                if (GabaritRenderer.HasGabarit(_pluginRoot, cat, surface.Id, GabaritIdentity.GameScopeFor(entry.System))
                     && !System.IO.File.Exists(GabaritRenderer.GameCachePath(_pluginRoot, cat, surface.Id, entry.System, entry.Rom)))
                 {
                     var dims = MediaResolutionPreview.TargetOf(surface, screens);
@@ -510,9 +510,9 @@ public sealed class GamesView : UserControl, IDisposable
                     var s = surfaces.FirstOrDefault(x => x.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
                     if (s == null) return;
                     // general template composed with the current game's assets as a
-                    // concrete preview; the layout applies to every game of the surface
-                    new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.GameScope,
-                        L.T($"Gabarit général — jeux (aperçu : {entry.Rom})", $"General template — games (preview: {entry.Rom})"),
+                    // concrete preview; it applies to every game of THIS system (per-system)
+                    new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(entry.System),
+                        L.T($"Gabarit général — jeux {entry.System} (aperçu : {entry.Rom})", $"General template — {entry.System} games (preview: {entry.Rom})"),
                         data.Assets, s.Id, gabaritMode: true)
                     {
                         Owner = Window.GetWindow(this)
