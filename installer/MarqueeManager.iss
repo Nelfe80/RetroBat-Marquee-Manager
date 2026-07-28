@@ -42,7 +42,8 @@ french.SelectDirDesc=Choisissez le dossier plugins\MarqueeManager de VOTRE Retro
 Source: "..\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; \
     Excludes: "\src\*,\docs\*,\wiki\*,\media\*,\state\*,\artifacts\*,\dist\*,\installer\*,\tests\*,\.git\*,\.github\*,\.log\*,\.cache\*,\.versioning\*,\.archive\*,\.temp\*,\.graceful_exit\*,\obj\*,\bin\*,\site\*,\.gitignore,\.gitattributes,\mkdocs.yml,\RetroBatMarqueeManager.sln,\Directory.Build.props,\build.bat,\build-Setup.bat,\release.ps1,\config.ini,\config.ini.bak,\DmdDevice.log,\MARQUEE_MANAGER_SETUP.md,\RetroBat-Marquee-Manager-Plan-Developpement-UX-UI.md,\scripts\optimize-sprite-gifs.ps1,\tools\rbmarquee-gen\obj\*,\tools\rbmarquee-gen\bin\*,\Resources\sprites\master\*,CAHIER*,*.log,*.pdb,*.lib,__pycache__\*,*.pyc"
 
-; Dépendance APIExpose (dossier frère) — installée seulement si absente
+; Dépendance APIExpose (dossier frère) — DÉTECTION (fournit ApiExposeInstalled) ;
+; on avertit dans [Code] si absent (installée par APIExpose-Cabinet-Setup, pas ici)
 #include "..\..\APIExpose\installer\apiexpose-bootstrap.iss"
 
 [Dirs]
@@ -55,3 +56,15 @@ Filename: "{app}\MarqueeManagerSetup.exe"; WorkingDir: "{app}"; Description: "Ou
 [UninstallRun]
 Filename: "taskkill"; Parameters: "/f /im {#AppExe}"; Flags: runhidden; RunOnceId: "StopMarquee"
 Filename: "{app}\uninstall-es-start-hook.bat"; WorkingDir: "{app}"; Flags: runhidden; RunOnceId: "UnhookMarquee"
+
+[Code]
+// APIExpose (dossier frère) est requis : on ne le bundle pas (dossier complet +
+// Data Pack, via APIExpose-Cabinet-Setup) ; on avertit s'il manque, sans bloquer.
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssInstall) and (not ApiExposeInstalled()) then
+    MsgBox('APIExpose n''est pas installé à côté (plugins\APIExpose).'#13#10#13#10
+      + 'Marquee Manager en a besoin pour fonctionner. Lancez d''abord'#13#10
+      + 'APIExpose-Cabinet-Setup.exe — l''installation continue quand même.',
+      mbInformation, MB_OK);
+end;
