@@ -15,8 +15,8 @@ public sealed class MediaResolutionServiceTests
     private static ScopePolicy Full(bool game, params SourceKind[] disabled)
     {
         var kinds = game
-            ? new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback }
-            : new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
+            ? new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback }
+            : new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
         var set = new HashSet<SourceKind>(disabled);
         var sources = kinds.ToDictionary(k => k, k => new SourceSettings(!set.Contains(k), new FitPolicy(FitMode.Contain)));
         return new ScopePolicy(null, false, sources, Bg);
@@ -83,6 +83,31 @@ public sealed class MediaResolutionServiceTests
         assets.Have(MediaScope.System, SourceKind.Scraped);
 
         Assert.Equal(ResolutionSource.Generated, svc.Resolve(SysCtx()).Source);
+    }
+
+    // The user drop folder ("Mon dossier médias") sits between the personal creation
+    // and the generated tile: it beats generated but yields to a personal creation.
+    [Fact]
+    public void System_PersonalAbsent_UserDropBeatsGenerated()
+    {
+        var (svc, assets, _, _) = Build();
+        assets.Have(MediaScope.System, SourceKind.UserDrop);
+        assets.Have(MediaScope.System, SourceKind.Generated);
+
+        var r = svc.Resolve(SysCtx());
+
+        Assert.Equal(ResolutionSource.UserDrop, r.Source);
+        Assert.True(Traced(r, ResolutionSource.UserDrop, TraceCodes.SourceSelected));
+    }
+
+    [Fact]
+    public void System_PersonalPresent_BeatsUserDrop()
+    {
+        var (svc, assets, _, _) = Build();
+        assets.Have(MediaScope.System, SourceKind.Personal);
+        assets.Have(MediaScope.System, SourceKind.UserDrop);
+
+        Assert.Equal(ResolutionSource.Personal, svc.Resolve(SysCtx()).Source);
     }
 
     [Fact]

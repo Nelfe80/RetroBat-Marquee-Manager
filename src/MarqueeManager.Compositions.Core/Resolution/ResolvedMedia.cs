@@ -8,6 +8,7 @@ namespace MarqueeManager.Compositions.Core.Resolution;
 public enum ResolutionSource
 {
     Personal,       // "Création graphique" (user project or imported image)
+    UserDrop,       // "Mon dossier médias" — a raw file dropped in media\<cat>s\user
     Generated,      // composed from the surface template
     Scraped,        // ready-to-show marquee from APIExpose (Marquee/ScreenMarquee)
     Logo,           // logo/wheel laid out on a safe canvas

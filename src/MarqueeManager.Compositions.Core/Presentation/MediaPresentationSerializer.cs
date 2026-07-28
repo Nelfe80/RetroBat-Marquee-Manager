@@ -244,6 +244,7 @@ public static class MediaPresentationSerializer
     private static string SourceKindName(SourceKind k) => k switch
     {
         SourceKind.Personal => "personal",
+        SourceKind.UserDrop => "userDrop",
         SourceKind.Generated => "generated",
         SourceKind.Scraped => "scraped",
         SourceKind.Logo => "logo",
@@ -256,6 +257,8 @@ public static class MediaPresentationSerializer
         switch (name.ToLowerInvariant())
         {
             case "personal": kind = SourceKind.Personal; return true;
+            case "userdrop":
+            case "user-drop": kind = SourceKind.UserDrop; return true;
             case "generated": kind = SourceKind.Generated; return true;
             case "scraped": kind = SourceKind.Scraped; return true;
             case "logo": kind = SourceKind.Logo; return true;

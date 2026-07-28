@@ -11,13 +11,13 @@ namespace MarqueeManager.Compositions.Core.Resolution;
 /// </summary>
 public sealed class MediaResolutionService : IMediaResolutionService
 {
-    // System chain (§6.1): personal → generated → scraped → logo → [neutral].
+    // System chain (§6.1): personal → user drop → generated → scraped → logo → [neutral].
     private static readonly SourceKind[] SystemChain =
-        { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
+        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
 
-    // Game chain (§6.2): personal → generated → scraped → logo → SYSTEM chain → [neutral].
+    // Game chain (§6.2): personal → user drop → generated → scraped → logo → SYSTEM chain → [neutral].
     private static readonly SourceKind[] GameChainBeforeFallback =
-        { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
+        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
 
     private readonly IPresentationPolicyProvider _policies;
     private readonly IMediaAssetResolver _assets;
@@ -157,6 +157,7 @@ public sealed class MediaResolutionService : IMediaResolutionService
     private static ResolutionSource ToSource(SourceKind kind) => kind switch
     {
         SourceKind.Personal => ResolutionSource.Personal,
+        SourceKind.UserDrop => ResolutionSource.UserDrop,
         SourceKind.Generated => ResolutionSource.Generated,
         SourceKind.Scraped => ResolutionSource.Scraped,
         SourceKind.Logo => ResolutionSource.Logo,

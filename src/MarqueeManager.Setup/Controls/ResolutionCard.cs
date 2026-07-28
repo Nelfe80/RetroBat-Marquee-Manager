@@ -23,9 +23,10 @@ public sealed class ResolutionCard : UserControl
     {
         [SourceKind.Generated] = 0,   // general template, all systems
         [SourceKind.Personal] = 1,    // this system / this game
-        [SourceKind.Scraped] = 2,
-        [SourceKind.Logo] = 3,
-        [SourceKind.SystemFallback] = 4
+        [SourceKind.UserDrop] = 2,    // a raw file the user dropped in
+        [SourceKind.Scraped] = 3,
+        [SourceKind.Logo] = 4,
+        [SourceKind.SystemFallback] = 5
     };
 
     private readonly MediaResolutionPreview _engine;
@@ -116,6 +117,13 @@ public sealed class ResolutionCard : UserControl
         panel.Children.Add(preview);
         if (!link.Present)
             panel.Children.Add(Ui.MutedLabel(L.T("absent — aucun média", "absent — no media")));
+        if (link.Kind == SourceKind.UserDrop)
+        {
+            // discoverability: tell the user exactly where to drop the file
+            var hint = Ui.MutedLabel(L.T("Déposez votre image ici : ", "Drop your image here: ") + MediaResolutionPreview.DropTarget(ctx));
+            hint.TextWrapping = TextWrapping.Wrap;
+            panel.Children.Add(hint);
+        }
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
         if (link.Kind == SourceKind.Personal && _compose is { } compose)
@@ -154,6 +162,7 @@ public sealed class ResolutionCard : UserControl
         SourceKind.Personal => ctx.Scope == MediaScope.Game
             ? L.T("Ma création pour ce jeu", "My creation for this game")
             : L.T("Ma création pour ce système", "My creation for this system"),
+        SourceKind.UserDrop => L.T("Mon dossier médias", "My media folder"),
         SourceKind.Scraped => L.T("Marquee scrapé", "Scraped marquee"),
         SourceKind.Logo => L.T("Logo mis en page", "Laid-out logo"),
         SourceKind.SystemFallback => L.T("Rendu du système", "System render"),

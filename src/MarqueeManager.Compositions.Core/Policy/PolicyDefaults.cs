@@ -18,6 +18,7 @@ public static class PolicyDefaults
         new Dictionary<SourceKind, SourceSettings>
         {
             [SourceKind.Personal] = new(true, Contain),
+            [SourceKind.UserDrop] = new(true, Contain),
             [SourceKind.Generated] = new(true, Contain),
             [SourceKind.Scraped] = new(true, ScrapDynamic),
             [SourceKind.Logo] = new(true, Contain, Logo),
@@ -27,6 +28,7 @@ public static class PolicyDefaults
         new Dictionary<SourceKind, SourceSettings>
         {
             [SourceKind.Personal] = new(true, Contain),
+            [SourceKind.UserDrop] = new(true, Contain),
             [SourceKind.Generated] = new(true, Contain),
             [SourceKind.Scraped] = new(true, ScrapDynamic),
             [SourceKind.Logo] = new(true, Contain, Logo),

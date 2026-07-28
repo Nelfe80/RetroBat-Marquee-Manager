@@ -83,6 +83,11 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
                 var shared = new MarqueeProjectStore(_pluginRoot, categoryRoot);
                 if (shared.HasComposition("systems", frontend)) return Found(shared.PngPath("systems", frontend), "creation");
                 return AssetLookup.Missing;
+            case SourceKind.UserDrop:
+                // raw file dropped in media\<cat>s\user\systems\<sys>.* (both spellings)
+                return DropFolder(categoryRoot, "systems", frontend) is { Asset: not null } fromFrontend
+                    ? fromFrontend
+                    : DropFolder(categoryRoot, "systems", canonical);
             case SourceKind.Generated:
                 // the surface's general template rendered for THIS system wins over
                 // the APIExpose autogen when it has been rendered to the cache
@@ -124,6 +129,9 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
             case SourceKind.Personal:
                 var composition = _assignments.CompositionPath(category, system, rom);
                 return File.Exists(composition) ? Found(composition, "creation") : AssetLookup.Missing;
+            case SourceKind.UserDrop:
+                // raw file dropped in media\<cat>s\user\<sys>\<rom>.*
+                return DropFolder(categoryRoot, system, rom);
             case SourceKind.Generated:
                 // the surface's game gabarit rendered for THIS game wins over the
                 // APIExpose autogen when it has been rendered to the cache
@@ -147,6 +155,26 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
             if (File.Exists(path)) return Found(path, provenance);
         }
         return AssetLookup.Missing;
+    }
+
+    private static readonly string[] DropExtensions = { ".png", ".jpg", ".jpeg", ".gif", ".webp" };
+
+    /// <summary>The user drop folder media\&lt;cat&gt;s\user\&lt;segments&gt;.&lt;ext&gt;, first
+    /// existing extension — the same location the runtime's chain "user" link reads.</summary>
+    private AssetLookup DropFolder(string categoryRoot, params string[] segments)
+    {
+        var parts = new List<string> { _pluginRoot, "media", categoryRoot, "user" };
+        parts.AddRange(segments.Select(SafeName));
+        var stem = Path.Combine(parts.ToArray());
+        foreach (var ext in DropExtensions)
+            if (File.Exists(stem + ext)) return Found(stem + ext, "user");
+        return AssetLookup.Missing;
+    }
+
+    private static string SafeName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return new string(name.ToLowerInvariant().Where(c => !invalid.Contains(c)).ToArray());
     }
 
     private static AssetLookup Found(string path, string provenance)
@@ -267,8 +295,8 @@ public sealed class MediaResolutionPreview
     }
 
     private static SourceKind[] ChainOrder(MediaScope scope) => scope == MediaScope.System
-        ? new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo }
-        : new[] { SourceKind.Personal, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback };
+        ? new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo }
+        : new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback };
 
     public bool HasOverride(ResolutionContext context) => MediaPresentationEdits.HasOverride(_document, context);
 
@@ -301,12 +329,30 @@ public sealed class MediaResolutionPreview
     private static ResolutionSource ToSource(SourceKind kind) => kind switch
     {
         SourceKind.Personal => ResolutionSource.Personal,
+        SourceKind.UserDrop => ResolutionSource.UserDrop,
         SourceKind.Generated => ResolutionSource.Generated,
         SourceKind.Scraped => ResolutionSource.Scraped,
         SourceKind.Logo => ResolutionSource.Logo,
         SourceKind.SystemFallback => ResolutionSource.SystemFallback,
         _ => ResolutionSource.None
     };
+
+    /// <summary>The exact file the user should drop for the "Mon dossier médias" link
+    /// of this context — shown on the card so the drop location is discoverable.</summary>
+    public static string DropTarget(ResolutionContext ctx)
+    {
+        var categoryRoot = ctx.Category.ToLowerInvariant() switch
+        {
+            "topper" => "toppers",
+            "dmd-virtual" or "dmd" => "dmd",
+            _ => "marquees"
+        };
+        static string Safe(string s) => s.ToLowerInvariant();
+        var sys = Safe(ctx.CanonicalSystem ?? ctx.FrontendSystem ?? "");
+        return ctx.Scope == MediaScope.System
+            ? $@"media\{categoryRoot}\user\systems\{sys}.png"
+            : $@"media\{categoryRoot}\user\{sys}\{Safe(ctx.Rom ?? "")}.png";
+    }
 
     /// <summary>The physical target size of a surface: its explicit bounds, else
     /// the targeted Windows screen's dimensions, else a marquee-shaped default.</summary>
@@ -330,6 +376,7 @@ public static class ResolutionText
     public static string Link(ResolutionSource link) => link switch
     {
         ResolutionSource.Personal => L.T("Ma création graphique", "My graphic creation"),
+        ResolutionSource.UserDrop => L.T("Mon dossier médias", "My media folder"),
         ResolutionSource.Generated => L.T("Générée (gabarit)", "Generated (template)"),
         ResolutionSource.Scraped => L.T("Marquee scrapé", "Scraped marquee"),
         ResolutionSource.Logo => L.T("Logo mis en page", "Laid-out logo"),
