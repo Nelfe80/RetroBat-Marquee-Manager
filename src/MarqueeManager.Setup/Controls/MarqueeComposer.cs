@@ -36,7 +36,19 @@ public sealed class MarqueeComposer : UserControl
     private LayerVisual? _selected;
     private Point _dragStart;
     private (double X, double Y) _dragOrigin;
-    private bool _dragging;
+
+    // direct-manipulation gesture on the selected layer (move / corner resize /
+    // rotation arm) — visible handles are drawn in Render, hit-tested here.
+    private enum Handle { None, Move, Resize, Rotate }
+    private Handle _mode = Handle.None;
+    private Point _gestureCenter;
+    private double _gestureStartScale;
+    private double _gestureStartDist;
+    private double _gestureStartRotation;
+    private double _gestureStartAngle;
+    private const double HandleSize = 9;   // px square/dot side
+    private const double HandleHit = 8;    // px pick tolerance
+    private const double RotateArm = 22;   // px from top edge to rotation dot
 
     // inspector
     private readonly StackPanel _inspector;
@@ -280,12 +292,21 @@ public sealed class MarqueeComposer : UserControl
     private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
     {
         var position = e.GetPosition(_canvas);
+
+        // a handle of the CURRENT selection wins over re-selecting: the rotation
+        // dot sits outside the layer, so a plain hit-test would deselect it.
+        if (_selected is { Model.Locked: false } && BeginHandleGesture(_selected, position))
+        {
+            Render();
+            return;
+        }
+
         var hit = _layers.LastOrDefault(l => !l.Model.Hidden && Bounds(l).Contains(position));
         Select(hit);
         // locked layers stay selectable (inspector opens) but never drag
         if (hit is { Model.Locked: false })
         {
-            _dragging = true;
+            _mode = Handle.Move;
             _dragStart = position;
             _dragOrigin = (hit.Model.X, hit.Model.Y);
             _canvas.CaptureMouse();
@@ -293,28 +314,112 @@ public sealed class MarqueeComposer : UserControl
         Render();
     }
 
+    /// <summary>Starts a resize/rotate gesture when <paramref name="position"/> grabs
+    /// one of the layer's handles; returns false to let the normal move logic run.</summary>
+    private bool BeginHandleGesture(LayerVisual layer, Point position)
+    {
+        var g = HandleGeometry(layer);
+        if (Near(position, g.rotate))
+        {
+            _mode = Handle.Rotate;
+            _gestureCenter = g.center;
+            _gestureStartRotation = layer.Model.Rotation;
+            _gestureStartAngle = Angle(g.center, position);
+            _canvas.CaptureMouse();
+            return true;
+        }
+        if (layer.Model.Source != "text" && g.corners.Any(c => Near(position, c)))
+        {
+            _mode = Handle.Resize;
+            _gestureCenter = g.center;
+            _gestureStartScale = layer.Model.Scale;
+            _gestureStartDist = Math.Max(1, Dist(g.center, position));
+            _canvas.CaptureMouse();
+            return true;
+        }
+        return false;
+    }
+
     private void Canvas_MouseMove(object sender, MouseEventArgs e)
     {
-        if (!_dragging || _selected == null || e.LeftButton != MouseButtonState.Pressed)
+        var position = e.GetPosition(_canvas);
+        if (_mode == Handle.None)
+        {
+            UpdateHoverCursor(position);
+            return;
+        }
+        if (_selected == null || e.LeftButton != MouseButtonState.Pressed)
         {
             return;
         }
 
-        var position = e.GetPosition(_canvas);
-        _selected.Model.X = Math.Clamp(_dragOrigin.X + (position.X - _dragStart.X) / DisplayWidth, -0.5, 1.5);
-        _selected.Model.Y = Math.Clamp(_dragOrigin.Y + (position.Y - _dragStart.Y) / _displayHeight, -0.5, 1.5);
+        switch (_mode)
+        {
+            case Handle.Move:
+                _selected.Model.X = Math.Clamp(_dragOrigin.X + (position.X - _dragStart.X) / DisplayWidth, -0.5, 1.5);
+                _selected.Model.Y = Math.Clamp(_dragOrigin.Y + (position.Y - _dragStart.Y) / _displayHeight, -0.5, 1.5);
+                break;
+            case Handle.Resize:
+                var ratio = Dist(_gestureCenter, position) / _gestureStartDist;
+                _selected.Model.Scale = Math.Clamp(_gestureStartScale * ratio, 0.05, 3.0);
+                SyncInspector();
+                StackChanged?.Invoke();
+                break;
+            case Handle.Rotate:
+                var delta = Angle(_gestureCenter, position) - _gestureStartAngle;
+                _selected.Model.Rotation = Math.Clamp(_gestureStartRotation + delta, -180, 180);
+                SyncInspector();
+                StackChanged?.Invoke();
+                break;
+        }
         Render();
+    }
+
+    private void UpdateHoverCursor(Point p)
+    {
+        if (_selected is { Model.Locked: false })
+        {
+            var g = HandleGeometry(_selected);
+            if (Near(p, g.rotate)) { _canvas.Cursor = Cursors.Hand; return; }
+            if (_selected.Model.Source != "text" && g.corners.Any(c => Near(p, c)))
+            {
+                _canvas.Cursor = Cursors.SizeNWSE;
+                return;
+            }
+        }
+        _canvas.Cursor = Cursors.Arrow;
     }
 
     private void EndDrag()
     {
-        if (_dragging)
+        if (_mode != Handle.None)
         {
-            _dragging = false;
+            _mode = Handle.None;
             _canvas.ReleaseMouseCapture();
             Changed?.Invoke();
         }
     }
+
+    // ---- handle geometry (local frame rotated around the layer center) ----
+
+    private (Point[] corners, Point rotate, Point center) HandleGeometry(LayerVisual layer)
+    {
+        var b = Bounds(layer);
+        var center = new Point(b.X + b.Width / 2, b.Y + b.Height / 2);
+        var theta = layer.Model.Rotation * Math.PI / 180.0;
+        var cos = Math.Cos(theta);
+        var sin = Math.Sin(theta);
+        Point Rot(double dx, double dy) => new(center.X + dx * cos - dy * sin, center.Y + dx * sin + dy * cos);
+        var hw = b.Width / 2;
+        var hh = b.Height / 2;
+        var corners = new[] { Rot(-hw, -hh), Rot(hw, -hh), Rot(hw, hh), Rot(-hw, hh) };
+        var rotate = Rot(0, -hh - RotateArm);
+        return (corners, rotate, center);
+    }
+
+    private static double Dist(Point a, Point b) => Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
+    private static double Angle(Point c, Point p) => Math.Atan2(p.Y - c.Y, p.X - c.X) * 180.0 / Math.PI;
+    private static bool Near(Point a, Point b) => Math.Abs(a.X - b.X) <= HandleHit && Math.Abs(a.Y - b.Y) <= HandleHit;
 
     private void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
     {
@@ -540,8 +645,46 @@ public sealed class MarqueeComposer : UserControl
                 Canvas.SetLeft(ring, bounds.X - 3);
                 Canvas.SetTop(ring, bounds.Y - 3);
                 _canvas.Children.Add(ring);
+
+                if (!layer.Model.Locked)
+                {
+                    DrawHandles(layer);
+                }
             }
         }
+    }
+
+    /// <summary>Draws the direct-manipulation handles of the selected layer: a
+    /// rotation arm + dot above the top edge, and corner squares to resize
+    /// (media only — text is sized by its font, not by Scale).</summary>
+    private void DrawHandles(LayerVisual layer)
+    {
+        var g = HandleGeometry(layer);
+        var topMid = new Point((g.corners[0].X + g.corners[1].X) / 2, (g.corners[0].Y + g.corners[1].Y) / 2);
+        _canvas.Children.Add(new Line
+        {
+            X1 = topMid.X, Y1 = topMid.Y, X2 = g.rotate.X, Y2 = g.rotate.Y,
+            Stroke = Ui.Accent, StrokeThickness = 1.2, IsHitTestVisible = false
+        });
+        _canvas.Children.Add(HandleDot(g.rotate, round: true));
+        if (layer.Model.Source != "text")
+        {
+            foreach (var corner in g.corners)
+            {
+                _canvas.Children.Add(HandleDot(corner, round: false));
+            }
+        }
+    }
+
+    private FrameworkElement HandleDot(Point p, bool round)
+    {
+        FrameworkElement dot = round
+            ? new Ellipse { Width = HandleSize, Height = HandleSize, Fill = Ui.Accent, Stroke = Brushes.White, StrokeThickness = 1 }
+            : new Rectangle { Width = HandleSize, Height = HandleSize, Fill = Brushes.White, Stroke = Ui.Accent, StrokeThickness = 1.2 };
+        dot.IsHitTestVisible = false; // hit-testing is done against HandleGeometry
+        Canvas.SetLeft(dot, p.X - HandleSize / 2);
+        Canvas.SetTop(dot, p.Y - HandleSize / 2);
+        return dot;
     }
 
     private void DrawBackground()
