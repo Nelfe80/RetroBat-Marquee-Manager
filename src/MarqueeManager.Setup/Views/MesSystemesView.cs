@@ -132,6 +132,18 @@ public sealed class MesSystemesView : UserControl
         {
             var system = SelectedSystem();
             var surface = SurfaceOf(SelectedSurface());
+            // render the surface's gabarit for THIS system once (cached) so the
+            // "Générée" card reflects the general template
+            if (system != null && surface != null)
+            {
+                var cat = CategoryOf(surface);
+                if (GabaritRenderer.HasGabarit(pluginRoot, cat, surface.Id, GabaritIdentity.SystemScope)
+                    && !System.IO.File.Exists(GabaritRenderer.CachePath(pluginRoot, cat, surface.Id, system)))
+                {
+                    var dims = MediaResolutionPreview.TargetOf(surface, detectedScreens);
+                    GabaritRenderer.RenderSystem(pluginRoot, cat, surface.Id, system, dims.Width, dims.Height, SystemAssets(pluginRoot, system));
+                }
+            }
             ResolutionContext? ctx = (system != null && surface != null)
                 ? engine.SystemContext(surface, detectedScreens, system)
                 : null;
@@ -153,11 +165,13 @@ public sealed class MesSystemesView : UserControl
                     // saved per surface; it resolves to each system's media at render.
                     // The selected system provides the assets for a concrete preview.
                     new GameComposerWindow(pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.SystemScope,
-                        L.T("Gabarit général — systèmes", "General template — systems"),
+                        L.T($"Gabarit général — systèmes (aperçu : {system})", $"General template — systems (preview: {system})"),
                         SystemAssets(pluginRoot, system), surface.Id)
                     {
                         Owner = System.Windows.Window.GetWindow(this)
                     }.ShowDialog();
+                    // the recipe changed → drop the cached renders so they regenerate
+                    GabaritRenderer.InvalidateSurface(pluginRoot, CategoryOf(surface), surface.Id);
                     Refresh();
                 },
                 deletePersonal: () =>

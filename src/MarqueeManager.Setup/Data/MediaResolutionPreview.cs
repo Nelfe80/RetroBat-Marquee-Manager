@@ -84,6 +84,10 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
                 if (shared.HasComposition("systems", frontend)) return Found(shared.PngPath("systems", frontend), "creation");
                 return AssetLookup.Missing;
             case SourceKind.Generated:
+                // the surface's general template rendered for THIS system wins over
+                // the APIExpose autogen when it has been rendered to the cache
+                var gabaritCache = GabaritRenderer.CachePath(_pluginRoot, categoryRoot, ctx.SurfaceId, frontend);
+                if (File.Exists(gabaritCache)) return Found(gabaritCache, "gabarit");
                 return FromRoots(SystemRoots(frontend, canonical), "generated",
                     category == "dmd" ? @"artwork\marquee\generated-system-dmd.png" : @"artwork\marquee\generated-system-marquee.png");
             case SourceKind.Logo:
