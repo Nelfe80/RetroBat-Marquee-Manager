@@ -150,6 +150,43 @@ public sealed class CompositionChainResolver
         return null;
     }
 
+    /// <summary>The CATEGORY-LEVEL graphic creation (the default for every surface):
+    /// media\&lt;cat&gt;s\{systems\&lt;sys&gt; | &lt;sys&gt;\&lt;rom&gt;}. Used by the override resolver
+    /// for the "Ma création" source when no per-surface creation exists.</summary>
+    public string? CategoryCreation(string category, LightingSceneMeta? meta, bool systemScope)
+    {
+        var system = meta?.System;
+        var rom = meta?.Rom;
+        if (string.IsNullOrEmpty(system)) return null;
+        foreach (var sys in SystemSpellings(system!))
+        {
+            var path = systemScope || string.IsNullOrEmpty(rom)
+                ? FirstExisting(CategoryRoot(category), "systems", SafeName(sys))
+                : FirstExisting(CategoryRoot(category), SafeName(sys), SafeName(rom!));
+            if (path != null) return path;
+        }
+        return null;
+    }
+
+    /// <summary>The user drop-folder file for the "Mon dossier médias" source:
+    /// media\&lt;cat&gt;s\user\{systems\&lt;sys&gt; | &lt;sys&gt;\&lt;rom&gt;} (alias-aware for games).</summary>
+    public string? UserDropFile(string category, LightingSceneMeta? meta, bool systemScope)
+    {
+        var system = meta?.System;
+        var rom = meta?.Rom;
+        if (string.IsNullOrEmpty(system)) return null;
+        if (systemScope || string.IsNullOrEmpty(rom))
+        {
+            foreach (var sys in SystemSpellings(system!))
+            {
+                var path = FirstExisting(Path.Combine(CategoryRoot(category), "user"), "systems", SafeName(sys));
+                if (path != null) return path;
+            }
+            return null;
+        }
+        return ResolveUserFile(category, system!, rom!);
+    }
+
     /// <summary>Setup writes the gabarit cache under "marquees"/"toppers"/"dmd" — the
     /// dmd folder is "dmd", NOT the "s"-suffixed <see cref="CategoryRoot"/> spelling.</summary>
     private string GabaritCategoryRoot(string category)

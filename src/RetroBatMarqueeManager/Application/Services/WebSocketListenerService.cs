@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Channels;
 using RetroBatMarqueeManager.Core.Interfaces;
 using RetroBatMarqueeManager.Infrastructure.Processes;
+using OverrideSource = RetroBatMarqueeManager.Application.Media.PresentationOverrides.Source;
 
 namespace RetroBatMarqueeManager.Application.Services;
 
@@ -46,6 +47,7 @@ public sealed class WebSocketListenerService : BackgroundService
     private readonly Application.Lighting.GenreMap _genreMap;
     private readonly string _effectOverridesRoot;
     private readonly Application.Media.CompositionChainResolver _compositionChains;
+    private readonly Application.Media.PresentationOverrides _overrides;
     private readonly Application.Media.CompositionTemplateRenderer _templateRenderer;
 
     public WebSocketListenerService(
@@ -71,6 +73,7 @@ public sealed class WebSocketListenerService : BackgroundService
         _effectOverridesRoot = Path.Combine(config.BaseDirectory, "overrides", "effects");
         _compositionChains = new Application.Media.CompositionChainResolver(
             config.BaseDirectory, logger, config.LightingPreferGeneratedMarquee);
+        _overrides = new Application.Media.PresentationOverrides(config.BaseDirectory, logger);
         _templateRenderer = new Application.Media.CompositionTemplateRenderer(config.BaseDirectory, logger);
         _compositionChains.TemplateMissing = OnTemplateMissing;
     }
@@ -325,6 +328,17 @@ public sealed class WebSocketListenerService : BackgroundService
             }
             foreach (var target in _config.GetTargetsForContent("marquee"))
             {
+                // the user's "use this source" card selection (Setup) wins when set: it
+                // resolves the fixed chain for this exact target, skipping the sources
+                // disabled by the click. No selection → the default precedence below.
+                var policy = _overrides.For(target, systemScope, snapshotMeta?.System, snapshotMeta?.Rom);
+                if (policy != null)
+                {
+                    var picked = ResolveMarqueeOverride(policy, target, snapshotMeta, systemScope, media) ?? marquee;
+                    await _surfaces.DisplayMediaAsync(picked, target, cancellationToken, snapshotMeta, resolved: true);
+                    continue;
+                }
+
                 // per-surface precedence: a graphic creation wins, then the surface's
                 // general template (gabarit) rendered for this game/system, then the
                 // category-level chain resolution
@@ -362,6 +376,49 @@ public sealed class WebSocketListenerService : BackgroundService
             await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? dmdPath, target, cancellationToken);
         }
     }
+
+    // the fixed chain the Setup cards resolve in (spec §6); a disabled source is
+    // skipped, so an override starts the chain at the highest source the user left on.
+    private static readonly OverrideSource[] MarqueeSystemOrder =
+        { OverrideSource.Personal, OverrideSource.UserDrop, OverrideSource.Generated, OverrideSource.Scraped, OverrideSource.Logo };
+    private static readonly OverrideSource[] MarqueeGameOrder =
+        { OverrideSource.Personal, OverrideSource.UserDrop, OverrideSource.Generated, OverrideSource.Scraped, OverrideSource.Logo, OverrideSource.SystemFallback };
+
+    /// <summary>Resolves the marquee for a target that carries a card override: the
+    /// first ENABLED source (fixed order) with a present file wins. Null → the caller
+    /// keeps the stream's own offer.</summary>
+    private string? ResolveMarqueeOverride(Application.Media.PresentationOverrides.TargetPolicy policy, string target,
+        Application.Lighting.LightingSceneMeta? meta, bool systemScope, JsonElement media)
+    {
+        var order = systemScope || string.IsNullOrEmpty(meta?.Rom) ? MarqueeSystemOrder : MarqueeGameOrder;
+        foreach (var source in order)
+        {
+            if (!policy.IsEnabled(source)) continue;
+            var path = ResolveMarqueeSource(source, target, meta, systemScope, media);
+            if (path != null && File.Exists(path)) return path;
+        }
+        return null;
+    }
+
+    private string? ResolveMarqueeSource(OverrideSource source, string target,
+        Application.Lighting.LightingSceneMeta? meta, bool systemScope, JsonElement media)
+        => source switch
+        {
+            OverrideSource.Personal => _compositionChains.SurfaceCreation("marquee", target, meta, systemScope)
+                                       ?? _compositionChains.CategoryCreation("marquee", meta, systemScope),
+            OverrideSource.UserDrop => _compositionChains.UserDropFile("marquee", meta, systemScope),
+            OverrideSource.Generated => _compositionChains.SurfaceGabarit("marquee", target, meta, systemScope)
+                                        ?? MediaPath(media, "GeneratedMarquee"),
+            OverrideSource.Scraped => MediaPath(media, "Marquee") ?? MediaPath(media, "ScreenMarquee"),
+            OverrideSource.Logo => MediaPath(media, "Logo"),
+            // the game payload carries no system media, so the system fallback resolves
+            // only the on-disk system sources (creation / drop / gabarit) for this surface
+            OverrideSource.SystemFallback => _compositionChains.SurfaceCreation("marquee", target, meta, systemScope: true)
+                                             ?? _compositionChains.CategoryCreation("marquee", meta, systemScope: true)
+                                             ?? _compositionChains.UserDropFile("marquee", meta, systemScope: true)
+                                             ?? _compositionChains.SurfaceGabarit("marquee", target, meta, systemScope: true),
+            _ => null
+        };
 
     /// <summary>
     /// The dynamic surface components eat the whole snapshot: every media kind
