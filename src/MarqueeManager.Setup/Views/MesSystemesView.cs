@@ -53,6 +53,10 @@ public sealed class MesSystemesView : UserControl
             "Choisis le système et la surface ; tout se règle dans les cartes ci-dessous (clique une carte pour l'utiliser, ou compose ta création).",
             "Pick the system and the surface; everything is set in the cards below (click a card to use it, or compose your creation).")));
         var systemRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 4, 0, 0) };
+        var systemLabel = Ui.MutedLabel(L.T("Système :", "System:"));
+        systemLabel.Margin = new System.Windows.Thickness(0, 0, 6, 0);
+        systemLabel.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+        systemRow.Children.Add(systemLabel);
         var systemPicker = Ui.ComboBox(200);
         // nothing preselected; only systems with at least one INSTALLED game;
         // mame/fbneo stay listed (they carry their own chains and creations)
@@ -82,9 +86,9 @@ public sealed class MesSystemesView : UserControl
         bool IsSuspended(SurfaceModel surface)
             => surface.Screens.Count > 0 && surface.Screens.All(unmanagedScreens.Contains);
 
-        var surfaceRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 6, 0, 0) };
+        var surfaceRow = systemRow; // system + surface share one line
         var surfaceLabel = Ui.MutedLabel(L.T("Surface :", "Surface:"));
-        surfaceLabel.Margin = new System.Windows.Thickness(0, 0, 6, 0);
+        surfaceLabel.Margin = new System.Windows.Thickness(16, 0, 6, 0);
         surfaceLabel.VerticalAlignment = System.Windows.VerticalAlignment.Center;
         surfaceRow.Children.Add(surfaceLabel);
         var surfacePicker = Ui.ComboBox(240);
@@ -121,7 +125,6 @@ public sealed class MesSystemesView : UserControl
             _ => "marquees"
         };
 
-        composeCard.Children.Add(surfaceRow);
         composeCard.Children.Add(showSuspended);
 
         void Refresh() => UpdateResolution();

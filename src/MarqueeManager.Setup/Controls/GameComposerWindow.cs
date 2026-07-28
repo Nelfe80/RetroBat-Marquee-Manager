@@ -406,6 +406,34 @@ public sealed class GameComposerWindow : Window
         }
     }
 
+    /// <summary>Import an image file: copy it into media\imports (a stable path) and
+    /// place it as a layer. Its key "import" never matches a system asset, so a
+    /// gabarit uses it for EVERY system; a creation uses it for that creation only.</summary>
+    private void ImportImage()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = L.T("Importer une image", "Import an image"),
+            Filter = "Images|*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.gif"
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        try
+        {
+            var dir = Path.Combine(_pluginRoot, "media", "imports");
+            Directory.CreateDirectory(dir);
+            var dest = Path.Combine(dir, Guid.NewGuid().ToString("N") + Path.GetExtension(dialog.FileName).ToLowerInvariant());
+            File.Copy(dialog.FileName, dest, overwrite: true);
+            _composer.AddMediaLayer(dest, "import");
+            _status.Text = L.T("Image importée et posée en calque.", "Image imported and placed as a layer.");
+            _status.Foreground = Ui.Muted;
+        }
+        catch (Exception ex)
+        {
+            _status.Text = L.T($"Import impossible : {ex.Message}", $"Import failed: {ex.Message}");
+            _status.Foreground = Ui.Error;
+        }
+    }
+
     private void SwitchTarget(Target target)
     {
         // carry the current layers over — the fractions adapt to the new ratio
@@ -472,6 +500,14 @@ public sealed class GameComposerWindow : Window
         text.HorizontalAlignment = HorizontalAlignment.Stretch;
         text.HorizontalContentAlignment = HorizontalAlignment.Left;
         panel.Children.Add(text);
+
+        // import your own image — used for EVERY system in a gabarit (its key never
+        // matches a system asset, so it is not remapped), specific to a creation
+        var import = Ui.Button(L.T("Importer une image…", "Import an image…"), (_, _) => ImportImage());
+        import.Margin = new Thickness(0, 2, 0, 2);
+        import.HorizontalAlignment = HorizontalAlignment.Stretch;
+        import.HorizontalContentAlignment = HorizontalAlignment.Left;
+        panel.Children.Add(import);
         var recipe = Ui.Button(L.T("Gabarit auto (fanart + logo 50 %)", "Auto recipe (fanart + 50 % logo)"), (_, _) =>
             _composer.ApplyTemplatePreset(
                 _assets.FirstOrDefault(a => a.Key == "fanart")?.Path,
