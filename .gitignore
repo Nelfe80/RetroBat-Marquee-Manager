@@ -97,3 +97,6 @@ RetroBat-Marquee-Manager-Plan-*.md
 
 # Nested duplicate produced by a bad publish copy (never a real folder)
 /Resources/Resources/
+
+# installeur Inno Setup (artefact de build)
+dist/
