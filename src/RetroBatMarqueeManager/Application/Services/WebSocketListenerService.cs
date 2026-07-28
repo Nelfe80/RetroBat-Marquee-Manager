@@ -313,9 +313,24 @@ public sealed class WebSocketListenerService : BackgroundService
         }
         _lastMarqueeMeta = snapshotMeta;
 
+        // On-disk sources (creation / gabarit / drop) and the card overrides are keyed
+        // by the FRONTEND system the user sees in ES and the Setup keys by (mame). The
+        // marquee payload's own System is the CANONICAL media folder (arcade) or empty
+        // on a system browse, so resolve those with _selectedSystem instead — otherwise
+        // the runtime shows a different source than the Setup preview. SystemSpellings
+        // still bridges mame ↔ arcade for the game files kept under the canonical folder.
+        var resolveMeta = snapshotMeta;
+        if (!string.IsNullOrEmpty(_selectedSystem)
+            && (snapshotMeta == null || !string.Equals(snapshotMeta.System, _selectedSystem, StringComparison.OrdinalIgnoreCase)))
+        {
+            resolveMeta = snapshotMeta is null
+                ? new Application.Lighting.LightingSceneMeta(null, null, null, null, _selectedSystem, _selectedRom)
+                : snapshotMeta with { System = _selectedSystem };
+        }
+
         // the per-system priority chain decides the marquee source; the stream's
         // own priority (marquee > generated > logo) stays the last resort
-        var chained = _compositionChains.Resolve("marquee", snapshotMeta, systemScope, SnapshotKind);
+        var chained = _compositionChains.Resolve("marquee", resolveMeta, systemScope, SnapshotKind);
         var marquee = chained
                       ?? MediaPath(media, "Marquee") ?? MediaPath(media, "GeneratedMarquee") ?? MediaPath(media, "Logo");
         if (marquee != null)
@@ -331,10 +346,10 @@ public sealed class WebSocketListenerService : BackgroundService
                 // the user's "use this source" card selection (Setup) wins when set: it
                 // resolves the fixed chain for this exact target, skipping the sources
                 // disabled by the click. No selection → the default precedence below.
-                var policy = _overrides.For(target, systemScope, snapshotMeta?.System, snapshotMeta?.Rom);
+                var policy = _overrides.For(target, systemScope, resolveMeta?.System, resolveMeta?.Rom);
                 if (policy != null)
                 {
-                    var picked = ResolveMarqueeOverride(policy, target, snapshotMeta, systemScope, media) ?? marquee;
+                    var picked = ResolveMarqueeOverride(policy, target, resolveMeta, systemScope, media) ?? marquee;
                     await _surfaces.DisplayMediaAsync(picked, target, cancellationToken, snapshotMeta, resolved: true);
                     continue;
                 }
@@ -342,9 +357,9 @@ public sealed class WebSocketListenerService : BackgroundService
                 // per-surface precedence: a graphic creation wins, then the surface's
                 // general template (gabarit) rendered for this game/system, then the
                 // category-level chain resolution
-                var surfaceCreation = _compositionChains.SurfaceCreation("marquee", target, snapshotMeta, systemScope);
+                var surfaceCreation = _compositionChains.SurfaceCreation("marquee", target, resolveMeta, systemScope);
                 var surfaceGabarit = surfaceCreation == null
-                    ? _compositionChains.SurfaceGabarit("marquee", target, snapshotMeta, systemScope)
+                    ? _compositionChains.SurfaceGabarit("marquee", target, resolveMeta, systemScope)
                     : null;
                 await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? marquee, target, cancellationToken, snapshotMeta,
                     resolved: surfaceCreation != null || surfaceGabarit != null || chained != null);
@@ -356,7 +371,7 @@ public sealed class WebSocketListenerService : BackgroundService
         var dmd = Child(media, "Dmd", "dmd");
         var generatedDmdPath = MediaPath(dmd, "Generated");
         var stillDmdPath = MediaPath(dmd, "Still");
-        var chainedDmd = _compositionChains.Resolve("dmd", snapshotMeta, systemScope, source => source.ToLowerInvariant() switch
+        var chainedDmd = _compositionChains.Resolve("dmd", resolveMeta, systemScope, source => source.ToLowerInvariant() switch
         {
             "animations" => FirstAnimation(dmd),
             "still" => stillDmdPath,
@@ -369,9 +384,9 @@ public sealed class WebSocketListenerService : BackgroundService
         await _dmd.SetBaseMediaAsync(dmdPath, cancellationToken, generatedDmdPath ?? stillDmdPath ?? dmdPath);
         foreach (var target in _config.GetTargetsForContent("dmd"))
         {
-            var surfaceCreation = _compositionChains.SurfaceCreation("dmd", target, snapshotMeta, systemScope);
+            var surfaceCreation = _compositionChains.SurfaceCreation("dmd", target, resolveMeta, systemScope);
             var surfaceGabarit = surfaceCreation == null
-                ? _compositionChains.SurfaceGabarit("dmd", target, snapshotMeta, systemScope)
+                ? _compositionChains.SurfaceGabarit("dmd", target, resolveMeta, systemScope)
                 : null;
             await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? dmdPath, target, cancellationToken);
         }
