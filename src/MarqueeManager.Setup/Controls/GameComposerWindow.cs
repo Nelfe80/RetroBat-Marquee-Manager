@@ -29,6 +29,9 @@ public sealed class GameComposerWindow : Window
     private readonly IReadOnlyList<GameAsset> _assets;
     private readonly string _downloadsDir;
     private readonly string _mediaRoot;
+    // gabarit mode: the loaded layout's media is remapped to the CURRENT example
+    // system's assets (by AssetKey), so the preview always shows the picked system
+    private readonly bool _gabaritMode;
 
     private readonly List<Target> _targets = new();
     private readonly Border _composerHost = new();
@@ -42,13 +45,14 @@ public sealed class GameComposerWindow : Window
     /// System scope: system="systems", rom=&lt;system id&gt;. initialSurfaceId binds
     /// the target selector to the surface picked in the calling view.</summary>
     public GameComposerWindow(string pluginRoot, string system, string rom, string displayName,
-        IReadOnlyList<GameAsset> assets, string? initialSurfaceId = null)
+        IReadOnlyList<GameAsset> assets, string? initialSurfaceId = null, bool gabaritMode = false)
     {
         _pluginRoot = pluginRoot;
         _system = system;
         _rom = rom;
         _displayName = displayName;
         _assets = assets;
+        _gabaritMode = gabaritMode;
         _downloadsDir = Path.Combine(pluginRoot, "media", "marquees", "downloads", Safe(system), Safe(rom));
         _mediaRoot = Path.GetFullPath(Path.Combine(pluginRoot, "..", "APIExpose", "media", "systems"));
 
@@ -204,16 +208,26 @@ public sealed class GameComposerWindow : Window
             };
             var line = new DockPanel();
 
-            // left icons, Photoshop style: eye (hide) + padlock (lock)
-            var eye = Ui.Button(layer.Hidden ? "◌" : "👁", (_, _) =>
-                _composer.ApplyToLayer(layer, l => l.Hidden = !l.Hidden));
+            // left icons, Photoshop style: eye (hide) + padlock (lock). Re-render the
+            // panel after a toggle so the icon reflects the new state immediately.
+            var eye = Ui.Button(layer.Hidden ? "🚫" : "👁", (_, _) =>
+            {
+                _composer.ApplyToLayer(layer, l => l.Hidden = !l.Hidden);
+                RenderSidePanels();
+            });
             eye.Padding = new Thickness(4, 1, 4, 1);
-            eye.ToolTip = L.T("Masquer/afficher", "Hide/show");
+            eye.Opacity = layer.Hidden ? 0.5 : 1.0;
+            eye.ToolTip = layer.Hidden ? L.T("Masqué — cliquer pour afficher", "Hidden — click to show")
+                                       : L.T("Visible — cliquer pour masquer", "Visible — click to hide");
             line.Children.Add(eye);
             var padlock = Ui.Button(layer.Locked ? "🔒" : "🔓", (_, _) =>
-                _composer.ApplyToLayer(layer, l => l.Locked = !l.Locked));
+            {
+                _composer.ApplyToLayer(layer, l => l.Locked = !l.Locked);
+                RenderSidePanels();
+            });
             padlock.Padding = new Thickness(4, 1, 4, 1);
-            padlock.ToolTip = L.T("Verrouiller/déverrouiller", "Lock/unlock");
+            padlock.ToolTip = layer.Locked ? L.T("Verrouillé — cliquer pour déverrouiller", "Locked — click to unlock")
+                                           : L.T("Déverrouillé — cliquer pour verrouiller", "Unlocked — click to lock");
             line.Children.Add(padlock);
 
             var name = Ui.Label(LayerName(layer), 11);
@@ -371,9 +385,25 @@ public sealed class GameComposerWindow : Window
             InlineInspector = false // the window hosts the layers panel + inspector
         };
         _composer.StackChanged += RenderSidePanels;
-        if (project != null) _composer.LoadProject(project);
+        if (project != null)
+        {
+            if (_gabaritMode) RemapForGabarit(project);
+            _composer.LoadProject(project);
+        }
         _composerHost.Child = _composer;
         RenderSidePanels();
+    }
+
+    /// <summary>Point each media layer at the CURRENT example system's asset of the
+    /// same type — the gabarit stored the paths of whatever system it was last
+    /// composed on, but the layout is generic.</summary>
+    private void RemapForGabarit(MarqueeProject project)
+    {
+        foreach (var layer in project.Layers)
+        {
+            var asset = _assets.FirstOrDefault(a => a.Key.Equals(layer.AssetKey, StringComparison.OrdinalIgnoreCase));
+            if (asset is not null && File.Exists(asset.Path)) layer.Source = asset.Path;
+        }
     }
 
     private void SwitchTarget(Target target)

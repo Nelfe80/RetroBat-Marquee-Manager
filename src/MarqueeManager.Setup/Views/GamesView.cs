@@ -495,8 +495,8 @@ public sealed class GamesView : UserControl, IDisposable
                     // general template composed with the current game's assets as a
                     // concrete preview; the layout applies to every game of the surface
                     new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.GameScope,
-                        L.T("Gabarit général — jeux", "General template — games"),
-                        data.Assets, s.Id)
+                        L.T($"Gabarit général — jeux (aperçu : {entry.Rom})", $"General template — games (preview: {entry.Rom})"),
+                        data.Assets, s.Id, gabaritMode: true)
                     {
                         Owner = Window.GetWindow(this)
                     }.ShowDialog();

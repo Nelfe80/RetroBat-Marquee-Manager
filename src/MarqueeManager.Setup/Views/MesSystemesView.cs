@@ -166,7 +166,7 @@ public sealed class MesSystemesView : UserControl
                     // The selected system provides the assets for a concrete preview.
                     new GameComposerWindow(pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.SystemScope,
                         L.T($"Gabarit général — systèmes (aperçu : {system})", $"General template — systems (preview: {system})"),
-                        SystemAssets(pluginRoot, system), surface.Id)
+                        SystemAssets(pluginRoot, system), surface.Id, gabaritMode: true)
                     {
                         Owner = System.Windows.Window.GetWindow(this)
                     }.ShowDialog();
