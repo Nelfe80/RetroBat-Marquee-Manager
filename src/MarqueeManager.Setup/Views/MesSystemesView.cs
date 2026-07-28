@@ -18,9 +18,6 @@ public sealed class MesSystemesView : UserControl
     public MesSystemesView(string pluginRoot)
     {
         var media = new GameMediaCatalog(pluginRoot);
-        var ini = IniFile.Load(PluginPaths.ConfigPath(pluginRoot));
-        var identity = new GameIdentityIndex(pluginRoot,
-            ini.Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345"));
 
         var page = new StackPanel();
         page.Children.Add(Ui.Title(L.T("Mes systèmes", "My systems")));
@@ -230,16 +227,10 @@ public sealed class MesSystemesView : UserControl
 
         page.Children.Add(resolutionCard);
 
-        var templates = new StackPanel();
-        templates.Children.Add(Ui.SectionHeader(L.T("Templates de composition", "Composition templates")));
-        templates.Children.Add(Ui.MutedLabel(L.T(
-            "4 gabarits automatiques (fanart + gradient selon la luminance + logo) : 1920×360, 1280×400, 920×360 et vertical 1080×1920. "
-            + "Affectez-les dans les priorités (« Template … ») : chaque jeu du système reçoit sa composition, rendue en tâche de fond ou pré-générée en masse.",
-            "4 automatic recipes (fanart + luminance-driven gradient + logo): 1920×360, 1280×400, 920×360 and vertical 1080×1920. "
-            + "Assign them in the priorities (“Template …”): every game of the system gets its composition, rendered in the background or pre-generated in bulk.")));
-        page.Children.Add(Ui.Card(templates));
-
-        page.Children.Add(Ui.Card(new PrioritiesCard(pluginRoot, media, identity)));
+        // Priorités par système et Templates de composition sont ABSORBÉS par le
+        // nouveau modèle : l'ordre est fixe et on choisit le gagnant en cliquant une
+        // carte (activer/désactiver par lien) ; les recettes fanart+gradient+logo
+        // sont désormais des gabarits éditables (« Modifier le gabarit général »).
 
         Content = Ui.Page(page);
     }
