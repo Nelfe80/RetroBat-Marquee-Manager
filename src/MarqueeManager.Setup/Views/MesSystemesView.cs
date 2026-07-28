@@ -193,6 +193,39 @@ public sealed class MesSystemesView : UserControl
         systemPicker.SelectionChanged += (_, _) => Refresh();
         surfacePicker.SelectionChanged += (_, _) => Refresh();
         Refresh();
+
+        // bulk warm-up: render the surface's system gabarit for EVERY listed system
+        // at once (one layout, all systems) — same render as the lazy per-view path.
+        var pregenRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 10, 0, 0) };
+        var pregenStatus = Ui.MutedLabel("");
+        pregenStatus.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+        pregenStatus.Margin = new System.Windows.Thickness(10, 0, 0, 0);
+        pregenRow.Children.Add(Ui.Button(L.T("Pré-générer pour tous les systèmes", "Pre-generate for all systems"), (_, _) =>
+        {
+            var surface = SurfaceOf(SelectedSurface());
+            if (surface == null) return;
+            var cat = CategoryOf(surface);
+            if (!GabaritRenderer.HasGabarit(pluginRoot, cat, surface.Id, GabaritIdentity.SystemScope))
+            {
+                pregenStatus.Text = L.T("Aucun gabarit sur cette surface — composez-le d'abord.",
+                    "No gabarit on this surface — compose it first.");
+                return;
+            }
+            var dims = MediaResolutionPreview.TargetOf(surface, detectedScreens);
+            var allSystems = media.ListSystems().Where(HasGames).ToList();
+            var done = 0;
+            foreach (var sys in allSystems)
+            {
+                if (GabaritRenderer.RenderSystem(pluginRoot, cat, surface.Id, sys, dims.Width, dims.Height, SystemAssets(pluginRoot, sys)) != null)
+                    done++;
+            }
+            pregenStatus.Text = L.T($"{done}/{allSystems.Count} systèmes générés pour « {surface.Id} ».",
+                $"{done}/{allSystems.Count} systems generated for “{surface.Id}”.");
+            Refresh();
+        }));
+        pregenRow.Children.Add(pregenStatus);
+        composeCard.Children.Add(pregenRow);
+
         page.Children.Add(Ui.Card(composeCard));
 
         page.Children.Add(resolutionCard);
