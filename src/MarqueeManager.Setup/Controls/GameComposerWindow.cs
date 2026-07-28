@@ -230,6 +230,24 @@ public sealed class GameComposerWindow : Window
                                            : L.T("Déverrouillé — cliquer pour verrouiller", "Unlocked — click to lock");
             line.Children.Add(padlock);
 
+            // up/down arrows to reorder (alternative to drag & drop)
+            var up = Ui.Button("▲", (_, _) =>
+            {
+                var i = _composer.LayerModels.ToList().FindIndex(l => ReferenceEquals(l, layer));
+                if (i >= 0) _composer.MoveLayerTo(layer, i + 1);
+            });
+            up.Padding = new Thickness(3, 1, 3, 1);
+            up.ToolTip = L.T("Monter (vers l'avant)", "Move up (towards front)");
+            line.Children.Add(up);
+            var down = Ui.Button("▼", (_, _) =>
+            {
+                var i = _composer.LayerModels.ToList().FindIndex(l => ReferenceEquals(l, layer));
+                if (i >= 0) _composer.MoveLayerTo(layer, i - 1);
+            });
+            down.Padding = new Thickness(3, 1, 3, 1);
+            down.ToolTip = L.T("Descendre (vers l'arrière)", "Move down (towards back)");
+            line.Children.Add(down);
+
             var name = Ui.Label(LayerName(layer), 11);
             name.VerticalAlignment = VerticalAlignment.Center;
             name.Margin = new Thickness(6, 0, 0, 0);
