@@ -11,6 +11,12 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <PublishTrimmed>false</PublishTrimmed>
+    <!-- Single-file publish MUST bundle the native libs (libSkiaSharp, libHarfBuzzSharp,
+         WebView2 loader, System.IO.Ports native) into the exe and self-extract them at
+         runtime. Without this the exe copied alone to the plugin root throws
+         DllNotFoundException 'libSkiaSharp' the moment the lighting engine builds an
+         SKPaint, and the host shuts down (no marquee window at all). -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
