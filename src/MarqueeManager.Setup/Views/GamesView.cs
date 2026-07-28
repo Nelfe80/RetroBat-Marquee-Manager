@@ -206,12 +206,17 @@ public sealed class GamesView : UserControl, IDisposable
         {
             var map = await Task.Run(async () =>
             {
-                // LedManager cascade: API gamelist → roms\<sys>\gamelist.xml → pack
+                // LedManager cascade: API gamelist → roms\<sys>\gamelist.xml
                 var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 foreach (var identity in await _identity.NamesAsync(system)) result.TryAdd(identity.Rom, identity.Name);
 
-                // supplementary source: the media library metadata fills the roms
-                // the cascade missed (bounded — one small json per missing rom)
+                // the gamelist pack fills the rest — comprehensive for arcade families
+                // whose members split across roms folders (llander → "Lunar Lander"),
+                // so a search by name finds games the per-folder gamelist never listed
+                foreach (var (rom, name) in _identity.PackNames(system)) result.TryAdd(rom, name);
+
+                // last resort: the media library metadata fills any rom still missing
+                // (bounded — one small json per missing rom)
                 var mediaRoms = _allGames.Where(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
                     .Select(g => g.Rom);
                 var budget = 800;

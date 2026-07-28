@@ -132,6 +132,8 @@ public sealed class ResolutionCard : UserControl
             actions.Children.Add(Ui.Button(L.T("Supprimer", "Delete"), (_, _) => delete()));
         if (link.Kind == SourceKind.Generated && _editGabarit is { } editGabarit)
             actions.Children.Add(Ui.Button(L.T("Modifier le gabarit général", "Edit the general template"), (_, _) => editGabarit()));
+        if (link.Kind == SourceKind.UserDrop)
+            actions.Children.Add(Ui.Button(L.T("Ouvrir le dossier", "Open the folder"), (_, _) => _engine.OpenDropFolder(ctx)));
         if (actions.Children.Count > 0) panel.Children.Add(actions);
 
         var selectable = link.Present && link.Kind != SourceKind.SystemFallback;

@@ -84,10 +84,9 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
                 if (shared.HasComposition("systems", frontend)) return Found(shared.PngPath("systems", frontend), "creation");
                 return AssetLookup.Missing;
             case SourceKind.UserDrop:
-                // raw file dropped in media\<cat>s\user\systems\<sys>.* (both spellings)
-                return DropFolder(categoryRoot, "systems", frontend) is { Asset: not null } fromFrontend
-                    ? fromFrontend
-                    : DropFolder(categoryRoot, "systems", canonical);
+                // SYSTEM scope uses the FRONTEND name (mame.png, not arcade.png) — a
+                // per-system asset the user manages by the system they see in ES.
+                return DropFolder(categoryRoot, "systems", frontend);
             case SourceKind.Generated:
                 // the surface's general template rendered for THIS system wins over
                 // the APIExpose autogen when it has been rendered to the cache
@@ -223,6 +222,7 @@ public sealed record ChainLink(
 /// </summary>
 public sealed class MediaResolutionPreview
 {
+    private readonly string _pluginRoot;
     private readonly SetupMediaAssetResolver _assets;
     private readonly PreviewGenerationPlanner _planner = new();
     private readonly IFitCalculator _fit = new FitCalculator();
@@ -233,10 +233,24 @@ public sealed class MediaResolutionPreview
 
     public MediaResolutionPreview(string pluginRoot, GameMediaCatalog media, CompositionAssignments assignments)
     {
+        _pluginRoot = pluginRoot;
         _assets = new SetupMediaAssetResolver(pluginRoot, media, assignments);
         _store = new MediaPresentationStore(pluginRoot);
         _document = _store.Load();
         Rebuild();
+    }
+
+    /// <summary>Opens (creating it if needed) the drop folder for the "Mon dossier
+    /// médias" link, so the user can drop a file even before it exists.</summary>
+    public void OpenDropFolder(ResolutionContext ctx)
+    {
+        var folder = Path.GetDirectoryName(Path.Combine(_pluginRoot, DropTarget(ctx)))!;
+        try
+        {
+            Directory.CreateDirectory(folder);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{folder}\"") { UseShellExecute = true });
+        }
+        catch { /* explorer unavailable: nothing to do */ }
     }
 
     private void Rebuild()
@@ -348,10 +362,11 @@ public sealed class MediaResolutionPreview
             _ => "marquees"
         };
         static string Safe(string s) => s.ToLowerInvariant();
-        var sys = Safe(ctx.CanonicalSystem ?? ctx.FrontendSystem ?? "");
+        // SYSTEM scope keys by the FRONTEND name (mame.png); GAME scope by the
+        // canonical folder (arcade\<rom>.png) where the game media actually lives.
         return ctx.Scope == MediaScope.System
-            ? $@"media\{categoryRoot}\user\systems\{sys}.png"
-            : $@"media\{categoryRoot}\user\{sys}\{Safe(ctx.Rom ?? "")}.png";
+            ? $@"media\{categoryRoot}\user\systems\{Safe(ctx.FrontendSystem ?? ctx.CanonicalSystem ?? "")}.png"
+            : $@"media\{categoryRoot}\user\{Safe(ctx.CanonicalSystem ?? ctx.FrontendSystem ?? "")}\{Safe(ctx.Rom ?? "")}.png";
     }
 
     /// <summary>The physical target size of a surface: its explicit bounds, else

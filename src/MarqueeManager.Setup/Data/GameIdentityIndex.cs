@@ -29,6 +29,7 @@ public sealed class GameIdentityIndex
     private readonly object _sync = new();
     private readonly Dictionary<string, IReadOnlyList<GameIdentity>> _namesBySystem = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IReadOnlyDictionary<string, string>> _aliasesBySystem = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, IReadOnlyDictionary<string, string>> _packNamesBySystem = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, string>? _systemAliases;
 
     public GameIdentityIndex(string pluginRoot, string apiBaseUrl)
@@ -116,6 +117,56 @@ public sealed class GameIdentityIndex
         lock (_sync)
         {
             _aliasesBySystem[system] = map;
+        }
+        return map;
+    }
+
+    /// <summary>rom → display name from the gamelist pack (id/set → n). Unlike the
+    /// per-folder gamelist.xml, the pack is COMPREHENSIVE for arcade families whose
+    /// members are split across roms folders (llander lives in roms\mame yet belongs
+    /// to the folded "arcade" system), so it fills the names those gamelists miss.
+    /// Heavy (streams the whole pack once); cached per system. Call off the UI thread.</summary>
+    public IReadOnlyDictionary<string, string> PackNames(string system)
+    {
+        lock (_sync)
+        {
+            if (_packNamesBySystem.TryGetValue(system, out var cached)) return cached;
+        }
+
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var path = PackPath(system);
+        if (path != null)
+        {
+            try
+            {
+                foreach (var line in File.ReadLines(path))
+                {
+                    if (line.Length < 2) continue;
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(line);
+                        var root = doc.RootElement;
+                        var rom = Str(root, "set");
+                        if (rom.Length == 0) rom = Str(root, "id");
+                        var name = Str(root, "n");
+                        if (name.Length == 0) name = Str(root, "fn");
+                        if (rom.Length > 0 && name.Length > 0) map[rom] = name;
+                    }
+                    catch (JsonException)
+                    {
+                        // malformed line: skipped
+                    }
+                }
+            }
+            catch
+            {
+                // unreadable pack: names degrade to the cascade result
+            }
+        }
+
+        lock (_sync)
+        {
+            _packNamesBySystem[system] = map;
         }
         return map;
     }

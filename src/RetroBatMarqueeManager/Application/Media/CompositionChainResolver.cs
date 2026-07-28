@@ -114,9 +114,16 @@ public sealed class CompositionChainResolver
         var rom = meta?.Rom;
         if (string.IsNullOrEmpty(system) || string.IsNullOrEmpty(surfaceId)) return null;
         var root = Path.Combine(CategoryRoot(category), "surfaces", SafeName(surfaceId));
-        return systemScope || string.IsNullOrEmpty(rom)
-            ? FirstExisting(root, "systems", SafeName(system))
-            : FirstExisting(root, SafeName(system), SafeName(rom!));
+        // arcade family: the user may have saved under the frontend name (mame) while
+        // the runtime is fed the canonical one (arcade), or vice versa — try both.
+        foreach (var sys in SystemSpellings(system!))
+        {
+            var path = systemScope || string.IsNullOrEmpty(rom)
+                ? FirstExisting(root, "systems", SafeName(sys))
+                : FirstExisting(root, SafeName(sys), SafeName(rom!));
+            if (path != null) return path;
+        }
+        return null;
     }
 
     /// <summary>The surface's general TEMPLATE (gabarit) rendered for this system or
@@ -133,10 +140,14 @@ public sealed class CompositionChainResolver
         var rom = meta?.Rom;
         if (string.IsNullOrEmpty(system) || string.IsNullOrEmpty(surfaceId)) return null;
         var cacheBase = Path.Combine(GabaritCategoryRoot(category), ".cache", "surfaces", SafeName(surfaceId));
-        var path = systemScope || string.IsNullOrEmpty(rom)
-            ? Path.Combine(cacheBase, "systems", SafeName(system) + ".png")
-            : Path.Combine(cacheBase, "games", SafeName(system), SafeName(rom!) + ".png");
-        return File.Exists(path) ? path : null;
+        foreach (var sys in SystemSpellings(system!))
+        {
+            var path = systemScope || string.IsNullOrEmpty(rom)
+                ? Path.Combine(cacheBase, "systems", SafeName(sys) + ".png")
+                : Path.Combine(cacheBase, "games", SafeName(sys), SafeName(rom!) + ".png");
+            if (File.Exists(path)) return path;
+        }
+        return null;
     }
 
     /// <summary>Setup writes the gabarit cache under "marquees"/"toppers"/"dmd" — the
