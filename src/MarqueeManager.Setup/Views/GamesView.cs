@@ -492,8 +492,11 @@ public sealed class GamesView : UserControl, IDisposable
                 {
                     var s = surfaces.FirstOrDefault(x => x.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
                     if (s == null) return;
-                    var t = MediaResolutionPreview.TargetOf(s, screens);
-                    new GabaritEditorWindow(_pluginRoot, s.Id, GabaritStore.GameScope, t.Width, t.Height)
+                    // general template composed with the current game's assets as a
+                    // concrete preview; the layout applies to every game of the surface
+                    new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.GameScope,
+                        L.T("Gabarit général — jeux", "General template — games"),
+                        data.Assets, s.Id)
                     {
                         Owner = Window.GetWindow(this)
                     }.ShowDialog();

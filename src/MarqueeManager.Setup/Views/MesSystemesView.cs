@@ -148,9 +148,13 @@ public sealed class MesSystemesView : UserControl
                 },
                 editGabarit: () =>
                 {
-                    if (surface == null) return;
-                    var t = MediaResolutionPreview.TargetOf(surface, detectedScreens);
-                    new GabaritEditorWindow(pluginRoot, surface.Id, GabaritStore.SystemScope, t.Width, t.Height)
+                    if (system == null || surface == null) return;
+                    // the general template = a composed layout (layers keyed by type)
+                    // saved per surface; it resolves to each system's media at render.
+                    // The selected system provides the assets for a concrete preview.
+                    new GameComposerWindow(pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.SystemScope,
+                        L.T("Gabarit général — systèmes", "General template — systems"),
+                        SystemAssets(pluginRoot, system), surface.Id)
                     {
                         Owner = System.Windows.Window.GetWindow(this)
                     }.ShowDialog();
