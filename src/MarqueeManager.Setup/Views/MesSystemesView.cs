@@ -22,8 +22,8 @@ public sealed class MesSystemesView : UserControl
         var page = new StackPanel();
         page.Children.Add(Ui.Title(L.T("Mes systèmes", "My systems")));
         page.Children.Add(Ui.Subtitle(L.T(
-            "Par système : quelles sources s'affichent et dans quel ordre, quel template automatique, votre dossier de médias, et la pré-génération de masse.",
-            "Per system: which sources display and in what order, which automatic template, your media folder, and bulk pre-generation.")));
+            "Par système : quelle source s'affiche (clique une carte), le gabarit général, votre dossier de médias, et la pré-génération de masse.",
+            "Per system: which source shows (click a card), the general template, your media folder, and bulk pre-generation.")));
 
         if (!media.IsAvailable)
         {

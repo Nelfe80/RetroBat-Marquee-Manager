@@ -10,11 +10,13 @@ Choisissez un système (seuls les systèmes avec des **jeux installés** dans `r
 
 ## Mon marquee
 
-La fiche montre **le marquee actuellement affiché** pour ce jeu et sa **source** (votre création, votre dossier, le scrapé, le généré…), résolue par la règle de priorité du système — le lien ouvre Mes systèmes pour la modifier. Si la source vous appartient (création ou fichier de votre dossier), un bouton la **supprime** : la source suivante de la chaîne reprend la main.
+Choisissez la **surface** (les surfaces suspendues sont masquées par défaut) : sous le sélecteur, les mêmes **cartes de résolution** que dans Mes systèmes, du plus général au plus précis — **Gabarit général**, **Ma création pour ce jeu**, **Mon dossier médias**, **Marquee scrapé**, **Logo mis en page**. Chaque carte a son aperçu ; **cliquer une carte** l'utilise pour **ce jeu** (un override propre au jeu) et la **coche verte ✓** marque celle qui s'affiche.
 
-Chaque **surface a sa propre création** : une création A sur la surface marquee et une création B sur le topper peuvent coexister pour le même jeu. Sous le nom du jeu : le **sélecteur de surface**, « **Ouvrir l'interface de création graphique** » et la **suppression de la création de cette surface** ; la fiche liste aussi les créations existantes (cliquer = éditer celle-là).
+Le **compositeur** et la **suppression** vivent sur la carte « Ma création pour ce jeu » (**Composer / Modifier**, **Supprimer**). Chaque **surface a sa propre création** : changez de surface pour voir et éditer celle de chaque surface.
 
-L'interface : cible (écran/surface) en haut, **médias par type** à gauche (clic = choisir la version dans une modale par source, gradients statiques inclus), canvas au centre (glisser, molette = taille, Maj+molette = rotation), **calques** à droite (œil, cadenas, glisser-déposer pour l'ordre) avec l'inspecteur du calque sélectionné (taille, rotation, opacité, texte, miroir).
+Le **gabarit général des jeux est par système** : « Modifier le gabarit général » compose une mise en page générique qui s'applique à **tous les jeux de ce système** (megadrive et nes peuvent avoir la leur), chaque jeu la recevant avec ses propres médias. **Mon dossier médias** propose « **Ouvrir le dossier** » pour déposer un fichier brut (au niveau jeu : `media\marquees\user\<système>\<rom>.png`).
+
+L'interface de création : cible (écran/surface) en haut, **médias par type** à gauche (clic = choisir la version dans une modale par source, gradients statiques et **import d'image** inclus), canvas au centre (glisser, molette = taille, Maj+molette = rotation, **poignées** de redimension/rotation sur le calque sélectionné), **calques** à droite (œil, cadenas, flèches ▲▼ et glisser-déposer pour l'ordre) avec l'inspecteur du calque (taille, rotation, opacité, texte, miroir).
 
 ## Récupérer des médias en ligne
 

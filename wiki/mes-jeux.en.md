@@ -10,11 +10,13 @@ Pick a system (only systems with **installed games** in `roms\` show up — the 
 
 ## My marquee
 
-The sheet shows **the marquee currently displayed** for this game and its **source** (your creation, your folder, scraped, generated…), resolved through the system's priority rule — the link opens My systems to change it. When the source is yours (creation or a file from your folder), a button **deletes** it: the next source in the chain takes over.
+Pick the **surface** (suspended surfaces are hidden by default): below the picker, the same **resolution cards** as in My systems, from most general to most specific — **General template**, **My creation for this game**, **My media folder**, **Scraped marquee**, **Laid-out logo**. Every card has its preview; **clicking a card** uses it for **this game** (a per-game override) and the **green check ✓** marks the one that shows.
 
-Every **surface carries its own creation**: creation A on the marquee surface and creation B on the topper can coexist for the same game. Under the game name: the **surface picker**, “**Open the graphic creation interface**” and the **deletion of that surface's creation**; the sheet also lists the existing creations (click = edit that one).
+The **composer** and the **delete** live on the “My creation for this game” card (**Compose / Edit**, **Delete**). Every **surface carries its own creation**: switch surface to see and edit each one.
 
-The interface: target (screen/surface) at the top, **media by type** on the left (click = pick the version in a per-source modal, static gradients included), canvas in the middle (drag, wheel = size, Shift+wheel = rotate), **layers** on the right (eye, padlock, drag & drop for z-order) with the selected layer's inspector (size, rotation, opacity, text, mirror).
+The **games' general template is per system**: “Edit the general template” composes a generic layout that applies to **every game of this system** (megadrive and nes can each have their own), each game receiving it with its own media. **My media folder** offers “**Open the folder**” to drop a raw file (game level: `media\marquees\user\<system>\<rom>.png`).
+
+The creation interface: target (screen/surface) at the top, **media by type** on the left (click = pick the version in a per-source modal, static gradients and **image import** included), canvas in the middle (drag, wheel = size, Shift+wheel = rotate, resize/rotate **handles** on the selected layer), **layers** on the right (eye, padlock, ▲▼ arrows and drag & drop for z-order) with the layer inspector (size, rotation, opacity, text, mirror).
 
 ## Fetch media online
 
