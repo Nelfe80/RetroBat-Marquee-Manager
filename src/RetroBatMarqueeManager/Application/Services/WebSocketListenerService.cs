@@ -325,11 +325,15 @@ public sealed class WebSocketListenerService : BackgroundService
             }
             foreach (var target in _config.GetTargetsForContent("marquee"))
             {
-                // a graphic creation saved for THIS surface wins over the
-                // category-level resolution (creations are per-surface)
+                // per-surface precedence: a graphic creation wins, then the surface's
+                // general template (gabarit) rendered for this game/system, then the
+                // category-level chain resolution
                 var surfaceCreation = _compositionChains.SurfaceCreation("marquee", target, snapshotMeta, systemScope);
-                await _surfaces.DisplayMediaAsync(surfaceCreation ?? marquee, target, cancellationToken, snapshotMeta,
-                    resolved: surfaceCreation != null || chained != null);
+                var surfaceGabarit = surfaceCreation == null
+                    ? _compositionChains.SurfaceGabarit("marquee", target, snapshotMeta, systemScope)
+                    : null;
+                await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? marquee, target, cancellationToken, snapshotMeta,
+                    resolved: surfaceCreation != null || surfaceGabarit != null || chained != null);
             }
         }
 
@@ -352,7 +356,10 @@ public sealed class WebSocketListenerService : BackgroundService
         foreach (var target in _config.GetTargetsForContent("dmd"))
         {
             var surfaceCreation = _compositionChains.SurfaceCreation("dmd", target, snapshotMeta, systemScope);
-            await _surfaces.DisplayMediaAsync(surfaceCreation ?? dmdPath, target, cancellationToken);
+            var surfaceGabarit = surfaceCreation == null
+                ? _compositionChains.SurfaceGabarit("dmd", target, snapshotMeta, systemScope)
+                : null;
+            await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? dmdPath, target, cancellationToken);
         }
     }
 
@@ -575,8 +582,11 @@ public sealed class WebSocketListenerService : BackgroundService
             foreach (var target in _config.GetTargetsForContent("topper"))
             {
                 var surfaceCreation = _compositionChains.SurfaceCreation("topper", target, meta, systemScope);
-                await _surfaces.DisplayMediaAsync(surfaceCreation ?? path, target, cancellationToken,
-                    resolved: surfaceCreation != null || chained != null);
+                var surfaceGabarit = surfaceCreation == null
+                    ? _compositionChains.SurfaceGabarit("topper", target, meta, systemScope)
+                    : null;
+                await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? path, target, cancellationToken,
+                    resolved: surfaceCreation != null || surfaceGabarit != null || chained != null);
             }
         }
     }

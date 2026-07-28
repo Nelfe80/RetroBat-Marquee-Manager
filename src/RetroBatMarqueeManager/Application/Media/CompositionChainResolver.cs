@@ -119,6 +119,36 @@ public sealed class CompositionChainResolver
             : FirstExisting(root, SafeName(system), SafeName(rom!));
     }
 
+    /// <summary>The surface's general TEMPLATE (gabarit) rendered for this system or
+    /// game by the Setup (headless), cached at
+    /// media\&lt;cat&gt;root\.cache\surfaces\&lt;surfaceId&gt;\{systems\&lt;sys&gt; | games\&lt;sys&gt;\&lt;rom&gt;}.png.
+    /// A deliberate, user-composed layout: it sits just below a per-surface graphic
+    /// creation and above the scanned/scraped fallbacks. Null when nothing has been
+    /// rendered yet (the runtime never renders it — it consumes what Setup baked, via
+    /// the lazy per-view render or the "Pre-generate" button), so an absent gabarit is
+    /// a clean no-op that never regresses the existing chain.</summary>
+    public string? SurfaceGabarit(string category, string surfaceId, LightingSceneMeta? meta, bool systemScope)
+    {
+        var system = meta?.System;
+        var rom = meta?.Rom;
+        if (string.IsNullOrEmpty(system) || string.IsNullOrEmpty(surfaceId)) return null;
+        var cacheBase = Path.Combine(GabaritCategoryRoot(category), ".cache", "surfaces", SafeName(surfaceId));
+        var path = systemScope || string.IsNullOrEmpty(rom)
+            ? Path.Combine(cacheBase, "systems", SafeName(system) + ".png")
+            : Path.Combine(cacheBase, "games", SafeName(system), SafeName(rom!) + ".png");
+        return File.Exists(path) ? path : null;
+    }
+
+    /// <summary>Setup writes the gabarit cache under "marquees"/"toppers"/"dmd" — the
+    /// dmd folder is "dmd", NOT the "s"-suffixed <see cref="CategoryRoot"/> spelling.</summary>
+    private string GabaritCategoryRoot(string category)
+        => Path.Combine(_baseDirectory, "media", category.ToLowerInvariant() switch
+        {
+            "topper" => "toppers",
+            "dmd" or "dmd-virtual" => "dmd",
+            _ => "marquees"
+        });
+
     // ================= chains =================
 
     private IReadOnlyList<string> ChainFor(string category, string system)
