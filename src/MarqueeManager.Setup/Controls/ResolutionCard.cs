@@ -116,7 +116,9 @@ public sealed class ResolutionCard : UserControl
         if (!link.Present) preview.Opacity = 0.4;
         panel.Children.Add(preview);
         if (!link.Present)
-            panel.Children.Add(Ui.MutedLabel(L.T("absent — aucun média", "absent — no media")));
+            panel.Children.Add(Ui.MutedLabel(L.T(
+                "aucun média pour cette source — rien à afficher, non sélectionnable",
+                "no media for this source — nothing to show, not selectable")));
         if (link.Kind == SourceKind.UserDrop)
         {
             // discoverability: tell the user exactly where to drop the file

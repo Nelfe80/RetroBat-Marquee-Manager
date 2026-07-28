@@ -464,22 +464,48 @@ public sealed class GamesView : UserControl, IDisposable
 
         // surface picker only — the preview and the compose/delete actions live on
         // the resolution cards below (like Mes systèmes)
-        var surfaces = new SurfacesStore(_pluginRoot).Load();
+        var surfacesStore = new SurfacesStore(_pluginRoot);
+        var surfaces = surfacesStore.Load();
+        // a surface whose screen(s) the user excluded from MarqueeManager is SUSPENDED
+        // and kept out of the picker by default, exactly like Mes systèmes
+        var unmanagedScreens = surfacesStore.LoadScreens()
+            .Where(s => !s.ManagedByMarqueeManager && s.WindowsIndex >= 0)
+            .Select(s => s.WindowsIndex)
+            .ToHashSet();
+        bool IsSuspended(SurfaceModel s) => s.Screens.Count > 0 && s.Screens.All(unmanagedScreens.Contains);
+
         var surfaceRow = new WrapPanel { Margin = new Thickness(0, 8, 0, 4) };
         var surfaceLabel = Ui.MutedLabel(L.T("Surface :", "Surface:"));
         surfaceLabel.Margin = new Thickness(0, 0, 6, 0);
         surfaceLabel.VerticalAlignment = VerticalAlignment.Center;
         surfaceRow.Children.Add(surfaceLabel);
         var surfacePicker = Ui.ComboBox(210);
-        foreach (var surface in surfaces)
+        var showSuspended = Ui.CheckBox(L.T("Afficher les surfaces suspendues", "Show suspended surfaces"), false);
+        showSuspended.Margin = new Thickness(12, 0, 0, 0);
+        showSuspended.VerticalAlignment = VerticalAlignment.Center;
+
+        void RebuildSurfacePicker()
         {
-            var item = new ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id };
-            surfacePicker.Items.Add(item);
-            if (surface.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase)) surfacePicker.SelectedItem = item;
+            var previous = _selectedSurfaceId;
+            surfacePicker.Items.Clear();
+            foreach (var surface in surfaces)
+            {
+                var suspended = IsSuspended(surface);
+                if (suspended && showSuspended.IsChecked != true) continue;
+                var item = new ComboBoxItem
+                {
+                    Content = $"{surface.Id} ({surface.Category})" + (suspended ? L.T("  · suspendue", "  · suspended") : ""),
+                    Tag = surface.Id
+                };
+                surfacePicker.Items.Add(item);
+                if (surface.Id.Equals(previous, StringComparison.OrdinalIgnoreCase)) surfacePicker.SelectedItem = item;
+            }
+            if (surfacePicker.SelectedItem == null && surfacePicker.Items.Count > 0) surfacePicker.SelectedIndex = 0;
+            _selectedSurfaceId = (surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
         }
-        if (surfacePicker.SelectedItem == null && surfacePicker.Items.Count > 0) surfacePicker.SelectedIndex = 0;
-        _selectedSurfaceId = (surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
+        RebuildSurfacePicker();
         surfaceRow.Children.Add(surfacePicker);
+        surfaceRow.Children.Add(showSuspended);
         card.Children.Add(surfaceRow);
 
         // shared block card: what displays for THIS game on the picked surface, and
@@ -535,50 +561,13 @@ public sealed class GamesView : UserControl, IDisposable
             _selectedSurfaceId = (surfacePicker.SelectedItem as ComboBoxItem)?.Tag as string;
             UpdateResolutionCard();
         };
+        showSuspended.Checked += (_, _) => { RebuildSurfacePicker(); UpdateResolutionCard(); };
+        showSuspended.Unchecked += (_, _) => { RebuildSurfacePicker(); UpdateResolutionCard(); };
         UpdateResolutionCard();
         card.Children.Add(resolutionCard);
 
-        // each graphic creation is INDEPENDENT per surface: creation A on
-        // surface 1, creation B on surface 2, for the same game
-        var creations = 0;
-        foreach (var surface in surfaces)
-        {
-            var category = CategoryOfSurface(surface);
-            var store = new MarqueeProjectStore(_pluginRoot, category, surface.Id);
-            if (!store.HasComposition(entry.System, entry.Rom)) continue;
-            creations++;
-
-            var row = new WrapPanel { Margin = new Thickness(0, 4, 0, 4) };
-            var thumb = ThumbImage(store.PngPath(entry.System, entry.Rom), 64);
-            thumb.Cursor = Cursors.Hand;
-            thumb.ToolTip = L.T("Cliquer pour éditer", "Click to edit");
-            thumb.MouseLeftButtonDown += (_, _) => OpenComposer(entry, data, surface.Id);
-            row.Children.Add(thumb);
-            var side = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            var label = Ui.Label(L.T($"Création — surface {surface.Id}", $"Creation — surface {surface.Id}"), 12);
-            label.FontWeight = FontWeights.Bold;
-            side.Children.Add(label);
-            var sideButtons = new WrapPanel();
-            sideButtons.Children.Add(Ui.Button(L.T("Éditer…", "Edit…"), (_, _) => OpenComposer(entry, data, surface.Id)));
-            sideButtons.Children.Add(Ui.Button(L.T("Supprimer", "Delete"), (_, _) =>
-            {
-                store.Delete(entry.System, entry.Rom);
-                _status.Text = L.T($"Création de la surface {surface.Id} supprimée.",
-                    $"Surface {surface.Id} creation deleted.");
-                _status.Foreground = Ui.Muted;
-                if (_current != null) OpenGame(_current);
-            }));
-            side.Children.Add(sideButtons);
-            row.Children.Add(side);
-            card.Children.Add(row);
-        }
-
-        if (creations == 0)
-        {
-            card.Children.Add(Ui.MutedLabel(L.T(
-                "Pas encore de création graphique : chaque surface peut recevoir la sienne (fanart, logo, gradients, textes, médias téléchargés).",
-                "No graphic creation yet: each surface can carry its own (fanart, logo, gradients, texts, downloaded media).")));
-        }
+        // no separate list below: the "Ma création" card shows this surface's creation
+        // in its own preview with Édite/Supprimer — switch the surface to see each one
 
         _gameHost.Children.Add(Ui.Card(card));
     }

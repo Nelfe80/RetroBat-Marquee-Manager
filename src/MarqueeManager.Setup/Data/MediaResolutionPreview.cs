@@ -126,8 +126,16 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
         switch (kind)
         {
             case SourceKind.Personal:
-                var composition = _assignments.CompositionPath(category, system, rom);
-                return File.Exists(composition) ? Found(composition, "creation") : AssetLookup.Missing;
+                // the composer saves per-surface (media\<cat>\surfaces\<id>\<sys>\<rom>),
+                // then at the category level — SAME store the card's Édite/Supprimer and
+                // the runtime read, so the card shows the creation instead of "absent"
+                var perSurface = new MarqueeProjectStore(_pluginRoot, categoryRoot, ctx.SurfaceId);
+                if (perSurface.HasComposition(system, rom)) return Found(perSurface.PngPath(system, rom), "creation");
+                var shared = new MarqueeProjectStore(_pluginRoot, categoryRoot);
+                if (shared.HasComposition(system, rom)) return Found(shared.PngPath(system, rom), "creation");
+                // legacy CompositionAssignments location, still honored
+                var legacy = _assignments.CompositionPath(category, system, rom);
+                return File.Exists(legacy) ? Found(legacy, "creation") : AssetLookup.Missing;
             case SourceKind.UserDrop:
                 // raw file dropped in media\<cat>s\user\<sys>\<rom>.*
                 return DropFolder(categoryRoot, system, rom);
