@@ -160,10 +160,11 @@ public sealed class MarqueeComposer : UserControl
 
         var plate = new Border
         {
-            Background = Ui.Viewport,
+            // no padding: the canvas fills the plate edge-to-edge so its black frame
+            // is never mistaken for part of the composition (a thin border delineates it)
             BorderBrush = Ui.PanelBorder,
             BorderThickness = new Thickness(1),
-            Padding = new Thickness(10),
+            Padding = new Thickness(0),
             HorizontalAlignment = HorizontalAlignment.Left,
             Child = _canvas
         };
