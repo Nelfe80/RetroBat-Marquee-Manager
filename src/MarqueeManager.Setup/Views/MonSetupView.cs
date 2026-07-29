@@ -651,6 +651,7 @@ public sealed class MonSetupView : UserControl
     private void SaveAll()
     {
         _store.Save(_surfaces, _plan);
+        PushGameScreenToApi();
         if (MarqueeManagerProcess.IsRunning()
             && MessageBox.Show(
                 L.T("Redémarrer MarqueeManager avec cette configuration ?", "Restart MarqueeManager with this configuration?"),
@@ -659,5 +660,40 @@ public sealed class MonSetupView : UserControl
             MarqueeManagerProcess.Stop();
             MarqueeManagerProcess.Start(_pluginRoot);
         }
+    }
+
+    /// <summary>Tells APIExpose which display is the RetroBat/game screen so it keeps
+    /// the standalone emulators' MonitorIndex pointing there (see MonitorSyncClient).
+    /// Best-effort: no-op if no game screen is assigned or APIExpose isn't running.</summary>
+    private void PushGameScreenToApi()
+    {
+        var deviceName = GameScreenDeviceName();
+        if (string.IsNullOrWhiteSpace(deviceName)) return;
+
+        string apiBaseUrl;
+        try
+        {
+            apiBaseUrl = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot))
+                .Get("Settings", "ApiExposeBaseUrl", "ws://127.0.0.1:12345");
+        }
+        catch
+        {
+            apiBaseUrl = "ws://127.0.0.1:12345";
+        }
+
+        MonitorSyncClient.PushGameScreen(apiBaseUrl, deviceName);
+    }
+
+    /// <summary>The GDI device name (\\.\DISPLAYn) of the screen hosting RetroBat: the
+    /// one typed "game" (or "mixed-vertical", which also carries the game view), else
+    /// the primary detected screen. Empty when none is connected.</summary>
+    private string? GameScreenDeviceName()
+    {
+        var game = _plan.FirstOrDefault(s => s.Connected && !string.IsNullOrWhiteSpace(s.Id)
+            && (s.Usage.Equals("game", StringComparison.OrdinalIgnoreCase)
+                || s.Usage.Equals("mixed-vertical", StringComparison.OrdinalIgnoreCase)));
+        if (game != null) return game.Id;
+
+        return _detected.FirstOrDefault(d => d.Primary)?.DeviceName;
     }
 }
