@@ -35,4 +35,4 @@
           → DMD physique optionnel (DLL dmd/zedmd + dmdext pour la vidéo)
     ```
 
-MarqueeManager fait partie de la famille de plugins RetroBat avec [APIExpose](https://github.com/Nelfe80/RetroBat-APIExpose) (le moteur de données, **requis**) et [LedManager](https://github.com/Nelfe80/RetroBat-Led-Manager) (boutons et panneaux LED).
+MarqueeManager fait partie de la famille de plugins RetroBat avec [APIExpose](https://nelfe80.github.io/RetroBat-APIExpose/) (le moteur de données, **requis**) et [LedManager](https://nelfe80.github.io/RetroBat-Led-Manager/) (boutons et panneaux LED).

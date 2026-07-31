@@ -26,3 +26,7 @@ La première migration V1→V2 sauvegarde votre ancien fichier dans `config.ini.
 ## Où sont les logs ?
 
 Dans le dossier `.log\` du plugin. En cas de souci DMD, `DmdDevice.log` (à la racine) contient le dialogue avec le panneau. Joignez ces fichiers à toute demande d'aide.
+
+## Toujours bloqué ?
+
+Ouvrez un ticket sur le [suivi des problèmes de MarqueeManager](https://github.com/Nelfe80/RetroBat-Marquee-Manager/issues) en joignant les logs du dossier `.log\`.

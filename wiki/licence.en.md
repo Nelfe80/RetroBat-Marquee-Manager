@@ -13,4 +13,4 @@ Bundled DLLs and tools (dmdext, ZeDMD libraries…) remain under their respectiv
 
 ## The ecosystem
 
-MarqueeManager works with [APIExpose](https://github.com/Nelfe80/RetroBat-APIExpose), which has its own terms for some uses (cabinet builders, venues) — see its [licensing page](https://nelfe80.github.io/RetroBat-APIExpose/en/licences/).
+MarqueeManager works with [APIExpose](https://nelfe80.github.io/RetroBat-APIExpose/en/), which has its own terms for some uses (cabinet builders, venues) — see its [licensing page](https://nelfe80.github.io/RetroBat-APIExpose/en/licences/).
