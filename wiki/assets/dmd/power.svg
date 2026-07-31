@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 210" font-family="system-ui, sans-serif" fill="none">
+  <!-- controller -->
+  <rect x="30" y="72" width="150" height="66" rx="6" stroke="#7c8697" stroke-width="2" fill="#7c86971a"/>
+  <text x="105" y="110" fill="#7c8697" font-size="15" text-anchor="middle">ESP32</text>
+  <text x="176" y="98" fill="#e05a5a" font-size="11" text-anchor="end">+5V / VN</text>
+  <text x="176" y="134" fill="#7c8697" font-size="11" text-anchor="end">GND</text>
+
+  <!-- panels -->
+  <rect x="390" y="36" width="150" height="60" rx="6" stroke="#7c8697" stroke-width="2" fill="#7c86971a"/>
+  <text x="465" y="72" fill="#7c8697" font-size="14" text-anchor="middle">64 × 32</text>
+  <rect x="390" y="126" width="150" height="60" rx="6" stroke="#7c8697" stroke-width="2" fill="#7c86971a"/>
+  <text x="465" y="162" fill="#7c8697" font-size="14" text-anchor="middle">64 × 32</text>
+
+  <!-- +5V (red) split in parallel to both VCC -->
+  <path d="M180,94 H245 M245,54 V150 M245,54 H390 M245,150 H390" stroke="#e05a5a" stroke-width="2"/>
+  <circle cx="245" cy="94" r="3" fill="#e05a5a"/>
+  <text x="398" y="50" fill="#e05a5a" font-size="11">VCC</text>
+  <text x="398" y="146" fill="#e05a5a" font-size="11">VCC</text>
+
+  <!-- GND (slate) split in parallel to both GND -->
+  <path d="M180,130 H300 M300,82 V172 M300,82 H390 M300,172 H390" stroke="#7c8697" stroke-width="2"/>
+  <circle cx="300" cy="130" r="3" fill="#7c8697"/>
+  <text x="398" y="90" fill="#7c8697" font-size="11">GND</text>
+  <text x="398" y="178" fill="#7c8697" font-size="11">GND</text>
+</svg>

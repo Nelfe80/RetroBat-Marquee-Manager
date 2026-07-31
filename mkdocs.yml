@@ -50,6 +50,7 @@ plugins:
             Accueil: Home
             Premiers pas: Getting started
             Assistant de configuration: Setup assistant
+            Matériel: Hardware
             Mon setup: My setup
             Mes systèmes: My systems
             Mes jeux: My games
@@ -73,6 +74,7 @@ nav:
   - Accueil: index.md
   - Premiers pas: premiers-pas.md
   - Assistant de configuration: assistant.md
+  - Matériel: materiel.md
   - Mon setup: mon-setup.md
   - Mes systèmes: mes-systemes.md
   - Mes jeux: mes-jeux.md

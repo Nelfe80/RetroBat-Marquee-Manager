@@ -2,6 +2,9 @@
 
 MarqueeManager drives a **physical DMD** (ZeDMD and compatibles) through the private DLLs in `tools\dmd` and `tools\zedmd`, and uses `dmdext` only to pass through compatible video media.
 
+!!! tip "Build the DMD"
+    To build an LED-panel DMD (assembly, HUB75 wiring, power, ZeDMD flashing), see [Hardware](materiel.md#build-a-zedmd-dmd-128-32).
+
 ## Enabling the DMD
 
 In `config.ini`, section `[DMD]`: activation, model, resolution and port. For a standard ZeDMD:
