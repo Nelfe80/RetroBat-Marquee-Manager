@@ -406,7 +406,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             // 3b. Lighting Engine Layer (Skia rendered surface, replaces static image when ready)
             if (_lightingOptions != null)
             {
-                _lightingHost = new WpfSkiaSurfaceHost(_logger, _lightingOptions.FpsLimit, _lightingOptions.ShowFps, _lightingOptions.RenderScale, _lightingOptions.PresentPipeline)
+                _lightingHost = new WpfSkiaSurfaceHost(_logger, _lightingOptions.FpsLimit, _lightingOptions.ShowFps, _lightingOptions.RenderScale, _lightingOptions.PresentPipeline, _lightingOptions.GpuRaster)
                 {
                     Visibility = Visibility.Collapsed
                 };
@@ -676,7 +676,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             {
                 try
                 {
-                    await System.Threading.Tasks.Task.Delay(70).ConfigureAwait(false);
+                    await System.Threading.Tasks.Task.Delay(20).ConfigureAwait(false);
                     if (System.Threading.Interlocked.Read(ref _marqueeSeq) != seq) return; // flown past
                     if (!File.Exists(path)) return;
 

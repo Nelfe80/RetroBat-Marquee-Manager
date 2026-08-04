@@ -22,7 +22,9 @@ public sealed class OptionsView : UserControl
     private readonly TextBlock _apiResult = Ui.MutedLabel("");
     private readonly CheckBox _tray;
     private readonly CheckBox _logToFile;
+    private readonly CheckBox _gpuAccel;
     private readonly CheckBox _lightingEnabled;
+    private readonly CheckBox _lightingGpuRaster;
     private readonly Slider _renderScale;
     private readonly TextBlock _renderScaleLabel = Ui.MutedLabel("");
     private readonly Slider _fillHeight;
@@ -105,6 +107,13 @@ public sealed class OptionsView : UserControl
         connexion.Children.Add(_tray);
         _logToFile = Ui.CheckBox(L.T("Écrire les logs dans .log\\debug.log", "Write logs to .log\\debug.log"), ini.GetBool("Settings", "LogToFile", true));
         connexion.Children.Add(_logToFile);
+        _gpuAccel = Ui.CheckBox(L.T("Accélération GPU (composition matérielle WPF)", "GPU acceleration (WPF hardware compositing)"), ini.GetBool("Settings", "GpuAcceleration", true));
+        connexion.Children.Add(_gpuAccel);
+        connexion.Children.Add(Ui.MutedLabel(L.T(
+            "Décochez si le pilote GPU de la borne provoque artefacts ou saccades : le rendu bascule en logiciel (SoftwareOnly). "
+            + "N'affecte pas le raster du moteur lumière, qui reste sur le CPU. Nécessite un redémarrage du MarqueeManager.",
+            "Uncheck if the cabinet's GPU driver causes artefacts or stutter: rendering falls back to software (SoftwareOnly). "
+            + "Does not move the lighting-engine raster off the CPU. Requires a MarqueeManager restart.")));
         page.Children.Add(Ui.Card(connexion));
 
         // --- lighting ---
@@ -119,6 +128,18 @@ public sealed class OptionsView : UserControl
             + "réglable par surface et par état d'affichage dans Mon setup.",
             "Master switch — the render lives on the surfaces carrying the “Lighting” component, "
             + "set per surface and per display state in My setup.")));
+
+        _lightingGpuRaster = Ui.CheckBox(L.T("Rasteriser le moteur lumière sur le GPU (backend Skia OpenGL)",
+                "Rasterize the lighting engine on the GPU (Skia OpenGL backend)"),
+            ini.GetBool("Lighting", "GpuRaster", false));
+        lighting.Children.Add(_lightingGpuRaster);
+        lighting.Children.Add(Ui.MutedLabel(L.T(
+            "Déporte le rendu du moteur lumière sur le GPU (puis readback vers le CPU pour l'affichage). "
+            + "À activer si le CPU ne tient pas la cadence ; exige un pilote GPU OpenGL correct. "
+            + "Repli automatique sur le CPU si l'initialisation GL échoue. Nécessite un redémarrage.",
+            "Offloads the lighting-engine render to the GPU (then reads back to CPU for display). "
+            + "Enable if the CPU can't keep up; requires a working OpenGL driver. "
+            + "Falls back to CPU automatically if GL init fails. Requires a restart.")));
 
         (_renderScale, var renderLine) = PercentSlider(ini.GetDouble("Lighting", "RenderScale", 0.75), 0.25, 1.0,
             _renderScaleLabel, v => $"{(int)(v * 100)} % — " + L.T("qualité/performance", "quality/performance"));
@@ -710,8 +731,10 @@ public sealed class OptionsView : UserControl
         ini.Set("Settings", "ApiExposeBaseUrl", url);
         ini.Set("Settings", "MinimizeToTray", B(_tray));
         ini.Set("Settings", "LogToFile", B(_logToFile));
+        ini.Set("Settings", "GpuAcceleration", B(_gpuAccel));
 
         ini.Set("Lighting", "Enabled", B(_lightingEnabled));
+        ini.Set("Lighting", "GpuRaster", B(_lightingGpuRaster));
         ini.Set("Lighting", "RenderScale", D(_renderScale));
         ini.Set("Lighting", "FillHeightMaxCrop", D(_fillHeight));
         ini.Set("Lighting", "GlassReflection", D(_glass));

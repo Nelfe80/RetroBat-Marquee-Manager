@@ -111,6 +111,11 @@ public interface IConfigService
     /// renderer. false = legacy double-buffer copy under the swap lock.</summary>
     bool LightingPresentPipeline { get; }
 
+    /// <summary>true = rasterize the lighting engine on the GPU (Skia OpenGL backend,
+    /// read back to CPU for WPF present). Auto-falls back to the CPU raster on GL
+    /// init failure. false = historical CPU raster.</summary>
+    bool LightingGpuRaster { get; }
+
     bool LiveScoreEnabled { get; }
     bool LiveTimerEnabled { get; }
     bool LiveDataMarqueeEnabled { get; }

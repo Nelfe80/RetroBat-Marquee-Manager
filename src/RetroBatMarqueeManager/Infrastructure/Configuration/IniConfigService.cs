@@ -90,6 +90,17 @@ public sealed class IniConfigService : IConfigService
     public bool LightingMapCache => Bool("Lighting", "MapCache", true);
     public bool LightingPresentPipeline => Bool("Lighting", "PresentPipeline", true);
 
+    /// <summary>true = rasterise le moteur lumière sur le GPU (backend Skia OpenGL,
+    /// puis readback vers le CPU pour la présentation WPF). Repli automatique sur le
+    /// raster CPU si l'init GL échoue. false (défaut) = raster CPU historique.</summary>
+    public bool LightingGpuRaster => Bool("Lighting", "GpuRaster", false);
+
+    /// <summary>true (défaut) = composition matérielle WPF (GPU) ; false force
+    /// RenderMode.SoftwareOnly (rendu logiciel/CPU). Utile sur borne dont le pilote
+    /// GPU pose des artefacts/instabilités. Ne déporte PAS le raster Skia du moteur
+    /// lumière sur le GPU (celui-ci reste CPU) — c'est la présentation WPF qui bascule.</summary>
+    public bool GpuAcceleration => Bool("Settings", "GpuAcceleration", true);
+
     public bool LiveScoreEnabled => Bool("LiveData", "ScoreEnabled", true);
     public bool LiveTimerEnabled => Bool("LiveData", "TimerEnabled", true);
     public bool LiveDataMarqueeEnabled => Bool("LiveData", "MarqueeEnabled", true);
@@ -215,6 +226,10 @@ public sealed class IniConfigService : IConfigService
         sb.AppendLine($"MinimizeToTray={V("MinimizeToTray", "true")}");
         sb.AppendLine($"LogToFile={V("LogToFile", "true")}");
         sb.AppendLine($"LogFilePath={V("LogFilePath", @".log\debug.log")}");
+        sb.AppendLine("; true = composition materielle WPF (GPU). false force le rendu logiciel");
+        sb.AppendLine("; (SoftwareOnly) : a essayer si le pilote GPU de la borne cause des artefacts");
+        sb.AppendLine("; ou des instabilites. N'affecte pas le raster du moteur lumiere (reste CPU).");
+        sb.AppendLine($"GpuAcceleration={V("GpuAcceleration", "true")}");
         sb.AppendLine();
         sb.AppendLine("[Screens]");
         sb.AppendLine("; <Cible>Bounds=x,y,largeur,hauteur : fenetre positionnee dans l'ecran cible");
@@ -308,6 +323,10 @@ public sealed class IniConfigService : IConfigService
         sb.AppendLine("; false recommande : le DMD affiche le media fourni par le flux (gif anime");
         sb.AppendLine("; en priorite, sinon dmd generated / logo), plus lumineux et mieux adapte.");
         sb.AppendLine("DmdMirror=false");
+        sb.AppendLine("; true = rasterise le moteur lumiere sur le GPU (backend Skia OpenGL, readback");
+        sb.AppendLine("; vers le CPU pour l'affichage). Repli automatique sur le CPU si l'init GL echoue.");
+        sb.AppendLine("; A activer si le raster CPU ne tient pas la cadence ; exige un pilote GPU correct.");
+        sb.AppendLine("GpuRaster=false");
         sb.AppendLine();
         sb.AppendLine("[LiveData]");
         sb.AppendLine("ScoreEnabled=true");

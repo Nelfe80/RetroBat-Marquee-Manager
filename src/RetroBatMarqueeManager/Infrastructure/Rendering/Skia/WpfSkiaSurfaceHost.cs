@@ -37,6 +37,19 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     private WriteableBitmap? _writeable;
     private int _presentQueued;
 
+    // GPU rasterization (opt-in, [Lighting] GpuRaster). When active, the scene is
+    // rasterized by Skia on the GPU (offscreen GL surface) then read back into the
+    // CPU _back buffer, so the whole present pipeline below stays unchanged. All three
+    // GPU objects are thread-affine to the render thread. Any init/render failure nulls
+    // _grContext and the code silently falls back to the CPU raster — never a regression.
+    private readonly bool _gpuRaster;
+    private GlOffscreenContext? _glContext;
+    private GRContext? _grContext;
+    private SKSurface? _gpuSurface;
+    private int _gpuSurfaceWidth;
+    private int _gpuSurfaceHeight;
+    private bool _gpuInitAttempted;
+
     private volatile int _targetWidth;
     private volatile int _targetHeight;
 
@@ -64,13 +77,14 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     /// </summary>
     public Action<SKBitmap>? FrameRendered;
 
-    public WpfSkiaSurfaceHost(ILogger logger, int fpsLimit, bool showFps, double renderScale = 1.0, bool presentPipeline = true)
+    public WpfSkiaSurfaceHost(ILogger logger, int fpsLimit, bool showFps, double renderScale = 1.0, bool presentPipeline = true, bool gpuRaster = false)
     {
         _logger = logger;
         _fpsLimit = Math.Clamp(fpsLimit, 15, 240);
         _showFps = showFps;
         _renderScale = Math.Clamp(renderScale, 0.25, 1.0);
         _presentPipeline = presentPipeline;
+        _gpuRaster = gpuRaster;
         Stretch = Stretch.Fill;
         SizeChanged += (_, _) => UpdateTargetSize();
         Loaded += (_, _) =>
@@ -123,12 +137,49 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         timeBeginPeriod(1);
         try
         {
+            if (_gpuRaster) TryInitGpu();
             RenderLoopCore(ct);
         }
         finally
         {
+            DisposeGpu(); // thread-affine: must run on the render thread
             timeEndPeriod(1);
         }
+    }
+
+    /// <summary>Best-effort GPU init on the render thread. On ANY failure it logs and
+    /// leaves _grContext null, so RenderFrame keeps using the CPU raster — the GPU path
+    /// is purely additive and can never break the existing rendering.</summary>
+    private void TryInitGpu()
+    {
+        if (_gpuInitAttempted) return;
+        _gpuInitAttempted = true;
+        try
+        {
+            _glContext = GlOffscreenContext.Create();
+            var glInterface = GRGlInterface.Create(name => GlOffscreenContext.GetProcAddress(name))
+                              ?? throw new InvalidOperationException("GRGlInterface.Create returned null.");
+            _grContext = GRContext.CreateGl(glInterface)
+                         ?? throw new InvalidOperationException("GRContext.CreateGl returned null.");
+            _logger.LogInformation("Skia lighting raster: GPU backend active (desktop OpenGL / WGL).");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Skia lighting raster: GPU init failed — falling back to CPU rasterization.");
+            DisposeGpu();
+        }
+    }
+
+    private void DisposeGpu()
+    {
+        try { _gpuSurface?.Dispose(); } catch { /* best effort */ }
+        try { _grContext?.Dispose(); } catch { /* best effort */ }
+        try { _glContext?.Dispose(); } catch { /* best effort */ }
+        _gpuSurface = null;
+        _grContext = null;
+        _glContext = null;
+        _gpuSurfaceWidth = 0;
+        _gpuSurfaceHeight = 0;
     }
 
     private int _lastLogicalWidth;
@@ -245,15 +296,10 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 _front ??= new SKBitmap(info);
                 _spare ??= new SKBitmap(info);
             }
-        using (var surface = SKSurface.Create(info, _back.GetPixels(), _back.RowBytes))
+        if (_grContext == null || !RenderFrameGpu(info, logicalWidth, logicalHeight, physicalWidth, physicalHeight, elapsed))
         {
-            var canvas = surface.Canvas;
-            canvas.Save();
-            canvas.Scale(physicalWidth / (float)logicalWidth, physicalHeight / (float)logicalHeight);
-            _renderer!.Render(canvas, logicalWidth, logicalHeight, elapsed);
-            canvas.Restore();
-            if (_showFps) DrawFps(canvas);
-            canvas.Flush();
+            using var surface = SKSurface.Create(info, _back.GetPixels(), _back.RowBytes);
+            DrawScene(surface, logicalWidth, logicalHeight, physicalWidth, physicalHeight, elapsed);
         }
 
         if (_presentPipeline)
@@ -282,6 +328,52 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                     catch (Exception ex) { _logger.LogDebug(ex, "Frame sink failed"); }
                 }
             }
+        }
+    }
+
+    /// <summary>Draws the scene into the given surface. Identical for the CPU and GPU
+    /// paths — only the surface differs (CPU bitmap-backed vs GPU offscreen).</summary>
+    private void DrawScene(SKSurface surface, int logicalWidth, int logicalHeight, int physicalWidth, int physicalHeight, TimeSpan elapsed)
+    {
+        var canvas = surface.Canvas;
+        canvas.Save();
+        canvas.Scale(physicalWidth / (float)logicalWidth, physicalHeight / (float)logicalHeight);
+        _renderer!.Render(canvas, logicalWidth, logicalHeight, elapsed);
+        canvas.Restore();
+        if (_showFps) DrawFps(canvas);
+        canvas.Flush();
+    }
+
+    /// <summary>Rasterizes the frame on the GPU, then reads the pixels back into the
+    /// CPU _back buffer so the whole present pipeline stays unchanged. Returns false —
+    /// and disables the GPU for the rest of the session — on any failure, so the caller
+    /// re-draws this frame on the CPU. GPU objects are only ever touched here and in
+    /// TryInitGpu/DisposeGpu, all on the render thread.</summary>
+    private bool RenderFrameGpu(SKImageInfo info, int logicalWidth, int logicalHeight, int physicalWidth, int physicalHeight, TimeSpan elapsed)
+    {
+        try
+        {
+            if (_gpuSurface == null || _gpuSurfaceWidth != physicalWidth || _gpuSurfaceHeight != physicalHeight)
+            {
+                _gpuSurface?.Dispose();
+                _gpuSurface = SKSurface.Create(_grContext, true, info)
+                              ?? throw new InvalidOperationException("GPU SKSurface.Create returned null (unsupported format?).");
+                _gpuSurfaceWidth = physicalWidth;
+                _gpuSurfaceHeight = physicalHeight;
+            }
+
+            DrawScene(_gpuSurface, logicalWidth, logicalHeight, physicalWidth, physicalHeight, elapsed);
+            _grContext!.Flush();
+
+            if (!_gpuSurface.ReadPixels(info, _back!.GetPixels(), _back.RowBytes, 0, 0))
+                throw new InvalidOperationException("GPU ReadPixels failed.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Skia lighting raster: GPU frame failed — disabling GPU, reverting to CPU rasterization.");
+            DisposeGpu(); // _grContext becomes null → CPU path from now on
+            return false;
         }
     }
 

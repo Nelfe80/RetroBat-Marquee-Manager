@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -279,29 +280,70 @@ public sealed class ComponentHost : Canvas
     private static string? Lookup(IReadOnlyDictionary<string, string?> kinds, string kind)
         => kinds.TryGetValue(kind, out var path) ? path : null;
 
+    // Per-Image load state: the path currently shown/loading and a monotonic
+    // sequence so a slower decode can never overwrite a newer request. Kept in a
+    // weak table so it disappears with the Image (no leak). Only touched on the
+    // UI thread, so no locking is needed on its fields.
+    private sealed class ImageLoadState
+    {
+        public string? CurrentPath;
+        public int Seq;
+    }
+
+    private static readonly ConditionalWeakTable<Image, ImageLoadState> _imageState = new();
+
+    /// <summary>Assigns an image source WITHOUT blocking the UI thread. The decode
+    /// (BitmapImage EndInit reads and decodes the whole file — 100-234 ms for a
+    /// large fanart/logo) runs on a thread-pool thread; the frozen bitmap is
+    /// handed back on the Dispatcher. Two guards keep it correct and cheap:
+    /// a DEDUP short-circuit (same path already shown/loading = no work) and a
+    /// SEQUENCE guard (an older decode finishing late never clobbers a newer one).</summary>
     private static void SetImage(FrameworkElement element, string? path)
     {
         if (element is not Image image) return;
+        var state = _imageState.GetOrCreateValue(image);
+
+        // Same target as the one already shown or in flight: nothing to do. This
+        // absorbs the repeated ApplyMedia passes (raw then enriched snapshot) that
+        // otherwise re-decoded the identical file back to back.
+        if (string.Equals(state.CurrentPath, path, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        state.CurrentPath = path;
+        var seq = ++state.Seq;
+
         if (path == null || !File.Exists(path))
         {
             image.Source = null;
             return;
         }
 
-        try
+        var dispatcher = image.Dispatcher;
+        var target = path;
+        _ = System.Threading.Tasks.Task.Run(() =>
         {
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = new Uri(path);
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-            bitmap.Freeze();
-            image.Source = bitmap;
-        }
-        catch
-        {
-            image.Source = null;
-        }
+            BitmapImage? bitmap = null;
+            try
+            {
+                bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(target);
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+            }
+            catch
+            {
+                bitmap = null;
+            }
+
+            dispatcher.BeginInvoke(new Action(() =>
+            {
+                // A newer SetImage superseded this one while we decoded: drop it.
+                if (state.Seq != seq) return;
+                image.Source = bitmap;
+            }));
+        });
     }
 
     private void SetVideo(FrameworkElement element, string? path)
