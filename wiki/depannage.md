@@ -23,6 +23,17 @@ Le mode « contrôle externe » se termine au `ui.game.ended`. Si un pinball s'e
 
 La première migration V1→V2 sauvegarde votre ancien fichier dans `config.ini.v1.bak`, puis migre écrans, DMD, DOF et l'activation RA. Les anciennes clés historiques (scraping, MPV, ImageMagick, génération vidéo…) ne sont volontairement pas reprises : ces responsabilités appartiennent désormais à APIExpose.
 
+## Le marquee lumineux saccade (FPS bas)
+
+Le moteur lumière est rendu par défaut sur le **CPU**, ce qui peut saturer sur une grande surface (1920×360 et plus). Deux options dans **MarqueeManagerSetup → Rendu lumineux** :
+
+- **Rasteriser le moteur lumière sur le GPU** (`[Lighting] GpuRaster`) : déporte le rendu sur le GPU (backend Skia OpenGL). Tient la pleine résolution à la cadence cible là où le CPU devait rogner. Repli automatique sur le CPU si le pilote GL n'initialise pas. Exige un pilote GPU OpenGL correct. **Nécessite un redémarrage.**
+- **Résolution interne** : à défaut de GPU, baissez-la (0.75 → 0.5) pour retrouver la fluidité au prix d'un léger flou.
+
+## Artefacts / instabilités d'affichage (pilote GPU)
+
+Si l'affichage scintille ou plante à cause du pilote GPU de la borne, décochez **Accélération GPU (composition matérielle WPF)** (`[Settings] GpuAcceleration`) : le rendu WPF bascule en logiciel (SoftwareOnly), plus lent mais plus stable. **Nécessite un redémarrage.**
+
 ## Où sont les logs ?
 
 Dans le dossier `.log\` du plugin. En cas de souci DMD, `DmdDevice.log` (à la racine) contient le dialogue avec le panneau. Joignez ces fichiers à toute demande d'aide.

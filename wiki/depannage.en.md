@@ -23,6 +23,17 @@ External-control mode ends at `ui.game.ended`. If a pinball crashed, go back to 
 
 The first V1→V2 migration backs up your old file as `config.ini.v1.bak`, then migrates screens, DMD, DOF and the RA activation. Historical keys (scraping, MPV, ImageMagick, video generation…) are intentionally not carried over: those responsibilities now belong to APIExpose.
 
+## The lit marquee stutters (low FPS)
+
+The lighting engine renders on the **CPU** by default, which can saturate on a large surface (1920×360 and up). Two options in **MarqueeManagerSetup → Marquee lighting**:
+
+- **Rasterize the lighting engine on the GPU** (`[Lighting] GpuRaster`): offloads the render to the GPU (Skia OpenGL backend). Holds full resolution at the target frame rate where the CPU had to drop the internal scale. Falls back to CPU automatically if the GL driver fails to initialize. Requires a working OpenGL driver. **Requires a restart.**
+- **Internal resolution**: without a GPU, lower it (0.75 → 0.5) to regain smoothness at the cost of slight blur.
+
+## Display artefacts / instability (GPU driver)
+
+If the display flickers or crashes because of the cabinet's GPU driver, uncheck **GPU acceleration (WPF hardware compositing)** (`[Settings] GpuAcceleration`): WPF rendering falls back to software (SoftwareOnly), slower but more stable. **Requires a restart.**
+
 ## Where are the logs?
 
 In the plugin's `.log\` folder. For DMD issues, `DmdDevice.log` (at the root) contains the dialogue with the panel. Attach these files to any help request.
