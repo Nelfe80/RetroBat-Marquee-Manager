@@ -770,6 +770,8 @@ public sealed class WebSocketListenerService : BackgroundService
             // back to the frontend: sounds return, audible re-ignition
             _surfaces.SetLightingIngame(false);
             _surfaces.PowerCycleLighting();
+            // restore the navigation priority so the marquee keeps up while browsing ES
+            ProcessPriorityHelper.Apply(_config.GetValue("Settings", "ProcessPriority", "belownormal"));
             return;
         }
         if (!type.Equals("ui.game.started", StringComparison.OrdinalIgnoreCase) && !type.Equals("ui.game.started.raw", StringComparison.OrdinalIgnoreCase)) return;
@@ -780,6 +782,8 @@ public sealed class WebSocketListenerService : BackgroundService
         // game launch drama: silent power cycle — the play session stays clean
         _surfaces.SetLightingIngame(true);
         _surfaces.PowerCycleLighting();
+        // yield the CPU to the emulator during play (input latency); restored on game end
+        ProcessPriorityHelper.Apply(_config.GetValue("Settings", "ProcessPriorityInGame", "belownormal"));
         var system = ExtractSystem(payload);
         if (system.Length == 0) system = _selectedSystem ?? string.Empty;
         if (system.Length > 0) _selectedSystem = system;

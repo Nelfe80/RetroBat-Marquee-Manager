@@ -35,12 +35,11 @@ public static class Program
         // (its script queue spawns one process per selection): events.ini then
         // lags minutes behind the frontend. Below-normal priority makes the
         // marquee the first thing to slow down, never the frontend.
-        if (!config.GetValue("Settings", "ProcessPriority", "belownormal")
-                .Equals("normal", StringComparison.OrdinalIgnoreCase))
-        {
-            try { Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal; }
-            catch { /* unprivileged environments keep the default priority */ }
-        }
+        // belownormal (default) keeps the marquee below ES; normal lets it compete;
+        // abovenormal/high let it win CPU against other Normal-class apps (useful on a
+        // shared dev box, but on a real cabinet it can starve ES/the emulator). This is
+        // the NAVIGATION priority; it is lowered to ProcessPriorityInGame during play.
+        ProcessPriorityHelper.Apply(config.GetValue("Settings", "ProcessPriority", "belownormal"));
 
         using var host = Host.CreateDefaultBuilder(args)
             .ConfigureLogging(logging =>
