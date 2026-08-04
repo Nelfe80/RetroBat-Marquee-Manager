@@ -43,6 +43,7 @@ public sealed class IniConfigService : IConfigService
         .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
         .Select(value => value.ToLowerInvariant())
         .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    public bool DmdAsyncMediaPipeline => Bool("DMD", "AsyncMediaPipeline", true);
 
     public bool LayEnabled => Bool("DOF", "Enabled", BoolFlat("LayEnabled", true));
     public bool LayLcdEnabled => Bool("DOF", "MarqueeEnabled", BoolFlat("LayLcdEnabled", true));
@@ -85,6 +86,9 @@ public sealed class IniConfigService : IConfigService
     public string LightingTubeColor => Get("Lighting", "TubeColor", "#FFE0B2");
     public bool LightingPreferGeneratedMarquee => Bool("Lighting", "PreferGeneratedMarquee", false);
     public bool LightingDmdMirror => Bool("Lighting", "DmdMirror", false);
+    public bool LightingLatestWinsGeneration => Bool("Lighting", "LatestWinsGeneration", true);
+    public bool LightingMapCache => Bool("Lighting", "MapCache", true);
+    public bool LightingPresentPipeline => Bool("Lighting", "PresentPipeline", true);
 
     public bool LiveScoreEnabled => Bool("LiveData", "ScoreEnabled", true);
     public bool LiveTimerEnabled => Bool("LiveData", "TimerEnabled", true);

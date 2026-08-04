@@ -47,6 +47,12 @@ public interface IConfigService
     int DmdMinimumBlockDisplayMs { get; }
     IReadOnlySet<string> ActiveSystemsDmd { get; }
 
+    /// <summary>Lot A: base-media decode/native render is handed to a dedicated
+    /// DMD worker (bounded, latest-wins) instead of running on the WS selection
+    /// thread, so a slow ZeDMD/GIF never stalls the next selection. false = legacy
+    /// inline path.</summary>
+    bool DmdAsyncMediaPipeline { get; }
+
     bool LayEnabled { get; }
     bool LayLcdEnabled { get; }
     bool LayDmdEnabled { get; }
@@ -88,6 +94,22 @@ public interface IConfigService
     string LightingTubeColor { get; }
     bool LightingPreferGeneratedMarquee { get; }
     bool LightingDmdMirror { get; }
+
+    /// <summary>Lot B: lighting generation carries a selection revision + cancellation;
+    /// a result whose selection is no longer current is disposed, never adopted, and
+    /// the opaque scene never masks the new game's fallback while generating. false =
+    /// legacy behavior.</summary>
+    bool LightingLatestWinsGeneration { get; }
+
+    /// <summary>Lot C: generated lighting maps are kept in an LRU cache keyed by
+    /// image+mtime+size+profile+crop, so revisiting a game/scale is a cache hit
+    /// (no decode/generation). false = always regenerate.</summary>
+    bool LightingMapCache { get; }
+
+    /// <summary>Lot D: WPF present copies the latest frame OUTSIDE the shared
+    /// render/swap lock (triple buffer), so a slow WritePixels never blocks the
+    /// renderer. false = legacy double-buffer copy under the swap lock.</summary>
+    bool LightingPresentPipeline { get; }
 
     bool LiveScoreEnabled { get; }
     bool LiveTimerEnabled { get; }

@@ -17,6 +17,19 @@ public sealed class LightingMaps : IDisposable
     public int Width => Unlit.Width;
     public int Height => Unlit.Height;
 
+    /// <summary>Deep copy for the map cache (Lot C): the cache owns an independent
+    /// copy, so evicting/disposing it can never touch the maps the renderer displays.
+    /// Null if either pixel copy fails (caller then skips caching).</summary>
+    public LightingMaps? Clone()
+    {
+        var unlit = Unlit.Copy();
+        var lit = Lit.Copy();
+        if (unlit == null || lit == null) { unlit?.Dispose(); lit?.Dispose(); return null; }
+        return new LightingMaps { Unlit = unlit, Lit = lit };
+    }
+
+    public long ByteSize => (long)Unlit.RowBytes * Unlit.Height + (long)Lit.RowBytes * Lit.Height;
+
     public void Dispose()
     {
         Unlit.Dispose();
@@ -56,54 +69,74 @@ public static class AutoMapGenerator
         using var scaled = ScaleTo(source, info, sourceCrop);
 
         var count = targetWidth * targetHeight * 4;
-        var src = new byte[count];
-        Marshal.Copy(scaled.GetPixels(), src, 0, count);
-
-        var unlit = new byte[count];
-        var lit = new byte[count];
-        var endFalloff = ComputeEndFalloff(targetWidth);
-        var (cornerX, cornerY) = ComputeCornerFalloff(targetWidth, targetHeight);
-        var aging = (float)Math.Clamp(profile.Aging, 0, 1);
-
-        // lamp light color × aged-material transmission loss (slight yellowing)
-        var litR = profile.Bulb.ColorR * (1f - 0.10f * aging);
-        var litG = profile.Bulb.ColorG * (1f - 0.16f * aging);
-        var litB = profile.Bulb.ColorB * (1f - 0.30f * aging);
-
-        // unlit print: darkened, detail preserved, aging warms and dims it (§16.5)
-        var unlitR = 1f - 0.05f * aging;
-        var unlitG = 0.98f - 0.12f * aging;
-        var unlitB = 0.95f - 0.28f * aging;
-
-        for (var i = 0; i < count; i += 4)
+        // Lot C: pooled buffers (no per-generation heap allocation) + row-parallel
+        // loop. The math is unchanged and per-pixel independent, so the output is
+        // bit-identical to the serial version.
+        var pool = System.Buffers.ArrayPool<byte>.Shared;
+        var src = pool.Rent(count);
+        var unlit = pool.Rent(count);
+        var lit = pool.Rent(count);
+        try
         {
-            var pixel = i / 4;
-            var x = pixel % targetWidth;
-            var y = pixel / targetWidth;
-            // dark corners: light never fully reaches the box angles — the corner
-            // term only bites where BOTH edge proximities are high
-            var corner = 1f - CornerDarkness * (1f - cornerX[x]) * (1f - cornerY[y]);
-            var falloff = endFalloff[x] * corner;
-            var b = src[i] / 255f;
-            var g = src[i + 1] / 255f;
-            var r = src[i + 2] / 255f;
+            Marshal.Copy(scaled.GetPixels(), src, 0, count);
 
-            lit[i] = (byte)(Math.Clamp(b * litB * falloff, 0f, 1f) * 255f);
-            lit[i + 1] = (byte)(Math.Clamp(g * litG * falloff, 0f, 1f) * 255f);
-            lit[i + 2] = (byte)(Math.Clamp(r * litR * falloff, 0f, 1f) * 255f);
-            lit[i + 3] = 255;
+            var endFalloff = ComputeEndFalloff(targetWidth);
+            var (cornerX, cornerY) = ComputeCornerFalloff(targetWidth, targetHeight);
+            var aging = (float)Math.Clamp(profile.Aging, 0, 1);
 
-            unlit[i] = (byte)(Math.Clamp((b * 0.22f + 0.02f) * unlitB, 0f, 1f) * 255f);
-            unlit[i + 1] = (byte)(Math.Clamp((g * 0.22f + 0.02f) * unlitG, 0f, 1f) * 255f);
-            unlit[i + 2] = (byte)(Math.Clamp((r * 0.22f + 0.02f) * unlitR, 0f, 1f) * 255f);
-            unlit[i + 3] = 255;
+            // lamp light color × aged-material transmission loss (slight yellowing)
+            var litR = profile.Bulb.ColorR * (1f - 0.10f * aging);
+            var litG = profile.Bulb.ColorG * (1f - 0.16f * aging);
+            var litB = profile.Bulb.ColorB * (1f - 0.30f * aging);
+
+            // unlit print: darkened, detail preserved, aging warms and dims it (§16.5)
+            var unlitR = 1f - 0.05f * aging;
+            var unlitG = 0.98f - 0.12f * aging;
+            var unlitB = 0.95f - 0.28f * aging;
+
+            // Serial on purpose: generation runs on ONE dedicated background thread
+            // (see MarqueeLightingRenderer), so it never grabs extra cores from the
+            // AboveNormal render thread nor pressures the thread pool. The ArrayPool
+            // buffers keep it allocation-free; the cache makes revisits skip it entirely.
+            for (var y = 0; y < targetHeight; y++)
+            {
+                var cornerYRow = cornerY[y];
+                var rowBase = y * targetWidth * 4;
+                for (var x = 0; x < targetWidth; x++)
+                {
+                    var i = rowBase + x * 4;
+                    // dark corners: light never fully reaches the box angles — the corner
+                    // term only bites where BOTH edge proximities are high
+                    var corner = 1f - CornerDarkness * (1f - cornerX[x]) * (1f - cornerYRow);
+                    var falloff = endFalloff[x] * corner;
+                    var b = src[i] / 255f;
+                    var g = src[i + 1] / 255f;
+                    var r = src[i + 2] / 255f;
+
+                    lit[i] = (byte)(Math.Clamp(b * litB * falloff, 0f, 1f) * 255f);
+                    lit[i + 1] = (byte)(Math.Clamp(g * litG * falloff, 0f, 1f) * 255f);
+                    lit[i + 2] = (byte)(Math.Clamp(r * litR * falloff, 0f, 1f) * 255f);
+                    lit[i + 3] = 255;
+
+                    unlit[i] = (byte)(Math.Clamp((b * 0.22f + 0.02f) * unlitB, 0f, 1f) * 255f);
+                    unlit[i + 1] = (byte)(Math.Clamp((g * 0.22f + 0.02f) * unlitG, 0f, 1f) * 255f);
+                    unlit[i + 2] = (byte)(Math.Clamp((r * 0.22f + 0.02f) * unlitR, 0f, 1f) * 255f);
+                    unlit[i + 3] = 255;
+                }
+            }
+
+            return new LightingMaps
+            {
+                Unlit = ToBitmap(unlit, info, count),
+                Lit = ToBitmap(lit, info, count)
+            };
         }
-
-        return new LightingMaps
+        finally
         {
-            Unlit = ToBitmap(unlit, info),
-            Lit = ToBitmap(lit, info)
-        };
+            pool.Return(src);
+            pool.Return(unlit);
+            pool.Return(lit);
+        }
     }
 
     /// <summary>
@@ -171,10 +204,11 @@ public static class AutoMapGenerator
         return t * t * (3f - 2f * t);
     }
 
-    private static SKBitmap ToBitmap(byte[] pixels, SKImageInfo info)
+    private static SKBitmap ToBitmap(byte[] pixels, SKImageInfo info, int length)
     {
         var bitmap = new SKBitmap(info);
-        Marshal.Copy(pixels, 0, bitmap.GetPixels(), pixels.Length);
+        // `pixels` may be an oversized pooled buffer: copy exactly `length` bytes.
+        Marshal.Copy(pixels, 0, bitmap.GetPixels(), length);
         return bitmap;
     }
 

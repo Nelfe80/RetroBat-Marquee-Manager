@@ -28,6 +28,12 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     private readonly object _swapLock = new();
     private SKBitmap? _front;
     private SKBitmap? _back;
+    // Lot D: third buffer for the triple-buffer present path. Roles: _back = render
+    // target, _front = latest ready frame, _spare = the UI thread's present buffer.
+    // The swap lock is then held only for pointer swaps — never during WritePixels.
+    private SKBitmap? _spare;
+    private bool _hasReady;
+    private readonly bool _presentPipeline;
     private WriteableBitmap? _writeable;
     private int _presentQueued;
 
@@ -58,12 +64,13 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     /// </summary>
     public Action<SKBitmap>? FrameRendered;
 
-    public WpfSkiaSurfaceHost(ILogger logger, int fpsLimit, bool showFps, double renderScale = 1.0)
+    public WpfSkiaSurfaceHost(ILogger logger, int fpsLimit, bool showFps, double renderScale = 1.0, bool presentPipeline = true)
     {
         _logger = logger;
         _fpsLimit = Math.Clamp(fpsLimit, 15, 240);
         _showFps = showFps;
         _renderScale = Math.Clamp(renderScale, 0.25, 1.0);
+        _presentPipeline = presentPipeline;
         Stretch = Stretch.Fill;
         SizeChanged += (_, _) => UpdateTargetSize();
         Loaded += (_, _) =>
@@ -227,13 +234,17 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     /// Maps therefore never regenerate just because the scale changed (§6).</summary>
     private void RenderFrame(int logicalWidth, int logicalHeight, int physicalWidth, int physicalHeight, TimeSpan elapsed)
     {
-        if (_back == null || _back.Width != physicalWidth || _back.Height != physicalHeight)
-        {
-            _back?.Dispose();
-            _back = new SKBitmap(new SKImageInfo(physicalWidth, physicalHeight, SKColorType.Bgra8888, SKAlphaType.Premul));
-        }
-
+        // Only the render thread touches the _back-role buffer, so it is the one safe
+        // to (re)create here; _front/_spare converge to the new size as they rotate
+        // into the _back role. A buffer the UI thread may be presenting is never freed.
+        _back = EnsureBuffer(_back, physicalWidth, physicalHeight);
         var info = new SKImageInfo(physicalWidth, physicalHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
+        if (_presentPipeline)
+            lock (_swapLock)
+            {
+                _front ??= new SKBitmap(info);
+                _spare ??= new SKBitmap(info);
+            }
         using (var surface = SKSurface.Create(info, _back.GetPixels(), _back.RowBytes))
         {
             var canvas = surface.Canvas;
@@ -245,15 +256,40 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
             canvas.Flush();
         }
 
-        lock (_swapLock)
+        if (_presentPipeline)
         {
-            (_front, _back) = (_back, _front);
-            if (FrameRendered != null && _front != null)
+            // Lot D: mirror the freshly drawn buffer to the DMD OUTSIDE the swap lock,
+            // then publish it as the ready frame with only a pointer swap under lock.
+            if (FrameRendered != null)
             {
-                try { FrameRendered(_front); }
+                try { FrameRendered(_back); }
                 catch (Exception ex) { _logger.LogDebug(ex, "Frame sink failed"); }
             }
+            lock (_swapLock)
+            {
+                (_front, _back) = (_back, _front);
+                _hasReady = true;
+            }
         }
+        else
+        {
+            lock (_swapLock)
+            {
+                (_front, _back) = (_back, _front);
+                if (FrameRendered != null && _front != null)
+                {
+                    try { FrameRendered(_front); }
+                    catch (Exception ex) { _logger.LogDebug(ex, "Frame sink failed"); }
+                }
+            }
+        }
+    }
+
+    private static SKBitmap EnsureBuffer(SKBitmap? buffer, int width, int height)
+    {
+        if (buffer != null && buffer.Width == width && buffer.Height == height) return buffer;
+        buffer?.Dispose();
+        return new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Premul));
     }
 
     private void DrawFps(SKCanvas canvas)
@@ -283,6 +319,34 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     private void Present()
     {
         Interlocked.Exchange(ref _presentQueued, 0);
+        if (_presentPipeline)
+        {
+            SKBitmap present;
+            var pickedAt = Stopwatch.GetTimestamp();
+            lock (_swapLock)
+            {
+                if (!_hasReady || _front == null || _spare == null) return;
+                (_spare, _front) = (_front, _spare);   // take the latest ready into the present slot
+                _hasReady = false;
+                present = _spare;
+            }
+            // the copy runs OUTSIDE the swap lock: a slow WritePixels never blocks the renderer
+            var copyAt = Stopwatch.GetTimestamp();
+            var pw = present.Width;
+            var ph = present.Height;
+            if (_writeable == null || _writeable.PixelWidth != pw || _writeable.PixelHeight != ph)
+            {
+                _writeable = new WriteableBitmap(pw, ph, 96, 96, PixelFormats.Pbgra32, null);
+                Source = _writeable;
+            }
+            _writeable.WritePixels(new Int32Rect(0, 0, pw, ph), present.GetPixels(), present.RowBytes * ph, present.RowBytes);
+            var doneAt = Stopwatch.GetTimestamp();
+            Interlocked.Increment(ref _presentsThisWindow);
+            _metrics.RecordPresent(
+                (copyAt - pickedAt) * 1000.0 / Stopwatch.Frequency,
+                (doneAt - copyAt) * 1000.0 / Stopwatch.Frequency);
+            return;
+        }
         var waitStart = Stopwatch.GetTimestamp();
         lock (_swapLock)
         {
@@ -315,7 +379,8 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         {
             _front?.Dispose();
             _back?.Dispose();
-            _front = _back = null;
+            _spare?.Dispose();
+            _front = _back = _spare = null;
         }
         _renderer?.Dispose();
         _renderer = null;

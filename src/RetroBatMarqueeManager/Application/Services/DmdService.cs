@@ -29,6 +29,13 @@ public sealed class DmdService : IDmdService
     private Task? _notificationWorker;
     private Task? _rotationWorker;
     private Task? _deferredRenderTask;
+    // Lot A: base-media renders run on a dedicated latest-wins worker (bounded to 1)
+    // so a slow ZeDMD or a many-frame GIF decode never blocks the WS selection thread.
+    private readonly Channel<int> _mediaPipeline = Channel.CreateBounded<int>(
+        new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropOldest, SingleReader = true });
+    private Task? _mediaPipelineWorker;
+    private int _mediaSignal;
+    private string? _displayedMediaKey;
     private string? _displayedPersistentOwner;
     private DateTime _displayedPersistentSince;
     private bool _notificationActive;
@@ -83,6 +90,8 @@ public sealed class DmdService : IDmdService
         if (!_initialized) _logger.LogWarning("Native DMD unavailable; private dmdext fallback remains available for media playback.");
         _notificationWorker = Task.Run(() => RunNotificationsAsync(_lifetime.Token), _lifetime.Token);
         _rotationWorker = Task.Run(() => RunPersistentRotationAsync(_lifetime.Token), _lifetime.Token);
+        if (_config.DmdAsyncMediaPipeline)
+            _mediaPipelineWorker = Task.Run(() => RunMediaPipelineAsync(_lifetime.Token), _lifetime.Token);
     }
 
     private async Task<bool> OptimizeZeDmdAsync(CancellationToken cancellationToken)
@@ -327,6 +336,7 @@ public sealed class DmdService : IDmdService
                     lock (_sync)
                     {
                         _notificationActive = true;
+                        _displayedMediaKey = null;
                         background = _textBackgroundMedia;
                         statusBadges = _statusBadges.ToArray();
                     }
@@ -344,7 +354,37 @@ public sealed class DmdService : IDmdService
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
 
-    private Task RenderTopAsync(CancellationToken cancellationToken)
+    /// <summary>Lot A: renders the latest base-media state off the WS selection thread.
+    /// Bounded to one in-flight signal (latest-wins), so a slow ZeDMD or a many-frame
+    /// GIF decode never delays the next selection; only the most recent state renders.</summary>
+    private async Task RunMediaPipelineAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await foreach (var _ in _mediaPipeline.Reader.ReadAllAsync(cancellationToken))
+            {
+                try { await RenderTopAsync(cancellationToken, inlineMedia: true); }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { return; }
+                catch (Exception ex) { _logger.LogDebug(ex, "DMD media pipeline render failed"); }
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+    }
+
+    private void SignalMediaPipeline() => _mediaPipeline.Writer.TryWrite(Interlocked.Increment(ref _mediaSignal));
+
+    // Lot A: identity of the base media on the panel, for dedup (path + size + mtime).
+    private static string? MediaKey(string path)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            return info.Exists ? $"{path}|{info.Length}|{info.LastWriteTimeUtc.Ticks}" : null;
+        }
+        catch { return null; }
+    }
+
+    private Task RenderTopAsync(CancellationToken cancellationToken, bool inlineMedia = false)
     {
         if (!_config.DmdEnabled || _externalControl || cancellationToken.IsCancellationRequested) return Task.CompletedTask;
         PersistentContent? content;
@@ -386,6 +426,7 @@ public sealed class DmdService : IDmdService
         if (content != null)
         {
             StopOwnedPlayback();
+            lock (_sync) _displayedMediaKey = null;
             if (_nativeOpen)
                 RenderPixels(_renderer.RenderText(content.Owner, content.Text, null, _config.DmdWidth, _config.DmdHeight, textBackground, statusBadges, content.DetailColor));
             return Task.CompletedTask;
@@ -394,10 +435,19 @@ public sealed class DmdService : IDmdService
         if (layout is { Length: > 0 })
         {
             StopOwnedPlayback();
+            lock (_sync) _displayedMediaKey = null;
             RenderPixels(layout);
             return Task.CompletedTask;
         }
-        return string.IsNullOrWhiteSpace(media) ? Task.CompletedTask : RenderMediaAsync(media, cancellationToken);
+        if (string.IsNullOrWhiteSpace(media)) return Task.CompletedTask;
+        // Lot A: hand the (potentially slow) base-media decode to the DMD worker,
+        // unless we ARE that worker (inlineMedia) or the async pipeline is disabled.
+        if (_config.DmdAsyncMediaPipeline && !inlineMedia)
+        {
+            SignalMediaPipeline();
+            return Task.CompletedTask;
+        }
+        return RenderMediaAsync(media, cancellationToken);
     }
 
     private async Task RunPersistentRotationAsync(CancellationToken cancellationToken)
@@ -490,11 +540,20 @@ public sealed class DmdService : IDmdService
 
     private Task RenderMediaAsync(string path, CancellationToken cancellationToken)
     {
+        var key = MediaKey(path);
+        // Lot A: skip a redundant decode/native render when the exact same base media
+        // (path + size + mtime) is already on the panel.
+        if (_config.DmdAsyncMediaPipeline && key != null)
+        {
+            lock (_sync)
+                if (string.Equals(key, _displayedMediaKey, StringComparison.Ordinal)) return Task.CompletedTask;
+        }
         StopOwnedPlayback();
         var extension = Path.GetExtension(path);
         if (VideoExtensions.Contains(extension))
         {
             StartOwnedDmdExt(path);
+            lock (_sync) _displayedMediaKey = key;
             return Task.CompletedTask;
         }
         // no native panel connected: RenderPixels drops every frame, so decoding
@@ -517,9 +576,11 @@ public sealed class DmdService : IDmdService
                 }
                 catch (OperationCanceledException) { }
             }, _mediaCancellation.Token);
+            lock (_sync) _displayedMediaKey = key;
             return Task.CompletedTask;
         }
         RenderPixels(_renderer.RenderImage(path, _config.DmdWidth, _config.DmdHeight));
+        lock (_sync) _displayedMediaKey = key;
         return Task.CompletedTask;
     }
 

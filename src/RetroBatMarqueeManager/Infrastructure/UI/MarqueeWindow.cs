@@ -406,7 +406,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             // 3b. Lighting Engine Layer (Skia rendered surface, replaces static image when ready)
             if (_lightingOptions != null)
             {
-                _lightingHost = new WpfSkiaSurfaceHost(_logger, _lightingOptions.FpsLimit, _lightingOptions.ShowFps, _lightingOptions.RenderScale)
+                _lightingHost = new WpfSkiaSurfaceHost(_logger, _lightingOptions.FpsLimit, _lightingOptions.ShowFps, _lightingOptions.RenderScale, _lightingOptions.PresentPipeline)
                 {
                     Visibility = Visibility.Collapsed
                 };
@@ -438,7 +438,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     _lightingRenderer = new Application.Lighting.MarqueeLightingRenderer(_logger, libraries,
                         _lightingOptions.FillHeightMaxCrop, sound, _lightingOptions.GlassReflection,
                         _lightingOptions.TubeVisualOpacity, _lightingOptions.TubeThickness,
-                        _lightingOptions.TubeBlur, _lightingOptions.TubeEndFade, _lightingOptions.TubeColor);
+                        _lightingOptions.TubeBlur, _lightingOptions.TubeEndFade, _lightingOptions.TubeColor,
+                        _lightingOptions.LatestWinsGeneration, _lightingOptions.MapCache);
                     if (_dmdMirror != null) _lightingHost.FrameRendered = MirrorFrameToDmd;
                     this.Loaded += (_, _) =>
                     {

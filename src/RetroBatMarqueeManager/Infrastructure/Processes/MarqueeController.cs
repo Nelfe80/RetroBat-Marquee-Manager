@@ -44,7 +44,7 @@ public sealed class MarqueeController : IDisposable
                     i, screens[i].DeviceName, screens[i].Primary, screens[i].Bounds, screens[i].WorkingArea);
 
             var lightingOptions = _config.LightingEnabled
-                ? new LightingSurfaceOptions(_config.LightingTestPattern, _config.LightingFpsLimit, _config.LightingShowFps, _config.LightingRenderScale, _config.LightingFillHeightMaxCrop, _config.LightingSoundEnabled, _config.LightingSoundVolume, _config.LightingGlassReflection, _config.LightingTubeVisualOpacity, _config.LightingTubeThickness, _config.LightingTubeBlur, _config.LightingTubeEndFade, _config.LightingTubeColor)
+                ? new LightingSurfaceOptions(_config.LightingTestPattern, _config.LightingFpsLimit, _config.LightingShowFps, _config.LightingRenderScale, _config.LightingFillHeightMaxCrop, _config.LightingSoundEnabled, _config.LightingSoundVolume, _config.LightingGlassReflection, _config.LightingTubeVisualOpacity, _config.LightingTubeThickness, _config.LightingTubeBlur, _config.LightingTubeEndFade, _config.LightingTubeColor, _config.LightingLatestWinsGeneration, _config.LightingMapCache, _config.LightingPresentPipeline)
                 : null;
 
             // screens the user excluded from MarqueeManager (Mon setup → "use this

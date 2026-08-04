@@ -102,14 +102,38 @@ half4 main(float2 p) {
     private volatile bool _generating;
     private string? _currentSceneRom;
 
+    // Lot B: a generation is stale once _requested no longer points at its image;
+    // such a result is disposed, never adopted, and the opaque scene never masks the
+    // new game's fallback while its scene is still generating.
+    private readonly bool _latestWinsGeneration;
+    // Lot C: LRU cache of generated maps, keyed by image+mtime+surface+profile.
+    private readonly bool _mapCache;
+    private readonly LightingMapCache? _mapCacheStore;
+
+    // Generation runs on ONE dedicated thread, never the thread pool: during ES
+    // navigation bursts the pool queued generations for ~2 s before they even ran
+    // (wall ≫ compute). A dedicated thread removes that queue wait; single-flight is
+    // still enforced by _generating, so at most one generation runs at a time.
+    private readonly System.Threading.SemaphoreSlim _genSignal = new(0);
+    private readonly object _genLock = new();
+    private Thread? _genThread;
+    private volatile bool _genShutdown;
+    private MarqueeRequest? _genRequest;
+    private int _genW, _genH;
+    private System.Diagnostics.Stopwatch? _genClock;
+
     public MarqueeLightingRenderer(ILogger logger, LightingLibraries libraries, double fillHeightMaxCrop = 0.30,
         Infrastructure.Audio.LightingSoundService? sound = null, double glassReflection = 0.06,
         double tubeVisualOpacity = 0.0, double tubeThickness = 1.0, double tubeBlur = 1.0,
-        double tubeEndFade = 0.10, string? tubeColor = null)
+        double tubeEndFade = 0.10, string? tubeColor = null,
+        bool latestWinsGeneration = true, bool mapCache = true)
     {
         _logger = logger;
         _libraries = libraries;
         _sound = sound;
+        _latestWinsGeneration = latestWinsGeneration;
+        _mapCache = mapCache;
+        _mapCacheStore = mapCache ? new LightingMapCache(64L * 1024 * 1024) : null;
         _fillHeightMaxCrop = Math.Clamp(fillHeightMaxCrop, 0.0, 0.6);
         _glassReflection = (float)Math.Clamp(glassReflection, 0.0, 0.3);
         _tubeVisualOpacity = (float)Math.Clamp(tubeVisualOpacity, 0.0, 0.5);
@@ -119,6 +143,44 @@ half4 main(float2 p) {
         _tubeColor = ParseTubeColor(tubeColor, new SKColor(255, 224, 178));
         _effect = SKRuntimeEffect.CreateShader(Sksl, out var errors)
                   ?? throw new InvalidOperationException($"SKSL compilation failed: {errors}");
+        _genThread = new Thread(GenerationLoop)
+        {
+            IsBackground = true,
+            Name = "MarqueeManager.Lighting.Gen",
+            Priority = ThreadPriority.Normal
+        };
+        _genThread.Start();
+    }
+
+    /// <summary>Dedicated generation thread: waits for a request, runs it to completion,
+    /// repeats. Off the thread pool so navigation bursts never queue it behind pool work.</summary>
+    private void GenerationLoop()
+    {
+        while (true)
+        {
+            _genSignal.Wait();
+            if (_genShutdown) return;
+            MarqueeRequest request;
+            int w, h;
+            System.Diagnostics.Stopwatch clock;
+            lock (_genLock)
+            {
+                if (_genRequest == null) continue;
+                request = _genRequest;
+                w = _genW;
+                h = _genH;
+                clock = _genClock ?? System.Diagnostics.Stopwatch.StartNew();
+            }
+            try
+            {
+                RunGeneration(request, w, h, clock);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lighting map generation failed for {Path}; static image stays", request.Path);
+                lock (_resultLock) { _generating = false; }
+            }
+        }
     }
 
     private readonly float _tubeThickness;
@@ -445,6 +507,18 @@ half4 main(float2 p) {
 
         _steadySlot = (long)(elapsed.TotalSeconds * FlickerHz);
         _dirty = false;
+
+        // Lot B: a different game is now selected but its lighting scene isn't generated
+        // yet — do NOT let the previous opaque scene mask the new game's fallback. Show
+        // the new fallback (transparent) with ingame fx until the new scene is adopted.
+        if (_latestWinsGeneration && requested != null && _currentPath != null
+            && !string.Equals(requested.Path, _currentPath, StringComparison.OrdinalIgnoreCase))
+        {
+            canvas.Clear(SKColors.Transparent);
+            _sound?.SetLevels(0f, 0f);
+            RenderOverlayFx(canvas, width, height, elapsed.TotalSeconds);
+            return;
+        }
 
         if (_maps == null || _currentPath == null)
         {
@@ -1005,12 +1079,44 @@ half4 main(float2 p) {
         }
     }
 
+    // Lot B: still the scene the UI wants? Generation is keyed on the requested image
+    // path; a newer (different-path) selection makes an in-flight/pending result stale.
+    private bool IsCurrentPath(string path)
+    {
+        var current = _requested;
+        return current != null && string.Equals(current.Path, path, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsRequestCurrent(MarqueeRequest request) => IsCurrentPath(request.Path);
+
+    // Lot C: everything that determines the generated scene — source image + its mtime,
+    // the surface size (framing/offset), the rom (lamp scene → framing span) and the
+    // resolved bulb + aging (map tint). The derived crop is a deterministic function of
+    // these, so it need not be in the key.
+    private static string BuildCacheKey(string sourcePath, int surfaceWidth, int surfaceHeight, string? rom, ResolvedLightProfile profile)
+    {
+        long mtime = 0;
+        try { mtime = File.GetLastWriteTimeUtc(sourcePath).Ticks; } catch { /* keep 0 */ }
+        return string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"{sourcePath}|{mtime}|{surfaceWidth}x{surfaceHeight}|{rom}|{profile.Bulb.Id}|{profile.Aging:F3}");
+    }
+
     private void StartGeneration(MarqueeRequest request, int surfaceWidth, int surfaceHeight)
     {
-        _generating = true;
-        var generationClock = System.Diagnostics.Stopwatch.StartNew();
-        Task.Run(() =>
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        lock (_genLock)
         {
+            _genRequest = request;
+            _genW = surfaceWidth;
+            _genH = surfaceHeight;
+            _genClock = clock;
+            _generating = true;
+        }
+        _genSignal.Release();
+    }
+
+    private void RunGeneration(MarqueeRequest request, int surfaceWidth, int surfaceHeight, System.Diagnostics.Stopwatch generationClock)
+    {
             try
             {
                 var systemLogo = Path.GetFileName(request.Path).Contains("system-marquee", StringComparison.OrdinalIgnoreCase);
@@ -1027,6 +1133,40 @@ half4 main(float2 p) {
                 // declares it: lamp regions were measured on that exact image
                 var sourcePath = lampScene?.CalibratedImagePath ?? request.Path;
 
+                // v0 heuristic until the WS contract carries imageSource (§5): APIExpose
+                // names its upstream-composited images "generated-*"; scans keep "marquee.*".
+                var fileName = Path.GetFileName(sourcePath);
+                var composited = fileName.StartsWith("generated-", StringComparison.OrdinalIgnoreCase);
+                var profile = _libraries.Resolve(request.Meta, composited);
+
+                // Lot C: cache lookup BEFORE the decode. A hit reuses the whole baked
+                // scene (offset/framing/lamps) and only clones the maps — no decode, no
+                // framing, no per-pixel generation.
+                var cacheKey = _mapCache
+                    ? BuildCacheKey(sourcePath, surfaceWidth, surfaceHeight, request.Meta?.Rom, profile)
+                    : null;
+                if (cacheKey != null && _mapCacheStore!.TryGetClone(cacheKey, out var cached) && cached != null)
+                {
+                    if (_latestWinsGeneration && !IsRequestCurrent(request))
+                    {
+                        cached.Maps.Dispose();
+                        lock (_resultLock) { _generating = false; }
+                        return;
+                    }
+                    Volatile.Write(ref _lastMapGenerationMs, generationClock.Elapsed.TotalMilliseconds);
+                    lock (_resultLock)
+                    {
+                        _pendingResult?.Item2.Dispose();
+                        _pendingResult = (request.Path, cached.Maps, cached.Offset, cached.SurfaceWidth, cached.SurfaceHeight,
+                            cached.Profile, cached.Backlight, cached.LampScene, cached.Rom);
+                        _generating = false;
+                        _dirty = true;
+                    }
+                    _logger.LogInformation("Lighting maps CACHE HIT for {File} at {W}x{H} ({WallMs} ms wall)",
+                        fileName, surfaceWidth, surfaceHeight, generationClock.ElapsedMilliseconds);
+                    return;
+                }
+
                 using var source = SKBitmap.Decode(sourcePath);
                 if (source == null || source.Width == 0 || source.Height == 0)
                 {
@@ -1035,11 +1175,13 @@ half4 main(float2 p) {
                     return;
                 }
 
-                // v0 heuristic until the WS contract carries imageSource (§5): APIExpose
-                // names its upstream-composited images "generated-*"; scans keep "marquee.*".
-                var fileName = Path.GetFileName(sourcePath);
-                var composited = fileName.StartsWith("generated-", StringComparison.OrdinalIgnoreCase);
-                var profile = _libraries.Resolve(request.Meta, composited);
+                // Lot B checkpoint: superseded during decode → abort before the heavy
+                // map generation (source disposed by `using`).
+                if (_latestWinsGeneration && !IsRequestCurrent(request))
+                {
+                    lock (_resultLock) { _generating = false; }
+                    return;
+                }
 
                 // content-aware framing: fill height without ever cutting the title;
                 // system logos stay centered and modest; DOF lamps must all stay in frame
@@ -1066,11 +1208,26 @@ half4 main(float2 p) {
 
                 var started = System.Diagnostics.Stopwatch.StartNew();
                 var maps = AutoMapGenerator.Generate(source, framing.Width, framing.Height, profile, framing.SourceCrop);
-                _logger.LogInformation("Lighting maps for {Path}{Calibrated} at {W}x{H} in {Ms} ms — bulb {Bulb} (via {Source}), aging {Aging:F2}, {Tubes} tube(s), {Framing}{Lamps}",
+                _logger.LogInformation("Lighting maps for {Path}{Calibrated} at {W}x{H} in {Ms} ms compute / {WallMs} ms wall — bulb {Bulb} (via {Source}), aging {Aging:F2}, {Tubes} tube(s), {Framing}{Lamps}",
                     fileName, sourcePath != request.Path ? " [image DOF calibrée]" : "",
-                    framing.Width, framing.Height, started.ElapsedMilliseconds,
+                    framing.Width, framing.Height, started.ElapsedMilliseconds, generationClock.ElapsedMilliseconds,
                     profile.Bulb.Id, profile.Source, profile.Aging, backlight.TwoTubes ? 2 : 1, framing.Label,
                     lampScene != null ? $", {lampScene.Lamps.Count} DOF lamp(s)" : "");
+
+                // Lot C: cache a deep copy of the freshly generated scene (the cache
+                // owns its copy; `maps` stays the renderer's). Cached even if superseded
+                // below, so the next visit to this game is a hit.
+                if (cacheKey != null)
+                    _mapCacheStore!.Put(cacheKey, maps, offset, surfaceWidth, surfaceHeight, profile, backlight, lampScene, request.Meta?.Rom);
+
+                // Lot B checkpoint: a newer selection superseded this scene during
+                // generation → dispose, never publish it as a pending result.
+                if (_latestWinsGeneration && !IsRequestCurrent(request))
+                {
+                    maps.Dispose();
+                    lock (_resultLock) { _generating = false; }
+                    return;
+                }
 
                 Volatile.Write(ref _lastMapGenerationMs, generationClock.Elapsed.TotalMilliseconds);
                 lock (_resultLock)
@@ -1086,7 +1243,6 @@ half4 main(float2 p) {
                 _logger.LogError(ex, "Lighting map generation failed for {Path}; static image stays", request.Path);
                 lock (_resultLock) { _generating = false; }
             }
-        });
     }
 
     private static RbMarqueeScene RemapForCrop(RbMarqueeScene scene, SKRectI crop, int sourceWidth)
@@ -1119,6 +1275,14 @@ half4 main(float2 p) {
         }
         if (result == null) return;
         var (path, maps, offset, w, h, profile, backlight, lampScene, rom) = result.Value;
+
+        // Lot B: a newer (different-path) selection superseded this scene before it
+        // could be adopted — dispose it, never show the wrong game.
+        if (_latestWinsGeneration && !IsCurrentPath(path))
+        {
+            maps.Dispose();
+            return;
+        }
 
         // Same game, only a new LightingMap (resize / adaptive scale / reframe):
         // the dynamic state — arcade outputs, lamp intensities, running effects,
@@ -1252,6 +1416,9 @@ half4 main(float2 p) {
 
     public void Dispose()
     {
+        _genShutdown = true;
+        _genSignal.Release();
+        _genThread?.Join(2000);
         ClearScene();
         lock (_resultLock)
         {
@@ -1262,5 +1429,6 @@ half4 main(float2 p) {
         _glowPaint.Dispose();
         _glassPaint.Dispose();
         _effect.Dispose();
+        _mapCacheStore?.Dispose();
     }
 }
