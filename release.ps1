@@ -32,6 +32,11 @@ $ex = @(
     "-x!$name\MARQUEE_MANAGER_SETUP.md", "-x!$name\state", "-x!$name\media",
     "-x!$name\scripts\optimize-sprite-gifs.ps1",
     "-x!$name\Resources\sprites\master",
+    "-x!$name\tests",
+    # dist = installeur Inno compile (~90 Mo) ; installer = sources .iss. Jamais dans
+    # le pack runtime (sinon full/update explosent). Idem APIExpose.
+    "-x!$name\dist", "-x!$name\installer",
+    '-xr!obj', '-xr!bin',
     '-xr!CAHIER_DES_CHARGES*', '-xr!*.log', '-xr!__pycache__', '-xr!*.pyc'
 )
 
@@ -56,8 +61,19 @@ if ($LASTEXITCODE -ne 0) { throw "Construction de update.7z echouee (exit $LASTE
 & $sz a -t7z $update "$name\Resources\sprites\" "-x!$name\Resources\sprites\master" -mx=5 -bsp0 -bso0
 if ($LASTEXITCODE -ne 0) { throw "Ajout des sprites a update.7z echoue (exit $LASTEXITCODE)." }
 
-$fullListing = & $sz l $full
-$updateListing = & $sz l $update
+# L'archive fraichement ecrite peut etre brievement verrouillee (scan antivirus /
+# flush disque) : "7z l" renvoie alors une liste vide. On relit avec quelques essais.
+function Get-ArchiveListing {
+    param([string]$SevenZip, [string]$Archive)
+    for ($i = 0; $i -lt 6; $i++) {
+        if ($i -gt 0) { Start-Sleep -Milliseconds 500 }
+        $listing = & $SevenZip l $Archive
+        if ($listing) { return $listing }
+    }
+    throw "Listing de $Archive vide apres plusieurs tentatives (fichier verrouille ?)."
+}
+$fullListing = Get-ArchiveListing $sz $full
+$updateListing = Get-ArchiveListing $sz $update
 function Assert-ArchiveContent {
     param(
         [Parameter(Mandatory = $true)][string]$ArchiveName,
