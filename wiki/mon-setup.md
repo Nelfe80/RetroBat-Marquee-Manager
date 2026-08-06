@@ -43,6 +43,18 @@ Les onglets **Navigation ES / En jeu / Les deux** en haut filtrent l'édition pa
 !!! note "Vidéo live"
     Le composant vidéo peut suivre une chaîne **stream Twitch en direct > YouTube > vidéo locale** : s'il existe un live sur le jeu affiché, il prend la place de la vidéo. Identifiants dans Options → Sources en ligne ; sans clé, la vidéo locale s'affiche simplement.
 
+### Le tableau de scores
+
+Le composant **Hiscores** affiche le classement du jeu courant. Ses options (inspecteur, groupe *Contenu*) :
+
+- **Source** — *Classement local* (les scores captés sur la borne), *NelfePlay (en ligne)* (le **Top 100 mondial** certifié du jeu), ou *Les deux* : les deux tableaux s'affichent **l'un après l'autre** (le mondial d'abord), en n'affichant que celui qui existe.
+- **Mon meilleur rang** — sous chaque tableau, une ligne rappelle **votre** position : en local, votre meilleure ligne pour le jeu ; en mondial, votre rang certifié (ou une invitation à vous identifier sur NelfePlay). Le libellé est personnalisable (`{rank} {of} {score} {pseudo}`) et localisé.
+- **Lignes par page** — un nombre libre, ou **Dynamique** : le nombre s'ajuste à la place disponible (une marquee large et courte en montre peu, une zone haute davantage). Au-delà de N lignes, le tableau défile page par page.
+- **Position** — le tableau se cale en **haut / milieu / bas** de sa zone.
+- **Couleur rang/score** — or par défaut, une couleur fixe, ou **Auto** : une couleur vive extraite du logo/marquee du jeu.
+- **Titre** — `{name}` (ou simplement `gamename`) = nom du jeu ; le titre est **découplé** de la liste (un titre long ne rapetisse plus le score).
+- Un discret **filigrane** *local / mondial* en bas indique le tableau affiché à l'instant t.
+
 ## Mires, identification, DMD, tactile
 
 - **Identifier les écrans** affiche un grand numéro sur chaque écran physique.

@@ -43,6 +43,18 @@ The **ES browsing / Ingame / Both** tabs at the top filter editing per state.
 !!! note "Live video"
     The video component can follow a **live Twitch stream > YouTube > local video** chain: if a live stream exists for the displayed game, it takes the video's place. Credentials in Options → Online sources; without keys, the local video simply shows.
 
+### The score board
+
+The **Hiscores** component shows the current game's leaderboard. Its options (inspector, *Content* group):
+
+- **Source** — *Local hiscores* (scores captured on the cabinet), *NelfePlay (online)* (the game's certified **world Top 100**), or *Both*: the two boards show **one after another** (world first), displaying only the one that has data.
+- **My best rank** — under each board, a line recalls **your** position: locally, your best line for the game; worldwide, your certified rank (or a prompt to identify on NelfePlay). The label is customizable (`{rank} {of} {score} {pseudo}`) and localized.
+- **Rows per page** — a free number, or **Dynamic**: the count fits the available space (a wide, short marquee shows few; a taller zone more). Beyond N rows, the board cycles page by page.
+- **Alignment** — the board sits at the **top / middle / bottom** of its zone.
+- **Rank/score colour** — gold by default, a fixed colour, or **Auto**: a vivid colour pulled from the game logo/marquee.
+- **Title** — `{name}` (or just `gamename`) = game name; the title is **decoupled** from the list (a long title no longer shrinks the score).
+- A faint *local / world* **watermark** at the bottom tells which board is on screen right now.
+
 ## Test patterns, identification, DMD, touch
 
 - **Identify screens** shows a big number on every physical screen.
