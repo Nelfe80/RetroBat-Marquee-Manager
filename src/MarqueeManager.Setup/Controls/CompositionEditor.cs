@@ -380,7 +380,8 @@ public sealed class CompositionEditor : Window
                 rect.Child = new Image
                 {
                     Source = LoadThumb(mediaPath),
-                    Stretch = component.Options.TryGetValue("stretch", out var s) && s == "fill" ? Stretch.Fill : Stretch.Uniform,
+                    // Never distort a media: "fill" = UniformToFill (keeps aspect, crops).
+                    Stretch = component.Options.TryGetValue("stretch", out var s) && s == "fill" ? Stretch.UniformToFill : Stretch.Uniform,
                     Opacity = 0.9,
                     IsHitTestVisible = false
                 };
@@ -559,6 +560,10 @@ public sealed class CompositionEditor : Window
 
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
+        // While typing in a field (e.g. the leaderboard title), the editor shortcuts
+        // (Delete = remove layer, Ctrl+D/Z/Y…) must NOT fire — let the field handle the key.
+        if (Keyboard.FocusedElement is System.Windows.Controls.TextBox) return;
+
         if (e.Key == Key.Delete && _selected != null)
         {
             SnapshotHistory();
@@ -763,6 +768,108 @@ public sealed class CompositionEditor : Window
                 "D'où vient ce média ? Flux APIExpose du jeu courant, selon les priorités du système (Mes systèmes).",
                 "Where does this media come from? The current game's APIExpose stream, per the system priorities (My systems).")));
         }
+        if (component.Type == "overlay.hiscore")
+        {
+            ComboBox Combo(string key, string defaultValue, params (string tag, string fr, string en)[] items)
+            {
+                var box = Ui.ComboBox(180);
+                var current = component.Options.TryGetValue(key, out var cv) && cv.Length > 0 ? cv : defaultValue;
+                foreach (var (tag, fr, en) in items)
+                {
+                    var item = new ComboBoxItem { Content = L.T(fr, en), Tag = tag };
+                    box.Items.Add(item);
+                    if (tag.Equals(current, StringComparison.OrdinalIgnoreCase)) box.SelectedItem = item;
+                }
+                if (box.SelectedItem == null) box.SelectedIndex = 0;
+                box.SelectionChanged += (_, _) => { if ((box.SelectedItem as ComboBoxItem)?.Tag is string t) component.Options[key] = t; };
+                return box;
+            }
+            CheckBox Toggle(string key, string fr, string en, bool def)
+            {
+                var cb = Ui.CheckBox(L.T(fr, en),
+                    component.Options.TryGetValue(key, out var v) ? !v.Equals("false", StringComparison.OrdinalIgnoreCase) : def);
+                cb.Checked += (_, _) => component.Options[key] = "true";
+                cb.Unchecked += (_, _) => component.Options[key] = "false";
+                return cb;
+            }
+
+            // Defaults follow the chosen source AND the UI language; they're plain text the
+            // operator can override (title + "my rank" footer). suppress guards programmatic
+            // refreshes so they don't get recorded as manual customizations.
+            var suppress = false;
+            string SourceNow() => component.Options.TryGetValue("source", out var s) && s.Length > 0 ? s : "local";
+            string TitleDefault(string src) => src.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
+                ? L.T("{name} — CLASSEMENT MONDIAL", "{name} — WORLD RANKING")
+                : L.T("{name} — CLASSEMENT LOCAL", "{name} — LOCAL LEADERBOARD");
+            string MyRankDefault(string src) => src.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
+                ? L.T("★ TON RANG MONDIAL  {rank} / {of}", "★ YOUR WORLD RANK  {rank} / {of}")
+                : L.T("★ TON MEILLEUR ICI  {rank}   {score}", "★ YOUR BEST HERE  {rank}   {score}");
+
+            var titleBox = Ui.TextBox(component.Options.TryGetValue("title", out var tv) ? tv : TitleDefault(SourceNow()), 200);
+            titleBox.TextChanged += (_, _) => { if (!suppress) component.Options["title"] = titleBox.Text; };
+            var myRankBox = Ui.TextBox(component.Options.TryGetValue("myRankTemplate", out var mrv) ? mrv : MyRankDefault(SourceNow()), 200);
+            myRankBox.TextChanged += (_, _) => { if (!suppress) component.Options["myRankTemplate"] = myRankBox.Text; };
+
+            content.Children.Add(Ui.Row(L.T("Titre", "Title"), titleBox, labelWidth: 90));
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "{name} (ou simplement « gamename ») = nom du jeu ; {system} = système.",
+                "{name} (or just \"gamename\") = game name; {system} = system.")));
+            var sourceCombo = Combo("source", "local",
+                ("local", "Classement local", "Local hiscores"),
+                ("nelfeplay", "NelfePlay (en ligne)", "NelfePlay (online)"),
+                ("dual", "Les deux (monde puis local)", "Both (world then local)"));
+            sourceCombo.SelectionChanged += (_, _) =>
+            {
+                suppress = true;
+                if (!component.Options.ContainsKey("title")) titleBox.Text = TitleDefault(SourceNow());
+                if (!component.Options.ContainsKey("myRankTemplate")) myRankBox.Text = MyRankDefault(SourceNow());
+                suppress = false;
+            };
+            content.Children.Add(Ui.Row(L.T("Source", "Source"), sourceCombo, labelWidth: 90));
+            // Rows: a free number, or "Dynamique" which fits the count to the available zone.
+            var isDynRows = !component.Options.TryGetValue("rows", out var rowsVal)
+                || string.IsNullOrWhiteSpace(rowsVal)
+                || (rowsVal.Trim().ToLowerInvariant() is "0" or "auto" or "dynamic" or "dynamique");
+            var rowsBox = Ui.TextBox(isDynRows ? "10" : rowsVal!.Trim(), 60);
+            rowsBox.IsEnabled = !isDynRows;
+            var dynRows = Ui.CheckBox(L.T("Dynamique (selon la place)", "Dynamic (fit to space)"), isDynRows);
+            dynRows.Margin = new Thickness(10, 0, 0, 0);
+            rowsBox.TextChanged += (_, _) => { if (dynRows.IsChecked != true) component.Options["rows"] = rowsBox.Text.Trim(); };
+            dynRows.Checked += (_, _) => { component.Options["rows"] = "auto"; rowsBox.IsEnabled = false; };
+            dynRows.Unchecked += (_, _) => { rowsBox.IsEnabled = true; component.Options["rows"] = string.IsNullOrWhiteSpace(rowsBox.Text) ? "10" : rowsBox.Text.Trim(); };
+            var rowsPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            rowsPanel.Children.Add(rowsBox);
+            rowsPanel.Children.Add(dynRows);
+            content.Children.Add(Ui.Row(L.T("Lignes par page", "Rows per page"), rowsPanel, labelWidth: 90));
+            content.Children.Add(Ui.Row(L.T("Durée par page (s)", "Page duration (s)"), Combo("pageSeconds", "6",
+                ("4", "4", "4"), ("6", "6", "6"), ("8", "8", "8"), ("10", "10", "10")), labelWidth: 90));
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "Au-delà de N lignes, le classement défile page par page (max 100 par jeu). « Dynamique » ajuste N à la surface.",
+                "Beyond N rows, the leaderboard cycles page by page (max 100 per game). \"Dynamic\" fits N to the surface.")));
+            content.Children.Add(Ui.Row(L.T("Mode", "Mode"), Combo("mode", "full",
+                ("full", "Classement complet", "Full ranking"), ("best", "Meilleur score", "Best score only")), labelWidth: 90));
+            content.Children.Add(Ui.Row(L.T("Fond", "Background"), Combo("background", "dark",
+                ("dark", "Sombre", "Dark"), ("transparent", "Transparent", "Transparent"), ("gradient", "Dégradé", "Gradient")), labelWidth: 90));
+            content.Children.Add(Ui.Row(L.T("Position", "Alignment"), Combo("align", "middle",
+                ("top", "Haut", "Top"), ("middle", "Milieu", "Middle"), ("bottom", "Bas", "Bottom")), labelWidth: 90));
+            content.Children.Add(Ui.Row(L.T("Couleur rang/score", "Rank/score colour"), Combo("color", "gold",
+                ("gold", "Or (défaut)", "Gold (default)"), ("auto", "Auto (couleur du jeu)", "Auto (game colour)"),
+                ("white", "Blanc", "White"), ("cyan", "Cyan", "Cyan"), ("green", "Vert", "Green"),
+                ("orange", "Orange", "Orange"), ("pink", "Rose", "Pink"), ("red", "Rouge", "Red")), labelWidth: 90));
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "« Auto » extrait une couleur vive du logo/marquee du jeu (repli or si absent).",
+                "\"Auto\" pulls a vivid colour from the game logo/marquee (falls back to gold).")));
+            content.Children.Add(Toggle("showTitle", "Afficher le titre", "Show title", true));
+            content.Children.Add(Toggle("showRank", "Colonne rang", "Rank column", true));
+            content.Children.Add(Toggle("highlight", "Mettre en valeur un nouveau score", "Highlight a new score", true));
+            content.Children.Add(Toggle("showSource", "Filigrane « local / mondial » en bas", "\"local / world\" watermark at the bottom", true));
+            content.Children.Add(Toggle("showMyRank", "Afficher mon meilleur rang (sous le classement)", "Show my best rank (below the board)", true));
+            content.Children.Add(Ui.Row(L.T("Libellé du rang", "Rank label"), myRankBox, labelWidth: 90));
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "Modèle libre — {rank} {of} {score} {pseudo}. Local : ta meilleure ligne du jeu. NelfePlay : ton rang mondial certifié (ou une invitation à t'identifier).",
+                "Free template — {rank} {of} {score} {pseudo}. Local: your best line for the game. NelfePlay: your certified world rank (or a prompt to identify).")));
+        }
+
         _inspector.Children.Add(Group(1, L.T("Contenu", "Content"), content));
 
         // --- Style ---
@@ -797,7 +904,7 @@ public sealed class CompositionEditor : Window
         }
         else if (component.Type.StartsWith("media."))
         {
-            var stretch = Ui.CheckBox(L.T("Étirer (fill)", "Stretch (fill)"),
+            var stretch = Ui.CheckBox(L.T("Remplir la zone (recadrer, sans déformer)", "Fill the zone (crop, no distortion)"),
                 component.Options.TryGetValue("stretch", out var s) && s == "fill");
             stretch.Checked += (_, _) => component.Options["stretch"] = "fill";
             stretch.Unchecked += (_, _) => component.Options.Remove("stretch");

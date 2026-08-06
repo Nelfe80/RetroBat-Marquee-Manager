@@ -708,20 +708,192 @@ public sealed class WebSocketListenerService : BackgroundService
             return;
         }
 
-        var score = Text(payload, "Score", "score", "Value", "value");
-        var player = Text(payload, "Player", "player", "Name", "name");
-        if (score.Length == 0)
+        // Prefer the full ranking (Top N) when APIExpose sends the Scores collection.
+        var scores = Child(payload, "Scores", "scores");
+        if (scores.ValueKind == JsonValueKind.Array)
         {
-            var scores = Child(payload, "Scores", "scores");
-            if (scores.ValueKind == JsonValueKind.Array)
+            var rows = ParseHiscoreRows(scores);
+            if (rows.Count > 0)
             {
-                var first = scores.EnumerateArray().FirstOrDefault();
-                score = Text(first, "Score", "score", "Value", "value");
-                player = Text(first, "Name", "name", "Player", "player");
+                _surfaces.SetHiscoreLeaderboard(HiscoreGameLabel(payload, rom), _selectedSystem ?? string.Empty, rows);
+                return;
             }
         }
+
+        // Fallback: a single value (legacy single-line overlay — zero regression).
+        var score = Text(payload, "Score", "score", "Value", "value");
+        var player = Text(payload, "Player", "player", "Name", "name");
         if (score.Length == 0) return;
         _surfaces.SetInformation("hiscore", "HIGH SCORE", $"{player} {score}".Trim(), null, true, 0);
+    }
+
+    /// <summary>Display label for the leaderboard title ("&lt;GAME&gt; — LOCAL LEADERBOARD").
+    /// Prefers a real game name from the payload, else the rom id. Never translated.</summary>
+    private string HiscoreGameLabel(JsonElement payload, string rom)
+    {
+        var name = Text(payload, "GameName", "gameName", "Title", "title", "LongName", "longName");
+        return name.Length > 0 ? name : rom;
+    }
+
+    /// <summary>Builds the leaderboard rows from a Scores JSON array (shared by the WS
+    /// hiscore event and the HTTP fetch). Ranks default to the row position.</summary>
+    private List<Core.HiscoreRow> ParseHiscoreRows(JsonElement scores)
+    {
+        var rows = new List<Core.HiscoreRow>();
+        if (scores.ValueKind != JsonValueKind.Array) return rows;
+        var index = 0;
+        foreach (var entry in scores.EnumerateArray())
+        {
+            index++;
+            var name = Text(entry, "Name", "name", "Player", "player");
+            var value = Text(entry, "Score", "score", "Value", "value");
+            if (value.Length == 0 && name.Length == 0) continue;
+            var rank = Text(entry, "Rank", "rank");
+            if (rank.Length == 0) rank = index.ToString();
+            rows.Add(new Core.HiscoreRow(rank, name, value));
+        }
+        return rows;
+    }
+
+    private CancellationTokenSource? _hiscoreFetchCts;
+
+    private void CancelHiscoreFetch()
+    {
+        try { _hiscoreFetchCts?.Cancel(); } catch { /* already disposed */ }
+        _hiscoreFetchCts = null;
+    }
+
+    /// <summary>Lot 3: debounced (latest-wins) fetch of GET /api/v1/hiscores for the
+    /// just-selected game, so the leaderboard appears while browsing ES — not only on
+    /// hiscore.updated. A fast scroll cancels pending fetches and only the last runs.</summary>
+    private void ScheduleHiscoreFetch(string rom)
+    {
+        CancelHiscoreFetch();
+        var cts = new CancellationTokenSource();
+        _hiscoreFetchCts = cts;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(500, cts.Token).ConfigureAwait(false);
+                await FetchHiscoreLeaderboardAsync(rom, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) { /* superseded by a newer selection */ }
+            catch (Exception ex) { _logger.LogDebug("Hiscore fetch failed: {Message}", ex.Message); }
+        }, cts.Token);
+    }
+
+    private async Task FetchHiscoreLeaderboardAsync(string rom, CancellationToken ct)
+    {
+        var url = $"{HttpBaseUrl()}/api/v1/hiscores";
+        using var response = await VideoHttp.GetAsync(url, ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return; // no running/selected game, not found, error
+        var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        // Selection may have moved on while the request was in flight.
+        if (ct.IsCancellationRequested || !rom.Equals(_selectedRom, StringComparison.OrdinalIgnoreCase)) return;
+
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (Text(root, "Status", "status").Equals("error", StringComparison.OrdinalIgnoreCase)) return;
+        var rows = ParseHiscoreRows(Child(root, "Scores", "scores"));
+        if (rows.Count == 0) return;
+        var romName = Text(root, "RomName", "romName");
+        var myRank = LocalMyRank(rows, Text(root, "Me", "me"));
+        _surfaces.SetHiscoreLeaderboard(romName.Length > 0 ? romName : rom, _selectedSystem ?? string.Empty, rows, "local", myRank);
+    }
+
+    /// <summary>"Your best line" under the LOCAL board: the current player's best row
+    /// (rows arrive rank-sorted, so the first name match is the best). Null when nobody is
+    /// identified at the cabinet (anonymous), so no footer is drawn at all.</summary>
+    private static Core.HiscoreMyRank? LocalMyRank(IReadOnlyList<Core.HiscoreRow> rows, string me)
+    {
+        if (string.IsNullOrWhiteSpace(me)) return null;
+        var who = me.Trim();
+        foreach (var r in rows)
+        {
+            if (!r.Name.Trim().Equals(who, StringComparison.OrdinalIgnoreCase)) continue;
+            return new Core.HiscoreMyRank(false, true, false, r.Rank.Trim(), 0, r.Score.Trim(), who);
+        }
+        return new Core.HiscoreMyRank(false, false, false, string.Empty, 0, string.Empty, who);
+    }
+
+    private string HttpBaseUrl()
+    {
+        var ws = _config.ApiExposeWebSocketBaseUrl ?? "ws://127.0.0.1:12345";
+        return ws.Replace("wss://", "https://").Replace("ws://", "http://").TrimEnd('/');
+    }
+
+    private CancellationTokenSource? _worldFetchCts;
+
+    private void CancelWorldFetch()
+    {
+        try { _worldFetchCts?.Cancel(); } catch { /* already disposed */ }
+        _worldFetchCts = null;
+    }
+
+    /// <summary>Debounced (latest-wins) fetch of the NelfePlay WORLD ranking (proxy of
+    /// records/leaderboard) for the selected game, feeding a nelfeplay-source overlay.hiscore.</summary>
+    private void ScheduleWorldFetch(string rom)
+    {
+        CancelWorldFetch();
+        var cts = new CancellationTokenSource();
+        _worldFetchCts = cts;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(600, cts.Token).ConfigureAwait(false);
+                await FetchWorldLeaderboardAsync(rom, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) { /* superseded */ }
+            catch (Exception ex) { _logger.LogDebug("World leaderboard fetch failed: {Message}", ex.Message); }
+        }, cts.Token);
+    }
+
+    private async Task FetchWorldLeaderboardAsync(string rom, CancellationToken ct)
+    {
+        var url = $"{HttpBaseUrl()}/api/v1/nelfeplay/records/leaderboard";
+        using var response = await VideoHttp.GetAsync(url, ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return;
+        var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (ct.IsCancellationRequested || !rom.Equals(_selectedRom, StringComparison.OrdinalIgnoreCase)) return;
+
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (!(root.TryGetProperty("present", out var present) && present.ValueKind == JsonValueKind.True)) return;
+        if (!root.TryGetProperty("leaderboard", out var board) || board.ValueKind != JsonValueKind.Array) return;
+
+        var rows = new List<Core.HiscoreRow>();
+        foreach (var entry in board.EnumerateArray())
+        {
+            var score = entry.TryGetProperty("score", out var sc) ? sc.ToString() : string.Empty;
+            if (score.Length == 0) continue;
+            var rank = entry.TryGetProperty("rank", out var rk) ? rk.ToString() : string.Empty;
+            var anon = entry.TryGetProperty("anonymous", out var an) && an.ValueKind == JsonValueKind.True;
+            var player = (anon || !entry.TryGetProperty("player", out var pl)) ? "ANON" : (pl.GetString() ?? "ANON");
+            rows.Add(new Core.HiscoreRow(rank, player, score));
+        }
+        if (rows.Count == 0) return;
+        _surfaces.SetHiscoreLeaderboard(rom, _selectedSystem ?? string.Empty, rows, "nelfeplay", WorldMyRank(root));
+    }
+
+    /// <summary>"Your rank" under the WORLD board, from the me{} block records/leaderboard
+    /// embeds: the certified rank if any, else a paired/unpaired state the window turns into
+    /// a not-ranked-yet note or a call to identify.</summary>
+    private static Core.HiscoreMyRank WorldMyRank(JsonElement root)
+    {
+        var paired = root.TryGetProperty("paired", out var pd) && pd.ValueKind == JsonValueKind.True;
+        if (root.TryGetProperty("me", out var me) && me.ValueKind == JsonValueKind.Object)
+        {
+            var rank = me.TryGetProperty("rank", out var rk) && rk.ValueKind == JsonValueKind.Number ? rk.GetInt32() : 0;
+            if (rank > 0)
+            {
+                var of = me.TryGetProperty("of", out var o) && o.ValueKind == JsonValueKind.Number ? o.GetInt32() : 0;
+                var score = me.TryGetProperty("score", out var sc) && sc.ValueKind == JsonValueKind.Number ? sc.GetInt32().ToString() : string.Empty;
+                return new Core.HiscoreMyRank(true, true, paired, rank.ToString(), of, score, string.Empty);
+            }
+        }
+        return new Core.HiscoreMyRank(true, false, paired, string.Empty, 0, string.Empty, string.Empty);
     }
 
     private async Task HandleFrontendAsync(JsonElement root, CancellationToken cancellationToken)
@@ -744,13 +916,21 @@ public sealed class WebSocketListenerService : BackgroundService
             }
             if (selectedRom.Length > 0)
             {
-                if (!string.Equals(_selectedRom, selectedRom, StringComparison.OrdinalIgnoreCase))
-                    _surfaces.ClearInformation("hiscore");
+                var romChanged = !string.Equals(_selectedRom, selectedRom, StringComparison.OrdinalIgnoreCase);
+                if (romChanged) _surfaces.ClearInformation("hiscore");
                 _selectedRom = selectedRom;
+                // Lot 3: load the local leaderboard for the newly-selected game so it
+                // shows while browsing ES (debounced so a fast scroll fetches once).
+                if (romChanged) ScheduleHiscoreFetch(selectedRom);
+                // World ranking (NelfePlay) only when a surface asks for it, to avoid
+                // hitting the online endpoint on every browse.
+                if (romChanged && _surfaces.HasHiscoreSource("nelfeplay")) ScheduleWorldFetch(selectedRom);
             }
             else
             {
                 _selectedRom = null;
+                CancelHiscoreFetch();
+                CancelWorldFetch();
                 _surfaces.ClearInformation("hiscore");
             }
             return;

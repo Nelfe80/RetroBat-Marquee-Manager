@@ -151,6 +151,36 @@ public sealed class MarqueeController : IDisposable
         foreach (var window in InformationWindows(owner, target)) window.RemoveInformationOverlay(owner);
     }
 
+    private string? _lastHiscoreGame;
+    private HashSet<string>? _lastHiscoreKeys;
+    private static string HiscoreKey(Core.HiscoreRow row) => (row.Name + "|" + row.Score).Trim();
+
+    /// <summary>Renders the full local hiscore Top-N on every surface carrying the
+    /// overlay.hiscore component. Rows genuinely new since the last update FOR THE SAME
+    /// game are highlighted/animated (a fresh game switch highlights nothing).</summary>
+    public void SetHiscoreLeaderboard(string game, string system, IReadOnlyList<Core.HiscoreRow> rows, string source = "local", Core.HiscoreMyRank? myRank = null)
+    {
+        var highlight = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // New-score highlight is a LOCAL notion (a run you just set); the world board
+        // isn't diffed. Each window only renders the feed matching its own source option.
+        if (source.Equals("local", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.Equals(game, _lastHiscoreGame, StringComparison.OrdinalIgnoreCase) && _lastHiscoreKeys != null)
+            {
+                foreach (var row in rows)
+                {
+                    var key = HiscoreKey(row);
+                    if (!_lastHiscoreKeys.Contains(key)) highlight.Add(key);
+                }
+            }
+            _lastHiscoreGame = game;
+            _lastHiscoreKeys = new HashSet<string>(rows.Select(HiscoreKey), StringComparer.OrdinalIgnoreCase);
+        }
+
+        foreach (var window in WindowsWithComponent("overlay.hiscore"))
+            window.SetHiscoreLeaderboard("hiscore", game, system, rows, highlight, source, myRank);
+    }
+
     /// <summary>Explicit non-marquee target = historical direct routing (panel/lcd
     /// messages name their surface); the default goes to the owner's component.</summary>
     private IEnumerable<MarqueeWindow> InformationWindows(string owner, string target)
@@ -183,6 +213,18 @@ public sealed class MarqueeController : IDisposable
     /// <summary>True when at least one surface carries this component.</summary>
     public bool HasComponent(string type)
         => _surfaces.Values.Any(surface => surface.HasComponent(type));
+
+    /// <summary>True when at least one overlay.hiscore surface uses this data source
+    /// (local / nelfeplay). Lets the listener fetch the world ranking only when composed.</summary>
+    public bool HasHiscoreSource(string source)
+        => _surfaces.Values.Any(surface =>
+        {
+            var options = surface.Component("overlay.hiscore")?.Options;
+            var s = options != null && options.TryGetValue("source", out var v) && v.Length > 0 ? v : "local";
+            // "dual" consumes both feeds, so it counts as having either source.
+            return s.Equals(source, StringComparison.OrdinalIgnoreCase)
+                || s.Equals("dual", StringComparison.OrdinalIgnoreCase);
+        });
 
     /// <summary>First surface's option value for a component type (e.g. the pinned
     /// card number of iccard.static).</summary>

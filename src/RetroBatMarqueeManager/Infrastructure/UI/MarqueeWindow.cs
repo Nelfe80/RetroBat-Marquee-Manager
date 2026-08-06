@@ -45,11 +45,19 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// <summary>The dynamic surface this window renders (null on legacy paths
         /// that never went through GetSurfaces — tests, tooling).</summary>
         private readonly Core.Surfaces.SurfaceDefinition? _surface;
+        // The flux background layer (_backgroundImage) is only shown when the composition
+        // includes a visible media.flux component. A surface built without it (e.g. a topper
+        // carrying only score/leaderboard overlays) no longer shows the fanart/marquee flux.
+        private readonly bool _fluxBackgroundEnabled;
         private ComponentHost? _componentHost;
 
         /// <summary>Media kinds of the current selection → the dynamic components.</summary>
         public void UpdateComponentMedia(IReadOnlyDictionary<string, string?> kinds)
-            => Dispatcher.BeginInvoke(new Action(() => _componentHost?.ApplyMedia(kinds)));
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _componentHost?.ApplyMedia(kinds);
+                UpdateGameAccent(kinds); // refresh the game colour for hiscore boards tinted "auto"
+            }));
 
         /// <summary>Selection meta (name/year/developer/publisher/system) → text.meta.</summary>
         public void UpdateComponentMeta(IReadOnlyDictionary<string, string> meta)
@@ -303,6 +311,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             _dmdWidth = dmdWidth;
             _dmdHeight = dmdHeight;
             _surface = surface;
+            // No surface definition = legacy behavior (always show the flux background).
+            _fluxBackgroundEnabled = surface == null || surface.Component("media.flux")?.Visible == true;
 
             this.WindowStyle = WindowStyle.None;
             this.ResizeMode = ResizeMode.NoResize;
@@ -678,6 +688,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 {
                     await System.Threading.Tasks.Task.Delay(20).ConfigureAwait(false);
                     if (System.Threading.Interlocked.Read(ref _marqueeSeq) != seq) return; // flown past
+                    if (!_fluxBackgroundEnabled) return; // surface composed without a visible media.flux
                     if (!File.Exists(path)) return;
 
                     var decodeWidth = _windowPixelWidth; // captured at positioning, no UI call
@@ -721,6 +732,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             this.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (_latestVideoPath != path) return;
+                if (!_fluxBackgroundEnabled) return; // surface composed without a visible media.flux
                 try
                 {
                     _backgroundImage.Visibility = Visibility.Collapsed;
@@ -1895,6 +1907,515 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             }
         }
 
+        /// <summary>Lot 2: native WPF Top-N local leaderboard (rank · name · score) with the
+        /// title "&lt;GAME&gt; — LOCAL LEADERBOARD", shown when APIExpose sends the full ranking.
+        /// Rows flagged as new (highlightKeys) pulse briefly. Centered for now — Lot 4 will
+        /// make it honor the rect drawn on the overlay.hiscore component in the Setup.</summary>
+        private sealed class HiscoreBoard
+        {
+            public string Owner = "hiscore", Source = "local", Game = "", Sys = "", TitleTemplate = "", Mode = "full", Background = "dark";
+            public IReadOnlyList<Core.HiscoreRow> Rows = System.Array.Empty<Core.HiscoreRow>();
+            public IReadOnlyCollection<string> Highlight = System.Array.Empty<string>();
+            public bool ShowTitle = true, ShowRank = true, HighlightOn = true, ShowSourceTag = true;
+            public int PageSize = 10;            // 0 = dynamic (fit rows to the zone)
+            public int RenderedPageSize = 10;    // rows actually shown last render (drives paging)
+            public int PageSeconds = 6, Total, Page;
+            public string Align = "middle";      // vertical placement in the zone: top|middle|bottom
+            public string ColorSpec = "gold";    // rank/score tint: gold|auto|<named>|#RRGGBB
+            public string? Footer;               // "your best rank" line drawn under the grid, all pages
+        }
+        // One board per source. In "dual" mode both may be present and the page timer cycles
+        // world → local → world…; a single-source component keeps exactly one entry.
+        private readonly List<HiscoreBoard> _hiscoreBoards = new();
+        private int _hiscoreBoardIndex;
+        private DispatcherTimer? _hiscorePageTimer;
+        private System.Windows.Media.Color? _gameAccent;   // vibrant colour extracted from the game media (color=auto)
+        private string? _gameAccentPath;                   // media the accent was computed from (skip recompute)
+        private HiscoreBoard? CurrentHiscoreBoard
+            => _hiscoreBoards.Count == 0 ? null : _hiscoreBoards[Math.Clamp(_hiscoreBoardIndex, 0, _hiscoreBoards.Count - 1)];
+        private static int HiscoreSourceOrder(string source) // "d'abord le nelfeplay"
+            => source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase) ? 0 : 1;
+        private const int HiscoreMaxTotal = 100; // top 100 per machine per game
+
+        public void SetHiscoreLeaderboard(string owner, string game, string system,
+            IReadOnlyList<Core.HiscoreRow> rows, IReadOnlyCollection<string> highlightKeys, string source = "local",
+            Core.HiscoreMyRank? myRank = null)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (_speedrunActive) return; // focus mode: nothing but the speedrun may draw
+
+                var options = _surface?.Component("overlay.hiscore")?.Options;
+                string Opt(string key, string fallback)
+                    => options != null && options.TryGetValue(key, out var v) && v.Length > 0 ? v : fallback;
+                bool Flag(string key, bool fallback)
+                    => options != null && options.TryGetValue(key, out var v) ? !v.Equals("false", StringComparison.OrdinalIgnoreCase) : fallback;
+
+                // A surface shows one source (local / nelfeplay) — or "dual", which accepts
+                // BOTH feeds and cycles them. Ignore a feed the component didn't ask for.
+                var compSource = Opt("source", "local");
+                var isDual = compSource.Equals("dual", StringComparison.OrdinalIgnoreCase);
+                if (!isDual && !string.Equals(source, compSource, StringComparison.OrdinalIgnoreCase)) return;
+
+                // Empty feed for this source: drop its slot; keep the other board in dual.
+                if (rows == null || rows.Count == 0)
+                {
+                    _hiscoreBoards.RemoveAll(b => b.Source.Equals(source, StringComparison.OrdinalIgnoreCase));
+                    if (_hiscoreBoards.Count == 0) { RemoveInformationOverlayCore(owner); return; }
+                    _hiscoreBoardIndex = Math.Clamp(_hiscoreBoardIndex, 0, _hiscoreBoards.Count - 1);
+                    RenderHiscorePage();
+                    EnsureHiscorePageTimer();
+                    return;
+                }
+
+                var mode = Opt("mode", "full");
+                var best = mode.Equals("best", StringComparison.OrdinalIgnoreCase);
+                // rows: a free number, or "auto"/"dynamique"/0/empty = dynamic (fit to zone).
+                var rowsOpt = Opt("rows", "10").Trim().ToLowerInvariant();
+                var dynamic = rowsOpt is "" or "0" or "auto" or "dynamic" or "dynamique";
+                var pageSize = best ? 1 : (dynamic ? 0 : (int.TryParse(rowsOpt, out var rn) ? Math.Clamp(rn, 1, HiscoreMaxTotal) : 0));
+                var pageSeconds = int.TryParse(Opt("pageSeconds", "6"), out var ps) ? Math.Clamp(ps, 2, 60) : 6;
+                var total = Math.Min(rows.Count, best ? 1 : HiscoreMaxTotal);
+                var fr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
+                    .Equals("fr", StringComparison.OrdinalIgnoreCase);
+                // Default title/footer wording is per-source; a custom value (even in dual)
+                // is honoured for both boards, since the operator asked for that text.
+                var defaultTitle = source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
+                    ? (fr ? "{name} — CLASSEMENT MONDIAL" : "{name} — WORLD RANKING")
+                    : (fr ? "{name} — CLASSEMENT LOCAL" : "{name} — LOCAL LEADERBOARD");
+
+                var board = new HiscoreBoard
+                {
+                    Owner = owner, Source = source, Game = game, Sys = system, Rows = rows,
+                    Highlight = highlightKeys ?? System.Array.Empty<string>(),
+                    ShowTitle = Flag("showTitle", true), ShowRank = Flag("showRank", true), HighlightOn = Flag("highlight", true),
+                    ShowSourceTag = Flag("showSource", true),
+                    TitleTemplate = Opt("title", defaultTitle), Mode = mode, Background = Opt("background", "dark"),
+                    Align = Opt("align", "middle").ToLowerInvariant(), ColorSpec = Opt("color", "gold"),
+                    PageSize = pageSize, RenderedPageSize = pageSize > 0 ? pageSize : 10,
+                    PageSeconds = pageSeconds, Total = total, Page = 0,
+                    Footer = (myRank != null && Flag("showMyRank", true)) ? BuildMyRankFooter(myRank, fr, Opt) : null
+                };
+
+                // Upsert this source's board, world first so dual shows nelfeplay then local.
+                _hiscoreBoards.RemoveAll(b => b.Source.Equals(source, StringComparison.OrdinalIgnoreCase));
+                _hiscoreBoards.Add(board);
+                _hiscoreBoards.Sort((a, b) => HiscoreSourceOrder(a.Source).CompareTo(HiscoreSourceOrder(b.Source)));
+                _hiscoreBoardIndex = Math.Clamp(_hiscoreBoardIndex, 0, _hiscoreBoards.Count - 1);
+
+                RenderHiscorePage();
+                EnsureHiscorePageTimer();
+            }));
+        }
+
+        /// <summary>Starts/stops the shared page timer. Needed when any board has more rows
+        /// than a page, OR when two boards must alternate (dual). Each tick advances the
+        /// current board's page and, past its last page, hands over to the next board.</summary>
+        private void EnsureHiscorePageTimer()
+        {
+            var needed = _hiscoreBoards.Count > 1 || _hiscoreBoards.Any(b => b.Total > Math.Max(1, b.RenderedPageSize));
+            if (!needed) { _hiscorePageTimer?.Stop(); _hiscorePageTimer = null; return; }
+
+            var seconds = CurrentHiscoreBoard?.PageSeconds ?? 6;
+            if (_hiscorePageTimer == null)
+            {
+                _hiscorePageTimer = new DispatcherTimer();
+                _hiscorePageTimer.Tick += (_, _) =>
+                {
+                    var b = CurrentHiscoreBoard;
+                    if (b == null) { _hiscorePageTimer?.Stop(); return; }
+                    var pages = Math.Max(1, (int)Math.Ceiling(b.Total / (double)Math.Max(1, b.RenderedPageSize)));
+                    if (b.Page + 1 < pages) b.Page++;
+                    else
+                    {
+                        b.Page = 0;
+                        if (_hiscoreBoards.Count > 1)
+                            _hiscoreBoardIndex = (_hiscoreBoardIndex + 1) % _hiscoreBoards.Count;
+                    }
+                    if (_hiscorePageTimer != null) _hiscorePageTimer.Interval = TimeSpan.FromSeconds(CurrentHiscoreBoard?.PageSeconds ?? 6);
+                    RenderHiscorePage();
+                };
+            }
+            _hiscorePageTimer.Interval = TimeSpan.FromSeconds(seconds);
+            _hiscorePageTimer.Start();
+        }
+
+        /// <summary>Builds the "your rank" footer text. Labels are component options so an
+        /// operator can reword or translate them freely (placeholders {rank} {of} {score}
+        /// {pseudo}); the defaults follow the cabinet UI language (fr/en).</summary>
+        private static string? BuildMyRankFooter(Core.HiscoreMyRank m, bool fr, Func<string, string, string> opt)
+        {
+            if (m.World)
+            {
+                if (m.Present)
+                {
+                    var tpl = opt("myRankTemplate", fr ? "★ TON RANG MONDIAL  {rank} / {of}" : "★ YOUR WORLD RANK  {rank} / {of}");
+                    return tpl.Replace("{rank}", "#" + m.Rank)
+                              .Replace("{of}", m.Of > 0 ? m.Of.ToString() : "?")
+                              .Replace("{score}", m.Score);
+                }
+                return m.Paired
+                    ? opt("myRankNoneLabel", fr ? "★ Pas encore classé au niveau mondial" : "★ Not ranked worldwide yet")
+                    : opt("myRankIdentifyLabel", fr ? "Identifie-toi sur NelfePlay pour apparaître au classement" : "Identify on NelfePlay to enter the ranking");
+            }
+            if (m.Present)
+            {
+                var rankLabel = string.IsNullOrEmpty(m.Rank) ? string.Empty : "#" + m.Rank;
+                var tpl = opt("myRankTemplate", fr ? "★ TON MEILLEUR ICI  {rank}   {score}" : "★ YOUR BEST HERE  {rank}   {score}");
+                return tpl.Replace("{rank}", rankLabel).Replace("{score}", m.Score).Replace("{pseudo}", m.Pseudo);
+            }
+            return opt("myRankNoneLabel", fr ? "★ {pseudo} : pas encore classé ici" : "★ {pseudo}: not ranked here yet")
+                .Replace("{pseudo}", m.Pseudo);
+        }
+
+        /// <summary>Rank/score colour from the component option: "gold" (default), "auto"
+        /// (vibrant colour of the current game, gold until it's computed), a named colour, or
+        /// a #RRGGBB value.</summary>
+        private System.Windows.Media.Brush ResolveHiscoreTint(string spec)
+        {
+            spec = string.IsNullOrWhiteSpace(spec) ? "gold" : spec.Trim();
+            Color color;
+            if (spec.Equals("auto", StringComparison.OrdinalIgnoreCase))
+            {
+                if (_gameAccent is { } c) color = c;
+                else return Brushes.Gold;
+            }
+            else if (spec.StartsWith("#", StringComparison.Ordinal))
+            {
+                try { color = (Color)System.Windows.Media.ColorConverter.ConvertFromString(spec); }
+                catch { return Brushes.Gold; }
+            }
+            else
+            {
+                switch (spec.ToLowerInvariant())
+                {
+                    case "white": return Brushes.White;
+                    case "cyan": color = Color.FromRgb(0x7C, 0xE7, 0xFF); break;
+                    case "green": color = Color.FromRgb(0x53, 0xD0, 0x73); break;
+                    case "red": color = Color.FromRgb(0xFF, 0x5A, 0x4A); break;
+                    case "pink": color = Color.FromRgb(0xFF, 0x63, 0xA4); break;
+                    case "orange": color = Color.FromRgb(0xFF, 0x96, 0x1E); break;
+                    default: return Brushes.Gold;
+                }
+            }
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
+
+        /// <summary>Recomputes the game accent colour (off the UI thread) from the game media,
+        /// then re-renders if a hiscore board is tinted "auto". No-op if the media is unchanged.</summary>
+        private void UpdateGameAccent(IReadOnlyDictionary<string, string?> kinds)
+        {
+            string? Path4(string k) => kinds.TryGetValue(k, out var p) && !string.IsNullOrWhiteSpace(p) && File.Exists(p) ? p : null;
+            var path = Path4("logo") ?? Path4("screenmarquee") ?? Path4("marquee") ?? Path4("fanart");
+            if (string.Equals(path, _gameAccentPath, StringComparison.OrdinalIgnoreCase)) return;
+            _gameAccentPath = path;
+
+            if (path == null) { _gameAccent = null; if (UsesAutoTint()) RenderHiscorePage(); return; }
+            _ = Task.Run(() =>
+            {
+                var color = TryExtractAccent(path);
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (!string.Equals(path, _gameAccentPath, StringComparison.OrdinalIgnoreCase)) return; // superseded
+                    _gameAccent = color;
+                    if (UsesAutoTint()) RenderHiscorePage();
+                }));
+            });
+        }
+
+        private bool UsesAutoTint()
+            => _hiscoreBoards.Any(b => b.ColorSpec.Equals("auto", StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>Picks a punchy, legible colour representative of the game media: the
+        /// saturation×value-weighted average of its vibrant pixels, then boosted so it reads
+        /// on a dark board. Null when the image has no vibrant colour (caller keeps gold).</summary>
+        private static System.Windows.Media.Color? TryExtractAccent(string path)
+        {
+            try
+            {
+                using var src = SkiaSharp.SKBitmap.Decode(path);
+                if (src == null || src.Width == 0 || src.Height == 0) return null;
+                var stepX = Math.Max(1, src.Width / 40);
+                var stepY = Math.Max(1, src.Height / 40);
+                double sr = 0, sg = 0, sb = 0, wsum = 0;
+                for (var y = 0; y < src.Height; y += stepY)
+                for (var x = 0; x < src.Width; x += stepX)
+                {
+                    var p = src.GetPixel(x, y);
+                    if (p.Alpha < 128) continue;
+                    RgbToHsv(p.Red, p.Green, p.Blue, out _, out var s, out var v);
+                    if (v < 0.25 || s < 0.30) continue; // ignore dark / greyish pixels
+                    var wgt = s * v;
+                    sr += p.Red * wgt; sg += p.Green * wgt; sb += p.Blue * wgt; wsum += wgt;
+                }
+                if (wsum <= 0) return null;
+                RgbToHsv((byte)(sr / wsum), (byte)(sg / wsum), (byte)(sb / wsum), out var hh, out var ss, out var vv);
+                HsvToRgb(hh, Math.Max(ss, 0.55), Math.Max(vv, 0.85), out var r, out var g, out var b);
+                return Color.FromRgb(r, g, b);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static void RgbToHsv(byte r, byte g, byte b, out double h, out double s, out double v)
+        {
+            double rd = r / 255.0, gd = g / 255.0, bd = b / 255.0;
+            double max = Math.Max(rd, Math.Max(gd, bd)), min = Math.Min(rd, Math.Min(gd, bd));
+            v = max;
+            var d = max - min;
+            s = max <= 0 ? 0 : d / max;
+            if (d <= 0) { h = 0; return; }
+            if (max == rd) h = 60 * (((gd - bd) / d) % 6);
+            else if (max == gd) h = 60 * (((bd - rd) / d) + 2);
+            else h = 60 * (((rd - gd) / d) + 4);
+            if (h < 0) h += 360;
+        }
+
+        private static void HsvToRgb(double h, double s, double v, out byte r, out byte g, out byte b)
+        {
+            var c = v * s;
+            var x = c * (1 - Math.Abs((h / 60 % 2) - 1));
+            var m = v - c;
+            double rd, gd, bd;
+            if (h < 60) { rd = c; gd = x; bd = 0; }
+            else if (h < 120) { rd = x; gd = c; bd = 0; }
+            else if (h < 180) { rd = 0; gd = c; bd = x; }
+            else if (h < 240) { rd = 0; gd = x; bd = c; }
+            else if (h < 300) { rd = x; gd = 0; bd = c; }
+            else { rd = c; gd = 0; bd = x; }
+            r = (byte)Math.Clamp((rd + m) * 255, 0, 255);
+            g = (byte)Math.Clamp((gd + m) * 255, 0, 255);
+            b = (byte)Math.Clamp((bd + m) * 255, 0, 255);
+        }
+
+        /// <summary>Renders the current page of the stored leaderboard. Called on data
+        /// arrival and by the page timer. Replaces the previous page element in place
+        /// (without touching the timer or the stored board).</summary>
+        private void RenderHiscorePage()
+        {
+            var board = CurrentHiscoreBoard;
+            if (board == null) return;
+            if (_informationOverlays.Remove(board.Owner, out var previous)) RemoveElementFromParent(previous);
+
+            var mono = new System.Windows.Media.FontFamily("Consolas");
+            var accent = new SolidColorBrush(Color.FromRgb(0x7C, 0xE7, 0xFF));
+            accent.Freeze();
+            var valueTint = ResolveHiscoreTint(board.ColorSpec); // rank/score colour (gold, game-auto, custom)
+
+            // Geometry of the zone first: needed to size the list and, when rows are dynamic,
+            // to pick a count that keeps the font legible.
+            var comp = _surface?.Component("overlay.hiscore");
+            var winW = _mainGrid.ActualWidth;
+            var winH = _mainGrid.ActualHeight;
+            var hasRect = comp != null && winW > 0 && winH > 0
+                          && !(comp.X <= 0 && comp.Y <= 0 && comp.W >= 1 && comp.H >= 1);
+            var zoneW = hasRect ? Math.Max(1, comp!.W * winW) : Math.Max(1, winW * 0.9);
+            var zoneH = hasRect ? Math.Max(1, comp!.H * winH) : Math.Max(1, winH * 0.9);
+
+            // Rows per page: fixed number, or dynamic from the zone aspect (tall/narrow zones
+            // fit more rows; a wide, short marquee fits fewer so they stay readable).
+            var pageSize = board.PageSize;
+            if (pageSize <= 0)
+                pageSize = Math.Clamp((int)Math.Round(zoneH / zoneW * 12) + 3, 3, HiscoreMaxTotal);
+            pageSize = Math.Min(pageSize, Math.Max(1, board.Total));
+            board.RenderedPageSize = pageSize;
+
+            var pages = Math.Max(1, (int)Math.Ceiling(board.Total / (double)pageSize));
+            if (board.Page >= pages) board.Page = 0;
+            var start = board.Page * pageSize;
+            var end = Math.Min(start + pageSize, board.Total);
+
+            var vAlign = board.Align switch
+            {
+                "top" => System.Windows.VerticalAlignment.Top,
+                "bottom" => System.Windows.VerticalAlignment.Bottom,
+                _ => System.Windows.VerticalAlignment.Center
+            };
+
+            // The LIST only (rank | name | score) in its OWN Viewbox, so its scale never
+            // depends on the title width — a long title no longer shrinks the score.
+            var listGrid = new Grid();
+            listGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });                     // rank
+            listGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // name
+            listGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });                     // score
+            for (var i = start; i < end; i++)
+            {
+                var row = board.Rows[i];
+                var line = i - start;
+                listGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                var hot = board.HighlightOn && board.Highlight.Contains((row.Name + "|" + row.Score).Trim());
+                var valueBrush = hot ? (System.Windows.Media.Brush)accent : valueTint;
+                var nameBrush = hot ? (System.Windows.Media.Brush)accent : Brushes.White;
+
+                if (board.ShowRank)
+                {
+                    var rankLabel = string.IsNullOrWhiteSpace(row.Rank) ? (i + 1).ToString() : row.Rank.Trim();
+                    var rankCell = CreateOutlinedText(rankLabel, 30, valueBrush, 2,
+                        TextAlignment.Right, System.Windows.HorizontalAlignment.Right, mono);
+                    rankCell.Margin = new Thickness(0, 2, 18, 2);
+                    Grid.SetRow(rankCell, line); Grid.SetColumn(rankCell, 0);
+                    listGrid.Children.Add(rankCell);
+                    if (hot) PulseHighlight(rankCell);
+                }
+
+                var nameCell = CreateOutlinedText(row.Name, 30, nameBrush, 2,
+                    TextAlignment.Left, System.Windows.HorizontalAlignment.Left, mono);
+                var scoreCell = CreateOutlinedText(row.Score, 30, valueBrush, 2,
+                    TextAlignment.Right, System.Windows.HorizontalAlignment.Right, mono);
+                nameCell.Margin = new Thickness(0, 2, 28, 2);
+                scoreCell.Margin = new Thickness(0, 2, 0, 2);
+                Grid.SetRow(nameCell, line); Grid.SetColumn(nameCell, 1);
+                Grid.SetRow(scoreCell, line); Grid.SetColumn(scoreCell, 2);
+                listGrid.Children.Add(nameCell); listGrid.Children.Add(scoreCell);
+                if (hot) { PulseHighlight(nameCell); PulseHighlight(scoreCell); }
+            }
+            var listViewbox = new System.Windows.Controls.Viewbox
+            {
+                Child = listGrid,
+                Stretch = Stretch.Uniform,
+                StretchDirection = System.Windows.Controls.StretchDirection.Both,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = vAlign
+            };
+
+            // Stacked layout: title band (own scale) / list (fills) / footer + source tag.
+            var root = new Grid();
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });                        // title
+            root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });   // list
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });                        // footer + tag
+
+            if (board.ShowTitle)
+            {
+                var titleText = FormatHiscoreTitle(board.TitleTemplate, board.Game, board.Sys);
+                if (pages > 1) titleText += $"   ({board.Page + 1}/{pages})";
+                var title = CreateOutlinedText(titleText, 26, Brushes.White, 2,
+                    TextAlignment.Center, System.Windows.HorizontalAlignment.Center);
+                var titleVb = new System.Windows.Controls.Viewbox
+                {
+                    Child = title,
+                    Stretch = Stretch.Uniform,
+                    StretchDirection = System.Windows.Controls.StretchDirection.Both,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Top,
+                    MaxHeight = Math.Max(24, zoneH * 0.22), // long titles shrink here, not the list
+                    Margin = new Thickness(0, 0, 0, zoneH * 0.03)
+                };
+                Grid.SetRow(titleVb, 0);
+                root.Children.Add(titleVb);
+            }
+
+            Grid.SetRow(listViewbox, 1);
+            root.Children.Add(listViewbox);
+
+            var bottom = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Vertical,
+                Margin = new Thickness(0, zoneH * 0.02, 0, 0)
+            };
+            // "Your best rank" line, scaled on its own so it never squeezes the list.
+            if (!string.IsNullOrWhiteSpace(board.Footer))
+            {
+                var footer = CreateOutlinedText(board.Footer!, 22, accent, 2,
+                    TextAlignment.Center, System.Windows.HorizontalAlignment.Center);
+                bottom.Children.Add(new System.Windows.Controls.Viewbox
+                {
+                    Child = footer,
+                    Stretch = Stretch.Uniform,
+                    StretchDirection = System.Windows.Controls.StretchDirection.DownOnly,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    MaxHeight = Math.Max(16, zoneH * 0.12)
+                });
+            }
+            // Faint watermark telling which board is on screen right now (key for dual).
+            if (board.ShowSourceTag)
+            {
+                var frTag = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
+                    .Equals("fr", StringComparison.OrdinalIgnoreCase);
+                var tagText = board.Source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
+                    ? "NELFEPLAY · " + (frTag ? "MONDIAL" : "WORLD")
+                    : "LOCAL";
+                var tag = CreateOutlinedText(tagText, 13, new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF)), 1,
+                    TextAlignment.Center, System.Windows.HorizontalAlignment.Center);
+                tag.Opacity = 0.45; // filigrane
+                tag.Margin = new Thickness(0, 6, 0, 0);
+                bottom.Children.Add(tag);
+            }
+            Grid.SetRow(bottom, 2);
+            root.Children.Add(bottom);
+
+            System.Windows.Media.Brush bg = board.Background.ToLowerInvariant() switch
+            {
+                "transparent" => System.Windows.Media.Brushes.Transparent,
+                "gradient" => new LinearGradientBrush(Color.FromArgb(205, 0, 0, 0), Color.FromArgb(40, 0, 0, 0), 90),
+                _ => new SolidColorBrush(Color.FromArgb(150, 0, 0, 0))
+            };
+            var container = new Border
+            {
+                Padding = new Thickness(30, 18, 30, 20),
+                Background = bg,
+                CornerRadius = new CornerRadius(12),
+                Child = root
+            };
+
+            // Honor the rect drawn on the overlay.hiscore component; else centered.
+            if (hasRect)
+            {
+                container.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+                container.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+                container.Margin = new Thickness(comp!.X * winW, comp.Y * winH, 0, 0);
+                container.Width = zoneW;
+                container.Height = zoneH;
+            }
+            else
+            {
+                container.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+                container.VerticalAlignment = vAlign; // top / middle / bottom of the window
+                container.Margin = new Thickness(24);
+                container.MaxWidth = 1400;
+            }
+
+            _mainGrid.Children.Add(container);
+            _informationOverlays[board.Owner] = container;
+        }
+
+        /// <summary>Fills a title template with the game/system. Accepts {name} and friendly
+        /// aliases ({gamename}, {game}, {title}; {system}, {systemname}); and, when someone
+        /// typed a bare token as the whole title (e.g. "gamename"), substitutes that too.</summary>
+        private static string FormatHiscoreTitle(string template, string game, string system)
+        {
+            var t = (template ?? string.Empty)
+                .Replace("{name}", game).Replace("{gamename}", game).Replace("{game}", game).Replace("{title}", game)
+                .Replace("{system}", system).Replace("{systemname}", system).Replace("{sys}", system);
+            if (t.Equals(template, StringComparison.Ordinal)) // no placeholder was present
+            {
+                switch ((template ?? string.Empty).Trim().ToLowerInvariant())
+                {
+                    case "gamename": case "game name": case "name": case "gametitle": case "game title": case "game":
+                        return game;
+                    case "system": case "systemname": case "system name":
+                        return system;
+                }
+            }
+            return t;
+        }
+
+        private static void PulseHighlight(UIElement element)
+        {
+            var pulse = new System.Windows.Media.Animation.DoubleAnimation
+            {
+                From = 0.25,
+                To = 1.0,
+                Duration = TimeSpan.FromMilliseconds(420),
+                AutoReverse = true,
+                RepeatBehavior = new System.Windows.Media.Animation.RepeatBehavior(3)
+            };
+            element.BeginAnimation(UIElement.OpacityProperty, pulse);
+        }
+
         // textAlignment and horizontalAlignment control how text sits within its parent column.
         // Use Stretch + Right/Left to make the grid fill its column (prevents apparent size variation
         // when the same font renders shorter vs longer strings in a proportional layout).
@@ -2086,6 +2607,13 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
         private void RemoveInformationOverlayCore(string owner)
         {
+            if (owner.StartsWith("hiscore", StringComparison.OrdinalIgnoreCase))
+            {
+                _hiscorePageTimer?.Stop();
+                _hiscorePageTimer = null;
+                _hiscoreBoards.Clear();
+                _hiscoreBoardIndex = 0;
+            }
             if (_informationTimers.Remove(owner, out var timer)) timer.Stop();
             if (_informationOverlays.Remove(owner, out var element)) RemoveElementFromParent(element);
             // Clear cached speedrun references so UpdateSpeedrunDisplay recreates on next call

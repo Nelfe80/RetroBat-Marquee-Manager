@@ -157,7 +157,9 @@ public sealed class ComponentHost : Canvas
             case "iccard.cycle":
                 return new Image
                 {
-                    Stretch = component.Option("stretch") == "fill" ? Stretch.Fill : Stretch.Uniform,
+                    // A media is NEVER distorted: "fill" fills the zone keeping aspect
+                    // (crops overflow), otherwise it fits (letterboxes). Never Stretch.Fill.
+                    Stretch = component.Option("stretch") == "fill" ? Stretch.UniformToFill : Stretch.Uniform,
                     Visibility = Visibility.Collapsed
                 };
 
