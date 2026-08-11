@@ -21,6 +21,7 @@ public sealed class ResolutionCard : UserControl
 {
     private static readonly Dictionary<SourceKind, int> DisplayRank = new()
     {
+        [SourceKind.Dynamic] = -1,    // the surface’s own layers, responsive: the base
         [SourceKind.Generated] = 0,   // general template, all systems
         [SourceKind.Personal] = 1,    // this system / this game
         [SourceKind.UserDrop] = 2,    // a raw file the user dropped in
@@ -172,6 +173,8 @@ public sealed class ResolutionCard : UserControl
         SourceKind.Scraped => L.T("Marquee scrapé", "Scraped marquee"),
         SourceKind.Logo => L.T("Logo mis en page", "Laid-out logo"),
         SourceKind.SystemFallback => L.T("Rendu du système", "System render"),
+        SourceKind.Dynamic => L.T("Rendu dynamique — les calques de la surface",
+                                  "Dynamic render — the surface's own layers"),
         _ => kind.ToString()
     };
 

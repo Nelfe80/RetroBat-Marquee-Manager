@@ -87,6 +87,12 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
                 // SYSTEM scope uses the FRONTEND name (mame.png, not arcade.png) — a
                 // per-system asset the user manages by the system they see in ES.
                 return DropFolder(categoryRoot, "systems", frontend);
+            case SourceKind.Dynamic:
+                // the surface's OWN layer stack, flattened by the runtime
+                // (docs\RENDU-DYNAMIQUE.md). Rendered lazily while browsing, never
+                // pre-generated: the preview shows it once it exists.
+                var dynSystem = DynamicCachePath(categoryRoot, ctx.SurfaceId, new[] { frontend, canonical }, null);
+                return File.Exists(dynSystem) ? Found(dynSystem, "dynamic") : AssetLookup.Missing;
             case SourceKind.Generated:
                 // the surface's general template rendered for THIS system wins over
                 // the APIExpose autogen when it has been rendered to the cache
@@ -99,6 +105,44 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
             default:
                 return AssetLookup.Missing; // no scraped system marquee in the library
         }
+    }
+
+    /// <summary>Mirror of the runtime's DynamicSurfaceRenderer.CachePath. The preview
+    /// shows the NAVIGATION render; the ingame one lives beside it under
+    /// "ingame.png" (second preview deliberately deferred — UX).</summary>
+    private string DynamicCachePath(string categoryRoot, string surfaceId, string system, string? rom)
+        => DynamicCachePath(categoryRoot, surfaceId, new[] { system }, rom);
+
+    /// <summary>The runtime names the folder after the system IT was fed, which for a
+    /// MAME set may be "mame" where the view offers "arcade" (or the reverse). Both
+    /// spellings are tried, like everywhere else that touches the arcade family.</summary>
+    private string DynamicCachePath(string categoryRoot, string surfaceId, IEnumerable<string> systems, string? rom)
+    {
+        var root = Path.Combine(_pluginRoot, "media", categoryRoot, ".cache", "surfaces", SafeCache(surfaceId));
+        string? first = null;
+        foreach (var system in systems.SelectMany(DynamicSystemSpellings))
+        {
+            var scoped = string.IsNullOrEmpty(rom)
+                ? Path.Combine(root, "systems", SafeCache(system))
+                : Path.Combine(root, "games", SafeCache(system), SafeCache(rom!));
+            var candidate = Path.Combine(scoped, "navigation.png");
+            first ??= candidate;
+            if (File.Exists(candidate)) return candidate;
+        }
+        return first ?? "";
+    }
+
+    private static IEnumerable<string> DynamicSystemSpellings(string system)
+    {
+        yield return system;
+        if (system.Equals("mame", StringComparison.OrdinalIgnoreCase)) yield return "arcade";
+        else if (system.Equals("arcade", StringComparison.OrdinalIgnoreCase)) yield return "mame";
+    }
+
+    private static string SafeCache(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return new string((name ?? "").ToLowerInvariant().Where(c => !invalid.Contains(c)).ToArray());
     }
 
     private IEnumerable<string> SystemRoots(string frontend, string canonical)
@@ -139,6 +183,9 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
             case SourceKind.UserDrop:
                 // raw file dropped in media\<cat>s\user\<sys>\<rom>.*
                 return DropFolder(categoryRoot, system, rom);
+            case SourceKind.Dynamic:
+                var dynGame = DynamicCachePath(categoryRoot, ctx.SurfaceId, new[] { system, ctx.SystemKey ?? system }, rom);
+                return File.Exists(dynGame) ? Found(dynGame, "dynamic") : AssetLookup.Missing;
             case SourceKind.Generated:
                 // the surface's game gabarit rendered for THIS game wins over the
                 // APIExpose autogen when it has been rendered to the cache
@@ -316,9 +363,12 @@ public sealed class MediaResolutionPreview
         return links;
     }
 
+    // MUST stay aligned with MediaResolutionService's chains in the domain — this is a
+    // second, hand-kept copy of the same order, and forgetting it here simply makes a
+    // card vanish from the view without any error.
     private static SourceKind[] ChainOrder(MediaScope scope) => scope == MediaScope.System
-        ? new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo }
-        : new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback };
+        ? new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Dynamic, SourceKind.Scraped, SourceKind.Logo }
+        : new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Dynamic, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback };
 
     public bool HasOverride(ResolutionContext context) => MediaPresentationEdits.HasOverride(_document, context);
 

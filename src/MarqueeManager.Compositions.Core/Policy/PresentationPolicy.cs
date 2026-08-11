@@ -5,7 +5,8 @@ namespace MarqueeManager.Compositions.Core.Policy;
 /// <summary>The links a surface policy can enable/disable and tune. Distinct from
 /// <see cref="Resolution.ResolutionSource"/> (a result): these are the CONFIGURABLE
 /// chain links. The neutral background is never one of them (non-disableable).</summary>
-public enum SourceKind { Personal, UserDrop, Generated, Scraped, Logo, SystemFallback }
+// Dynamic is appended LAST so existing numeric serializations stay stable.
+public enum SourceKind { Personal, UserDrop, Generated, Scraped, Logo, SystemFallback, Dynamic }
 
 public static class BackgroundKinds
 {

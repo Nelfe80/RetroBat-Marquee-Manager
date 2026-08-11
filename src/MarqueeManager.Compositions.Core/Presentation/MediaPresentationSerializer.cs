@@ -249,6 +249,7 @@ public static class MediaPresentationSerializer
         SourceKind.Scraped => "scraped",
         SourceKind.Logo => "logo",
         SourceKind.SystemFallback => "systemFallback",
+        SourceKind.Dynamic => "dynamic",
         _ => k.ToString().ToLowerInvariant()
     };
 
@@ -264,6 +265,7 @@ public static class MediaPresentationSerializer
             case "logo": kind = SourceKind.Logo; return true;
             case "systemfallback":
             case "system-fallback": kind = SourceKind.SystemFallback; return true;
+            case "dynamic": kind = SourceKind.Dynamic; return true;
             default: kind = SourceKind.Personal; return false;
         }
     }

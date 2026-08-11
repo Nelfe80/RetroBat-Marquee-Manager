@@ -75,7 +75,83 @@ public sealed class WebSocketListenerService : BackgroundService
             config.BaseDirectory, logger, config.LightingPreferGeneratedMarquee);
         _overrides = new Application.Media.PresentationOverrides(config.BaseDirectory, logger);
         _templateRenderer = new Application.Media.CompositionTemplateRenderer(config.BaseDirectory, logger);
+        _dynamicRenderer = new Application.Media.DynamicSurfaceRenderer(config.BaseDirectory, logger);
         _compositionChains.TemplateMissing = OnTemplateMissing;
+    }
+
+    private readonly Application.Media.DynamicSurfaceRenderer _dynamicRenderer;
+
+    /// <summary>Current display state, mirrored from the scene broadcasts: it selects
+    /// which dynamic render a surface shows, and ingame it is the ONLY source.</summary>
+    private volatile string _displayScene = "navigation";
+
+    /// <summary>
+    /// The surface's own layer stack, flattened and cached (docs\RENDU-DYNAMIQUE.md).
+    /// Null while it renders or when the surface has nothing to flatten — the caller
+    /// then keeps the media it already had, so nothing ever blinks.
+    /// </summary>
+    private string? ResolveDynamicSurface(string category, string target,
+        Application.Lighting.LightingSceneMeta? meta, bool systemScope)
+    {
+        var path = ResolveDynamicSurface(category, target, meta, systemScope, _displayScene, display: true);
+
+        // Warm-up: while browsing, also render the INGAME variant of the selected game.
+        // Ingame the dynamic render is the only law, so it must be ready the instant the
+        // game starts — and the user always looks at a game's card before launching it.
+        // One extra composite, off-thread, deduplicated, on exactly the right game (the
+        // reason a "pre-generate everything" batch is the wrong tool here).
+        if (_displayScene.Equals("navigation", StringComparison.OrdinalIgnoreCase))
+            ResolveDynamicSurface(category, target, meta, systemScope, "ingame", display: false);
+
+        return path;
+    }
+
+    private string? ResolveDynamicSurface(string category, string target,
+        Application.Lighting.LightingSceneMeta? meta, bool systemScope, string scene, bool display)
+    {
+        var system = meta?.System;
+        if (string.IsNullOrEmpty(system)) return null;
+
+        var surface = _config.GetSurfaces().FirstOrDefault(s =>
+            s.Id.Equals(target, StringComparison.OrdinalIgnoreCase));
+        if (surface == null) return null;
+
+        var run = Application.Media.DynamicSurfaceRenderer.FlattenableRun(surface, scene);
+        if (run.Count == 0) return null; // no composed stack under a lighting engine
+
+        var (width, height) = _surfaces.SurfacePixelSize(target);
+        if (width <= 0 || height <= 0) return null;
+
+        string? ResolveLayerMedia(Core.Surfaces.ComponentDefinition component)
+        {
+            var kind = component.Type.ToLowerInvariant() switch
+            {
+                "media.fanart" => "fanart",
+                "media.logo" => "logo",
+                "media.image" => component.Option("kind", "screenmarquee"),
+                _ => null
+            };
+            if (kind == null) return null;
+            lock (_lastMarqueeKinds) return _lastMarqueeKinds.TryGetValue(kind, out var path) ? path : null;
+        }
+
+        var output = _dynamicRenderer.CachePath(category, target, system!, meta?.Rom, scene, systemScope);
+        var key = Application.Media.DynamicSurfaceRenderer.CacheKey(run, width, height, scene, ResolveLayerMedia);
+        if (_dynamicRenderer.IsFresh(output, key)) return output;
+
+        // stale or absent: render in the background, then re-display if the selection
+        // has not moved on (same "pending → updated" pattern as the templates)
+        var rom = meta?.Rom;
+        _dynamicRenderer.RenderInBackground(run, width, height, scene, ResolveLayerMedia, output, path =>
+        {
+            if (!display) return; // warm-up job: render and cache, never take the screen
+            var current = _lastMarqueeMeta;
+            if (!string.Equals(current?.Rom, rom, StringComparison.OrdinalIgnoreCase)) return;
+            if (!string.Equals(_displayScene, scene, StringComparison.OrdinalIgnoreCase)) return;
+            _surfaces.SetDynamicRenderActive(target, true);
+            _ = _surfaces.DisplayMediaAsync(path, target, CancellationToken.None, current, resolved: true);
+        });
+        return null;
     }
 
     private readonly Dictionary<string, string?> _lastMarqueeKinds = new(StringComparer.OrdinalIgnoreCase);
@@ -357,12 +433,30 @@ public sealed class WebSocketListenerService : BackgroundService
                 // per-surface precedence: a graphic creation wins, then the surface's
                 // general template (gabarit) rendered for this game/system, then the
                 // category-level chain resolution
+                // ingame, the dynamic render is the ONLY law: the other sources are ES
+                // browsing media (docs\RENDU-DYNAMIQUE.md)
+                var dynamicRender = ResolveDynamicSurface("marquee", target, resolveMeta, systemScope);
+                if (_displayScene.Equals("ingame", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (dynamicRender != null)
+                    {
+                        _surfaces.SetDynamicRenderActive(target, true);
+                        await _surfaces.DisplayMediaAsync(dynamicRender, target, cancellationToken, snapshotMeta, resolved: true);
+                        continue;
+                    }
+                }
+
                 var surfaceCreation = _compositionChains.SurfaceCreation("marquee", target, resolveMeta, systemScope);
                 var surfaceGabarit = surfaceCreation == null
                     ? _compositionChains.SurfaceGabarit("marquee", target, resolveMeta, systemScope)
                     : null;
-                await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? marquee, target, cancellationToken, snapshotMeta,
-                    resolved: surfaceCreation != null || surfaceGabarit != null || chained != null);
+                // the dynamic render is the DEFAULT when nothing was picked: it only
+                // exists for a surface that actually composed layers under a lighting
+                // engine, so any other surface keeps its historical behaviour
+                _surfaces.SetDynamicRenderActive(target,
+                    surfaceCreation == null && surfaceGabarit == null && dynamicRender != null);
+                await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? dynamicRender ?? marquee, target, cancellationToken, snapshotMeta,
+                    resolved: surfaceCreation != null || surfaceGabarit != null || dynamicRender != null || chained != null);
             }
         }
 
@@ -906,6 +1000,7 @@ public sealed class WebSocketListenerService : BackgroundService
             type.Equals("ui.system.selected.raw", StringComparison.OrdinalIgnoreCase))
         {
             if (_pinballDmdActive) ReleasePinballDmd("selection changed");
+            _displayScene = "navigation";
             _surfaces.SetDisplayScene("navigation");
             var selectedSystem = ExtractSystem(payload);
             var selectedRom = ExtractRom(payload);
@@ -941,6 +1036,7 @@ public sealed class WebSocketListenerService : BackgroundService
             _logger.LogInformation("Frontend game ended event received: {Type}", type);
             // scene FIRST: ingame-only surfaces must leave the game screen even
             // if a later step throws — ES does not always re-select afterwards
+            _displayScene = "navigation";
             _surfaces.SetDisplayScene("navigation");
             _lay.Clear();
             _presentation.MarkGameEnded();
@@ -957,6 +1053,7 @@ public sealed class WebSocketListenerService : BackgroundService
         if (!type.Equals("ui.game.started", StringComparison.OrdinalIgnoreCase) && !type.Equals("ui.game.started.raw", StringComparison.OrdinalIgnoreCase)) return;
         // a new play session: drop any effect still pending from the previous one
         CancelDeferredEffects();
+        _displayScene = "ingame";
         _surfaces.SetDisplayScene("ingame");
         _presentation.MarkGameStarted();
         // game launch drama: silent power cycle — the play session stays clean
@@ -1095,7 +1192,7 @@ public sealed class WebSocketListenerService : BackgroundService
             _surfaces.PlayMediaEffect(rule.MediaPath, rule.MediaFullscreen, rule.DurationMs);
             if (rule.Kind == Application.Lighting.IngameEffectKind.Sprite && rule.Sprite == null) return;
         }
-        _surfaces.TriggerLightingEffect(rule);
+        _surfaces.TriggerIngameEffect(rule);
     }
 
     private Task LoadLayoutAsync(string rom, CancellationToken cancellationToken)

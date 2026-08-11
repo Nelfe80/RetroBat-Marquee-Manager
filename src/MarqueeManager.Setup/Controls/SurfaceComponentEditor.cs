@@ -29,7 +29,8 @@ public sealed class SurfaceComponentEditor : Window
         ["shape.gradient"] = Color.FromRgb(0x66, 0x66, 0x78),
         ["external.web"] = Color.FromRgb(0xE8, 0x5C, 0x5C),
         ["iccard.static"] = Color.FromRgb(0x20, 0xE8, 0xE8),
-        ["iccard.cycle"] = Color.FromRgb(0x20, 0xE8, 0xE8)
+        ["iccard.cycle"] = Color.FromRgb(0x20, 0xE8, 0xE8),
+        ["effects.engine"] = Color.FromRgb(0x39, 0xD3, 0x53)
     };
     private static readonly Color OverlayColor = Color.FromRgb(0x4C, 0xC9, 0x6E);
 

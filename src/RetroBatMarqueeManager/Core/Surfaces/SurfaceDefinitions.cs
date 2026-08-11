@@ -95,7 +95,7 @@ public static class SurfacesDocument
             foreach (var element in surfaces.EnumerateArray())
             {
                 var surface = ParseSurface(element);
-                if (surface != null) result.Add(surface);
+                if (surface != null) result.Add(WithImplicitEffectsEngine(surface, logger));
             }
 
             // A valid, Setup-owned document is authoritative even when it holds zero
@@ -247,6 +247,32 @@ public static class SurfacesDocument
         return surfaces;
     }
 
+    /// <summary>
+    /// Compatibility bridge (design note §4f). An engine IS scopable like any other
+    /// layer — a surface legitimately carries one lighting engine for ES browsing and
+    /// another for play, each placed from its own state in the composition editor.
+    ///
+    /// But before the split, the ingame events were played by `lighting.engine`, so a
+    /// surface written by an earlier Setup expresses "I want the events here" by
+    /// carrying the lighting engine alone, whatever scope it gave it. Such a surface
+    /// gains an implicit `effects.engine` scoped `both`: the events keep playing where
+    /// they used to. It is a bridge, not a user choice — an explicit `effects.engine`
+    /// written by the Setup always wins, with the scope the user gave it.
+    /// </summary>
+    private static SurfaceDefinition WithImplicitEffectsEngine(SurfaceDefinition surface, ILogger logger)
+    {
+        if (!surface.HasComponent("lighting.engine") || surface.HasComponent("effects.engine"))
+            return surface;
+
+        logger.LogInformation(
+            "Surface {Id}: implicit effects.engine added next to lighting.engine (ingame events, when=both)",
+            surface.Id);
+        return surface with
+        {
+            Components = surface.Components.Append(new ComponentDefinition("effects.engine")).ToList()
+        };
+    }
+
     private static string Capitalize(string value)
         => value.Length == 0 ? value : char.ToUpperInvariant(value[0]) + value[1..];
 
@@ -257,7 +283,13 @@ public static class SurfacesDocument
         var components = new List<ComponentDefinition> { new("media.flux") };
         if (category.Equals("marquee", StringComparison.OrdinalIgnoreCase))
         {
-            if (lighting) components.Add(new ComponentDefinition("lighting.engine"));
+            if (lighting)
+            {
+                components.Add(new ComponentDefinition("lighting.engine"));
+                // iso-behavior: on a legacy config the ingame events only ever played
+                // where the lighting engine ran, so they follow the same switch here.
+                components.Add(new ComponentDefinition("effects.engine"));
+            }
             components.Add(new ComponentDefinition("lamps.scene"));
             components.Add(new ComponentDefinition("overlay.hiscore"));
             components.Add(new ComponentDefinition("overlay.live.score"));

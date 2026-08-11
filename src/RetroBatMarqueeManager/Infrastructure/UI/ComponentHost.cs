@@ -24,7 +24,7 @@ public sealed class ComponentHost : Canvas
 {
     private static readonly HashSet<string> BuiltIn = new(StringComparer.OrdinalIgnoreCase)
     {
-        "media.flux", "lighting.engine", "lamps.scene",
+        "media.flux", "lighting.engine", "effects.engine", "lamps.scene",
         "overlay.hiscore", "overlay.live.score", "overlay.live.timer",
         "overlay.ra.info", "overlay.ra.badges", "overlay.ra.speedrun"
     };
@@ -44,10 +44,25 @@ public sealed class ComponentHost : Canvas
         }
     }
 
-    /// <summary>Final visibility = active in the current state AND has content.</summary>
+    /// <summary>Layers already baked into the dynamic render: drawing them live too
+    /// would show an UNLIT copy on top of the lit one. Reference identity is enough —
+    /// the suppressed set comes from the very component list this host was built
+    /// from.</summary>
+    private readonly HashSet<ComponentDefinition> _suppressed =
+        new(ReferenceEqualityComparer.Instance as IEqualityComparer<ComponentDefinition>);
+
+    public void SetSuppressed(IReadOnlyCollection<ComponentDefinition> suppressed)
+    {
+        _suppressed.Clear();
+        foreach (var component in suppressed) _suppressed.Add(component);
+        foreach (var (definition, element) in _visuals) RefreshVisibility(definition, element);
+    }
+
+    /// <summary>Final visibility = active in the current state, not baked into the
+    /// dynamic render, AND has content.</summary>
     private void RefreshVisibility(ComponentDefinition definition, FrameworkElement element)
     {
-        if (!definition.ActiveIn(_scene))
+        if (!definition.ActiveIn(_scene) || _suppressed.Contains(definition))
         {
             element.Visibility = Visibility.Collapsed;
             return;

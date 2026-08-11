@@ -102,6 +102,10 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     [DllImport("winmm.dll")]
     private static extern uint timeEndPeriod(uint period);
 
+    /// <summary>True once the render loop runs — the surface owner uses it to avoid
+    /// showing a layer that has not started yet.</summary>
+    public bool IsRunning => _renderThread != null;
+
     public void Start(ISkiaFrameRenderer renderer)
     {
         if (_renderThread != null) return;
@@ -191,6 +195,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     {
         var clock = Stopwatch.StartNew();
         var fpsFrames = 0;
+        var skipsThisWindow = 0;
         var fpsWindowStart = 0L;
         var lastFpsLog = 0L;
 
@@ -240,6 +245,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 {
                     // renderer skipped a visually identical frame (§17.5)
                     _metrics.RecordSkip();
+                    skipsThisWindow++;
                     _idle = true;
                 }
             }
@@ -248,8 +254,12 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
             {
                 CurrentFps = fpsFrames * (double)Stopwatch.Frequency / (now - fpsWindowStart);
                 // §6: adaptive resolution judged against the CONTENT cadence, so a
-                // 24 Hz scene can recover; only windows with continuous rendering count
-                if (fpsFrames >= targetFps / 3)
+                // 24 Hz scene can recover; only windows with continuous rendering count.
+                // A window with ANY skip is not overloaded — the renderer chose not to
+                // draw. Without this, a SPARSE renderer (the ingame events layer only
+                // draws while an effect plays) is permanently read as "can't keep up"
+                // and gets pinned at half resolution for no reason.
+                if (fpsFrames >= targetFps / 3 && skipsThisWindow == 0)
                 {
                     if (CurrentFps < targetFps * 0.70 && _adaptiveScale > 0.5)
                     {
@@ -263,6 +273,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 }
                 _presentedFps = Interlocked.Exchange(ref _presentsThisWindow, 0) * (double)Stopwatch.Frequency / (now - fpsWindowStart);
                 fpsFrames = 0;
+                skipsThisWindow = 0;
                 fpsWindowStart = now;
                 if (now - lastFpsLog >= 5 * Stopwatch.Frequency)
                 {

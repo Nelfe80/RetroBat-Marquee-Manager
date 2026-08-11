@@ -408,7 +408,11 @@ public sealed class SurfacesStore
         var components = new List<ComponentModel> { new() { Type = "media.flux" } };
         if (category.Equals("marquee", StringComparison.OrdinalIgnoreCase))
         {
-            if (lighting) components.Add(new ComponentModel { Type = "lighting.engine" });
+            if (lighting)
+            {
+                components.Add(new ComponentModel { Type = "lighting.engine" });
+                components.Add(new ComponentModel { Type = "effects.engine" });
+            }
             components.Add(new ComponentModel { Type = "lamps.scene" });
             components.Add(new ComponentModel { Type = "overlay.hiscore" });
             components.Add(new ComponentModel { Type = "overlay.live.score" });

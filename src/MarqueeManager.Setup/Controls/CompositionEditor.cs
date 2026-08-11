@@ -55,8 +55,10 @@ public sealed class CompositionEditor : Window
         ["shape.gradient"] = Color.FromRgb(0x66, 0x66, 0x78),
         ["external.web"] = Color.FromRgb(0xE8, 0x5C, 0x5C),
         ["iccard.static"] = Color.FromRgb(0x20, 0xE8, 0xE8),
-        ["iccard.cycle"] = Color.FromRgb(0x20, 0xE8, 0xE8)
+        ["iccard.cycle"] = Color.FromRgb(0x20, 0xE8, 0xE8),
+        ["effects.engine"] = Color.FromRgb(0x39, 0xD3, 0x53)
     };
+
 
     public CompositionEditor(string pluginRoot, SurfaceModel surface, double aspect, string initialState = "navigation")
     {
@@ -220,6 +222,12 @@ public sealed class CompositionEditor : Window
             new("🔷 " + L.T("Décoration", "Decoration"), L.T("Texte libre", "Custom text"), () => new() { C("text.custom", 0.1, 0.4, 0.8, 0.2, ("text", "Mon texte")) }),
             new("🔷 " + L.T("Décoration", "Decoration"), L.T("Web (Twitch/YouTube)", "Web (Twitch/YouTube)"), () => new() { C("external.web", 0, 0, 1, 1, ("url", "")) }),
             new("🔷 " + L.T("Décoration", "Decoration"), L.T("Lumière (tubes néon)", "Lighting (neon tubes)"), () => new() { C("lighting.engine") }),
+
+            // The events layer is mounted, not placed: it always covers the whole
+            // surface and always applies to both display states.
+            new("🎉 " + L.T("Événements", "Events"),
+                L.T("Événements animés (sprites)", "Animated events (sprites)"),
+                () => new() { C("effects.engine") }),
 
             new("🧩 " + L.T("Composites", "Composites"), L.T("Marquee (fanart+gradient+logo)", "Marquee (fanart+gradient+logo)"),
                 () => Fanart()

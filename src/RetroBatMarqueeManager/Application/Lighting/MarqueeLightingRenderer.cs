@@ -12,6 +12,12 @@ namespace RetroBatMarqueeManager.Application.Lighting;
 /// (§15); framing is content-aware (never cut the title). The vertical tube glow is
 /// a 1×H lookup rebuilt each rendered frame. The layer renders fully transparent
 /// until maps exist, so the static image below stays the fallback (§4.5).
+///
+/// Scope: this renderer LIGHTS AN IMAGE — tubes, glass, rbmarquee lamps and MAME
+/// outputs. Animated ingame events (sprites, veils) belong to
+/// <see cref="IngameEffectsRenderer"/>, which draws them above the media stack;
+/// only the tube-level kinds (`blackout`, `powerCycle`) still reach us, through
+/// <see cref="TriggerTubeEffect"/>. See docs\DECOUPLAGE-MOTEUR-EVENEMENTS.md.
 /// </summary>
 public sealed class MarqueeLightingRenderer : ISkiaFrameRenderer
 {
@@ -61,14 +67,12 @@ half4 main(float2 p) {
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> _arcadeOutputs = new(StringComparer.OrdinalIgnoreCase);
     private volatile bool _arcadeLive;
 
-    // ingame effect state (flash / pulse / blackout), written under _fxLock
-    private readonly object _fxLock = new();
-    private IngameEffectRule? _activeFx;
-    private double _fxStart = -1;
+    // TUBE-level ingame effects only: blackout and powerCycle. Sprites and colored
+    // veils moved out to IngameEffectsRenderer, which plays them above the media
+    // stack (docs\DECOUPLAGE-MOTEUR-EVENEMENTS.md). Armed by the trigger, stamped
+    // with scene time on the next frame.
+    private double _blackoutRequestSeconds = -1;
     private double _blackoutUntil = -1;
-
-    // sprite overlays (coins…): spawned by ingame events, drawn after the shader
-    private readonly List<SpriteInstance> _sprites = new();
 
     // audio-driven flicker sequence: the sound's envelope drives one tube
     private Infrastructure.Audio.LightingSoundService.SequenceHandle? _sequence;
@@ -223,190 +227,23 @@ half4 main(float2 p) {
         _dirty = true;
     }
 
-    /// <summary>Semantic ingame event resolved by the effects library (ws/ingame).
-    /// A rule can carry both a glass flash and sprites — both fire.</summary>
-    public void TriggerIngameEffect(IngameEffectRule rule)
+    /// <summary>TUBE-level part of an ingame event (§4a of the design note): the
+    /// controller routes only `blackout` and `powerCycle` here, the rest is played
+    /// by <see cref="IngameEffectsRenderer"/> above the media stack.</summary>
+    public void TriggerTubeEffect(IngameEffectRule rule)
     {
-        lock (_fxLock)
+        switch (rule.Kind)
         {
-            if (rule.Sprite != null) _pendingSprites.Add(rule);
-            if (rule.Kind != IngameEffectKind.Sprite)
-            {
-                _activeFx = rule;
-                _fxStart = double.MinValue; // armed: stamped with scene time on next frame
-            }
+            case IngameEffectKind.Blackout:
+                _blackoutRequestSeconds = rule.DurationMs / 1000.0;
+                break;
+            case IngameEffectKind.PowerCycle:
+                _powerCycleRequested = true;
+                break;
+            default:
+                return; // not a tube effect: nothing to do here
         }
         _dirty = true;
-    }
-
-    private readonly List<IngameEffectRule> _pendingSprites = new();
-
-    /// <summary>Spawn pending sprite rules at random positions in the art rect.</summary>
-    private void SpawnSprites(double t)
-    {
-        List<IngameEffectRule>? pending = null;
-        lock (_fxLock)
-        {
-            if (_pendingSprites.Count > 0)
-            {
-                pending = new List<IngameEffectRule>(_pendingSprites);
-                _pendingSprites.Clear();
-            }
-        }
-        if (pending == null) return;
-        foreach (var rule in pending)
-        {
-            if (rule.Sprite == null) continue;
-            var animation = SpriteAnimation.Load(
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "sprites", rule.Sprite), _logger);
-            if (animation == null) continue;
-            // "full_" sprites are scene backdrops: exactly ONE in the scene at a
-            // time, spanning 100 % of the artwork width
-            var fullWidth = Path.GetFileName(rule.Sprite).StartsWith("full_", StringComparison.OrdinalIgnoreCase);
-            if (fullWidth) _sprites.RemoveAll(s => s.FullWidth);
-
-            var budget = SpriteBudget;
-            var count = fullWidth ? 1 : rule.Count;
-            for (var i = 0; i < count && _sprites.Count < budget; i++)
-            {
-                var duration = Math.Max(0.3, rule.DurationMs / 1000.0) * (0.85 + _fxRandom.NextDouble() * 0.3);
-
-                // placement of the SPAWN point: random draws are STRATIFIED (one
-                // horizontal band per sprite: halves, quarters, tenths… so a
-                // swarm never clumps), or centered, or evenly spread
-                float px, py;
-                switch (rule.Placement)
-                {
-                    case "center":
-                        px = 0.5f;
-                        py = 0.5f;
-                        break;
-                    case "spread":
-                        px = (i + 0.5f) / count;
-                        py = 0.45f;
-                        break;
-                    default:
-                        px = (i + 0.15f + (float)_fxRandom.NextDouble() * 0.7f) / count;
-                        py = 0.18f + (float)_fxRandom.NextDouble() * 0.58f;
-                        break;
-                }
-                if (fullWidth)
-                {
-                    px = 0.5f;
-                    py = 0.5f;
-                }
-
-                float x = px, y = py, vx = 0, vy = 0;
-                switch (rule.Motion)
-                {
-                    case "cross":
-                        // horizontal crossing: random side, placement height, slight slope
-                        var leftToRight = _fxRandom.NextDouble() < 0.5;
-                        x = leftToRight ? -0.08f : 1.08f;
-                        y = rule.Placement == "random" ? 0.18f + (float)_fxRandom.NextDouble() * 0.6f : py;
-                        vx = (float)((1.16 / duration) * (leftToRight ? 1 : -1));
-                        vy = (float)((_fxRandom.NextDouble() - 0.5) * 0.25);
-                        break;
-                    case "fall":
-                        // short vertical drop: exits fast, freeing a slot for the next one
-                        y = -0.15f;
-                        vy = (float)(1.35 / duration);
-                        vx = rule.Placement == "random" ? (float)((_fxRandom.NextDouble() - 0.5) * 0.10) : 0;
-                        break;
-                    case "rise":
-                        y = 1.15f;
-                        vy = (float)(-1.35 / duration);
-                        vx = rule.Placement == "random" ? (float)((_fxRandom.NextDouble() - 0.5) * 0.10) : 0;
-                        break;
-                }
-
-                // the historic size jitter only applies in random placement — a
-                // deliberate scale (200 %…) must render exactly as asked
-                var jitter = !fullWidth && rule.Placement == "random" && Math.Abs(rule.Scale - 1.0) < 0.01
-                    ? 0.8f + (float)_fxRandom.NextDouble() * 0.5f
-                    : 1f;
-                _sprites.Add(new SpriteInstance
-                {
-                    Animation = animation,
-                    X = x,
-                    Y = y,
-                    VelocityX = fullWidth ? 0 : vx,
-                    VelocityY = fullWidth ? 0 : vy,
-                    TrailColor = rule.TrailColor,
-                    Scale = (float)rule.Scale * jitter,
-                    Grow = !fullWidth && rule.Grow,
-                    PixelCrisp = rule.Scale >= 1.5,
-                    FullWidth = fullWidth,
-                    StartSeconds = t + i * (0.06 + _fxRandom.NextDouble() * 0.08),
-                    DurationSeconds = duration
-                });
-            }
-        }
-    }
-
-    /// <summary>Animated sprite overlays, composited after the shader (CDC §23):
-    /// glowing trail ghosts behind moving sprites, then the animated frame.</summary>
-    private void DrawSprites(SKCanvas canvas, double t, float w, float h, SKPoint offset)
-    {
-        if (_sprites.Count == 0) return;
-        // a sprite out of the field frees its slot immediately
-        _sprites.RemoveAll(sprite =>
-        {
-            if (sprite.Done(t)) return true;
-            var (px, py) = sprite.PositionAt(t);
-            return px < -0.2f || px > 1.2f || py < -0.25f || py > 1.25f;
-        });
-        foreach (var sprite in _sprites)
-        {
-            if (t < sprite.StartSeconds) continue;
-            var alpha = sprite.Alpha(t);
-            var (nx, ny) = sprite.PositionAt(t);
-
-            // optional light trail (2 ghosts max — trails are expensive on CPU raster)
-            if (sprite.TrailColor is { } trail && (sprite.VelocityX != 0 || sprite.VelocityY != 0))
-            {
-                for (var k = 2; k >= 1; k--)
-                {
-                    var (gx, gy) = sprite.PositionAt(t - k * 0.06);
-                    var ghostAlpha = alpha * (1f - k / 3f) * 0.4f;
-                    DrawStretchedGlow(canvas,
-                        new SKPoint(offset.X + gx * w, offset.Y + gy * h),
-                        0.08f * h * sprite.Scale, 1.4f, 0.8f,
-                        trail.WithAlpha((byte)(ghostAlpha * 255)));
-                }
-            }
-
-            var frame = sprite.Animation.FrameAt((t - sprite.StartSeconds) * 1000);
-            float width, height;
-            if (sprite.FullWidth)
-            {
-                // backdrop sprite: spans the whole artwork width
-                width = w;
-                height = width * frame.Height / frame.Width;
-            }
-            else
-            {
-                height = 0.30f * h * sprite.ScaleAt(t);
-                width = height * frame.Width / frame.Height;
-            }
-            var dest = SKRect.Create(
-                offset.X + nx * w - width / 2f,
-                offset.Y + ny * h - height / 2f, width, height);
-            _glowPaint.BlendMode = sprite.Animation.Opaque ? SKBlendMode.Screen : SKBlendMode.SrcOver;
-            _glowPaint.Color = SKColors.White.WithAlpha((byte)(alpha * 255));
-            if (sprite.PixelCrisp)
-            {
-                // deliberate upscales keep the pixel-art look
-                using var image = SKImage.FromBitmap(frame);
-                canvas.DrawImage(image, dest, new SKSamplingOptions(SKFilterMode.Nearest), _glowPaint);
-            }
-            else
-            {
-                canvas.DrawBitmap(frame, dest, _glowPaint);
-            }
-        }
-        _glowPaint.Color = SKColors.White;
-        _glowPaint.BlendMode = SKBlendMode.Plus;
     }
 
     /// <summary>True when a lighting scene is mounted (used by the DMD mirror gate).</summary>
@@ -440,51 +277,20 @@ half4 main(float2 p) {
     {
         if (_dirty || _generating) return true;
         lock (_resultLock) { if (_pendingResult != null) return true; }
-        if (_maps == null)
-        {
-            // sceneless (video marquee, console game): the ingame effects still
-            // animate as an overlay at the flicker cadence
-            if (_sprites.Count > 0) return (long)(elapsed.TotalSeconds * FlickerHz) != _steadySlot;
-            lock (_fxLock) { return _activeFx != null || _pendingSprites.Count > 0; }
-        }
+        // sceneless (video marquee, console game): nothing to light, and the ingame
+        // events are no longer ours — IngameEffectsRenderer owns that layer
+        if (_maps == null) return false;
         // anything alive keeps the flicker cadence: lamps (attract/outputs),
-        // ingame effects, sprites, blackout, audio-driven sequence
-        if (_lampStates.Length > 0 || _sequence != null || _blackoutUntil > 0 || _sprites.Count > 0)
+        // blackout, audio-driven sequence
+        if (_lampStates.Length > 0 || _sequence != null || _blackoutUntil > 0 || _blackoutRequestSeconds > 0)
             return (long)(elapsed.TotalSeconds * FlickerHz) != _steadySlot;
-        lock (_fxLock) { if (_activeFx != null || _pendingSprites.Count > 0) return true; }
         // a bulb with no flicker and no life events settles into a static frame
         if (_profile.Bulb.EventRateScale <= 0 && _profile.Bulb.FlickerAmount <= 0)
             return elapsed.TotalSeconds - _sceneReadyAt < 0.4;
         return (long)(elapsed.TotalSeconds * FlickerHz) != _steadySlot;
     }
 
-    // rolling render cost (ms): drives the adaptive sprite budget
-    private double _renderMsAverage = 8;
-
-    /// <summary>
-    /// FPS guard: how many sprites the current frame budget can afford. Fewer when
-    /// the CPU raster is already slow — but NEVER zero. On a large/heavy surface the
-    /// steady render can sit above 40 ms (≈20 fps); cutting sprites to 0 there made
-    /// ingame effects vanish entirely ("one ring then nothing"). A floor keeps the
-    /// effects the user came for; adaptive resolution handles the frame-rate guard.
-    /// </summary>
-    private int SpriteBudget => _renderMsAverage switch
-    {
-        < 23 => 20,
-        < 32 => 12,
-        < 44 => 6,
-        _ => 3
-    };
-
     public void Render(SKCanvas canvas, int width, int height, TimeSpan elapsed)
-    {
-        var renderStart = System.Diagnostics.Stopwatch.GetTimestamp();
-        RenderCore(canvas, width, height, elapsed);
-        var renderMs = (System.Diagnostics.Stopwatch.GetTimestamp() - renderStart) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
-        _renderMsAverage += (renderMs - _renderMsAverage) * 0.15;
-    }
-
-    private void RenderCore(SKCanvas canvas, int width, int height, TimeSpan elapsed)
     {
         AdoptPendingResult(elapsed);
 
@@ -510,24 +316,22 @@ half4 main(float2 p) {
 
         // Lot B: a different game is now selected but its lighting scene isn't generated
         // yet — do NOT let the previous opaque scene mask the new game's fallback. Show
-        // the new fallback (transparent) with ingame fx until the new scene is adopted.
+        // the new fallback (transparent) until the new scene is adopted.
         if (_latestWinsGeneration && requested != null && _currentPath != null
             && !string.Equals(requested.Path, _currentPath, StringComparison.OrdinalIgnoreCase))
         {
             canvas.Clear(SKColors.Transparent);
             _sound?.SetLevels(0f, 0f);
-            RenderOverlayFx(canvas, width, height, elapsed.TotalSeconds);
             return;
         }
 
         if (_maps == null || _currentPath == null)
         {
-            // no scene: transparent so the media below stays visible — but the
-            // ingame effects still draw. A video marquee (console games) unmounts
-            // the lighting scene; sprites and veils must survive it.
+            // no scene: transparent so the media below stays visible. A video marquee
+            // (console games) unmounts the lighting scene; the ingame events keep
+            // playing regardless — they live on their own layer now.
             canvas.Clear(SKColors.Transparent);
             _sound?.SetLevels(0f, 0f);
-            RenderOverlayFx(canvas, width, height, elapsed.TotalSeconds);
             return;
         }
 
@@ -543,8 +347,8 @@ half4 main(float2 p) {
         // audio-driven flicker: the sequence's live amplitude replaces one tube's intensity
         UpdateAudioSequence(t, ref i1, ref i2);
 
-        // ingame effect envelope (flash dip / blackout)
-        var fx = UpdateIngameEffect(t, ref i1, ref i2);
+        // tube-level ingame effect: the blackout window cuts the tubes
+        UpdateBlackout(t, ref i1, ref i2);
 
         SyncSound(i1, i2);
         UpdateShapeRow(i1, i2);
@@ -563,9 +367,6 @@ half4 main(float2 p) {
             ["litTex"] = _litShader,
             ["shapeTex"] = shapeShader
         };
-        var shaking = _shakeX != 0f || _shakeY != 0f;
-        if (shaking) { canvas.Save(); canvas.Translate(_shakeX, _shakeY); }
-
         using var shader = _effect.ToShader(uniforms, children);
         _paint.Shader = shader;
         canvas.DrawRect(_offset.X, _offset.Y, _maps.Width, _maps.Height, _paint);
@@ -577,24 +378,7 @@ half4 main(float2 p) {
         if (_tubes.Length > 1 && _tubes[1].Electrode > 0.001)
             DrawElectrodeGlow(canvas, (float)_tubes[1].Electrode, _backlightProfile.TubeY2);
         DrawLamps(canvas);
-        SpawnSprites(t);
-        DrawSprites(canvas, t, _maps.Width, _maps.Height, _offset);
-        if (shaking) canvas.Restore();
-        if (fx != null) DrawIngameEffect(canvas, fx.Value.Rule, fx.Value.Envelope, _maps.Width, _maps.Height, _offset);
         DrawGlass(canvas);
-    }
-
-    /// <summary>Sceneless ingame effects: sprites and color veils drawn over the
-    /// whole surface while no lighting scene is mounted (video marquee, console
-    /// game without artwork). Tube-level effects (dip, strobe, shake, blackout)
-    /// have no tubes to act on and reduce to their overlay component.</summary>
-    private void RenderOverlayFx(SKCanvas canvas, int width, int height, double t)
-    {
-        float i1 = 1f, i2 = 1f;
-        var fx = UpdateIngameEffect(t, ref i1, ref i2);
-        SpawnSprites(t);
-        DrawSprites(canvas, t, width, height, default);
-        if (fx != null) DrawIngameEffect(canvas, fx.Value.Rule, fx.Value.Envelope, width, height, default);
     }
 
     /// <summary>
@@ -642,92 +426,29 @@ half4 main(float2 p) {
 
     private double Exponential(double mean) => -mean * Math.Log(1 - _fxRandom.NextDouble());
 
-    /// <summary>Ingame effect envelope: dips/cuts tube intensity; returns overlay draw data.</summary>
-    private (IngameEffectRule Rule, float Envelope)? UpdateIngameEffect(double t, ref float i1, ref float i2)
+    /// <summary>Blackout window: the tubes go out, then re-ignite. The matching dark
+    /// veil over the surface is drawn by <see cref="IngameEffectsRenderer"/>; here we
+    /// only cut the light (§4a).</summary>
+    private void UpdateBlackout(double t, ref float i1, ref float i2)
     {
-        // blackout window: everything dark, then re-ignite
-        if (_blackoutUntil > 0)
+        if (_blackoutRequestSeconds > 0)
         {
-            if (t < _blackoutUntil) { i1 = i2 = 0.02f; return null; }
-            _blackoutUntil = -1;
-            if (_maps != null)
-            {
-                _sceneReadyAt += t; // restart scene clock: re-ignition
-                CreateTubeSimulators();
-            }
-            return null;
+            _blackoutUntil = t + _blackoutRequestSeconds;
+            _blackoutRequestSeconds = -1;
         }
 
-        IngameEffectRule? rule;
-        double start;
-        lock (_fxLock)
+        if (_blackoutUntil <= 0) return;
+        if (t < _blackoutUntil)
         {
-            if (_activeFx == null) return null;
-            if (_fxStart == double.MinValue) _fxStart = t;
-            rule = _activeFx;
-            start = _fxStart;
+            i1 = i2 = 0.02f;
+            return;
         }
-
-        if (rule.Kind is IngameEffectKind.PowerCycle or IngameEffectKind.Blackout)
+        _blackoutUntil = -1;
+        if (_maps != null)
         {
-            lock (_fxLock) { _activeFx = null; }
-            if (rule.Kind == IngameEffectKind.Blackout)
-                _blackoutUntil = t + rule.DurationMs / 1000.0;
-            else
-                _powerCycleRequested = true;
-            return null;
+            _sceneReadyAt += t; // restart scene clock: re-ignition
+            CreateTubeSimulators();
         }
-
-        var progress = (t - start) / (rule.DurationMs / 1000.0);
-        if (progress >= 1)
-        {
-            lock (_fxLock) { _activeFx = null; }
-            _shakeX = _shakeY = 0f;
-            return null;
-        }
-        var envelope = (float)Math.Sin(Math.PI * Math.Clamp(progress, 0, 1));
-
-        switch (rule.Kind)
-        {
-            case IngameEffectKind.Shake:
-                // physical jolt of the whole scene, decaying with the envelope
-                var amplitude = (rule.Dip > 0 ? rule.Dip : 0.5f) * envelope;
-                _shakeX = (float)((_fxRandom.NextDouble() - 0.5) * 2 * amplitude * 14);
-                _shakeY = (float)((_fxRandom.NextDouble() - 0.5) * 2 * amplitude * 8);
-                return null;
-
-            case IngameEffectKind.Strobe:
-                // hard on/off bursts of the tubes (18 Hz square wave)
-                var strobeOn = (long)(t * 18) % 2 == 0;
-                var floor = 1f - (rule.Dip > 0 ? rule.Dip : 0.75f) * envelope;
-                if (!strobeOn) { i1 *= floor; i2 *= floor; }
-                return null;
-
-            case IngameEffectKind.Tint:
-                // sustained soft color grade, no dip — the glass takes the color
-                return (rule, envelope * 0.6f);
-
-            default:
-                if (rule.Dip > 0)
-                {
-                    i1 *= 1f - rule.Dip * envelope;
-                    i2 *= 1f - rule.Dip * envelope;
-                }
-                return (rule, envelope);
-        }
-    }
-
-    private float _shakeX, _shakeY;
-
-    /// <summary>Colored glass veil (flash) or additive pulse over the whole marquee.</summary>
-    private void DrawIngameEffect(SKCanvas canvas, IngameEffectRule rule, float envelope, float w, float h, SKPoint offset)
-    {
-        var alpha = rule.Kind == IngameEffectKind.Pulse ? 0.28f : 0.38f;
-        _glassPaint.BlendMode = rule.Kind == IngameEffectKind.Pulse ? SKBlendMode.Plus : SKBlendMode.SrcOver;
-        _glassPaint.Color = rule.Color.WithAlpha((byte)(alpha * envelope * 255));
-        canvas.DrawRect(offset.X, offset.Y, w, h, _glassPaint);
-        _glassPaint.Color = SKColors.White;
-        _glassPaint.BlendMode = SKBlendMode.SrcOver;
     }
 
     /// <summary>
@@ -1065,19 +786,11 @@ half4 main(float2 p) {
 
     // Lot 0 diagnostics (docs\Update.txt §4): surfaced to the host's RenderMetrics.
     private double _lastMapGenerationMs;
-    public int ActiveSpriteCount => _sprites.Count;
     public double LastMapGenerationMs => Volatile.Read(ref _lastMapGenerationMs);
 
-    /// <summary>§6: 30 while dynamic sprites/effects run, 24 for the steady
-    /// fluorescent scene. Read on the render thread (same as the sprite mutations).</summary>
-    public int DesiredFps
-    {
-        get
-        {
-            if (_sprites.Count > 0) return 30;
-            lock (_fxLock) { return _activeFx != null || _pendingSprites.Count > 0 ? 30 : 24; }
-        }
-    }
+    /// <summary>§6: the steady fluorescent scene. Dynamic sprites are no longer ours,
+    /// they run at 30 on the events layer.</summary>
+    public int DesiredFps => 24;
 
     // Lot B: still the scene the UI wants? Generation is keyed on the requested image
     // path; a newer (different-path) selection makes an in-flight/pending result stale.
@@ -1399,8 +1112,7 @@ half4 main(float2 p) {
         if (_sequence != null) { _sound?.StopSequence(_sequence); _sequence = null; }
         _nextSequenceAt = double.MaxValue;
         _blackoutUntil = -1;
-        _sprites.Clear();
-        lock (_fxLock) { _activeFx = null; _pendingSprites.Clear(); }
+        _blackoutRequestSeconds = -1;
     }
 
     private void ClearScene()

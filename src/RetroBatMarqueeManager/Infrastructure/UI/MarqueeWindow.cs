@@ -36,6 +36,11 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         // Lighting Engine Layer (Skia) — sits above legacy image/video/.lay, below overlays
         private readonly LightingSurfaceOptions? _lightingOptions;
         private WpfSkiaSurfaceHost? _lightingHost;
+        // Animated ingame events: own renderer, own host, mounted ABOVE the media
+        // stack (docs\DECOUPLAGE-MOTEUR-EVENEMENTS.md).
+        private readonly LightingSurfaceOptions? _effectsOptions;
+        private WpfSkiaSurfaceHost? _effectsHost;
+        private Application.Lighting.IngameEffectsRenderer? _effectsRenderer;
         private Application.Lighting.MarqueeLightingRenderer? _lightingRenderer;
 
         // DMD mirror: the lighting frame downscaled to the physical DMD
@@ -49,23 +54,31 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         // includes a visible media.flux component. A surface built without it (e.g. a topper
         // carrying only score/leaderboard overlays) no longer shows the fanart/marquee flux.
         private readonly bool _fluxBackgroundEnabled;
-        private ComponentHost? _componentHost;
+        // One host per RUN of dynamic components: an engine declared between two of
+        // them closes the run and takes its own slot, so the declared z-order holds.
+        private readonly List<ComponentHost> _componentHosts = new();
 
         /// <summary>Media kinds of the current selection → the dynamic components.</summary>
         public void UpdateComponentMedia(IReadOnlyDictionary<string, string?> kinds)
             => Dispatcher.BeginInvoke(new Action(() =>
             {
-                _componentHost?.ApplyMedia(kinds);
+                foreach (var host in _componentHosts) host.ApplyMedia(kinds);
                 UpdateGameAccent(kinds); // refresh the game colour for hiscore boards tinted "auto"
             }));
 
         /// <summary>Selection meta (name/year/developer/publisher/system) → text.meta.</summary>
         public void UpdateComponentMeta(IReadOnlyDictionary<string, string> meta)
-            => Dispatcher.BeginInvoke(new Action(() => _componentHost?.ApplyMeta(meta)));
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.ApplyMeta(meta);
+            }));
 
         /// <summary>Direct feed of one component type (instruction cards…).</summary>
         public void SetComponentSource(string type, string? path)
-            => Dispatcher.BeginInvoke(new Action(() => _componentHost?.SetSource(type, path)));
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.SetSource(type, path);
+            }));
 
         public bool HasSurfaceComponent(string type) => _surface?.HasComponent(type) == true;
 
@@ -182,13 +195,21 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// components filter on their `when`, the rich overlays gate through
         /// <see cref="IsComponentActive"/>, and a surface scoped to one state
         /// hides its WHOLE window in the other (e.g. nothing over ES while
-        /// browsing when the surface is ingame-only).</summary>
+        /// browsing when the surface is ingame-only).
+        ///
+        /// The built-in Skia layers are scoped here too (§4e): they used to keep
+        /// painting out of their state while silently refusing the events routed to
+        /// them — a `lighting.engine` scoped `navigation` still lit the surface during
+        /// play. Visible and addressable now agree.</summary>
         public void SetDisplayScene(string scene)
         {
             _activeScene = scene;
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                _componentHost?.ApplyScene(scene);
+                foreach (var host in _componentHosts) host.ApplyScene(scene);
+                ApplyDynamicSuppression(); // the flattened run differs per state
+                ScopeLayer(_lightingHost, "lighting.engine");
+                ScopeLayer(_effectsHost, "effects.engine");
                 if (_surface != null && !_surface.When.Equals("both", StringComparison.OrdinalIgnoreCase))
                 {
                     var active = _surface.ActiveIn(scene);
@@ -197,6 +218,106 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 }
             }));
         }
+
+        /// <summary>
+        /// Mounts the surface's layers in the DECLARED order, so the composition
+        /// editor's up/down arrows finally mean something for the engines too. Before
+        /// this, every built-in sat at a hardcoded depth: a fullscreen `media.fanart`
+        /// always won over the lighting engine and over the sprites, whatever the user
+        /// had ordered — the root cause of both bugs of this session.
+        ///
+        /// A run of dynamic components becomes one ComponentHost; an engine closes the
+        /// current run and takes its own slot. An engine declared twice (one per
+        /// display state, a legitimate composition) has a single host: it is mounted at
+        /// its FIRST declared position.
+        ///
+        /// Out of scope on purpose: the flux background, and the overlays (score, RA,
+        /// hiscore, OSD) which stay on their fixed upper slots — they are readability
+        /// panels, not part of the artwork stack.
+        /// </summary>
+        private void BuildOrderedSurfaceLayers()
+        {
+            if (_surface == null) return;
+            var run = new List<Core.Surfaces.ComponentDefinition>();
+
+            void FlushRun()
+            {
+                if (run.Count == 0) return;
+                var slice = _surface with { Components = run.ToList() };
+                run.Clear();
+                if (!ComponentHost.IsNeeded(slice)) return; // built-ins only: nothing to host
+                var host = new ComponentHost(slice, _logger);
+                _componentHosts.Add(host);
+                _mainGrid.Children.Add(host);
+            }
+
+            void Mount(WpfSkiaSurfaceHost? host)
+            {
+                FlushRun();
+                if (host != null && !_mainGrid.Children.Contains(host)) _mainGrid.Children.Add(host);
+            }
+
+            foreach (var component in _surface.Components)
+            {
+                if (component.Type.Equals("lighting.engine", StringComparison.OrdinalIgnoreCase)) Mount(_lightingHost);
+                else if (component.Type.Equals("effects.engine", StringComparison.OrdinalIgnoreCase)) Mount(_effectsHost);
+                else run.Add(component);
+            }
+            FlushRun();
+
+            // an engine the surface never declares still gets mounted (legacy safety)
+            if (_lightingHost != null && !_mainGrid.Children.Contains(_lightingHost)) _mainGrid.Children.Add(_lightingHost);
+            if (_effectsHost != null && !_mainGrid.Children.Contains(_effectsHost)) _mainGrid.Children.Add(_effectsHost);
+        }
+
+        /// <summary>A built-in Skia layer follows its component's `when` scope — which
+        /// for the two ENGINES is always "both", normalized at load: the lighting layer
+        /// also draws the rbmarquee lamps driven by live MAME outputs, so it can never
+        /// be navigation-only. Only applied once the layer has been started.
+        /// The events layer additionally unmounts whenever it draws nothing.</summary>
+        private void ScopeLayer(WpfSkiaSurfaceHost? host, string componentType)
+        {
+            if (host == null || !host.IsRunning) return;
+            var visible = IsComponentActive(componentType)
+                          && (!ReferenceEquals(host, _effectsHost) || _effectsHasContent);
+            // Hidden, NOT Collapsed: Collapsed removes the element from layout, so
+            // every effect would trigger a measure/arrange pass over the whole window
+            // — a layout storm on a layer that toggles several times a second.
+            host.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+        }
+
+        private bool _effectsHasContent;
+
+        private bool _dynamicRenderActive;
+
+        /// <summary>
+        /// The surface's flattened stack is now displayed (the dynamic render is
+        /// mounted): its layers must stop being drawn live, or an unlit copy would sit
+        /// on top of the lit one. Recomputed from the same pure function the renderer
+        /// used, so the two can never disagree.
+        /// </summary>
+        public void SetDynamicRenderActive(bool active)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _dynamicRenderActive = active;
+                ApplyDynamicSuppression();
+            }));
+        }
+
+        private void ApplyDynamicSuppression()
+        {
+            var suppressed = _dynamicRenderActive && _surface != null
+                ? Application.Media.DynamicSurfaceRenderer.FlattenableRun(_surface, _activeScene)
+                : Array.Empty<Core.Surfaces.ComponentDefinition>();
+            foreach (var host in _componentHosts) host.SetSuppressed(suppressed);
+        }
+
+        private volatile int _pixelWidth;
+        private volatile int _pixelHeight;
+
+        /// <summary>Window size in pixels, safe to read from any thread.</summary>
+        public (int Width, int Height) PixelSize => (_pixelWidth, _pixelHeight);
 
         /// <summary>True when the surface carries the component AND it participates
         /// in the current display state (legacy surfaces: always, `when` = both).</summary>
@@ -301,11 +422,12 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
         public MarqueeWindow(int screenNumber, ILogger logger, LightingSurfaceOptions? lightingOptions = null, Core.Interfaces.TargetBounds? bounds = null,
             Core.Interfaces.IDmdService? dmdMirror = null, int dmdWidth = 128, int dmdHeight = 32,
-            Core.Surfaces.SurfaceDefinition? surface = null)
+            Core.Surfaces.SurfaceDefinition? surface = null, LightingSurfaceOptions? effectsOptions = null)
         {
             _targetScreen = screenNumber;
             _logger = logger;
             _lightingOptions = lightingOptions;
+            _effectsOptions = effectsOptions;
             _bounds = bounds;
             _dmdMirror = dmdMirror;
             _dmdWidth = dmdWidth;
@@ -323,6 +445,14 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
             InitializeLayers();
 
+            // plain mirror of the window size, readable from ANY thread (the WPF
+            // properties are thread-affine and the renderers live off the UI thread)
+            this.SizeChanged += (_, e) =>
+            {
+                _pixelWidth = (int)Math.Round(e.NewSize.Width);
+                _pixelHeight = (int)Math.Round(e.NewSize.Height);
+            };
+            this.Closed += (_, _) => StopShake(); // never leave a Rendering handler behind
             this.SourceInitialized += OnSourceInitialized;
             // Touch is promoted to mouse events by WPF, so a single handler covers
             // both a finger tap and a mouse click (useful to test without a touchscreen).
@@ -373,7 +503,12 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
         private void InitializeLayers()
         {
-            _mainGrid = new Grid();
+            _mainGrid = new Grid
+            {
+                // shake transform (§4b): identity until an event jolts the surface
+                RenderTransformOrigin = new System.Windows.Point(0.5, 0.5),
+                RenderTransform = new TransformGroup { Children = { _shakeScale, _shakeTranslate } }
+            };
 
             // 1. Static Background Image
             _backgroundImage = new Image
@@ -420,7 +555,9 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 {
                     Visibility = Visibility.Collapsed
                 };
-                _mainGrid.Children.Add(_lightingHost);
+                // A dynamic surface decides its own z-order (see BuildOrderedSurfaceLayers);
+                // a legacy config keeps the historical slot, right here.
+                if (_surface == null) _mainGrid.Children.Add(_lightingHost);
                 if (_lightingOptions.TestPattern)
                 {
                     this.Loaded += (_, _) =>
@@ -453,8 +590,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     if (_dmdMirror != null) _lightingHost.FrameRendered = MirrorFrameToDmd;
                     this.Loaded += (_, _) =>
                     {
-                        _lightingHost.Visibility = Visibility.Visible;
                         _lightingHost.Start(_lightingRenderer);
+                        ScopeLayer(_lightingHost, "lighting.engine");
                         _logger.LogInformation("Lighting engine layer active on screen {Screen}", _targetScreen);
                     };
                 }
@@ -477,12 +614,38 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             _logoImage.RenderTransform = transformGroup;
             _mainGrid.Children.Add(_logoImage);
 
-            // 4b. Dynamic surface components (media blocks, texts, web embeds…)
-            if (_surface != null && ComponentHost.IsNeeded(_surface))
+            // 4b. Ingame events layer (sprites, veils).
+            if (_effectsOptions != null)
             {
-                _componentHost = new ComponentHost(_surface, _logger);
-                _mainGrid.Children.Add(_componentHost);
+                _effectsHost = new WpfSkiaSurfaceHost(_logger, _effectsOptions.FpsLimit, false,
+                    _effectsOptions.RenderScale, _effectsOptions.PresentPipeline, _effectsOptions.GpuRaster)
+                {
+                    Visibility = Visibility.Hidden,
+                    IsHitTestVisible = false
+                };
+                if (_surface == null) _mainGrid.Children.Add(_effectsHost);
+                _effectsRenderer = new Application.Lighting.IngameEffectsRenderer(_logger);
+                // mounted only while an event actually draws: a permanently visible
+                // full-screen alpha layer forces WPF to recomposite the whole window
+                // on every frame of the layers below (measured: lighting renderMs
+                // 8.5 → 30 ms, writePixels 1.5 → 10 ms).
+                _effectsRenderer.ContentChanged += content =>
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        _effectsHasContent = content;
+                        ScopeLayer(_effectsHost, "effects.engine");
+                    }));
+                this.Loaded += (_, _) =>
+                {
+                    _effectsHost.Start(_effectsRenderer);
+                    ScopeLayer(_effectsHost, "effects.engine");
+                    _logger.LogInformation("Ingame events layer ready on screen {Screen}", _targetScreen);
+                };
+                this.Closed += (_, _) => _effectsHost?.Dispose();
             }
+
+            // 4c. The surface's own layers, in the order the composition editor shows.
+            BuildOrderedSurfaceLayers();
 
             // 5. Custom Overlay Slot Layer
             _overlayCanvas = new Canvas();
@@ -648,14 +811,94 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// <summary>Restart the lighting scene with fresh random ignition scenarios.</summary>
         public void PowerCycleLighting() => _lightingRenderer?.PowerCycle();
 
-        public void SetLightingIngame(bool ingame) => _lightingRenderer?.SetIngame(ingame);
+        /// <summary>Play session boundary: both engines drop what belonged to the
+        /// previous session (lighting sounds/outputs, running events and sprites).</summary>
+        public void SetLightingIngame(bool ingame)
+        {
+            _lightingRenderer?.SetIngame(ingame);
+            _effectsRenderer?.SetIngame(ingame);
+        }
 
         public void SetLightingOutput(string output, int value) => _lightingRenderer?.SetArcadeOutput(output, value);
 
-        public void TriggerLightingEffect(Application.Lighting.IngameEffectRule rule)
+        /// <summary>Animated ingame event: sprites and veils on the events layer.
+        /// `shake` is the exception — it belongs to no renderer, the window jolts its
+        /// whole visual tree so the fanart and every media move with the sprites.</summary>
+        public void TriggerIngameEffect(Application.Lighting.IngameEffectRule rule)
         {
-            if (_speedrunActive) return; // clean speedrun session: no light effects
-            _lightingRenderer?.TriggerIngameEffect(rule);
+            if (_speedrunActive) return; // clean speedrun session: no effects
+            if (rule.Kind == Application.Lighting.IngameEffectKind.Shake)
+            {
+                StartShake(rule.DurationMs, rule.Dip > 0 ? rule.Dip : 0.5f);
+                return;
+            }
+            _effectsRenderer?.TriggerIngameEffect(rule);
+        }
+
+        // ===== physical jolt of the whole surface (design note §4b) =====
+        private readonly TranslateTransform _shakeTranslate = new();
+        private readonly ScaleTransform _shakeScale = new(1, 1);
+        private readonly Random _shakeRandom = new();
+        private System.Diagnostics.Stopwatch? _shakeClock;
+        private double _shakeDurationSeconds;
+        private float _shakeAmplitude;
+        private bool _shakeAttached;
+
+        /// <summary>
+        /// Jolts the entire window content — background, video, .lay, lighting layer,
+        /// logo, dynamic components, events layer, overlays. Driven by
+        /// CompositionTarget.Rendering (screen cadence, independent of the Skia render
+        /// threads) and armed only while a shake runs, so it costs nothing at rest.
+        /// A slight scale-up hides the empty edges the translation would reveal.
+        /// </summary>
+        private void StartShake(int durationMs, float amplitude)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _shakeDurationSeconds = Math.Max(0.05, durationMs / 1000.0);
+                // a shake landing on a running one takes the strongest of the two
+                _shakeAmplitude = _shakeClock != null ? Math.Max(_shakeAmplitude, amplitude) : amplitude;
+                _shakeClock = System.Diagnostics.Stopwatch.StartNew();
+                if (_shakeAttached) return;
+                CompositionTarget.Rendering += OnShakeFrame;
+                _shakeAttached = true;
+            }));
+        }
+
+        private void OnShakeFrame(object? sender, EventArgs e)
+        {
+            var progress = _shakeClock == null ? 1 : _shakeClock.Elapsed.TotalSeconds / _shakeDurationSeconds;
+            if (progress >= 1)
+            {
+                StopShake();
+                return;
+            }
+            var envelope = (float)Math.Sin(Math.PI * Math.Clamp(progress, 0, 1)) * _shakeAmplitude;
+            _shakeTranslate.X = (_shakeRandom.NextDouble() - 0.5) * 2 * envelope * 14;
+            _shakeTranslate.Y = (_shakeRandom.NextDouble() - 0.5) * 2 * envelope * 8;
+            // 3 % overscan: the translated content never uncovers the window edges
+            _shakeScale.ScaleX = _shakeScale.ScaleY = 1 + 0.03 * envelope;
+        }
+
+        private void StopShake()
+        {
+            if (_shakeAttached)
+            {
+                CompositionTarget.Rendering -= OnShakeFrame;
+                _shakeAttached = false;
+            }
+            _shakeClock = null;
+            _shakeAmplitude = 0;
+            _shakeTranslate.X = _shakeTranslate.Y = 0;
+            _shakeScale.ScaleX = _shakeScale.ScaleY = 1;
+        }
+
+        /// <summary>Tube-level part of an ingame event (blackout, powerCycle): only
+        /// the lighting engine can act on tubes it owns.</summary>
+        public void TriggerTubeEffect(Application.Lighting.IngameEffectRule rule)
+        {
+            if (_speedrunActive) return;
+            _lightingRenderer?.TriggerTubeEffect(rule);
         }
 
         public void DisplayImage(string path, Application.Lighting.LightingSceneMeta? lightingMeta = null)

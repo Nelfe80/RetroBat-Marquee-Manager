@@ -47,6 +47,34 @@ public sealed class MarqueeController : IDisposable
                 ? new LightingSurfaceOptions(_config.LightingTestPattern, _config.LightingFpsLimit, _config.LightingShowFps, _config.LightingRenderScale, _config.LightingFillHeightMaxCrop, _config.LightingSoundEnabled, _config.LightingSoundVolume, _config.LightingGlassReflection, _config.LightingTubeVisualOpacity, _config.LightingTubeThickness, _config.LightingTubeBlur, _config.LightingTubeEndFade, _config.LightingTubeColor, _config.LightingLatestWinsGeneration, _config.LightingMapCache, _config.LightingPresentPipeline, _config.LightingGpuRaster)
                 : null;
 
+            // The events layer is NOT gated by [Lighting] Enabled — that switch is
+            // about lighting an image, and the two engines are independent now. It
+            // only borrows the rendering knobs (cadence, scale, present, GPU); it has
+            // no scene, no tubes, no sound.
+            var effectsOptions = new LightingSurfaceOptions(
+                TestPattern: false,
+                FpsLimit: _config.LightingFpsLimit,
+                ShowFps: false,
+                // Half resolution, deliberately. Sprite GIFs are pre-downscaled to 96 px
+                // tall at load (320 px for full_* backdrops) and drawn at ~30 % of the
+                // surface height, so a full-resolution overlay upscales a small bitmap
+                // and buys nothing visible — while costing 4x the raster, the 5.5 MB/frame
+                // WritePixels on the UI thread and the WPF blend of a second full-screen
+                // layer. That second present is what made everything crawl as soon as a
+                // sprite appeared.
+                RenderScale: Math.Min(_config.LightingRenderScale, 0.5),
+                FillHeightMaxCrop: 0,
+                SoundEnabled: false,
+                SoundVolume: 0,
+                GlassReflection: 0,
+                TubeVisualOpacity: 0,
+                PresentPipeline: _config.LightingPresentPipeline,
+                // CPU raster on purpose: the events layer has no shader, only sprite
+                // blits the sprite budget is already tuned for. Giving it the GPU
+                // backend would keep a SECOND WGL/GRContext alive for the lifetime of
+                // the window, competing with the lighting engine's raster for nothing.
+                GpuRaster: false);
+
             // screens the user excluded from MarqueeManager (Mon setup → "use this
             // screen" unchecked): no window is created on them, their surfaces stay
             // in the document but are suspended.
@@ -79,12 +107,16 @@ public sealed class MarqueeController : IDisposable
                     }
 
                     var lighting = surface.HasComponent("lighting.engine") ? lightingOptions : null;
+                    // the events layer has its own host: it must exist even where no
+                    // lighting scene does (fanart surface, video marquee, iccard…)
+                    var effects = surface.HasComponent("effects.engine") ? effectsOptions : null;
                     var window = new MarqueeWindow(screen, _logger,
                         lighting,
                         surface.Bounds,
                         lighting != null && _config.LightingDmdMirror && _config.DmdEnabled ? _dmd : null,
                         _config.DmdWidth, _config.DmdHeight,
-                        surface);
+                        surface,
+                        effects);
                     if (!_windows.TryGetValue(surface.Id, out var list)) _windows[surface.Id] = list = new();
                     list.Add(window);
                     if (surface.Category.Equals("iccard", StringComparison.OrdinalIgnoreCase))
@@ -348,38 +380,56 @@ public sealed class MarqueeController : IDisposable
     /// <summary>A purpose-built .lay DMD view is active: the lighting mirror yields.</summary>
     public void SetLayDmdActive(bool active)
     {
-        foreach (var window in WindowsWithComponent("lighting.engine")) window.SetLayDmdActive(active);
+        foreach (var window in WindowsCarrying("lighting.engine")) window.SetLayDmdActive(active);
     }
 
     /// <summary>Game launch / return-to-frontend: the marquee lighting re-ignites.</summary>
     public void PowerCycleLighting()
     {
-        foreach (var window in WindowsWithComponent("lighting.engine")) window.PowerCycleLighting();
+        foreach (var window in WindowsCarrying("lighting.engine")) window.PowerCycleLighting();
     }
 
-    /// <summary>Ingame = clean session: lighting sounds muted, attract paused.</summary>
+    /// <summary>Ingame = clean session: lighting sounds muted, attract paused, and
+    /// both engines drop the previous session's state.</summary>
     public void SetLightingIngame(bool ingame)
     {
-        foreach (var window in WindowsWithComponent("lighting.engine")) window.SetLightingIngame(ingame);
+        foreach (var window in WindowsCarrying("lighting.engine", "effects.engine")) window.SetLightingIngame(ingame);
     }
 
     /// <summary>Live MAME output → mapped scene lamp (ws/arcade).</summary>
     public void SetLightingOutput(string output, int value)
     {
-        foreach (var window in WindowsWithComponent("lighting.engine")) window.SetLightingOutput(output, value);
+        foreach (var window in WindowsCarrying("lighting.engine")) window.SetLightingOutput(output, value);
     }
 
-    /// <summary>Semantic ingame event → light effect (ws/ingame via the effects library).</summary>
-    public void TriggerLightingEffect(Application.Lighting.IngameEffectRule rule)
+    /// <summary>Kinds a standalone overlay cannot express: they act on tubes the
+    /// lighting engine owns, so they are ALSO routed to it. Adding Flash and Strobe
+    /// here restores the historical tube dip on those kinds (design note §4a); this
+    /// is the same seam a future `lamp="…"` binding will use.</summary>
+    private static readonly Application.Lighting.IngameEffectKind[] TubeKinds =
     {
-        foreach (var window in WindowsWithComponent("lighting.engine")) window.TriggerLightingEffect(rule);
+        Application.Lighting.IngameEffectKind.Blackout,
+        Application.Lighting.IngameEffectKind.PowerCycle
+    };
+
+    /// <summary>
+    /// Semantic ingame event (ws/ingame via the effects library). The controller is
+    /// the dispatcher: the animated part always goes to the events engine, and the
+    /// tube-level part is handed to the lighting engine on top. The two renderers
+    /// never talk to each other.
+    /// </summary>
+    public void TriggerIngameEffect(Application.Lighting.IngameEffectRule rule)
+    {
+        foreach (var window in WindowsWithComponent("effects.engine")) window.TriggerIngameEffect(rule);
+        if (Array.IndexOf(TubeKinds, rule.Kind) < 0) return;
+        foreach (var window in WindowsWithComponent("lighting.engine")) window.TriggerTubeEffect(rule);
     }
 
     /// <summary>User-dropped effect media (webm/gif) triggered by a signal:
-    /// overlay on the marquee or temporary fullscreen takeover.</summary>
+    /// overlay on the surface or temporary fullscreen takeover.</summary>
     public void PlayMediaEffect(string path, bool fullscreen, int durationMs)
     {
-        foreach (var window in WindowsWithComponent("lighting.engine")) window.PlayMediaEffect(path, fullscreen, durationMs);
+        foreach (var window in WindowsWithComponent("effects.engine")) window.PlayMediaEffect(path, fullscreen, durationMs);
     }
 
     public void SetLampState(string lampName, int state)
@@ -406,12 +456,42 @@ public sealed class MarqueeController : IDisposable
     /// <summary>The rich overlays are no longer marquee-only: any surface carrying
     /// the matching component receives them (legacy configs get the historical
     /// component stack on the marquee surface, so behavior is unchanged there).
-    /// A component scoped by `when` only routes in its display state.</summary>
+    /// A component scoped by `when` only routes in its display state.
+    ///
+    /// VISUAL TRIGGERS ONLY — see <see cref="WindowsCarrying"/> for state signals.</summary>
     private IEnumerable<MarqueeWindow> WindowsWithComponent(string componentType)
         => _surfaces.Values
             .Where(surface => surface.HasComponent(componentType))
             .SelectMany(surface => GetWindows(surface.Id))
             .Where(window => window.IsComponentActive(componentType));
+
+    /// <summary>
+    /// STATE signals (design note §4d): routed on declaration alone, never on the
+    /// display state. A renderer must keep coherent state while its layer is hidden
+    /// — so that it is right when the layer comes back, and so `SetLightingIngame`
+    /// still mutes the tube sounds. Routing these through the scope filter is what
+    /// silently killed the MAME outputs during play on a `when:navigation` surface.
+    /// </summary>
+    private IEnumerable<MarqueeWindow> WindowsCarrying(params string[] componentTypes)
+        => _surfaces.Values
+            .Where(surface => componentTypes.Any(surface.HasComponent))
+            .SelectMany(surface => GetWindows(surface.Id));
+
+    /// <summary>The surface now displays its own flattened stack: its layers stop
+    /// being drawn live (no unlit copy over the lit one).</summary>
+    public void SetDynamicRenderActive(string surfaceId, bool active)
+    {
+        foreach (var window in GetWindows(surfaceId)) window.SetDynamicRenderActive(active);
+    }
+
+    /// <summary>Pixel size of a surface's window — the dynamic renderer flattens the
+    /// layer stack at exactly the size it will be shown at. (0,0) when the surface has
+    /// no window (excluded screen, suspended).</summary>
+    public (int Width, int Height) SurfacePixelSize(string surfaceId)
+    {
+        var window = GetWindows(surfaceId).FirstOrDefault();
+        return window?.PixelSize ?? (0, 0);
+    }
 
     /// <summary>Display state switch, broadcast to every surface.</summary>
     public void SetDisplayScene(string scene)

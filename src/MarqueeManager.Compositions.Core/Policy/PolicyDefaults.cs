@@ -22,6 +22,7 @@ public static class PolicyDefaults
             [SourceKind.Generated] = new(true, Contain),
             [SourceKind.Scraped] = new(true, ScrapDynamic),
             [SourceKind.Logo] = new(true, Contain, Logo),
+            [SourceKind.Dynamic] = new(true, Contain),
         }, Neutral);
 
     public static readonly ScopePolicy Game = new("game-default", false,
@@ -33,5 +34,6 @@ public static class PolicyDefaults
             [SourceKind.Scraped] = new(true, ScrapDynamic),
             [SourceKind.Logo] = new(true, Contain, Logo),
             [SourceKind.SystemFallback] = new(true, Contain),
+            [SourceKind.Dynamic] = new(true, Contain),
         }, Neutral);
 }

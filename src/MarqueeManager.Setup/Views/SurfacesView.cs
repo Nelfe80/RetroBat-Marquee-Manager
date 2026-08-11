@@ -51,6 +51,7 @@ public sealed class SurfacesView : UserControl
         ("overlay.ra.badges", "Badges RA", "RA badges"),
         ("overlay.ra.speedrun", "Speedrun RA", "RA speedrun"),
         ("lighting.engine", "Rendu lumineux (Lighting)", "Lighting engine"),
+        ("effects.engine", "Événements animés (sprites)", "Animated events (sprites)"),
         ("lamps.scene", "Lampes rbmarquee", "rbmarquee lamps"),
         ("iccard.static", "Carte fixe", "Static card"),
         ("iccard.cycle", "Carte variable", "Cycling card"),

@@ -13,11 +13,11 @@ public sealed class MediaResolutionService : IMediaResolutionService
 {
     // System chain (§6.1): personal → user drop → generated → scraped → logo → [neutral].
     private static readonly SourceKind[] SystemChain =
-        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
+        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Dynamic, SourceKind.Scraped, SourceKind.Logo };
 
     // Game chain (§6.2): personal → user drop → generated → scraped → logo → SYSTEM chain → [neutral].
     private static readonly SourceKind[] GameChainBeforeFallback =
-        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
+        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Dynamic, SourceKind.Scraped, SourceKind.Logo };
 
     private readonly IPresentationPolicyProvider _policies;
     private readonly IMediaAssetResolver _assets;
