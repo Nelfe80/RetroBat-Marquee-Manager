@@ -13,11 +13,21 @@ public sealed class MediaResolutionService : IMediaResolutionService
 {
     // System chain (§6.1): personal → user drop → generated → scraped → logo → [neutral].
     private static readonly SourceKind[] SystemChain =
-        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Dynamic, SourceKind.Scraped, SourceKind.Logo };
+        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
 
     // Game chain (§6.2): personal → user drop → generated → scraped → logo → SYSTEM chain → [neutral].
     private static readonly SourceKind[] GameChainBeforeFallback =
-        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Dynamic, SourceKind.Scraped, SourceKind.Logo };
+        { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Scraped, SourceKind.Logo };
+
+    /// <summary>
+    /// THE canonical source order, exposed so nobody has to keep a second copy of it.
+    /// A hand-kept duplicate in the Setup is what once made a whole card vanish from
+    /// the view without a single error — the order lives here and only here.
+    /// </summary>
+    public static IReadOnlyList<SourceKind> ChainFor(MediaScope scope)
+        => scope == MediaScope.System
+            ? SystemChain
+            : GameChainBeforeFallback.Append(SourceKind.SystemFallback).ToArray();
 
     private readonly IPresentationPolicyProvider _policies;
     private readonly IMediaAssetResolver _assets;

@@ -30,6 +30,15 @@ public static class MarqueeFramer
                 null, "logo contain");
         }
 
+        // A source AUTHORED at the surface's aspect (a flattened composition, a
+        // creation, a gabarit) is already framed: it must fill the surface exactly.
+        // Letterboxing it would leave black bands where the layers below keep showing
+        // through — the "two logos" symptom.
+        var sourceAspect = (double)source.Width / source.Height;
+        var surfaceAspect = (double)surfaceWidth / surfaceHeight;
+        if (Math.Abs(sourceAspect - surfaceAspect) <= surfaceAspect * 0.02)
+            return new Framing(surfaceWidth, surfaceHeight, null, "exact (authored for this surface)");
+
         var widthAtHeightFill = (double)source.Width * surfaceHeight / source.Height;
         if (widthAtHeightFill <= surfaceWidth || fillHeightMaxCrop <= 0)
             return Contain(source, surfaceWidth, surfaceHeight, "contain");

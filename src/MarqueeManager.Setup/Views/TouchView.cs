@@ -402,16 +402,27 @@ public sealed class TouchView : UserControl
                     iccard.Components.Add(new Data.ComponentModel { Type = "iccard.cycle", X = 0.5, Y = 0, W = 0.5, H = 1 });
                     changed = true;
                 }
-                // the full-frame stream media would sit under the split: remove it
-                changed |= iccard.Components.RemoveAll(c => c.Type == "media.flux") > 0;
+                // the full-frame resolved media would sit under the split: opt OUT of it.
+                // It must be an explicit hidden marker, not an absence — the runtime now
+                // shows the resolved media by default, so removing the component would
+                // turn it back ON instead of off.
+                var flux = iccard.Components.FirstOrDefault(c => c.Type == "media.flux");
+                if (flux == null)
+                {
+                    iccard.Components.Insert(0, new Data.ComponentModel { Type = "media.flux", Visible = false });
+                    changed = true;
+                }
+                else if (flux.Visible)
+                {
+                    flux.Visible = false;
+                    changed = true;
+                }
             }
             else
             {
                 changed |= iccard.Components.RemoveAll(c => c.Type is "iccard.static" or "iccard.cycle") > 0;
-                if (changed && !iccard.Components.Any(c => c.Type == "media.flux"))
-                {
-                    iccard.Components.Insert(0, new Data.ComponentModel { Type = "media.flux" });
-                }
+                // back to full frame: drop the opt-out marker, the resolved media shows again
+                changed |= iccard.Components.RemoveAll(c => c.Type == "media.flux" && !c.Visible) > 0;
             }
 
             if (changed) store.Save(surfaces);

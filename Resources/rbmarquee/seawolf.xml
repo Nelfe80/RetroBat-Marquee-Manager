@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
-<rbmarquee version="1.2" game="seawolf" system="mame" generated="true">
+<!-- Édité avec MarqueeManagerSetup : ce fichier prime et le générateur ne le touche plus. -->
+<rbmarquee version="1.2" game="seawolf" system="mame" generated="false">
   <scene target="marquee" image="seawolf.png">
     <lamps>
       <lamp id="1" region="0.4036 0.3750 0.0542 0.2889" color="#ff423d" />

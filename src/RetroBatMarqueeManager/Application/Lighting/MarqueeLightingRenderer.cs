@@ -477,8 +477,23 @@ half4 main(float2 p) {
         }
         else if (!_ingame && t > 2.5)
         {
-            // attract mode: show off the lamps without launching the game
-            if (_lampStates.Length == 2)
+            // attract mode: show off the lamps without launching the game. The scene's
+            // `mode` was parsed and carried but never read — the pattern was decided by
+            // the lamp count alone, so the Setup's dropdown did nothing.
+            var mode = _lampScene.AttractMode;
+            // alternate needs a pair; with a single lamp it would index past the end
+            var alternate = _lampStates.Length >= 2
+                            && (mode.Equals("alternate", StringComparison.OrdinalIgnoreCase)
+                                || _lampStates.Length == 2);
+            if (mode.Equals("off", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var state in _lampStates) state.Target = 0f;
+            }
+            else if (mode.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var state in _lampStates) state.Target = 1f;
+            }
+            else if (alternate)
             {
                 var phase = t % 1.1 < 0.55;
                 _lampStates[0].Target = phase ? 1f : 0f;

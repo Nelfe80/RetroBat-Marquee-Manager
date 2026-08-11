@@ -140,14 +140,39 @@ public sealed class CompositionChainResolver
         var rom = meta?.Rom;
         if (string.IsNullOrEmpty(system) || string.IsNullOrEmpty(surfaceId)) return null;
         var cacheBase = Path.Combine(GabaritCategoryRoot(category), ".cache", "surfaces", SafeName(surfaceId));
+        var gameScope = !systemScope && !string.IsNullOrEmpty(rom);
         foreach (var sys in SystemSpellings(system!))
         {
-            var path = systemScope || string.IsNullOrEmpty(rom)
-                ? Path.Combine(cacheBase, "systems", SafeName(sys) + ".png")
-                : Path.Combine(cacheBase, "games", SafeName(sys), SafeName(rom!) + ".png");
+            var path = gameScope
+                ? Path.Combine(cacheBase, "games", SafeName(sys), SafeName(rom!) + ".png")
+                : Path.Combine(cacheBase, "systems", SafeName(sys) + ".png");
             if (File.Exists(path)) return path;
         }
+
+        // Nothing baked yet: ask the host to render it. The runtime bakes its own
+        // gabarits now — it used to depend on the Setup having displayed that game's
+        // (or that system's) sheet, which on a real library meant "never".
+        //
+        // And it returns null rather than standing in with the SYSTEM render: showing
+        // one entry's artwork in place of another's is worse than showing nothing. The
+        // chain simply continues, and the real render lands a moment later.
+        GabaritMissing?.Invoke(surfaceId, category, system!, gameScope ? rom! : null);
         return null;
+    }
+
+    /// <summary>Fired when a gabarit is not baked yet: (surfaceId, category, system,
+    /// rom) — rom null for the SYSTEM scope. The host renders it in the background then
+    /// re-displays.</summary>
+    public Action<string, string, string, string?>? GabaritMissing;
+
+    /// <summary>Cache path of a surface's gabarit — the renderer writes here and
+    /// <see cref="SurfaceGabarit"/> reads it back. Null rom = system scope.</summary>
+    public string GabaritCachePath(string category, string surfaceId, string system, string? rom)
+    {
+        var root = Path.Combine(GabaritCategoryRoot(category), ".cache", "surfaces", SafeName(surfaceId));
+        return string.IsNullOrEmpty(rom)
+            ? Path.Combine(root, "systems", SafeName(system) + ".png")
+            : Path.Combine(root, "games", SafeName(system), SafeName(rom!) + ".png");
     }
 
     /// <summary>The CATEGORY-LEVEL graphic creation (the default for every surface):
@@ -348,12 +373,17 @@ public sealed class CompositionChainResolver
         return null;
     }
 
-    private static IEnumerable<string> SystemSpellings(string system)
+    /// <summary>ES exposes a MAME set as "mame" while the library — and the Setup's
+    /// saved files — may use "arcade", or the reverse. Anything that keys on the system
+    /// name must try both, or it silently finds nothing.</summary>
+    public static IEnumerable<string> SystemNames(string system)
     {
         yield return system;
         if (system.Equals("mame", StringComparison.OrdinalIgnoreCase)) yield return "arcade";
         else if (system.Equals("arcade", StringComparison.OrdinalIgnoreCase)) yield return "mame";
     }
+
+    private static IEnumerable<string> SystemSpellings(string system) => SystemNames(system);
 
     private static string SafeName(string name)
     {

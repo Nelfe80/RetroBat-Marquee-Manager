@@ -1,3 +1,4 @@
+using MarqueeManager.Compositions.Core.Composition;
 using System.Windows.Controls;
 using MarqueeManager.Compositions.Core.Policy;
 using MarqueeManager.Compositions.Core.Resolution;

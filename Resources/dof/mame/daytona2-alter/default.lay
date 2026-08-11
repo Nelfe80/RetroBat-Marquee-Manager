@@ -11,7 +11,7 @@
 		<image file="lamp_start.png" state="0" />
 	</element>
 	<element name="lamp_leader">
-		<image file="lamp_raceleader" state="0" />
+		<image file="lamp_raceleader.png" state="0" />
 	</element>
 	<element name="lamp_1">
 		<image file="lamp_1.png" state="0" />

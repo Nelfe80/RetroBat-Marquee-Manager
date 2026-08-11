@@ -1,3 +1,4 @@
+using MarqueeManager.Compositions.Core.Composition;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -405,6 +406,21 @@ public sealed class GamesView : UserControl, IDisposable
         if (entry.System is "arcade" or "mame" or "hbmame")
         {
             var backgrounds = new List<(string Label, string Path)>();
+            // FIRST and default when it exists: the artwork the lamp regions were
+            // measured on. The runtime lights THAT image whatever the resolution chain
+            // produced, so it is the only background on which placing lamps means
+            // anything — offering anything else first would let the user aim at an
+            // image that is never displayed.
+            var calibrated = SceneLampsCard.CalibratedBackground(_pluginRoot, entry.Rom);
+            if (calibrated != null)
+                backgrounds.Add((L.T("Artwork calibré (affiché en jeu)", "Calibrated artwork (shown in game)"), calibrated));
+            // then the surface's own composition, which is what the lighting engine
+            // actually lights when the surface stacks layers under it. Lamps are placed
+            // in FRACTIONS of the lit image: aiming them at another picture puts them
+            // beside their target.
+            var composed = ComposedBackground(entry.System, entry.Rom);
+            if (composed != null)
+                backgrounds.Add((L.T("Ma composition (éclairée)", "My composition (lit)"), composed));
             var generated = Path.Combine(_media.GameRoot(entry.System, entry.Rom), "artwork", "marquee", "generated-marquee.png");
             if (File.Exists(generated)) backgrounds.Add((L.T("Marquee généré", "Generated marquee"), generated));
             if (_projects.HasComposition(entry.System, entry.Rom))
@@ -454,6 +470,28 @@ public sealed class GamesView : UserControl, IDisposable
         "dmd-virtual" => "dmd",
         _ => "marquees"
     };
+
+    /// <summary>The flattened composition of the SELECTED surface for this game — the
+    /// image the lighting engine lights when the surface stacks bakeable layers under
+    /// it. Rendered lazily by the runtime, so it exists once the game has been browsed.
+    /// Both system spellings are tried (the runtime names the folder after what the
+    /// stream sent it: "mame" where the view says "arcade").</summary>
+    private string? ComposedBackground(string system, string rom)
+    {
+        if (string.IsNullOrEmpty(_selectedSurfaceId)) return null;
+        var safe = new Func<string, string>(name =>
+        {
+            var invalid = System.IO.Path.GetInvalidFileNameChars();
+            return new string(name.ToLowerInvariant().Where(c => !invalid.Contains(c)).ToArray());
+        });
+        foreach (var sys in new[] { system, system.Equals("mame", StringComparison.OrdinalIgnoreCase) ? "arcade" : "mame" })
+        {
+            var path = System.IO.Path.Combine(_pluginRoot, "media", "marquees", ".cache", "surfaces",
+                safe(_selectedSurfaceId!), "games", safe(sys), safe(rom), "navigation.png");
+            if (System.IO.File.Exists(path)) return path;
+        }
+        return null;
+    }
 
     private void BuildComposerCard(GameEntry entry, GamePreload data)
     {

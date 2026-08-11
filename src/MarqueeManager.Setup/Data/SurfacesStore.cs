@@ -132,6 +132,43 @@ public sealed class SurfacesStore
     public void Save(IReadOnlyList<SurfaceModel> surfaces)
         => SaveDocument(surfaces, LoadScreens());
 
+    /// <summary>
+    /// A surface whose LAYER STACK changed invalidates its flattened renders: the cache
+    /// key covers the media, not the recipe's edits, so a stale composition would keep
+    /// being served and lit. Compares against the document on disk and only wipes the
+    /// surfaces that actually moved — editing one surface must not cost a full re-render
+    /// of the others.
+    /// </summary>
+    private void InvalidateChangedLayouts(IReadOnlyList<SurfaceModel> surfaces)
+    {
+        try
+        {
+            if (!Exists) return;
+            var previous = Load().ToDictionary(s => s.Id, Signature, StringComparer.OrdinalIgnoreCase);
+            foreach (var surface in surfaces)
+            {
+                if (previous.TryGetValue(surface.Id, out var before) && before == Signature(surface)) continue;
+                foreach (var category in new[] { "marquees", "toppers", "dmd" })
+                {
+                    var dir = Path.Combine(_pluginRoot, "media", category, ".cache", "surfaces", SafeName(surface.Id));
+                    if (Directory.Exists(dir)) Directory.Delete(dir, recursive: true);
+                }
+            }
+        }
+        catch { /* cache hygiene only: a locked file must never block a save */ }
+    }
+
+    private static string SafeName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return new string((name ?? "").ToLowerInvariant().Where(c => !invalid.Contains(c)).ToArray());
+    }
+
+    private static string Signature(SurfaceModel surface)
+        => string.Join('|', surface.Components.Select(c =>
+            $"{c.Type};{c.X:F4},{c.Y:F4},{c.W:F4},{c.H:F4};{c.When};{c.Visible};" +
+            string.Join(',', c.Options.OrderBy(o => o.Key).Select(o => o.Key + "=" + o.Value))));
+
     public string DocumentPath => Path.Combine(_pluginRoot, "state", "surfaces.json");
 
     public bool Exists => File.Exists(DocumentPath);
@@ -224,6 +261,7 @@ public sealed class SurfacesStore
 
     private void SaveDocument(IReadOnlyList<SurfaceModel> surfaces, IReadOnlyList<ScreenModel> screens)
     {
+        InvalidateChangedLayouts(surfaces);
         var document = new Dictionary<string, object?>
         {
             ["schema"] = Schema,

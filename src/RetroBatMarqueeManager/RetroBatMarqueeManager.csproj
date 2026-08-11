@@ -28,6 +28,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- shared composition contracts: the runtime renders the surface gabarits itself,
+         so the project model and the asset table cannot live in the Setup -->
+    <ProjectReference Include="..\MarqueeManager.Compositions.Core\MarqueeManager.Compositions.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="..\..\resources\fonts\nokiafc22.ttf" Link="resources\fonts\nokiafc22.ttf" />
     <None Include="Resources\icon.ico"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
     <None Include="Resources\ra\biggoldencup.png"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>

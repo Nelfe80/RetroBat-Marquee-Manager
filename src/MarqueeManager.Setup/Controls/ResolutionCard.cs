@@ -21,7 +21,6 @@ public sealed class ResolutionCard : UserControl
 {
     private static readonly Dictionary<SourceKind, int> DisplayRank = new()
     {
-        [SourceKind.Dynamic] = -1,    // the surface’s own layers, responsive: the base
         [SourceKind.Generated] = 0,   // general template, all systems
         [SourceKind.Personal] = 1,    // this system / this game
         [SourceKind.UserDrop] = 2,    // a raw file the user dropped in
@@ -127,6 +126,17 @@ public sealed class ResolutionCard : UserControl
             hint.TextWrapping = TextWrapping.Wrap;
             panel.Children.Add(hint);
         }
+        if (link.Kind == SourceKind.SystemFallback)
+        {
+            // it is deliberately not clickable: it is the automatic terminal fallback,
+            // not a source you pick. Forcing it would disable every game source above
+            // it. Say so, or the card just looks broken.
+            var hint = Ui.MutedLabel(L.T(
+                "repli automatique : ce que montre le système quand ce jeu n'a rien à lui — non sélectionnable",
+                "automatic fallback: what the system shows when this game has nothing of its own — not selectable"));
+            hint.TextWrapping = TextWrapping.Wrap;
+            panel.Children.Add(hint);
+        }
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
         if (link.Kind == SourceKind.Personal && _compose is { } compose)
@@ -173,8 +183,6 @@ public sealed class ResolutionCard : UserControl
         SourceKind.Scraped => L.T("Marquee scrapé", "Scraped marquee"),
         SourceKind.Logo => L.T("Logo mis en page", "Laid-out logo"),
         SourceKind.SystemFallback => L.T("Rendu du système", "System render"),
-        SourceKind.Dynamic => L.T("Rendu dynamique — les calques de la surface",
-                                  "Dynamic render — the surface's own layers"),
         _ => kind.ToString()
     };
 

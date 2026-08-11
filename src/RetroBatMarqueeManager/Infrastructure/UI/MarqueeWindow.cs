@@ -434,7 +434,15 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             _dmdHeight = dmdHeight;
             _surface = surface;
             // No surface definition = legacy behavior (always show the flux background).
-            _fluxBackgroundEnabled = surface == null || surface.Component("media.flux")?.Visible == true;
+            // The resolved media is the OUTPUT of the whole resolution chain (My systems
+            // / My games): it is always shown, full frame, at the very back. It used to
+            // require a `media.flux` component, which made a surface silently ignore
+            // everything that chain decided the moment the component was dropped while
+            // recomposing — the configuration "undid itself" with no trace. It is a
+            // behaviour, not a placeable layer: its rectangle was ignored anyway.
+            // The only opt-out is an EXPLICIT media.flux marked hidden (the split
+            // instruction card does exactly that).
+            _fluxBackgroundEnabled = surface?.Component("media.flux")?.Visible != false;
 
             this.WindowStyle = WindowStyle.None;
             this.ResizeMode = ResizeMode.NoResize;

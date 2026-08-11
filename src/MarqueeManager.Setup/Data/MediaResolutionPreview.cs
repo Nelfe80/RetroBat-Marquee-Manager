@@ -1,3 +1,4 @@
+using MarqueeManager.Compositions.Core.Composition;
 using System.IO;
 using MarqueeManager.Compositions.Core.Fit;
 using MarqueeManager.Compositions.Core.Geometry;
@@ -94,12 +95,12 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
                 var dynSystem = DynamicCachePath(categoryRoot, ctx.SurfaceId, new[] { frontend, canonical }, null);
                 return File.Exists(dynSystem) ? Found(dynSystem, "dynamic") : AssetLookup.Missing;
             case SourceKind.Generated:
-                // the surface's general template rendered for THIS system wins over
-                // the APIExpose autogen when it has been rendered to the cache
+                // ONLY the surface's general template. It used to fall back to the
+                // APIExpose autogen, so the card showed a ✓ on "general template" for a
+                // surface that has none — the view and the runtime then disagreed on
+                // what that very card meant.
                 var gabaritCache = GabaritRenderer.CachePath(_pluginRoot, categoryRoot, ctx.SurfaceId, frontend);
-                if (File.Exists(gabaritCache)) return Found(gabaritCache, "gabarit");
-                return FromRoots(SystemRoots(frontend, canonical), "generated",
-                    category == "dmd" ? @"artwork\marquee\generated-system-dmd.png" : @"artwork\marquee\generated-system-marquee.png");
+                return File.Exists(gabaritCache) ? Found(gabaritCache, "gabarit") : AssetLookup.Missing;
             case SourceKind.Logo:
                 return FromRoots(SystemRoots(frontend, canonical), "logo", @"ui\wheels\wheel.png");
             default:
@@ -187,18 +188,38 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
                 var dynGame = DynamicCachePath(categoryRoot, ctx.SurfaceId, new[] { system, ctx.SystemKey ?? system }, rom);
                 return File.Exists(dynGame) ? Found(dynGame, "dynamic") : AssetLookup.Missing;
             case SourceKind.Generated:
-                // the surface's game gabarit rendered for THIS game wins over the
-                // APIExpose autogen when it has been rendered to the cache
+                // ONLY the surface's game gabarit — no autogen substitution (see above).
                 var gabaritCache = GabaritRenderer.GameCachePath(_pluginRoot, categoryRoot, ctx.SurfaceId, system, rom);
-                if (File.Exists(gabaritCache)) return Found(gabaritCache, "gabarit");
-                return FromLibrary(root, "generated", @"artwork\marquee\generated-marquee.png", @"artwork\marquee\generated-dmd.png");
+                return File.Exists(gabaritCache) ? Found(gabaritCache, "gabarit") : AssetLookup.Missing;
             case SourceKind.Scraped:
-                return FromLibrary(root, "scraped", @"artwork\marquee\marquee.png", @"artwork\marquee\marquee.jpg", @"artwork\marquee\screenmarquee.png");
+                // the REAL marquee only. The screenmarquee is a different media — on
+                // arcade it is unwanted, and it already carries its own logo, so laying
+                // another one over it is exactly the mess this forbids.
+                return FromLibrary(root, "scraped", @"artwork\marquee\marquee.png", @"artwork\marquee\marquee.jpg");
             case SourceKind.Logo:
                 return FromLibrary(root, "logo", @"ui\wheels\wheel.png");
+            case SourceKind.SystemFallback:
+                // Not a source of its own: it means "whatever the SYSTEM scope shows".
+                // Resolving it here is what turns a black rectangle into the actual
+                // image the player would get — the card must tell the truth like every
+                // other one, even though it is never selectable (see ResolutionCard).
+                return ResolveSystemFallback(category, categoryRoot, ctx);
             default:
                 return AssetLookup.Missing;
         }
+    }
+
+    /// <summary>Replays the SYSTEM chain, in its own order, on a system-scoped copy of
+    /// the context. First hit wins — exactly what the runtime would end up showing.</summary>
+    private AssetLookup ResolveSystemFallback(string category, string categoryRoot, ResolutionContext ctx)
+    {
+        var systemContext = ctx with { Scope = MediaScope.System, Rom = null, StableGameId = null };
+        foreach (var kind in MediaResolutionPreview.ChainOrder(MediaScope.System))
+        {
+            var found = ResolveSystem(kind, category, categoryRoot, systemContext);
+            if (found.Asset is not null) return found;
+        }
+        return AssetLookup.Missing;
     }
 
     private AssetLookup FromLibrary(string root, string provenance, params string[] relatives)
@@ -363,12 +384,9 @@ public sealed class MediaResolutionPreview
         return links;
     }
 
-    // MUST stay aligned with MediaResolutionService's chains in the domain — this is a
-    // second, hand-kept copy of the same order, and forgetting it here simply makes a
-    // card vanish from the view without any error.
-    private static SourceKind[] ChainOrder(MediaScope scope) => scope == MediaScope.System
-        ? new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Dynamic, SourceKind.Scraped, SourceKind.Logo }
-        : new[] { SourceKind.Personal, SourceKind.UserDrop, SourceKind.Generated, SourceKind.Dynamic, SourceKind.Scraped, SourceKind.Logo, SourceKind.SystemFallback };
+    /// <summary>The domain owns the order; the view just reads it.</summary>
+    internal static IReadOnlyList<SourceKind> ChainOrder(MediaScope scope)
+        => MediaResolutionService.ChainFor(scope);
 
     public bool HasOverride(ResolutionContext context) => MediaPresentationEdits.HasOverride(_document, context);
 

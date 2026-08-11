@@ -201,7 +201,10 @@ public sealed class CompositionEditor : Window
         {
             new("🖼 " + L.T("Médias", "Media"), "Fanart", Fanart),
             new("🖼 " + L.T("Médias", "Media"), L.T("Logo (50 %)", "Logo (50 %)"), Logo),
-            new("🖼 " + L.T("Médias", "Media"), L.T("Marquee du flux", "Stream marquee"), () => new() { C("media.flux") }),
+            // "media.flux" is deliberately NOT offered: the resolved media is shown by
+            // default, full frame, at the very back. It is a behaviour, not a layer —
+            // its rectangle was always ignored, and making it placeable only meant a
+            // surface could silently lose the output of the whole resolution chain.
             new("🖼 " + L.T("Médias", "Media"), L.T("Vidéo du jeu", "Game video"), () => new() { C("media.video", 0, 0, 1, 1, ("sources", "local")) }),
             new("🖼 " + L.T("Médias", "Media"), L.T("Image (kind)", "Image (kind)"), () => new() { C("media.image", 0.25, 0.25, 0.5, 0.5, ("kind", "screenmarquee")) }),
 

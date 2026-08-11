@@ -76,7 +76,98 @@ public sealed class WebSocketListenerService : BackgroundService
         _overrides = new Application.Media.PresentationOverrides(config.BaseDirectory, logger);
         _templateRenderer = new Application.Media.CompositionTemplateRenderer(config.BaseDirectory, logger);
         _dynamicRenderer = new Application.Media.DynamicSurfaceRenderer(config.BaseDirectory, logger);
+        _gabaritRenderer = new Application.Media.GabaritSkiaRenderer(config.BaseDirectory, logger);
         _compositionChains.TemplateMissing = OnTemplateMissing;
+        _compositionChains.GabaritMissing = OnGabaritMissing;
+    }
+
+    private readonly Application.Media.GabaritSkiaRenderer _gabaritRenderer;
+
+    /// <summary>
+    /// A gabarit is not baked yet (game scope when rom is set, system scope otherwise):
+    /// render it here, in the background, then re-display if the selection has not moved
+    /// on. The Setup no longer has to have opened that sheet for the template to apply.
+    /// </summary>
+    private void OnGabaritMissing(string surfaceId, string category, string system, string? rom)
+    {
+        var (width, height) = _surfaces.SurfacePixelSize(surfaceId);
+        if (width <= 0 || height <= 0) return;
+
+        // ES calls a MAME set "mame" while the gabarit may have been saved under
+        // "arcade" (or the reverse): both spellings name the same template.
+        string? scope = null;
+        if (string.IsNullOrEmpty(rom))
+        {
+            scope = Application.Media.GabaritSkiaRenderer.SystemScope;
+            if (!_gabaritRenderer.HasGabarit(category, surfaceId, scope)) return;
+        }
+        else
+        {
+            foreach (var spelling in Application.Media.CompositionChainResolver.SystemNames(system))
+            {
+                var candidate = Application.Media.GabaritSkiaRenderer.GameScopeFor(spelling);
+                if (!_gabaritRenderer.HasGabarit(category, surfaceId, candidate)) continue;
+                scope = candidate;
+                break;
+            }
+            if (scope == null) return;
+        }
+
+        var output = _compositionChains.GabaritCachePath(category, surfaceId, system, rom);
+        var systemScope = string.IsNullOrEmpty(rom);
+
+        // Capture the media of the CURRENT snapshot right now. The render runs in the
+        // background, and reading _lastMarqueeKinds when it completes would use whatever
+        // the user has browsed to since — that is how every system's template ended up
+        // wearing the Mega Drive fanart. The snapshot is also the ONLY media source:
+        // APIExpose serves it, MarqueeManager never goes looking in its folders.
+        Dictionary<string, string?> kinds;
+        lock (_lastMarqueeKinds) kinds = new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase);
+
+        _gabaritRenderer.RenderInBackground(category, surfaceId, scope, rom ?? system,
+            width, height, layer => ResolveGabaritLayerMedia(layer, kinds), output, path =>
+            {
+                var current = _lastMarqueeMeta;
+                if (!systemScope && !string.Equals(current?.Rom, rom, StringComparison.OrdinalIgnoreCase)) return;
+                // a per-surface creation still outranks the template: never stomp it
+                if (_compositionChains.SurfaceCreation(category, surfaceId, current, systemScope) != null) return;
+                _ = _surfaces.DisplayMediaAsync(path, surfaceId, CancellationToken.None, current, resolved: true);
+            });
+    }
+
+    /// <summary>
+    /// Media of one gabarit layer. The APIExpose media folders are SLUGS, not rom names,
+    /// so nothing is guessed from the file system: the layer's AssetKey resolves against
+    /// the paths the snapshot already gave us. An absolute source (a downloaded image, a
+    /// decoration) is used as-is.
+    /// </summary>
+    private static string? ResolveGabaritLayerMedia(MarqueeManager.Compositions.Core.Composition.MarqueeLayer layer,
+        IReadOnlyDictionary<string, string?> kinds)
+    {
+        // A background carries no AssetKey, only the path picked while composing:
+        // infer the key from it, or the template stays bound to that one game.
+        var key = string.IsNullOrWhiteSpace(layer.AssetKey)
+            ? MarqueeManager.Compositions.Core.Composition.GabaritAssets.KeyFromPath(layer.Source)
+            : layer.AssetKey;
+
+        if (key == null)
+            return layer.Source is { Length: > 0 } source && Path.IsPathRooted(source) && File.Exists(source)
+                ? source // a genuine one-off (downloaded image, decoration)
+                : null;
+
+        var kind = key.ToLowerInvariant() switch
+        {
+            "fanart" => "fanart",
+            "wheel" => "logo",
+            "marquee" => "marquee",
+            "screenmarquee" => "screenmarquee",
+            "mix" => "mix",
+            "boxfront" or "box3d" => "box",
+            "screenshot" => "screenshot",
+            "screentitle" => "screentitle",
+            _ => null
+        };
+        return kind != null && kinds.TryGetValue(kind, out var path) ? path : null;
     }
 
     private readonly Application.Media.DynamicSurfaceRenderer _dynamicRenderer;
@@ -122,6 +213,13 @@ public sealed class WebSocketListenerService : BackgroundService
         var (width, height) = _surfaces.SurfacePixelSize(target);
         if (width <= 0 || height <= 0) return null;
 
+        // Snapshot the media NOW. The render runs in the background and the cache key is
+        // computed here: reading _lastMarqueeKinds later would mix the key of one entry
+        // with the pixels of whatever has been browsed since — a wrong image, cached,
+        // and served as if it were right.
+        Dictionary<string, string?> kinds;
+        lock (_lastMarqueeKinds) kinds = new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase);
+
         string? ResolveLayerMedia(Core.Surfaces.ComponentDefinition component)
         {
             var kind = component.Type.ToLowerInvariant() switch
@@ -131,8 +229,7 @@ public sealed class WebSocketListenerService : BackgroundService
                 "media.image" => component.Option("kind", "screenmarquee"),
                 _ => null
             };
-            if (kind == null) return null;
-            lock (_lastMarqueeKinds) return _lastMarqueeKinds.TryGetValue(kind, out var path) ? path : null;
+            return kind != null && kinds.TryGetValue(kind, out var path) ? path : null;
         }
 
         var output = _dynamicRenderer.CachePath(category, target, system!, meta?.Rom, scene, systemScope);
@@ -446,17 +543,24 @@ public sealed class WebSocketListenerService : BackgroundService
                     }
                 }
 
+                // THE COMPOSITION RULES. A surface that stacks bakeable layers under a
+                // lighting engine has said what it wants to show; nothing resolved
+                // elsewhere may replace it. It only exists for such a surface, so every
+                // other one keeps the historical precedence below.
+                if (dynamicRender != null)
+                {
+                    _surfaces.SetDynamicRenderActive(target, true);
+                    await _surfaces.DisplayMediaAsync(dynamicRender, target, cancellationToken, snapshotMeta, resolved: true);
+                    continue;
+                }
+
                 var surfaceCreation = _compositionChains.SurfaceCreation("marquee", target, resolveMeta, systemScope);
                 var surfaceGabarit = surfaceCreation == null
                     ? _compositionChains.SurfaceGabarit("marquee", target, resolveMeta, systemScope)
                     : null;
-                // the dynamic render is the DEFAULT when nothing was picked: it only
-                // exists for a surface that actually composed layers under a lighting
-                // engine, so any other surface keeps its historical behaviour
-                _surfaces.SetDynamicRenderActive(target,
-                    surfaceCreation == null && surfaceGabarit == null && dynamicRender != null);
-                await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? dynamicRender ?? marquee, target, cancellationToken, snapshotMeta,
-                    resolved: surfaceCreation != null || surfaceGabarit != null || dynamicRender != null || chained != null);
+                _surfaces.SetDynamicRenderActive(target, false);
+                await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? marquee, target, cancellationToken, snapshotMeta,
+                    resolved: surfaceCreation != null || surfaceGabarit != null || chained != null);
             }
         }
 
@@ -516,9 +620,12 @@ public sealed class WebSocketListenerService : BackgroundService
             OverrideSource.Personal => _compositionChains.SurfaceCreation("marquee", target, meta, systemScope)
                                        ?? _compositionChains.CategoryCreation("marquee", meta, systemScope),
             OverrideSource.UserDrop => _compositionChains.UserDropFile("marquee", meta, systemScope),
-            OverrideSource.Generated => _compositionChains.SurfaceGabarit("marquee", target, meta, systemScope)
-                                        ?? MediaPath(media, "GeneratedMarquee"),
-            OverrideSource.Scraped => MediaPath(media, "Marquee") ?? MediaPath(media, "ScreenMarquee"),
+            // NO media fallback, ever: a source resolves to ITS media or to nothing.
+            // Substituting a neighbour silently — the autogen for the template, the
+            // screenmarquee for the marquee — is how a laid-out logo ends up stamped on
+            // a screenmarquee that already carries one.
+            OverrideSource.Generated => _compositionChains.SurfaceGabarit("marquee", target, meta, systemScope),
+            OverrideSource.Scraped => MediaPath(media, "Marquee"),
             OverrideSource.Logo => MediaPath(media, "Logo"),
             // the game payload carries no system media, so the system fallback resolves
             // only the on-disk system sources (creation / drop / gabarit) for this surface

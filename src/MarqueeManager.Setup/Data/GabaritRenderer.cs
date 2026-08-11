@@ -1,3 +1,4 @@
+using MarqueeManager.Compositions.Core.Composition;
 using System.IO;
 
 namespace MarqueeManager.Setup.Data;

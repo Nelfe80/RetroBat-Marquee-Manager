@@ -150,6 +150,28 @@ public sealed class SceneLampsCard : UserControl
         Content = card;
     }
 
+    /// <summary>
+    /// The artwork the lamp regions were MEASURED on, when the scene declares one
+    /// (`&lt;scene image="…"&gt;` → resources\images\…). The runtime prefers it over any
+    /// resolved media — MarqueeLightingRenderer: `lampScene?.CalibratedImagePath ??
+    /// request.Path` — so it is the only background on which placing lamps means
+    /// anything for these games. Null when the game has no scene, or none declared.
+    /// </summary>
+    public static string? CalibratedBackground(string pluginRoot, string rom)
+    {
+        try
+        {
+            var scenePath = Path.Combine(pluginRoot, "resources", "rbmarquee", rom + ".xml");
+            if (!File.Exists(scenePath)) return null;
+            var name = (string?)System.Xml.Linq.XDocument.Load(scenePath)
+                .Descendants("scene").FirstOrDefault()?.Attribute("image");
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            var path = Path.GetFullPath(Path.Combine(pluginRoot, "resources", "images", name));
+            return File.Exists(path) ? path : null;
+        }
+        catch { return null; }
+    }
+
     private bool _canvasWired;
 
     private void BuildEditor(StackPanel card)
