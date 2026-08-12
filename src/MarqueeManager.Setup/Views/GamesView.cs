@@ -265,6 +265,24 @@ public sealed class GamesView : UserControl, IDisposable
     /// where it sat among cards about that one game — the scope mix that made "who does
     /// what" unreadable.
     /// </summary>
+    /// <summary>Decoded fully on load: the file must not stay locked, the renderer
+    /// rewrites it behind us.</summary>
+    private static BitmapImage? LoadPreview(string path)
+    {
+        try
+        {
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+            bitmap.UriSource = new Uri(path);
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+        catch { return null; }
+    }
+
     private void ShowSystemLevel()
     {
         DisposeCards();
@@ -278,7 +296,26 @@ public sealed class GamesView : UserControl, IDisposable
             "Le gabarit général de ce système : la mise en page appliquée à chaque jeu, avec les médias de CE jeu. Choisissez un jeu ci-dessus pour ses réglages propres.",
             "This system's general template: the layout applied to every game, resolved with THAT game's media. Pick a game above for its own settings.")));
 
-        var surfaces = new SurfacesStore(_pluginRoot).Load();
+        // ONLY the surfaces that actually display something: a surface on a screen
+        // MarqueeManager does not manage never shows anything, and offering it here only
+        // invites configuring into the void.
+        var store = new SurfacesStore(_pluginRoot);
+        var unmanaged = store.LoadScreens()
+            .Where(x => !x.ManagedByMarqueeManager && x.WindowsIndex >= 0)
+            .Select(x => x.WindowsIndex)
+            .ToHashSet();
+        var surfaces = store.Load()
+            .Where(x => x.Screens.Count > 0 && !x.Screens.All(unmanaged.Contains))
+            .ToList();
+        if (surfaces.Count == 0)
+        {
+            panel.Children.Add(Ui.MutedLabel(L.T(
+                "Aucune surface active — activez un écran dans « Mon setup ».",
+                "No active surface — enable a screen in “My setup”.")));
+            _gameHost.Children.Add(Ui.Card(panel));
+            return;
+        }
+
         var row = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
         var label = Ui.MutedLabel(L.T("Surface :", "Surface:"));
         label.Margin = new Thickness(0, 0, 6, 0);
@@ -287,12 +324,10 @@ public sealed class GamesView : UserControl, IDisposable
         var picker = Ui.ComboBox(240);
         foreach (var surface in surfaces)
             picker.Items.Add(new ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id });
-        if (picker.Items.Count > 0)
-        {
-            picker.SelectedIndex = Math.Max(0, surfaces.FindIndex(x =>
-                x.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase)));
-            _selectedSurfaceId = (picker.SelectedItem as ComboBoxItem)?.Tag as string;
-        }
+        // default to the FIRST ACTIVE surface, not to whatever was remembered
+        var remembered = surfaces.FindIndex(x => x.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase));
+        picker.SelectedIndex = remembered >= 0 ? remembered : 0;
+        _selectedSurfaceId = (picker.SelectedItem as ComboBoxItem)?.Tag as string;
         picker.SelectionChanged += (_, _) =>
         {
             _selectedSurfaceId = (picker.SelectedItem as ComboBoxItem)?.Tag as string;
@@ -316,6 +351,24 @@ public sealed class GamesView : UserControl, IDisposable
                 ? L.T("✓ Un gabarit général existe pour ce système.", "✓ A general template exists for this system.")
                 : L.T("Aucun gabarit général pour ce système — chaque jeu utilise ses propres sources.",
                       "No general template for this system — each game uses its own sources.")));
+
+            // what this template currently produces, on this surface, for a sample game
+            var sampleGame = _allGames.FirstOrDefault(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase));
+            var preview = sampleGame != null
+                ? GabaritRenderer.GameCachePath(_pluginRoot, cat, surfaceId, sampleGame.System, sampleGame.Rom)
+                : null;
+            if (preview != null && System.IO.File.Exists(preview))
+            {
+                panel.Children.Add(Ui.MutedLabel(L.T($"Aperçu (exemple : {sampleGame!.Rom})", $"Preview (sample: {sampleGame!.Rom})")));
+                panel.Children.Add(new Image
+                {
+                    Source = LoadPreview(preview),
+                    Stretch = Stretch.Uniform,
+                    MaxHeight = 220,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(0, 4, 0, 4)
+                });
+            }
 
             var edit = Ui.Button(has
                 ? L.T("Modifier le gabarit général", "Edit the general template")

@@ -84,15 +84,8 @@ public sealed class GameComposerWindow : Window
         {
             // a surface on a screen MarqueeManager does not manage never displays
             // anything: offering it as a target only invites composing into the void
-            targetPicker.Items.Add(new ComboBoxItem
-            {
-                Content = target.Suspended
-                    ? target.Label + L.T("  — écran ignoré", "  — screen ignored")
-                    : target.Label,
-                Tag = target,
-                IsEnabled = !target.Suspended,
-                Foreground = target.Suspended ? Ui.Muted : null
-            });
+            if (target.Suspended) continue; // never displays anything: not a target
+            targetPicker.Items.Add(new ComboBoxItem { Content = target.Label, Tag = target });
         }
         targetPicker.SelectedIndex = Math.Max(0, _targets.IndexOf(_target));
         targetPicker.SelectionChanged += (_, _) =>

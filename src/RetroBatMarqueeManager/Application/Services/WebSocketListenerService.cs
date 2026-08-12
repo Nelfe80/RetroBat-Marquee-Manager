@@ -609,13 +609,8 @@ public sealed class WebSocketListenerService : BackgroundService
         var chained = _compositionChains.Resolve("marquee", resolveMeta, systemScope, SnapshotKind);
         var marquee = chained
                       ?? MediaPath(media, "Marquee") ?? MediaPath(media, "GeneratedMarquee") ?? MediaPath(media, "Logo");
-        if (marquee == null)
-        {
-            // nothing resolved for this entry: empty the surfaces rather than leave the
-            // previous game's marquee standing
-            foreach (var target in _config.GetTargetsForContent("marquee")) _surfaces.ClearMedia(target);
-            return;
-        }
+        // may be null: a creation, a gabarit or the surface's own composition can still
+        // carry this entry, so they are resolved BEFORE deciding to clear
         {
             if (snapshotMeta != null)
             {
@@ -668,7 +663,13 @@ public sealed class WebSocketListenerService : BackgroundService
                     ? _compositionChains.SurfaceGabarit("marquee", target, resolveMeta, systemScope)
                     : null;
                 _surfaces.SetDynamicRenderActive(target, false);
-                await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? marquee, target, cancellationToken, snapshotMeta,
+                var chosen = surfaceCreation ?? surfaceGabarit ?? marquee;
+                if (chosen == null)
+                {
+                    _surfaces.ClearMedia(target);
+                    continue;
+                }
+                await _surfaces.DisplayMediaAsync(chosen, target, cancellationToken, snapshotMeta,
                     resolved: surfaceCreation != null || surfaceGabarit != null || chained != null);
             }
         }
@@ -685,17 +686,24 @@ public sealed class WebSocketListenerService : BackgroundService
             "generated" => generatedDmdPath,
             _ => null
         });
+        // may be null: a creation or a gabarit can still carry this entry
         var dmdPath = chainedDmd ?? FirstAnimation(dmd) ?? stillDmdPath ?? generatedDmdPath;
-        if (dmdPath == null) return;
         // Keep the generated game DMD behind text even when an animation is preferred while idle.
-        await _dmd.SetBaseMediaAsync(dmdPath, cancellationToken, generatedDmdPath ?? stillDmdPath ?? dmdPath);
+        if (dmdPath != null)
+            await _dmd.SetBaseMediaAsync(dmdPath, cancellationToken, generatedDmdPath ?? stillDmdPath ?? dmdPath);
         foreach (var target in _config.GetTargetsForContent("dmd"))
         {
             var surfaceCreation = _compositionChains.SurfaceCreation("dmd", target, resolveMeta, systemScope);
             var surfaceGabarit = surfaceCreation == null
                 ? _compositionChains.SurfaceGabarit("dmd", target, resolveMeta, systemScope)
                 : null;
-            await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? dmdPath, target, cancellationToken);
+            var chosenDmd = surfaceCreation ?? surfaceGabarit ?? dmdPath;
+            if (chosenDmd == null)
+            {
+                _surfaces.ClearMedia(target);
+                continue;
+            }
+            await _surfaces.DisplayMediaAsync(chosenDmd, target, cancellationToken);
         }
     }
 
@@ -965,14 +973,9 @@ public sealed class WebSocketListenerService : BackgroundService
             : source.Equals("fanart", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Fanart")
             : source.Equals("logo", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Logo")
             : null);
+        // may be null: a game without a scraped topper can still have a creation or a
+        // gabarit, so the per-surface sources are resolved BEFORE deciding to clear
         var path = chained ?? MediaPath(media, "Topper");
-        if (path == null)
-        {
-            // this game has no topper: CLEAR. Returning here left the previous game's
-            // topper on screen, following the user across the library.
-            foreach (var target in _config.GetTargetsForContent("topper")) _surfaces.ClearMedia(target);
-            return;
-        }
         {
             foreach (var target in _config.GetTargetsForContent("topper"))
             {
@@ -980,7 +983,15 @@ public sealed class WebSocketListenerService : BackgroundService
                 var surfaceGabarit = surfaceCreation == null
                     ? _compositionChains.SurfaceGabarit("topper", target, meta, systemScope)
                     : null;
-                await _surfaces.DisplayMediaAsync(surfaceCreation ?? surfaceGabarit ?? path, target, cancellationToken,
+                var chosen = surfaceCreation ?? surfaceGabarit ?? path;
+                if (chosen == null)
+                {
+                    // nothing at all for this entry: empty the surface rather than leave
+                    // the previous game's topper standing
+                    _surfaces.ClearMedia(target);
+                    continue;
+                }
+                await _surfaces.DisplayMediaAsync(chosen, target, cancellationToken,
                     resolved: surfaceCreation != null || surfaceGabarit != null || chained != null);
             }
         }
