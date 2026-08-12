@@ -84,6 +84,10 @@ public sealed class GamesView : UserControl, IDisposable
         {
             _ = EnsureNamesAsync(SelectedSystem());
             RefreshResults();
+            // a system with no game picked is a level of its own: it is where the
+            // template that serves EVERY game of that system is edited
+            _current = null;
+            ShowSystemLevel();
         };
 
         pickerRow.Children.Add(_systems);
@@ -254,6 +258,86 @@ public sealed class GamesView : UserControl, IDisposable
     /// (a system without any roms folder is left unfiltered).</summary>
     private bool IsPresent(GameEntry game)
         => !_present.TryGetValue(game.System, out var roms) || roms.Contains(game.Rom);
+
+    /// <summary>
+    /// The "system, no game" level of My games: the general template that serves EVERY
+    /// game of this system. It used to be reachable only from inside a game's sheet,
+    /// where it sat among cards about that one game — the scope mix that made "who does
+    /// what" unreadable.
+    /// </summary>
+    private void ShowSystemLevel()
+    {
+        DisposeCards();
+        _gameHost.Children.Clear();
+        var system = SelectedSystem();
+        if (system.Length == 0) return;
+
+        var panel = new StackPanel();
+        panel.Children.Add(Ui.SectionHeader(L.T($"Tous les jeux de « {system} »", $"All games of “{system}”")));
+        panel.Children.Add(Ui.MutedLabel(L.T(
+            "Le gabarit général de ce système : la mise en page appliquée à chaque jeu, avec les médias de CE jeu. Choisissez un jeu ci-dessus pour ses réglages propres.",
+            "This system's general template: the layout applied to every game, resolved with THAT game's media. Pick a game above for its own settings.")));
+
+        var surfaces = new SurfacesStore(_pluginRoot).Load();
+        var row = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+        var label = Ui.MutedLabel(L.T("Surface :", "Surface:"));
+        label.Margin = new Thickness(0, 0, 6, 0);
+        label.VerticalAlignment = VerticalAlignment.Center;
+        row.Children.Add(label);
+        var picker = Ui.ComboBox(240);
+        foreach (var surface in surfaces)
+            picker.Items.Add(new ComboBoxItem { Content = $"{surface.Id} ({surface.Category})", Tag = surface.Id });
+        if (picker.Items.Count > 0)
+        {
+            picker.SelectedIndex = Math.Max(0, surfaces.FindIndex(x =>
+                x.Id.Equals(_selectedSurfaceId, StringComparison.OrdinalIgnoreCase)));
+            _selectedSurfaceId = (picker.SelectedItem as ComboBoxItem)?.Tag as string;
+        }
+        picker.SelectionChanged += (_, _) =>
+        {
+            _selectedSurfaceId = (picker.SelectedItem as ComboBoxItem)?.Tag as string;
+            ShowSystemLevel();
+        };
+        row.Children.Add(picker);
+        panel.Children.Add(row);
+
+        var surfaceId = _selectedSurfaceId;
+        if (surfaceId != null)
+        {
+            var cat = surfaces.FirstOrDefault(x => x.Id.Equals(surfaceId, StringComparison.OrdinalIgnoreCase))?.Category
+                          .ToLowerInvariant() switch
+            {
+                "topper" => "toppers",
+                "dmd-virtual" => "dmd",
+                _ => "marquees"
+            };
+            var has = GabaritRenderer.HasGabarit(_pluginRoot, cat, surfaceId, GabaritIdentity.GameScopeFor(system));
+            panel.Children.Add(Ui.MutedLabel(has
+                ? L.T("✓ Un gabarit général existe pour ce système.", "✓ A general template exists for this system.")
+                : L.T("Aucun gabarit général pour ce système — chaque jeu utilise ses propres sources.",
+                      "No general template for this system — each game uses its own sources.")));
+
+            var edit = Ui.Button(has
+                ? L.T("Modifier le gabarit général", "Edit the general template")
+                : L.T("Créer le gabarit général", "Create the general template"), (_, _) =>
+            {
+                var sample = _allGames.FirstOrDefault(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase));
+                var assets = sample != null ? _media.ListAssets(sample.System, sample.Rom) : new List<GameAsset>();
+                new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(system),
+                    L.T($"Gabarit général — jeux {system}", $"General template — {system} games"),
+                    assets, surfaceId, gabaritMode: true)
+                {
+                    Owner = Window.GetWindow(this)
+                }.ShowDialog();
+                GabaritRenderer.InvalidateSurface(_pluginRoot, cat, surfaceId);
+                ShowSystemLevel();
+            }, primary: true);
+            edit.Margin = new Thickness(0, 8, 0, 0);
+            panel.Children.Add(edit);
+        }
+
+        _gameHost.Children.Add(Ui.Card(panel));
+    }
 
     private void RefreshResults()
     {

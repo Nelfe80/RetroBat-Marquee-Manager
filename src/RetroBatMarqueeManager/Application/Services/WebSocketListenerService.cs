@@ -124,9 +124,21 @@ public sealed class WebSocketListenerService : BackgroundService
         Dictionary<string, string?> kinds;
         lock (_lastMarqueeKinds) kinds = new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase);
 
+        // Names the file each layer actually took. Without it, "I see the same fanart on
+        // every game" can only be argued about; with it, the log answers in one line.
+        var trace = new List<string>();
+        string? Resolve(MarqueeManager.Compositions.Core.Composition.MarqueeLayer layer)
+        {
+            var resolved = ResolveGabaritLayerMedia(layer, kinds, system);
+            var key = string.IsNullOrWhiteSpace(layer.AssetKey) ? "(no key)" : layer.AssetKey;
+            trace.Add($"{key}={(resolved == null ? "—" : Path.GetFileName(Path.GetDirectoryName(resolved)) + "/" + Path.GetFileName(resolved))}");
+            return resolved;
+        }
+
         _gabaritRenderer.RenderInBackground(category, surfaceId, scope, rom ?? system,
-            width, height, layer => ResolveGabaritLayerMedia(layer, kinds, system), output, path =>
+            width, height, Resolve, output, path =>
             {
+                _logger.LogInformation("Gabarit layers for {Label}: {Trace}", rom ?? system, string.Join(" · ", trace));
                 var current = _lastMarqueeMeta;
                 if (!systemScope && !string.Equals(current?.Rom, rom, StringComparison.OrdinalIgnoreCase)) return;
                 // a per-surface creation still outranks the template: never stomp it
@@ -175,7 +187,16 @@ public sealed class WebSocketListenerService : BackgroundService
             "screentitle" => "screentitle",
             _ => null
         };
-        return kind != null && kinds.TryGetValue(kind, out var path) ? path : null;
+        // A key that is not a GAME media kind — "gradient", or anything the composer
+        // labelled itself — names a fixed decoration, identical for every entry: it
+        // keeps its own file. Returning null here silently dropped the readability
+        // gradient of every template that had one.
+        if (kind == null)
+            return layer.Source is { Length: > 0 } fixedAsset && Path.IsPathRooted(fixedAsset) && File.Exists(fixedAsset)
+                ? fixedAsset
+                : null;
+
+        return kinds.TryGetValue(kind, out var path) ? path : null;
     }
 
     /// <summary>

@@ -75,8 +75,38 @@ public sealed class ResolutionCard : UserControl
         var target = _engine.Resolve(ctx).Target;
         _body.Children.Add(Ui.MutedLabel($"{L.T("Surface", "Surface")} : {ctx.SurfaceId} — {target.Width}×{target.Height}"));
 
-        foreach (var link in _engine.DescribeChain(ctx).OrderBy(l => DisplayRank.GetValueOrDefault(l.Kind, 9)))
+        // Two levels. The list used to mix scopes: four cards about THIS entry, plus the
+        // general template ("all games of this system") and the system render ("the
+        // system itself"). Presenting them as siblings is what made "who does what"
+        // unreadable. The broader ones now sit in their own block, at the bottom.
+        var links = _engine.DescribeChain(ctx).OrderBy(l => DisplayRank.GetValueOrDefault(l.Kind, 9)).ToList();
+        var broader = links.Where(l => IsBroaderScope(l.Kind)).ToList();
+
+        foreach (var link in links.Where(l => !IsBroaderScope(l.Kind)))
             _body.Children.Add(BuildSourceCard(ctx, link, target));
+
+        if (broader.Count > 0)
+        {
+            var block = new StackPanel { Margin = new Thickness(0, 10, 0, 0) };
+            var header = Ui.Label(ctx.Scope == MediaScope.Game
+                ? L.T("Tous les jeux de ce système", "All games of this system")
+                : L.T("Tous les systèmes", "All systems"), 12);
+            header.FontWeight = FontWeights.Bold;
+            block.Children.Add(header);
+            block.Children.Add(Ui.MutedLabel(ctx.Scope == MediaScope.Game
+                ? L.T("Ce que ce jeu hérite quand il n'a rien à lui.", "What this game inherits when it has nothing of its own.")
+                : L.T("Ce que ce système hérite quand il n'a rien à lui.", "What this system inherits when it has nothing of its own.")));
+            foreach (var link in broader) block.Children.Add(BuildSourceCard(ctx, link, target));
+            _body.Children.Add(new Border
+            {
+                Child = block,
+                Margin = new Thickness(0, 8, 0, 0),
+                Padding = new Thickness(10, 6, 10, 10),
+                CornerRadius = new CornerRadius(6),
+                BorderBrush = Ui.PanelBorder,
+                BorderThickness = new Thickness(1)
+            });
+        }
 
         if (_engine.HasOverride(ctx))
         {
@@ -90,6 +120,11 @@ public sealed class ResolutionCard : UserControl
             _body.Children.Add(reset);
         }
     }
+
+    /// <summary>Sources whose scope is WIDER than the entry being edited: the general
+    /// template (every game of this system / every system) and the system render.</summary>
+    private static bool IsBroaderScope(SourceKind kind)
+        => kind is SourceKind.Generated or SourceKind.SystemFallback;
 
     private FrameworkElement BuildSourceCard(ResolutionContext ctx, ChainLink link, PixelSize target)
     {
