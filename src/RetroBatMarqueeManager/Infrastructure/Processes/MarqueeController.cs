@@ -484,6 +484,14 @@ public sealed class MarqueeController : IDisposable
         foreach (var window in GetWindows(surfaceId)) window.SetDynamicRenderActive(active);
     }
 
+    /// <summary>Empties ONE surface's media. Every handler must call it when the new
+    /// entry has nothing of its own: keeping the previous entry's media is how one
+    /// topper, one card, one fanart ends up following the whole library.</summary>
+    public void ClearMedia(string target)
+    {
+        foreach (var window in GetWindows(target)) window.ClearMedia();
+    }
+
     /// <summary>Pixel size of a surface's window — the dynamic renderer flattens the
     /// layer stack at exactly the size it will be shown at. (0,0) when the surface has
     /// no window (excluded screen, suspended).</summary>

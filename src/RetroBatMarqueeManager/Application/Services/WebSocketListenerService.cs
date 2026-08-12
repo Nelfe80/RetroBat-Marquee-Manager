@@ -609,7 +609,13 @@ public sealed class WebSocketListenerService : BackgroundService
         var chained = _compositionChains.Resolve("marquee", resolveMeta, systemScope, SnapshotKind);
         var marquee = chained
                       ?? MediaPath(media, "Marquee") ?? MediaPath(media, "GeneratedMarquee") ?? MediaPath(media, "Logo");
-        if (marquee != null)
+        if (marquee == null)
+        {
+            // nothing resolved for this entry: empty the surfaces rather than leave the
+            // previous game's marquee standing
+            foreach (var target in _config.GetTargetsForContent("marquee")) _surfaces.ClearMedia(target);
+            return;
+        }
         {
             if (snapshotMeta != null)
             {
@@ -960,7 +966,13 @@ public sealed class WebSocketListenerService : BackgroundService
             : source.Equals("logo", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Logo")
             : null);
         var path = chained ?? MediaPath(media, "Topper");
-        if (path != null)
+        if (path == null)
+        {
+            // this game has no topper: CLEAR. Returning here left the previous game's
+            // topper on screen, following the user across the library.
+            foreach (var target in _config.GetTargetsForContent("topper")) _surfaces.ClearMedia(target);
+            return;
+        }
         {
             foreach (var target in _config.GetTargetsForContent("topper"))
             {
@@ -1007,7 +1019,9 @@ public sealed class WebSocketListenerService : BackgroundService
         var payload = Payload(root);
         var path = ResolveLocal(Text(payload, "Path", "path", "Value", "value"));
         var target = Text(payload, "Target", "target");
-        if (path != null) await _surfaces.DisplayMediaAsync(path, target.Length == 0 ? defaultTarget : target.ToLowerInvariant(), cancellationToken);
+        var resolved = target.Length == 0 ? defaultTarget : target.ToLowerInvariant();
+        if (path != null) await _surfaces.DisplayMediaAsync(path, resolved, cancellationToken);
+        else _surfaces.ClearMedia(resolved); // nothing for this entry → empty, never the previous one's
     }
 
     private void HandleHiscore(JsonElement root, CancellationToken cancellationToken)

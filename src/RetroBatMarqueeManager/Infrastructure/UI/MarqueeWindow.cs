@@ -2947,6 +2947,32 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             return pos;
         }
 
+        /// <summary>
+        /// Empties the surface's media: no image, no video, no lighting scene. The
+        /// missing counterpart of DisplayImage — without it, an entry with no media of
+        /// its own simply kept the previous one's, and a single topper or instruction
+        /// card followed the user across the whole library.
+        /// Supersedes any decode still in flight, or a late one would restore what we
+        /// just cleared.
+        /// </summary>
+        public void ClearMedia()
+        {
+            System.Threading.Interlocked.Increment(ref _marqueeSeq);
+            _latestImagePath = null;
+            _latestVideoPath = null;
+            this.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _mediaElement.Stop();
+                _mediaElement.Source = null;
+                _mediaElement.Visibility = Visibility.Collapsed;
+                _backgroundImage.Visibility = Visibility.Collapsed;
+                _backgroundImage.Source = null;
+                _logoImage.Visibility = Visibility.Collapsed;
+                _logoImage.Source = null;
+                _lightingRenderer?.SetMarqueeImage(null);
+            }));
+        }
+
         public void StopPlayback()
         {
             this.Dispatcher.BeginInvoke(new Action(() =>
