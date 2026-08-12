@@ -689,8 +689,18 @@ public sealed class WebSocketListenerService : BackgroundService
                 var policy = _overrides.For(target, systemScope, resolveMeta?.System, resolveMeta?.Rom);
                 if (policy != null)
                 {
-                    var picked = ResolveMarqueeOverride(policy, target, resolveMeta, systemScope, media) ?? marquee;
-                    await _surfaces.DisplayMediaAsync(picked, target, cancellationToken, snapshotMeta, resolved: true);
+                    var picked = ResolveMarqueeOverride(policy, target, resolveMeta, systemScope, media);
+                    if (picked != null)
+                    {
+                        await _surfaces.DisplayMediaAsync(picked, target, cancellationToken, snapshotMeta, resolved: true);
+                    }
+                    else
+                    {
+                        // The chain picked in the game's card is the WHOLE answer: falling
+                        // back to the stream served a source the user had explicitly
+                        // switched off, and passed null down when there was none at all.
+                        _surfaces.ClearMedia(target);
+                    }
                     continue;
                 }
 

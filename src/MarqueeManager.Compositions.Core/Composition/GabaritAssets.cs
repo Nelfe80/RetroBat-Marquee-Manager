@@ -39,6 +39,49 @@ public static class GabaritAssets
         ("dmd", new[] { @"artwork\marquee\generated-system-dmd.png" })
     };
 
+
+    /// <summary>
+    /// Every media type a composition can bind to, in palette order. This is the
+    /// AUTHORITY on what is composable — the palette is built from it, never from what
+    /// one sample game happens to own, because a template is generic: opening it on a
+    /// media-poor game (005, first of the arcade list) used to offer four buttons for a
+    /// whole system. A type with no file behind it is placed as a coloured placeholder.
+    ///
+    /// Scope: "game" = resolved against the entry, "system" = against its system,
+    /// "both" = available on either level. Aspect is the placeholder's shape only; a
+    /// real medium always uses its own.
+    /// </summary>
+    public static readonly IReadOnlyList<PaletteEntry> Palette = new PaletteEntry[]
+    {
+        new("fanart",         "both",   "Fanart",             "Fanart",             "#3D5A80", 16.0 / 9),
+        new("mix",            "game",   "Mix (mixrbv2)",      "Mix (mixrbv2)",      "#4C6E91", 4.0 / 3),
+        new("wheel",          "game",   "Logo du jeu",        "Game logo",          "#E0A458", 3.4),
+        new("marquee",        "game",   "Marquee",            "Marquee",            "#8E5572", 4.0),
+        new("screenmarquee",  "game",   "Screen marquee",     "Screen marquee",     "#A3688A", 4.0),
+        new("generated",      "game",   "Marquee généré",     "Generated marquee",  "#6D8B74", 4.0),
+        new("generateddmd",   "game",   "DMD généré",         "Generated DMD",      "#5C7A63", 4.0),
+        new("flyer",          "game",   "Flyer",              "Flyer",              "#B56576", 0.7),
+        new("screentitle",    "game",   "Écran-titre",        "Title screen",       "#6A7FA8", 4.0 / 3),
+        new("screenshot",     "game",   "Capture d'écran",    "Screenshot",         "#7B8FB5", 4.0 / 3),
+        new("box3d",          "game",   "Boîte 3D",           "3D box",             "#9C6644", 0.75),
+        new("boxfront",       "game",   "Jaquette",           "Box front",          "#B08968", 0.72),
+        new("bezel",          "game",   "Bezel",              "Bezel",              "#4A4E69", 16.0 / 9),
+        new("video",          "game",   "Vidéo",              "Video",              "#5F4B8B", 4.0 / 3),
+        new("systemfanart",   "system", "Fanart du système",  "System fanart",      "#33658A", 16.0 / 9),
+        new("systemwheel",    "system", "Logo du système",    "System logo",        "#F6AE2D", 3.4),
+        new("systemmarquee",  "system", "Marquee du système", "System marquee",     "#86BBD8", 4.0)
+    };
+
+    /// <summary>A composable media type: what the palette offers and what a placeholder
+    /// stands for until the entry's real medium is resolved.</summary>
+    public sealed record PaletteEntry(string Key, string Scope, string Fr, string En, string Color, double Aspect);
+
+    /// <summary>True when the key is a resolvable media type — as opposed to a one-off
+    /// (an import, a download, a gradient) that carries its own file and must never be
+    /// swapped out for another entry's media.</summary>
+    public static bool IsResolvable(string? key) =>
+        key is { Length: > 0 } && Palette.Any(e => e.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
+
     /// <summary>
     /// Infers the asset key a stored path stands for, by matching its tail against the
     /// tables. A gabarit BACKGROUND carries no AssetKey — only the concrete path picked

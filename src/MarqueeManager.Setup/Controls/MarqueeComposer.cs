@@ -234,6 +234,46 @@ public sealed class MarqueeComposer : UserControl
 
     public MarqueeBackground BackgroundModel => _background;
 
+    /// <summary>Swaps every resolvable media layer between its coloured placeholder and
+    /// the sample's real picture. One-off layers (imports, downloads, gradients) carry
+    /// their own file and are never touched.</summary>
+    public void ShowSamples(Func<string, string?> resolve, bool on)
+    {
+        foreach (var visual in _layers)
+        {
+            if (!GabaritAssets.IsResolvable(visual.Model.AssetKey)) continue;
+            visual.Model.Source = on ? ToRelative(resolve(visual.Model.AssetKey!) ?? "") : "";
+        }
+        Reload();
+    }
+
+    /// <summary>Rebuilds the visuals from the models, keeping order and selection.</summary>
+    private void Reload()
+    {
+        var models = _layers.Select(l => l.Model).ToList();
+        var selected = SelectedLayer;
+        _layers.Clear();
+        foreach (var model in models) AddLayerVisual(model);
+        Select(_layers.FirstOrDefault(l => ReferenceEquals(l.Model, selected)));
+        Render();
+        Changed?.Invoke();
+    }
+
+    /// <summary>Places a media TYPE with no file behind it: the layout is authored on
+    /// the type, the entry supplies the picture at render time.</summary>
+    public void AddPlaceholderLayer(GabaritAssets.PaletteEntry entry)
+    {
+        var layer = new MarqueeLayer { Source = "", AssetKey = entry.Key, Scale = 0.9 };
+        var visual = AddLayerVisual(layer);
+        if (entry.Key is "wheel" or "systemwheel" && visual.AspectRatio > 0)
+        {
+            layer.Scale = Math.Clamp(0.5 * DisplayWidth / (_displayHeight * visual.AspectRatio), 0.05, 3.0);
+        }
+        Select(visual);
+        Render();
+        Changed?.Invoke();
+    }
+
     /// <summary>Adds a media layer centered. Logos land at 50 % of the surface
     /// WIDTH by default (user rule); other media fit the height.</summary>
     public void AddMediaLayer(string absolutePath, string assetKey)
@@ -552,6 +592,30 @@ public sealed class MarqueeComposer : UserControl
 
     // ================= display rendering =================
 
+    /// <summary>The coloured stand-in for a media type with no picture behind it here.</summary>
+    private static FrameworkElement Placeholder(GabaritAssets.PaletteEntry entry)
+    {
+        var label = new TextBlock
+        {
+            Text = L.T(entry.Fr, entry.En),
+            Foreground = Brushes.White,
+            FontSize = 11,
+            TextWrapping = TextWrapping.Wrap,
+            TextAlignment = TextAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(4)
+        };
+        return new Border
+        {
+            Background = Ui.Brush(ParseColor(entry.Color)),
+            BorderBrush = Brushes.White,
+            BorderThickness = new Thickness(1),
+            Opacity = 0.92,
+            Child = label
+        };
+    }
+
     private LayerVisual AddLayerVisual(MarqueeLayer layer)
     {
         FrameworkElement element;
@@ -568,11 +632,20 @@ public sealed class MarqueeComposer : UserControl
         }
         else
         {
-            var bitmap = TryLoadBitmap(ToAbsolute(layer.Source));
+            var bitmap = string.IsNullOrEmpty(layer.Source) ? null : TryLoadBitmap(ToAbsolute(layer.Source));
             if (bitmap != null)
             {
                 aspect = bitmap.PixelHeight == 0 ? 1.0 : (double)bitmap.PixelWidth / bitmap.PixelHeight;
                 element = new Image { Source = bitmap, Stretch = Stretch.Uniform };
+            }
+            else if (GabaritAssets.Palette.FirstOrDefault(
+                         e => e.Key.Equals(layer.AssetKey, StringComparison.OrdinalIgnoreCase)) is { } entry)
+            {
+                // A template is composed against TYPES, not against one game's pictures:
+                // the type is always placeable, drawn as its colour until the entry it
+                // renders for supplies the real medium.
+                aspect = entry.Aspect;
+                element = Placeholder(entry);
             }
             else
             {

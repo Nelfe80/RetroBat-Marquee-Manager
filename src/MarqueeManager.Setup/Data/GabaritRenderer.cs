@@ -113,7 +113,17 @@ public static class GabaritRenderer
             // remap a media layer to THIS system's asset of the same type (fanart,
             // wheel/logo, marquee…); gradient/text/download layers keep their source
             var asset = assets.FirstOrDefault(a => a.Key.Equals(layer.AssetKey, StringComparison.OrdinalIgnoreCase));
-            if (asset is not null && File.Exists(asset.Path)) clone.Source = asset.Path;
+            if (GabaritAssets.IsResolvable(layer.AssetKey))
+            {
+                // NO FALLBACK: a resolvable type that this entry lacks draws nothing.
+                // Keeping the stored path made the template wear the media of whatever
+                // entry it was composed on — one game's fanart on the whole system.
+                clone.Source = asset is not null && File.Exists(asset.Path) ? asset.Path : "";
+            }
+            else if (asset is not null && File.Exists(asset.Path))
+            {
+                clone.Source = asset.Path;
+            }
             project.Layers.Add(clone);
         }
         return project;

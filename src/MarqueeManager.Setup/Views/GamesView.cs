@@ -283,6 +283,26 @@ public sealed class GamesView : UserControl, IDisposable
         catch { return null; }
     }
 
+    /// <summary>
+    /// The sample a template is composed against must be a game that actually HAS media:
+    /// taking the first one alphabetically landed on "005", which owns almost nothing,
+    /// and the palette came out nearly empty for a whole system. Scans a bounded slice —
+    /// enough to find a well-served game without walking thousands of folders.
+    /// </summary>
+    private GameEntry? RichestSample(string system)
+    {
+        GameEntry? best = null;
+        var bestCount = -1;
+        foreach (var game in _allGames.Where(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase)).Take(60))
+        {
+            var count = _media.ListAssets(game.System, game.Rom).Count;
+            if (count <= bestCount) continue;
+            best = game;
+            bestCount = count;
+        }
+        return best;
+    }
+
     private void ShowSystemLevel()
     {
         DisposeCards();
@@ -353,7 +373,7 @@ public sealed class GamesView : UserControl, IDisposable
                       "No general template for this system — each game uses its own sources.")));
 
             // what this template currently produces, on this surface, for a sample game
-            var sampleGame = _allGames.FirstOrDefault(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase));
+            var sampleGame = RichestSample(system);
             string? preview = null;
             if (has && sampleGame != null)
             {
@@ -386,7 +406,7 @@ public sealed class GamesView : UserControl, IDisposable
                 ? L.T("Modifier le gabarit général", "Edit the general template")
                 : L.T("Créer le gabarit général", "Create the general template"), (_, _) =>
             {
-                var sample = _allGames.FirstOrDefault(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase));
+                var sample = RichestSample(system);
                 var assets = sample != null ? _media.ListAssets(sample.System, sample.Rom) : new List<GameAsset>();
                 new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(system),
                     L.T($"Gabarit général — jeux {system}", $"General template — {system} games"),

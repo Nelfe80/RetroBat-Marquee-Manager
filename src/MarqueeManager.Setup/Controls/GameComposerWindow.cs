@@ -28,6 +28,10 @@ public sealed class GameComposerWindow : Window
     private readonly string _rom;
     private readonly string _displayName;
     private readonly IReadOnlyList<GameAsset> _assets;
+    /// <summary>Placeholders by default: a template is authored on TYPES. Ticking the box
+    /// swaps in one entry's real media to judge the layout against a real picture.</summary>
+    private bool _showSamples;
+    private readonly bool _hasSystemAssets;
     private readonly string _downloadsDir;
     private readonly string _mediaRoot;
     // gabarit mode: the loaded layout's media is remapped to the CURRENT example
@@ -53,6 +57,7 @@ public sealed class GameComposerWindow : Window
         _rom = rom;
         _displayName = displayName;
         _assets = assets;
+        _hasSystemAssets = true; // system logo/fanart/marquee exist for every system
         _gabaritMode = gabaritMode;
         _downloadsDir = Path.Combine(pluginRoot, "media", "marquees", "downloads", Safe(system), Safe(rom));
         _mediaRoot = Path.GetFullPath(Path.Combine(pluginRoot, "..", "APIExpose", "media", "systems"));
@@ -84,10 +89,13 @@ public sealed class GameComposerWindow : Window
         {
             // a surface on a screen MarqueeManager does not manage never displays
             // anything: offering it as a target only invites composing into the void
-            if (target.Suspended) continue; // never displays anything: not a target
             targetPicker.Items.Add(new ComboBoxItem { Content = target.Label, Tag = target });
         }
-        targetPicker.SelectedIndex = Math.Max(0, _targets.IndexOf(_target));
+        // select by TAG, never by index: the list is filtered, so an index into the
+        // unfiltered set pointed at another surface — or at nothing, leaving the picker
+        // blank
+        targetPicker.SelectedItem = targetPicker.Items.Cast<ComboBoxItem>()
+            .FirstOrDefault(i => ReferenceEquals(i.Tag, _target)) ?? targetPicker.Items.Cast<ComboBoxItem>().FirstOrDefault();
         targetPicker.SelectionChanged += (_, _) =>
         {
             if ((targetPicker.SelectedItem as ComboBoxItem)?.Tag is Target target && target != _target)
@@ -188,19 +196,15 @@ public sealed class GameComposerWindow : Window
     private string LayerName(MarqueeLayer layer)
     {
         if (layer.Source == "text") return $"{L.T("Texte", "Text")} « {layer.Text} »";
+        // A layer is named EXACTLY as the palette button that placed it — the two lists
+        // read side by side, so they must speak the same words.
+        if (GabaritAssets.Palette.FirstOrDefault(
+                e => e.Key.Equals(layer.AssetKey, StringComparison.OrdinalIgnoreCase)) is { } entry)
+        {
+            return L.T(entry.Fr, entry.En);
+        }
         return layer.AssetKey.ToLowerInvariant() switch
         {
-            "fanart" => "Fanart",
-            "mix" => "Mix",
-            "wheel" => L.T("Logo (wheel)", "Logo (wheel)"),
-            "marquee" => L.T("Marquee scrapé", "Scraped marquee"),
-            "screenmarquee" => L.T("Screen-marquee", "Screen-marquee"),
-            "flyer" => "Flyer",
-            "screentitle" => L.T("Écran titre", "Title screen"),
-            "screenshot" => L.T("Capture de jeu", "In-game screenshot"),
-            "box3d" => L.T("Boîte 3D", "3D box"),
-            "boxfront" => L.T("Boîte (face)", "Box (front)"),
-            "bezel" => "Bezel",
             "gradient" => L.T("Gradient", "Gradient"),
             "import" => L.T("Image importée", "Imported image"),
             "download" => L.T("Média téléchargé", "Downloaded media"),
@@ -420,6 +424,7 @@ public sealed class GameComposerWindow : Window
                 var w = surface.Width ?? (screenIndex >= 0 && screenIndex < screens.Count ? screens[screenIndex].Bounds.Width : 1920);
                 var h = surface.Height ?? (screenIndex >= 0 && screenIndex < screens.Count ? screens[screenIndex].Bounds.Height : 360);
                 if (w <= 0 || h <= 0) continue;
+                if (suspended) continue; // never displays anything: not a target at all
                 _targets.Add(new Target(
                     L.T($"Surface {surface.Id} ({surface.Category}) — écran {screenIndex}, {w}×{h}",
                         $"Surface {surface.Id} ({surface.Category}) — screen {screenIndex}, {w}×{h}"),
@@ -493,15 +498,17 @@ public sealed class GameComposerWindow : Window
         };
     }
 
-    /// <summary>Point each media layer at the CURRENT example system's asset of the
-    /// same type — the gabarit stored the paths of whatever system it was last
-    /// composed on, but the layout is generic.</summary>
+    /// <summary>A gabarit stores the paths of whatever entry it was last composed on,
+    /// but the layout is generic: a resolvable layer shows its coloured placeholder,
+    /// or the sample's own medium while samples are on. Never another entry's picture —
+    /// that is how a Sonic template ended up on every Mega Drive game.</summary>
     private void RemapForGabarit(MarqueeProject project)
     {
         foreach (var layer in project.Layers)
         {
+            if (!GabaritAssets.IsResolvable(layer.AssetKey)) continue;
             var asset = _assets.FirstOrDefault(a => a.Key.Equals(layer.AssetKey, StringComparison.OrdinalIgnoreCase));
-            if (asset is not null && File.Exists(asset.Path)) layer.Source = asset.Path;
+            layer.Source = _showSamples && asset is not null && File.Exists(asset.Path) ? asset.Path : "";
         }
     }
 
@@ -547,6 +554,40 @@ public sealed class GameComposerWindow : Window
 
     // ================= media palette =================
 
+    /// <summary>Places a type: the sample's real medium when samples are shown and it
+    /// has one, otherwise the coloured placeholder. Either way the layer carries the
+    /// KEY, so the runtime resolves it against whatever entry it renders for.</summary>
+    private void PlaceType(GabaritAssets.PaletteEntry entry)
+    {
+        var label = L.T(entry.Fr, entry.En);
+        if (_showSamples && _assets.Any(a => a.Key.Equals(entry.Key, StringComparison.OrdinalIgnoreCase)))
+        {
+            PickAndPlace(entry.Key, label);
+            return;
+        }
+        _composer.AddPlaceholderLayer(entry);
+        _status.Text = _showSamples
+            ? L.T($"{label} : l'échantillon n'en a pas — posé en repère, résolu jeu par jeu.",
+                  $"{label}: the sample has none — placed as a marker, resolved per entry.")
+            : L.T($"{label} posé. Cochez « Afficher les échantillons » pour voir de vrais médias.",
+                  $"{label} placed. Tick “Show samples” to see real media.");
+        _status.Foreground = Ui.Muted;
+    }
+
+    private void ToggleSamples(bool on)
+    {
+        _showSamples = on;
+        _composer.ShowSamples(key =>
+            _assets.FirstOrDefault(a => a.Key.Equals(key, StringComparison.OrdinalIgnoreCase)) is { } asset
+            && File.Exists(asset.Path) ? asset.Path : null, on);
+    }
+
+    private static Color ParseHex(string hex)
+    {
+        try { return (Color)ColorConverter.ConvertFromString(hex); }
+        catch { return Colors.Gray; }
+    }
+
     private FrameworkElement BuildPalette()
     {
         var panel = new StackPanel { Width = 200 };
@@ -554,12 +595,57 @@ public sealed class GameComposerWindow : Window
         panel.Children.Add(Ui.MutedLabel(L.T("Un type → choisir la version → posé en calque.",
             "One type → pick the version → placed as a layer.")));
 
-        foreach (var kind in _assets.Select(a => (a.Key, a.Label)).Distinct())
+        // EVERY composable type is offered, always. Building the palette from what one
+        // sample game owns made a whole system's template offer four buttons — the
+        // template is generic, the picture comes from the entry it renders for.
+        var samples = new CheckBox
         {
-            var button = Ui.Button(kind.Label, (_, _) => PickAndPlace(kind.Key, kind.Label));
-            button.Margin = new Thickness(0, 2, 0, 2);
-            button.HorizontalAlignment = HorizontalAlignment.Stretch;
-            button.HorizontalContentAlignment = HorizontalAlignment.Left;
+            Content = L.T("Afficher les échantillons", "Show samples"),
+            Foreground = Ui.Muted,
+            Margin = new Thickness(0, 4, 0, 6),
+            IsChecked = _showSamples
+        };
+        samples.Checked += (_, _) => ToggleSamples(true);
+        samples.Unchecked += (_, _) => ToggleSamples(false);
+        panel.Children.Add(samples);
+
+        foreach (var entry in GabaritAssets.Palette)
+        {
+            if (entry.Scope == "system" && !_hasSystemAssets) continue;
+            var label = L.T(entry.Fr, entry.En);
+            var owned = _assets.Any(a => a.Key.Equals(entry.Key, StringComparison.OrdinalIgnoreCase));
+            var button = new Button
+            {
+                Content = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                    {
+                        new Border
+                        {
+                            Width = 12, Height = 12, CornerRadius = new CornerRadius(2),
+                            Background = Ui.Brush(ParseHex(entry.Color)),
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Margin = new Thickness(0, 0, 6, 0)
+                        },
+                        new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center }
+                    }
+                },
+                ToolTip = owned
+                    ? L.T($"{label} — l'échantillon en possède un", $"{label} — the sample has one")
+                    : L.T($"{label} — posé en repère, résolu jeu par jeu",
+                          $"{label} — placed as a marker, resolved per entry"),
+                Margin = new Thickness(0, 2, 0, 2),
+                Padding = new Thickness(8, 4, 8, 4),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Background = Ui.Brush(Color.FromRgb(0x2A, 0x2A, 0x3E)),
+                Foreground = owned ? Brushes.White : Ui.Muted,
+                BorderBrush = Ui.Brush(Color.FromRgb(0x3A, 0x3A, 0x52)),
+                BorderThickness = new Thickness(1)
+            };
+            var captured = entry;
+            button.Click += (_, _) => PlaceType(captured);
             panel.Children.Add(button);
         }
 
