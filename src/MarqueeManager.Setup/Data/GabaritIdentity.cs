@@ -12,7 +12,15 @@ namespace MarqueeManager.Setup.Data;
 public static class GabaritIdentity
 {
     public const string SystemId = "__gabarit__";
+
+    /// <summary>What the pickers of "Mes jeux" / "Mes systèmes" carry for their "All"
+    /// entry: the level above every entry, where the template of last resort is
+    /// composed. Not a system, and never a folder name.</summary>
+    public const string AllSentinel = "__all__";
     public const string SystemScope = "system";
+    /// <summary>The template of LAST resort for games, across every system: what
+    /// "Tous les jeux" composes. A system's own template (GameScopeFor) outranks it;
+    /// it exists so a library can be dressed once instead of system by system.</summary>
     public const string GameScope = "game";
 
     /// <summary>The GAME gabarit is PER SYSTEM (user decision): each system carries

@@ -27,6 +27,12 @@ public static class GabaritRenderer
         return project != null && project.Layers.Any(l => !l.Hidden);
     }
 
+    /// <summary>Whether a game of this system is dressed by a template at all — its
+    /// system's, or the one composed for all games.</summary>
+    public static bool HasGameGabarit(string pluginRoot, string categoryRoot, string surfaceId, string system)
+        => HasGabarit(pluginRoot, categoryRoot, surfaceId, GabaritIdentity.GameScopeFor(system))
+           || HasGabarit(pluginRoot, categoryRoot, surfaceId, GabaritIdentity.GameScope);
+
     /// <summary>Deletes every cached gabarit render of a surface — both the per-system
     /// and per-game renders (call after an edit so the next view regenerates).</summary>
     public static void InvalidateSurface(string pluginRoot, string categoryRoot, string surfaceId)
@@ -68,8 +74,10 @@ public static class GabaritRenderer
     public static string? RenderGame(string pluginRoot, string categoryRoot, string surfaceId, string system, string rom,
         int targetWidth, int targetHeight, IReadOnlyList<GameAsset> gameAssets)
     {
-        var project = new MarqueeProjectStore(pluginRoot, categoryRoot, surfaceId)
-            .LoadProject(GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(system));
+        var store = new MarqueeProjectStore(pluginRoot, categoryRoot, surfaceId);
+        // this system's template, else the one composed for ALL games
+        var project = store.LoadProject(GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(system))
+                      ?? store.LoadProject(GabaritIdentity.SystemId, GabaritIdentity.GameScope);
         if (project == null || !project.Layers.Any(l => !l.Hidden) || targetWidth <= 0 || targetHeight <= 0)
             return null;
 

@@ -59,6 +59,14 @@ public sealed class MesSystemesView : UserControl
         // nothing preselected; only systems with at least one INSTALLED game;
         // mame/fbneo stay listed (they carry their own chains and creations)
         systemPicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = L.T("- sélectionner -", "- select -"), Tag = null });
+        // the general template of systems has ALWAYS been one template for all of them —
+        // it was simply edited from inside a system, which read as "this system's". It
+        // now has the entry it deserves, above the separator.
+        systemPicker.Items.Add(new System.Windows.Controls.ComboBoxItem
+        {
+            Content = L.T("Tous les systèmes", "All systems"), Tag = GabaritIdentity.AllSentinel
+        });
+        systemPicker.Items.Add(new System.Windows.Controls.Separator());
         var present = media.ListPresentRoms(pluginRoot);
         bool HasGames(string system) => GameMediaCatalog.ArcadeAliases.Contains(system)
             ? present.TryGetValue("arcade", out var arcade) && arcade.Count > 0
@@ -114,6 +122,10 @@ public sealed class MesSystemesView : UserControl
         surfaceRow.Children.Add(surfacePicker);
 
         string? SelectedSystem() => (systemPicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
+        // a real system to resolve the template's assets and preview against
+        string? SampleSystem() => systemPicker.Items.OfType<System.Windows.Controls.ComboBoxItem>()
+            .Select(i => i.Tag as string)
+            .FirstOrDefault(tag => tag is { Length: > 0 } && tag != GabaritIdentity.AllSentinel);
         string? SelectedSurface() => (surfacePicker.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
         SurfaceModel? SurfaceOf(string? id) => surfaces.FirstOrDefault(s => s.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
         static string CategoryOf(SurfaceModel surface) => surface.Category.ToLowerInvariant() switch
@@ -131,7 +143,12 @@ public sealed class MesSystemesView : UserControl
         // and delete actions live on the "Ma création" card, not up here.
         void UpdateResolution()
         {
-            var system = SelectedSystem();
+            var picked = SelectedSystem();
+            var allSystems = picked == GabaritIdentity.AllSentinel;
+            // "All systems" is a level, not a system: it edits the one template every
+            // system already shares. A real system still has to supply the assets and
+            // the preview, but none of THAT system's own settings are offered here.
+            var system = allSystems ? SampleSystem() : picked;
             var surface = SurfaceOf(SelectedSurface());
             // render the surface's gabarit for THIS system once (cached) so the
             // "Générée" card reflects the general template
@@ -148,8 +165,8 @@ public sealed class MesSystemesView : UserControl
             ResolutionContext? ctx = (system != null && surface != null)
                 ? engine.SystemContext(surface, detectedScreens, system)
                 : null;
-            resolutionCard.Update(ctx,
-                composePersonal: () =>
+            resolutionCard.Update(allSystems ? null : ctx,
+                composePersonal: allSystems ? null : () =>
                 {
                     if (system == null) return;
                     var window = new GameComposerWindow(pluginRoot, "systems", system, system, SystemAssets(pluginRoot, system), SelectedSurface())
@@ -166,7 +183,7 @@ public sealed class MesSystemesView : UserControl
                     // saved per surface; it resolves to each system's media at render.
                     // The selected system provides the assets for a concrete preview.
                     new GameComposerWindow(pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.SystemScope,
-                        L.T($"Gabarit général — systèmes (aperçu : {system})", $"General template — systems (preview: {system})"),
+                        L.T($"Gabarit — tous les systèmes (aperçu : {system})", $"Template — all systems (preview: {system})"),
                         SystemAssets(pluginRoot, system), surface.Id, gabaritMode: true)
                     {
                         Owner = System.Windows.Window.GetWindow(this)
@@ -175,7 +192,7 @@ public sealed class MesSystemesView : UserControl
                     GabaritRenderer.InvalidateSurface(pluginRoot, CategoryOf(surface), surface.Id);
                     Refresh();
                 },
-                deletePersonal: () =>
+                deletePersonal: allSystems ? null : () =>
                 {
                     if (system == null || surface == null) return;
                     // the creation may live per-surface OR at the category level

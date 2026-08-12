@@ -859,28 +859,8 @@ public sealed class CompositionEditor : Window
 
         // --- Contenu (état + option + provenance) ---
         var content = new StackPanel();
-        var when = Ui.ComboBox(150);
-        foreach (var (key, fr, en) in new[]
-                 {
-                     ("both", "Les deux états", "Both states"),
-                     ("navigation", "Navigation ES", "ES browsing"),
-                     ("ingame", "En jeu", "Ingame")
-                 })
-        {
-            var item = new ComboBoxItem { Content = L.T(fr, en), Tag = key };
-            when.Items.Add(item);
-            if (key.Equals(component.When, StringComparison.OrdinalIgnoreCase)) when.SelectedItem = item;
-        }
-        if (when.SelectedItem == null) when.SelectedIndex = 0;
-        when.SelectionChanged += (_, _) =>
-        {
-            if ((when.SelectedItem as ComboBoxItem)?.Tag is string key)
-            {
-                component.When = key;
-                RenderAll();
-            }
-        };
-        content.Children.Add(Ui.Row(L.T("Visible en", "Visible in"), when, labelWidth: 90));
+        // No "Visible in" picker: it wrote the same When field the eye now drives,
+        // one control contradicting the other on the next click.
 
         var optionKey = component.Type switch
         {

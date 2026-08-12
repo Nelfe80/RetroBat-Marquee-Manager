@@ -83,6 +83,7 @@ public sealed class GamesView : UserControl, IDisposable
         _systems.SelectionChanged += (_, _) =>
         {
             _ = EnsureNamesAsync(SelectedSystem());
+            _search.IsEnabled = SelectedSystem() != GabaritIdentity.AllSentinel;
             RefreshResults();
             // a system with no game picked is a level of its own: it is where the
             // template that serves EVERY game of that system is edited
@@ -143,6 +144,10 @@ public sealed class GamesView : UserControl, IDisposable
                 // nothing preselected: the user picks explicitly
                 _systems.Items.Clear();
                 _systems.Items.Add(new ComboBoxItem { Content = L.T("- sélectionner -", "- select -"), Tag = "" });
+                // the whole library, above the separator: where the template that dresses
+                // EVERY game is composed, whatever its system
+                _systems.Items.Add(new ComboBoxItem { Content = L.T("Tous les jeux", "All games"), Tag = GabaritIdentity.AllSentinel });
+                _systems.Items.Add(new Separator());
                 foreach (var system in present.Keys
                              .Where(s => present[s].Count > 0)
                              .OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
@@ -199,6 +204,7 @@ public sealed class GamesView : UserControl, IDisposable
                 break;
         }
     }
+
 
     private string SelectedSystem() => (_systems.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
 
@@ -293,18 +299,43 @@ public sealed class GamesView : UserControl, IDisposable
                ?? new GameEntry(system, rom);
     }
 
+    /// <summary>The sample for the library-wide template: the best-served game of any
+    /// system, so a template that dresses everything is not judged on whichever system
+    /// happens to come first.</summary>
+    private GameEntry? RichestSampleAnywhere()
+    {
+        GameEntry? best = null;
+        var bestCount = 0;
+        foreach (var system in _allGames.Select(g => g.System).Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (RichestSample(system) is not { } sample) continue;
+            var count = _media.ListAssets(sample.System, sample.Rom).Count;
+            if (count <= bestCount) continue;
+            best = sample;
+            bestCount = count;
+            if (bestCount >= 10) break; // amply served: no need to weigh the rest
+        }
+        return best;
+    }
+
+
     private void ShowSystemLevel()
     {
         DisposeCards();
         _gameHost.Children.Clear();
         var system = SelectedSystem();
         if (system.Length == 0) return;
+        var allGames = system == GabaritIdentity.AllSentinel;
 
         var panel = new StackPanel();
-        panel.Children.Add(Ui.SectionHeader(L.T($"Tous les jeux de « {system} »", $"All games of “{system}”")));
-        panel.Children.Add(Ui.MutedLabel(L.T(
-            "Le gabarit général de ce système : la mise en page appliquée à chaque jeu, avec les médias de CE jeu. Choisissez un jeu ci-dessus pour ses réglages propres.",
-            "This system's general template: the layout applied to every game, resolved with THAT game's media. Pick a game above for its own settings.")));
+        panel.Children.Add(Ui.SectionHeader(allGames
+            ? L.T("Tous les jeux", "All games")
+            : L.T($"Tous les jeux de « {system} »", $"All games of “{system}”")));
+        panel.Children.Add(Ui.MutedLabel(allGames
+            ? L.T("Le gabarit de dernier recours : la mise en page appliquée à un jeu dont ni sa fiche ni son système ne dit rien, avec les médias de CE jeu.",
+                  "The template of last resort: the layout applied to a game neither its own card nor its system speaks for, resolved with THAT game's media.")
+            : L.T("Le gabarit général de ce système : la mise en page appliquée à chaque jeu, avec les médias de CE jeu. Choisissez un jeu ci-dessus pour ses réglages propres.",
+                  "This system's general template: the layout applied to every game, resolved with THAT game's media. Pick a game above for its own settings.")));
 
         // ONLY the surfaces that actually display something: a surface on a screen
         // MarqueeManager does not manage never shows anything, and offering it here only
@@ -356,14 +387,25 @@ public sealed class GamesView : UserControl, IDisposable
                 "dmd-virtual" => "dmd",
                 _ => "marquees"
             };
-            var has = GabaritRenderer.HasGabarit(_pluginRoot, cat, surfaceId, GabaritIdentity.GameScopeFor(system));
-            panel.Children.Add(Ui.MutedLabel(has
-                ? L.T("✓ Un gabarit général existe pour ce système.", "✓ A general template exists for this system.")
-                : L.T("Aucun gabarit général pour ce système — chaque jeu utilise ses propres sources.",
-                      "No general template for this system — each game uses its own sources.")));
+            var scope = allGames ? GabaritIdentity.GameScope : GabaritIdentity.GameScopeFor(system);
+            var has = GabaritRenderer.HasGabarit(_pluginRoot, cat, surfaceId, scope);
+            panel.Children.Add(Ui.MutedLabel((has, allGames) switch
+            {
+                (true, true) => L.T("✓ Un gabarit existe pour tous les jeux.", "✓ A template exists for all games."),
+                (true, false) => L.T("✓ Un gabarit général existe pour ce système.", "✓ A general template exists for this system."),
+                (false, true) => L.T("Aucun gabarit pour tous les jeux — chaque système, puis chaque jeu, répond pour lui-même.",
+                                     "No template for all games — each system, then each game, answers for itself."),
+                (false, false) => L.T("Aucun gabarit général pour ce système — chaque jeu utilise ses propres sources.",
+                                      "No general template for this system — each game uses its own sources.")
+            }));
+            if (!allGames)
+            {
+                panel.Children.Add(Ui.MutedLabel(L.T("Il l'emporte sur le gabarit « Tous les jeux ».",
+                    "It outranks the “All games” template.")));
+            }
 
             // what this template currently produces, on this surface, for a sample game
-            var sampleGame = RichestSample(system);
+            var sampleGame = allGames ? RichestSampleAnywhere() : RichestSample(system);
             string? preview = null;
             if (has && sampleGame != null)
             {
@@ -396,10 +438,12 @@ public sealed class GamesView : UserControl, IDisposable
                 ? L.T("Modifier le gabarit général", "Edit the general template")
                 : L.T("Créer le gabarit général", "Create the general template"), (_, _) =>
             {
-                var sample = RichestSample(system);
+                var sample = allGames ? RichestSampleAnywhere() : RichestSample(system);
                 var assets = sample != null ? _media.ListAssets(sample.System, sample.Rom) : new List<GameAsset>();
-                new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(system),
-                    L.T($"Gabarit général — jeux {system}", $"General template — {system} games"),
+                new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, scope,
+                    allGames
+                        ? L.T("Gabarit — tous les jeux", "Template — all games")
+                        : L.T($"Gabarit général — jeux {system}", $"General template — {system} games"),
                     assets, surfaceId, gabaritMode: true)
                 {
                     Owner = Window.GetWindow(this)
@@ -426,7 +470,9 @@ public sealed class GamesView : UserControl, IDisposable
         }
 
         var system = SelectedSystem();
-        if (system.Length == 0)
+        // "All games" is a level, not a system: there is no entry to search for there,
+        // and a box that answers nothing is worse than one that is plainly shut
+        if (system.Length == 0 || system == GabaritIdentity.AllSentinel)
         {
             _results.Visibility = Visibility.Collapsed;
             return;
@@ -719,7 +765,8 @@ public sealed class GamesView : UserControl, IDisposable
             if (surface != null)
             {
                 var cat = CategoryOfSurface(surface);
-                if (GabaritRenderer.HasGabarit(_pluginRoot, cat, surface.Id, GabaritIdentity.GameScopeFor(entry.System))
+                // covered by its system's template OR by the one for all games
+                if (GabaritRenderer.HasGameGabarit(_pluginRoot, cat, surface.Id, entry.System)
                     && !System.IO.File.Exists(GabaritRenderer.GameCachePath(_pluginRoot, cat, surface.Id, entry.System, entry.Rom)))
                 {
                     var dims = MediaResolutionPreview.TargetOf(surface, screens);

@@ -78,6 +78,12 @@ public sealed class GabaritSkiaRenderer
             try
             {
                 var project = LoadProject(ProjectPath(category, surfaceId, scope));
+                // A system without its own game template falls back to the one composed
+                // for ALL games — the level of last resort, never another system's.
+                if (project == null && scope.StartsWith("game-", StringComparison.OrdinalIgnoreCase))
+                {
+                    project = LoadProject(ProjectPath(category, surfaceId, "game"));
+                }
                 if (project == null || !project.Layers.Any(l => !l.Hidden)) return;
                 if (Render(project, resolveMedia, tokens, width, height, outputPath))
                 {
