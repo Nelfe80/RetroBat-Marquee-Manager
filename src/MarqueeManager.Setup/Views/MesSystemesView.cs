@@ -80,6 +80,10 @@ public sealed class MesSystemesView : UserControl
         composeCard.Children.Add(systemRow);
 
         var resolutionCard = new ResolutionCard(engine);
+        // "All systems" is a level of its own: the resolution card speaks about ONE
+        // system's chain and draws nothing without a target, so that level needs its own
+        // panel rather than an emptied card.
+        var allSystemsHost = new StackPanel { Visibility = System.Windows.Visibility.Collapsed };
 
         var surfacesStore = new SurfacesStore(pluginRoot);
         var surfaces = surfacesStore.Load();
@@ -139,6 +143,72 @@ public sealed class MesSystemesView : UserControl
 
         void Refresh() => UpdateResolution();
 
+        // The template every system shares: what it produces on a sample system, and the
+        // one button that composes it.
+        void RenderAllSystemsLevel(string? sample, SurfaceModel? surface)
+        {
+            allSystemsHost.Children.Clear();
+            var panel = new StackPanel();
+            panel.Children.Add(Ui.SectionHeader(L.T("Tous les systèmes", "All systems")));
+            panel.Children.Add(Ui.MutedLabel(L.T(
+                "Une seule mise en page, appliquée à chaque système avec SES médias. Choisissez un système ci-dessus pour ses réglages propres.",
+                "One layout, applied to every system with ITS media. Pick a system above for its own settings.")));
+            if (surface == null || sample == null)
+            {
+                panel.Children.Add(Ui.MutedLabel(L.T("Sélectionnez une surface.", "Select a surface.")));
+                allSystemsHost.Children.Add(Ui.Card(panel));
+                return;
+            }
+
+            var cat = CategoryOf(surface);
+            var has = GabaritRenderer.HasGabarit(pluginRoot, cat, surface.Id, GabaritIdentity.SystemScope);
+            panel.Children.Add(Ui.MutedLabel(has
+                ? L.T("✓ Un gabarit existe pour tous les systèmes.", "✓ A template exists for all systems.")
+                : L.T("Aucun gabarit — chaque système répond avec ses propres sources.",
+                      "No template — each system answers with its own sources.")));
+
+            if (has)
+            {
+                var dims = MediaResolutionPreview.TargetOf(surface, detectedScreens);
+                var cache = GabaritRenderer.CachePath(pluginRoot, cat, surface.Id, sample);
+                if (!System.IO.File.Exists(cache))
+                {
+                    GabaritRenderer.RenderSystem(pluginRoot, cat, surface.Id, sample,
+                        dims.Width, dims.Height, SystemAssets(pluginRoot, sample));
+                }
+                if (System.IO.File.Exists(cache))
+                {
+                    panel.Children.Add(Ui.MutedLabel(L.T($"Aperçu (exemple : {sample})", $"Preview (sample: {sample})")));
+                    panel.Children.Add(new System.Windows.Controls.Image
+                    {
+                        Source = Ui.Preview(cache),
+                        Stretch = System.Windows.Media.Stretch.Uniform,
+                        MaxHeight = 220,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+                        Margin = new System.Windows.Thickness(0, 4, 0, 4)
+                    });
+                }
+            }
+
+            var edit = Ui.Button(has
+                ? L.T("Modifier le gabarit", "Edit the template")
+                : L.T("Créer le gabarit", "Create the template"), (_, _) =>
+            {
+                new GameComposerWindow(pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.SystemScope,
+                    L.T($"Gabarit — tous les systèmes (aperçu : {sample})", $"Template — all systems (preview: {sample})"),
+                    SystemAssets(pluginRoot, sample), surface.Id, gabaritMode: true)
+                {
+                    Owner = System.Windows.Window.GetWindow(this)
+                }.ShowDialog();
+                GabaritRenderer.InvalidateSurface(pluginRoot, cat, surface.Id);
+                Refresh();
+            }, primary: true);
+            edit.Margin = new System.Windows.Thickness(0, 8, 0, 0);
+            edit.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+            panel.Children.Add(edit);
+            allSystemsHost.Children.Add(Ui.Card(panel));
+        }
+
         // Point the shared block card at the picked system + surface. The composer
         // and delete actions live on the "Ma création" card, not up here.
         void UpdateResolution()
@@ -165,6 +235,9 @@ public sealed class MesSystemesView : UserControl
             ResolutionContext? ctx = (system != null && surface != null)
                 ? engine.SystemContext(surface, detectedScreens, system)
                 : null;
+            allSystemsHost.Visibility = allSystems ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+            resolutionCard.Visibility = allSystems ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+            if (allSystems) RenderAllSystemsLevel(system, SurfaceOf(SelectedSurface()));
             resolutionCard.Update(allSystems ? null : ctx,
                 composePersonal: allSystems ? null : () =>
                 {
@@ -244,6 +317,7 @@ public sealed class MesSystemesView : UserControl
         page.Children.Add(Ui.Card(composeCard));
 
         page.Children.Add(resolutionCard);
+        page.Children.Add(allSystemsHost);
 
         // Priorités par système et Templates de composition sont ABSORBÉS par le
         // nouveau modèle : l'ordre est fixe et on choisit le gagnant en cliquant une

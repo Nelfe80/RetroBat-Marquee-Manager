@@ -343,4 +343,25 @@ public static class Ui
 
         return grid;
     }
+
+    /// <summary>Loads a freshly baked preview WITHOUT the WPF image cache: a render that
+    /// overwrites its own path would otherwise keep showing the version before it.</summary>
+    public static System.Windows.Media.Imaging.BitmapImage? Preview(string path)
+    {
+        try
+        {
+            var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            bitmap.CreateOptions = System.Windows.Media.Imaging.BitmapCreateOptions.IgnoreImageCache;
+            bitmap.UriSource = new System.Uri(path);
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
