@@ -224,13 +224,11 @@ public sealed class CompositionEditor : Window
                 () => new() { C("shape.gradient", 0, 0.35, 1, 0.65, ("color", "#000000"), ("direction", "down"), ("opacity", "0.75")) }),
             new("🔷 " + L.T("Décoration", "Decoration"), L.T("Texte libre", "Custom text"), () => new() { C("text.custom", 0.1, 0.4, 0.8, 0.2, ("text", "Mon texte")) }),
             new("🔷 " + L.T("Décoration", "Decoration"), L.T("Web (Twitch/YouTube)", "Web (Twitch/YouTube)"), () => new() { C("external.web", 0, 0, 1, 1, ("url", "")) }),
-            new("🔷 " + L.T("Décoration", "Decoration"), L.T("Lumière (tubes néon)", "Lighting (neon tubes)"), () => new() { C("lighting.engine") }),
 
-            // The events layer is mounted, not placed: it always covers the whole
-            // surface and always applies to both display states.
-            new("🎉 " + L.T("Événements", "Events"),
-                L.T("Événements animés (sprites)", "Animated events (sprites)"),
-                () => new() { C("effects.engine") }),
+            // Lighting, lamps, animated events and the game image are RAILS, always
+            // present and pinned in the layers panel: they are the boundaries of the
+            // sandwich, not elements you add. Offering them here only meant a surface
+            // could end up with two, or with none.
 
             new("🧩 " + L.T("Composites", "Composites"), L.T("Marquee (fanart+gradient+logo)", "Marquee (fanart+gradient+logo)"),
                 () => Fanart()
@@ -578,6 +576,7 @@ public sealed class CompositionEditor : Window
         if (e.Key == Key.Delete && _selected != null)
         {
             SnapshotHistory();
+            if (IsPinned(_selected.Type)) return; // a rail is hidden, never removed
             _surface.Components.Remove(_selected);
             _selected = null;
             RenderAll();
@@ -611,6 +610,77 @@ public sealed class CompositionEditor : Window
     private string LayerName(ComponentModel component)
         => component.Name.Length > 0 ? component.Name : component.Type;
 
+    /// <summary>
+    /// The four RAILS of a surface, in render order. They are not layers you compose:
+    /// they are the boundaries of the sandwich, and the rendering pipeline fixes their
+    /// order. Pinned means: eye only — no delete, no move. Losing one by recomposing is
+    /// what silently disconnected a whole surface from the resolution chain.
+    ///
+    /// "lamps.scene" is WELDED to "lighting.engine": the rbmarquee lamps are painted
+    /// inside the lighting pass, over the lit artwork — nothing can be inserted between
+    /// the two.
+    /// </summary>
+    private static readonly string[] PinnedFront = { "effects.engine", "lamps.scene", "lighting.engine" };
+    private const string PinnedBack = "media.flux";
+
+    private static bool IsPinned(string type)
+        => type.Equals(PinnedBack, StringComparison.OrdinalIgnoreCase)
+           || PinnedFront.Contains(type, StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Live layers are fed by the streams; baked under the light they would be
+    /// covered by the opaque lit artwork.</summary>
+    private static readonly HashSet<string> LiveTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "media.video", "iccard.static", "iccard.cycle", "external.web",
+        "overlay.hiscore", "overlay.live.score", "overlay.live.timer",
+        "overlay.ra.info", "overlay.ra.badges", "overlay.ra.speedrun"
+    };
+
+    private static string PinnedLabel(string type) => type.ToLowerInvariant() switch
+    {
+        "effects.engine" => L.T("Événements animés", "Animated events"),
+        "lamps.scene" => L.T("Lampes", "Lamps"),
+        "lighting.engine" => L.T("Lumière (tubes néon)", "Lighting (neon tubes)"),
+        _ => L.T("Image du jeu (fond)", "Game image (background)")
+    };
+
+    /// <summary>Makes sure the four rails exist and sit at their fixed positions, keeping
+    /// whatever eye the surface already carried. Silent migration: an old surface simply
+    /// finds its rails in place.</summary>
+    private void NormalizeRails()
+    {
+        var components = _surface.Components;
+
+        // 1. every rail exists
+        foreach (var type in PinnedFront)
+            if (!components.Any(c => c.Type.Equals(type, StringComparison.OrdinalIgnoreCase)))
+                components.Add(new ComponentModel { Type = type });
+        if (!components.Any(c => c.Type.Equals(PinnedBack, StringComparison.OrdinalIgnoreCase)))
+            components.Insert(0, new ComponentModel { Type = PinnedBack });
+
+        // 2. the background is the floor — nothing renders under the game image
+        var back = components.First(c => c.Type.Equals(PinnedBack, StringComparison.OrdinalIgnoreCase));
+        if (components.IndexOf(back) != 0)
+        {
+            components.Remove(back);
+            components.Insert(0, back);
+        }
+
+        // 3. the three engines keep their RELATIVE order (lighting < lamps < effects in
+        //    back→front order) but stay where the user put them, so the composable zones
+        //    between them survive. Only the rails are re-sorted, in their own slots.
+        var slots = components
+            .Select((c, i) => (Component: c, Index: i))
+            .Where(x => PinnedFront.Contains(x.Component.Type, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+        var desired = slots
+            .Select(x => x.Component)
+            .OrderBy(c => Array.FindIndex(PinnedFront, t => t.Equals(c.Type, StringComparison.OrdinalIgnoreCase)))
+            .Reverse() // list order is back → front, PinnedFront is front → back
+            .ToList();
+        for (var i = 0; i < slots.Count; i++) components[slots[i].Index] = desired[i];
+    }
+
     private void RenderLayers()
     {
         _layersPanel.Children.Clear();
@@ -618,9 +688,20 @@ public sealed class CompositionEditor : Window
         title.FontWeight = FontWeights.Bold;
         _layersPanel.Children.Add(title);
 
+        NormalizeRails();
+
         // front-most first, RetroCreator/Photoshop convention
-        foreach (var component in Enumerable.Reverse(_surface.Components).ToList())
+        var ordered = Enumerable.Reverse(_surface.Components).ToList();
+        var lightingIndex = ordered.FindIndex(c => c.Type.Equals("lighting.engine", StringComparison.OrdinalIgnoreCase));
+        for (var position = 0; position < ordered.Count; position++)
         {
+            var component = ordered[position];
+            var pinned = IsPinned(component.Type);
+
+            // a composable gap, so the three zones read at a glance
+            if (!pinned && (position == 0 || IsPinned(ordered[position - 1].Type)))
+                _layersPanel.Children.Add(ZoneSeparator());
+
             var inState = _state == "both" || component.When is "both"
                           || component.When.Equals(_state, StringComparison.OrdinalIgnoreCase);
             var row = new DockPanel { Margin = new Thickness(0, 1, 0, 1), Opacity = inState ? 1 : 0.4 };
@@ -633,22 +714,38 @@ public sealed class CompositionEditor : Window
             });
             eye.Padding = new Thickness(4, 2, 4, 2);
             row.Children.Add(eye);
-            var padlock = Ui.Button(component.Locked ? "🔒" : "🔓", (_, _) =>
+            if (!pinned)
             {
-                SnapshotHistory();
-                component.Locked = !component.Locked;
-                RenderAll();
-            });
-            padlock.Padding = new Thickness(4, 2, 4, 2);
-            row.Children.Add(padlock);
+                var padlock = Ui.Button(component.Locked ? "🔒" : "🔓", (_, _) =>
+                {
+                    SnapshotHistory();
+                    component.Locked = !component.Locked;
+                    RenderAll();
+                });
+                padlock.Padding = new Thickness(4, 2, 4, 2);
+                row.Children.Add(padlock);
+            }
 
-            var buttons = new StackPanel { Orientation = Orientation.Horizontal };
-            buttons.Children.Add(Ui.Button("↑", (_, _) => MoveLayer(component, +1)));
-            buttons.Children.Add(Ui.Button("↓", (_, _) => MoveLayer(component, -1)));
-            DockPanel.SetDock(buttons, Dock.Right);
-            row.Children.Add(buttons);
+            if (!pinned)
+            {
+                var buttons = new StackPanel { Orientation = Orientation.Horizontal };
+                buttons.Children.Add(Ui.Button("↑", (_, _) => MoveLayer(component, +1)));
+                buttons.Children.Add(Ui.Button("↓", (_, _) => MoveLayer(component, -1)));
+                DockPanel.SetDock(buttons, Dock.Right);
+                row.Children.Add(buttons);
+            }
 
-            var name = Ui.Label(LayerName(component) + (component.When == "both" ? "" : $"  [{StateBadge(component.When)}]"), 11);
+            // a live layer under the light is covered by the opaque lit artwork —
+            // say it here instead of letting it be discovered on the cabinet
+            var covered = !pinned && lightingIndex >= 0 && position > lightingIndex
+                          && LiveTypes.Contains(component.Type);
+            if (covered) row.Opacity = 0.45;
+
+            var label = pinned
+                ? PinnedLabel(component.Type)
+                : LayerName(component) + (component.When == "both" ? "" : $"  [{StateBadge(component.When)}]");
+            if (covered) label += L.T("  · sous la lumière : sera recouvert", "  · under the light: will be covered");
+            var name = Ui.Label(label, 11);
             name.Margin = new Thickness(6, 0, 0, 0);
             name.VerticalAlignment = VerticalAlignment.Center;
             if (ReferenceEquals(component, _selected)) name.Foreground = Ui.Accent;
@@ -663,11 +760,25 @@ public sealed class CompositionEditor : Window
         }
     }
 
+    private FrameworkElement ZoneSeparator()
+        => new TextBlock
+        {
+            Text = L.T("┈┈ vos calques ┈┈", "┈┈ your layers ┈┈"),
+            Foreground = Ui.Muted,
+            FontSize = 9,
+            Margin = new Thickness(0, 4, 0, 2),
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+
     private void MoveLayer(ComponentModel component, int towardFront)
     {
+        if (IsPinned(component.Type)) return; // rails never move
         var index = _surface.Components.IndexOf(component);
         var target = index + towardFront; // list order = back → front
         if (index < 0 || target < 0 || target >= _surface.Components.Count) return;
+        // crossing a rail is how a layer changes zone (lit ↔ unlit); the background is
+        // the one that can never be crossed — nothing renders under the game image
+        if (_surface.Components[target].Type.Equals(PinnedBack, StringComparison.OrdinalIgnoreCase)) return;
         SnapshotHistory();
         (_surface.Components[index], _surface.Components[target]) = (_surface.Components[target], _surface.Components[index]);
         RenderAll();
@@ -931,6 +1042,7 @@ public sealed class CompositionEditor : Window
         actions.Children.Add(Ui.Button(L.T("Supprimer le calque", "Delete layer"), (_, _) =>
         {
             SnapshotHistory();
+            if (IsPinned(component.Type)) return; // a rail is hidden, never removed
             _surface.Components.Remove(component);
             _selected = null;
             RenderAll();

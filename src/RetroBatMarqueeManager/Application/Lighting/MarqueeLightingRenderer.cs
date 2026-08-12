@@ -212,6 +212,21 @@ half4 main(float2 p) {
     }
 
     /// <summary>Ingame = clean session: lighting sounds muted, attract mode paused.</summary>
+    private volatile bool _lampsVisible = true;
+
+    /// <summary>
+    /// The surface's `lamps.scene` eye. The rbmarquee lamps are painted INSIDE this
+    /// renderer's pass — over the lit artwork, under the glass — so they cannot be a
+    /// layer of their own; this is the switch that makes their pinned row mean
+    /// something. Until now the component existed in the Setup and the runtime never
+    /// looked at it.
+    /// </summary>
+    public void SetLampsVisible(bool visible)
+    {
+        _lampsVisible = visible;
+        _dirty = true;
+    }
+
     public void SetIngame(bool ingame)
     {
         _ingame = ingame;
@@ -377,7 +392,7 @@ half4 main(float2 p) {
             DrawElectrodeGlow(canvas, (float)_tubes[0].Electrode, _backlightProfile.TubeY1);
         if (_tubes.Length > 1 && _tubes[1].Electrode > 0.001)
             DrawElectrodeGlow(canvas, (float)_tubes[1].Electrode, _backlightProfile.TubeY2);
-        DrawLamps(canvas);
+        if (_lampsVisible) DrawLamps(canvas);
         DrawGlass(canvas);
     }
 

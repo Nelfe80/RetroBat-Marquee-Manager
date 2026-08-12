@@ -596,6 +596,9 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                         _lightingOptions.TubeBlur, _lightingOptions.TubeEndFade, _lightingOptions.TubeColor,
                         _lightingOptions.LatestWinsGeneration, _lightingOptions.MapCache);
                     if (_dmdMirror != null) _lightingHost.FrameRendered = MirrorFrameToDmd;
+                    // a surface that never declares lamps keeps them (legacy behaviour);
+                    // declaring the row and closing its eye is what turns them off
+                    _lightingRenderer.SetLampsVisible(_surface?.Component("lamps.scene")?.Visible != false);
                     this.Loaded += (_, _) =>
                     {
                         _lightingHost.Start(_lightingRenderer);
