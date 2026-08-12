@@ -156,6 +156,67 @@ public sealed class GameMediaCatalog
     /// alias folders are the same game, not a substitute for it: whichever actually
     /// holds the media wins, and the declared system stays the answer when neither does.
     /// </summary>
+    private readonly Dictionary<string, string?> _richestSample = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The game of a system whose media folder holds the most: the entry a generic
+    /// template is best judged against. Scanning the first N games instead landed on
+    /// media-less ones — 240 of the 245 Mega Drive folders hold nothing but a DMD gif,
+    /// so an alphabetical slice never reached the five that carry real art. Folders are
+    /// walked once per system and the answer cached.
+    /// </summary>
+    public string? RichestSampleRom(string system)
+    {
+        lock (_sync)
+        {
+            if (_richestSample.TryGetValue(system, out var cached)) return cached;
+        }
+
+        string? best = null;
+        var bestScore = 0;
+        foreach (var folder in SystemFolders(system))
+        {
+            var gamesRoot = Path.Combine(_systemsRoot, folder, "games");
+            try
+            {
+                foreach (var dir in Directory.EnumerateDirectories(gamesRoot))
+                {
+                    var name = Path.GetFileName(dir);
+                    var score = FolderRichness(gamesRoot, name);
+                    if (score <= bestScore) continue;
+                    bestScore = score;
+                    best = name;
+                }
+            }
+            catch
+            {
+                // unreadable system folder: whatever was found elsewhere still stands
+            }
+        }
+
+        // the folder is a slug; the window needs the rom the library knows
+        var rom = best == null
+            ? null
+            : ListGames().FirstOrDefault(g =>
+                  g.System.Equals(system, StringComparison.OrdinalIgnoreCase)
+                  && ResolveMediaFolder(system, g.Rom).Equals(best, StringComparison.OrdinalIgnoreCase))?.Rom
+              ?? best;
+
+        lock (_sync)
+        {
+            _richestSample[system] = rom;
+        }
+        return rom;
+    }
+
+    /// <summary>A system's media folder, plus the family folder its art may be filed
+    /// under (mame/fbneo art lives in "arcade").</summary>
+    private static IEnumerable<string> SystemFolders(string system)
+    {
+        yield return system;
+        if (ArcadeAliases.Contains(system)) yield return "arcade";
+    }
+
     public string GameRoot(string system, string rom)
     {
         var declared = Path.Combine(_systemsRoot, system, "games", ResolveMediaFolder(system, rom));

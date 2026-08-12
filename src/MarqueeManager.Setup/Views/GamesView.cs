@@ -283,24 +283,14 @@ public sealed class GamesView : UserControl, IDisposable
         catch { return null; }
     }
 
-    /// <summary>
-    /// The sample a template is composed against must be a game that actually HAS media:
-    /// taking the first one alphabetically landed on "005", which owns almost nothing,
-    /// and the palette came out nearly empty for a whole system. Scans a bounded slice —
-    /// enough to find a well-served game without walking thousands of folders.
-    /// </summary>
+    /// <summary>The entry a generic template is composed against: the catalog knows
+    /// which game of the system actually carries media.</summary>
     private GameEntry? RichestSample(string system)
     {
-        GameEntry? best = null;
-        var bestCount = -1;
-        foreach (var game in _allGames.Where(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase)).Take(60))
-        {
-            var count = _media.ListAssets(game.System, game.Rom).Count;
-            if (count <= bestCount) continue;
-            best = game;
-            bestCount = count;
-        }
-        return best;
+        if (_media.RichestSampleRom(system) is not { Length: > 0 } rom) return null;
+        return _allGames.FirstOrDefault(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase)
+                                             && g.Rom.Equals(rom, StringComparison.OrdinalIgnoreCase))
+               ?? new GameEntry(system, rom);
     }
 
     private void ShowSystemLevel()

@@ -242,7 +242,9 @@ public sealed class MarqueeComposer : UserControl
         foreach (var visual in _layers)
         {
             if (!GabaritAssets.IsResolvable(visual.Model.AssetKey)) continue;
-            visual.Model.Source = on ? ToRelative(resolve(visual.Model.AssetKey!) ?? "") : "";
+            visual.Model.Source = on && resolve(visual.Model.AssetKey!) is { Length: > 0 } path
+                ? ToRelative(path)
+                : "";
         }
         Reload();
     }

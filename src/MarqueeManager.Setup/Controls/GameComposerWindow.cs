@@ -542,10 +542,11 @@ public sealed class GameComposerWindow : Window
 
     private void SwitchTarget(Target target)
     {
-        // carry the current layers over — the fractions adapt to the new ratio
-        var carried = _composer.HasLayers ? _composer.BuildProject(_system, _rom) : null;
+        // A composition belongs to ITS surface: carrying the layers over dropped a
+        // marquee composition onto the topper, which has nothing to do with it. An
+        // empty target opens empty.
         _target = target;
-        MountComposer(LoadProjectFor(target) ?? carried);
+        MountComposer(LoadProjectFor(target));
         _status.Text = L.T($"Cible : {target.Label} — la création est propre à CETTE surface.",
             $"Target: {target.Label} — the creation belongs to THIS surface.");
         _status.Foreground = Ui.Muted;
