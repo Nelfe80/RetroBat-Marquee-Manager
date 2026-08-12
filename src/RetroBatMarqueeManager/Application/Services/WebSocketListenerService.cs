@@ -191,24 +191,30 @@ public sealed class WebSocketListenerService : BackgroundService
     private static string? ResolveGabaritLayerMedia(MarqueeManager.Compositions.Core.Composition.MarqueeLayer layer,
         IReadOnlyDictionary<string, string?> kinds, string system)
     {
-        // A general template may point OUTSIDE the APIExpose library — an ES theme
-        // background is stored per system as …/art/background/<system>.jpg. Composed on
-        // arcade, it must follow to lynx, or the template only ever serves the system it
-        // was authored on. The swap is existence-checked, so it can never substitute
-        // another system's picture.
-        var themed = ResolveBySystemName(layer.Source, system);
-        if (themed != null) return themed;
-
         // A background carries no AssetKey, only the path picked while composing:
-        // infer the key from it, or the template stays bound to that one game.
+        // infer the key from it, or the template stays bound to that one entry.
         var key = string.IsNullOrWhiteSpace(layer.AssetKey)
             ? MarqueeManager.Compositions.Core.Composition.GabaritAssets.KeyFromPath(layer.Source)
             : layer.AssetKey;
 
+        // SYSTEM-scoped layers, and ONLY those, follow the system by swapping the
+        // \systems\<sys>\ segment. Applying that to any path also matched a GAME asset —
+        // whose game folder never changes — so a template composed on Sonic served
+        // Sonic's art to every game of the system.
+        if (key is "systemfanart" or "systemwheel" or "systemmarquee")
+            return SwapSystemSegment(layer.Source, system);
+
         if (key == null)
+        {
+            // no key inferable: an ES theme background is stored per system as
+            // …/art/background/<system>.jpg and must follow; otherwise it is a genuine
+            // one-off (imported image, decoration) and keeps its own file.
+            var themed = ResolveBySystemName(layer.Source, system);
+            if (themed != null) return themed;
             return layer.Source is { Length: > 0 } source && Path.IsPathRooted(source) && File.Exists(source)
-                ? source // a genuine one-off (downloaded image, decoration)
+                ? source
                 : null;
+        }
 
         var kind = key.ToLowerInvariant() switch
         {
@@ -237,6 +243,30 @@ public sealed class WebSocketListenerService : BackgroundService
     }
 
     /// <summary>
+    /// A SYSTEM asset lives under …\systems\&lt;sys&gt;\… : swapping that one segment makes it
+    /// follow the system being rendered, so a Neo Geo logo placed in a template becomes
+    /// the Mega Drive logo on a Mega Drive game. Existence-checked, and reserved to the
+    /// system-scoped keys — a game asset's folder never changes, so swapping there
+    /// served the sample game's art to the whole system.
+    /// </summary>
+    private static string? SwapSystemSegment(string? source, string system)
+    {
+        if (string.IsNullOrWhiteSpace(source) || !Path.IsPathRooted(source)) return null;
+        var parts = source!.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var systemsAt = Array.FindLastIndex(parts, p => p.Equals("systems", StringComparison.OrdinalIgnoreCase));
+        if (systemsAt < 0 || systemsAt + 1 >= parts.Length) return File.Exists(source) ? source : null;
+
+        foreach (var name in Application.Media.CompositionChainResolver.SystemNames(system))
+        {
+            var swapped = (string[])parts.Clone();
+            swapped[systemsAt + 1] = name;
+            var candidate = string.Join(Path.DirectorySeparatorChar, swapped);
+            if (File.Exists(candidate)) return candidate;
+        }
+        return null;
+    }
+
+    /// <summary>
     /// A stored path whose FILE NAME is a system name (the ES theme's
     /// art\background\arcade.jpg) re-points to the current system. Returns null unless
     /// the swapped file really exists — a template never borrows another system's image.
@@ -244,23 +274,6 @@ public sealed class WebSocketListenerService : BackgroundService
     private static string? ResolveBySystemName(string? source, string system)
     {
         if (string.IsNullOrWhiteSpace(source) || !Path.IsPathRooted(source)) return null;
-
-        // A SYSTEM asset lives under …\systems\<sys>\… : swapping that one segment makes
-        // it follow the system being rendered, so a Neo Geo logo placed in a template
-        // becomes the Mega Drive logo on a Mega Drive game. Existence-checked, so a
-        // template can never wear another system's art.
-        var parts = source!.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        var systemsAt = Array.FindLastIndex(parts, p => p.Equals("systems", StringComparison.OrdinalIgnoreCase));
-        if (systemsAt >= 0 && systemsAt + 1 < parts.Length)
-        {
-            foreach (var name in Application.Media.CompositionChainResolver.SystemNames(system))
-            {
-                var swapped = (string[])parts.Clone();
-                swapped[systemsAt + 1] = name;
-                var candidate = string.Join(Path.DirectorySeparatorChar, swapped);
-                if (File.Exists(candidate)) return candidate;
-            }
-        }
 
         var directory = Path.GetDirectoryName(source);
         if (directory == null) return null;

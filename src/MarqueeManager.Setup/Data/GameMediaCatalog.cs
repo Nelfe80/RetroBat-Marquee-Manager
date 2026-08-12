@@ -316,6 +316,10 @@ public sealed class GameMediaCatalog
         return assets;
     }
 
+    /// <summary>Any metadata field of a game (name, developer, publisher, releasedate…).</summary>
+    public string? ReadMetadata(string system, string rom, string field)
+        => ReadMetadataField(system, rom, field);
+
     private string? ReadMetadataField(string system, string rom, string field)
     {
         foreach (var lang in Localization.L.French ? new[] { "fr", "en" } : new[] { "en", "fr" })

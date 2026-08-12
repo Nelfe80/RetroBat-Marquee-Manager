@@ -280,6 +280,22 @@ public sealed class MarqueeComposer : UserControl
         StackChanged?.Invoke();
     }
 
+    /// <summary>
+    /// Sample values for the {name} {year} {developer} {publisher} {system} tokens. The
+    /// STORED text keeps its tokens — a template must follow the entry — but showing
+    /// them raw on the canvas made the editor unusable: you compose against "{name}",
+    /// not against a title whose length and shape you can judge.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> Tokens { get; set; } =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    private string ResolveTokens(string text)
+    {
+        foreach (var (token, value) in Tokens)
+            text = text.Replace("{" + token + "}", value, StringComparison.OrdinalIgnoreCase);
+        return text;
+    }
+
     public void AddTextLayer(string text)
     {
         var layer = new MarqueeLayer { Source = "text", AssetKey = "text", Text = text, Scale = 1.0 };
@@ -544,7 +560,7 @@ public sealed class MarqueeComposer : UserControl
         {
             element = new TextBlock
             {
-                Text = layer.Text ?? "",
+                Text = ResolveTokens(layer.Text ?? ""),
                 Foreground = new SolidColorBrush(ParseColor(layer.TextColor)),
                 FontWeight = layer.Bold ? FontWeights.Bold : FontWeights.Normal,
                 FontFamily = new FontFamily("Segoe UI")

@@ -461,8 +461,36 @@ public sealed class GameComposerWindow : Window
             if (_gabaritMode) RemapForGabarit(project);
             _composer.LoadProject(project);
         }
+        _composer.Tokens = SampleTokens();
         _composerHost.Child = _composer;
         RenderSidePanels();
+    }
+
+    /// <summary>Metadata of the entry being previewed, so the canvas shows a real title
+    /// instead of "{name}". Missing values fall back to a readable placeholder rather
+    /// than to nothing — an empty layer cannot be positioned.</summary>
+    private Dictionary<string, string> SampleTokens()
+    {
+        var catalog = new GameMediaCatalog(_pluginRoot);
+        string Field(string field, string fallback)
+        {
+            try
+            {
+                var value = catalog.ReadMetadata(_system, _rom, field);
+                return string.IsNullOrWhiteSpace(value) ? fallback : value!;
+            }
+            catch { return fallback; }
+        }
+
+        var release = Field("releasedate", "");
+        return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["name"] = Field("name", _rom),
+            ["developer"] = Field("developer", L.T("développeur", "developer")),
+            ["publisher"] = Field("publisher", L.T("éditeur", "publisher")),
+            ["year"] = release.Length >= 4 ? release[..4] : L.T("année", "year"),
+            ["system"] = _system,
+        };
     }
 
     /// <summary>Point each media layer at the CURRENT example system's asset of the

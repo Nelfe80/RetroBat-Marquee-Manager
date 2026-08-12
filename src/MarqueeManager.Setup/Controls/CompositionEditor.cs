@@ -199,6 +199,10 @@ public sealed class CompositionEditor : Window
             new("📊 Live", "Hiscores", () => new() { C("overlay.hiscore", 0.7, 0.05, 0.28, 0.6) }),
             new("📊 Live", L.T("Score live", "Live score"), () => new() { C("overlay.live.score", 0.02, 0.7, 0.3, 0.28) }),
             new("📊 Live", L.T("Timer live", "Live timer"), () => new() { C("overlay.live.timer", 0.68, 0.7, 0.3, 0.28) }),
+            // the game video is a LIVE element — it is fed by the stream and cannot be
+            // baked into a composition, which is a still image by construction
+            new("📊 Live", L.T("Vidéo du jeu", "Game video"),
+                () => new() { C("media.video", 0, 0, 1, 1, ("sources", "local")) }),
             new("📊 Live", L.T("Web (Twitch/YouTube)", "Web (Twitch/YouTube)"),
                 () => new() { C("external.web", 0, 0, 1, 1, ("url", "")) }),
             new("📊 Live", L.T("Chat Twitch", "Twitch chat"),
