@@ -99,6 +99,11 @@ public sealed class WebSocketListenerService : BackgroundService
     {
         lock (_lastMarqueeKinds) _lastMarqueeKinds.Clear();
         lock (_lastKindsByCategory) _lastKindsByCategory.Clear();
+
+        // The instruction-card stream stays SILENT for a game that has none, so waiting
+        // for a message to clear meant never clearing: one card followed the user across
+        // the whole library. The selection change is the only reliable signal.
+        _ = _instructionCards.SetCardsAsync(Array.Empty<string>(), CancellationToken.None);
     }
 
     /// <summary>Last three path segments — enough to name the GAME, which the file name
