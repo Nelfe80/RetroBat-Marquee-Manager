@@ -29,6 +29,12 @@ public sealed record ResolutionContext(
 {
     public PixelSize Target => new(TargetWidth, TargetHeight);
 
+    /// <summary>The choice applies to EVERY game of the system, not to the entry being
+    /// previewed. A game still has to supply the media for the cards to show anything,
+    /// so the level is carried here rather than by blanking the rom — the preview stays
+    /// concrete while what is written stays system-wide.</summary>
+    public bool WholeSystem { get; init; }
+
     /// <summary>When set, the target is lighting-pinned: the resolver frames EVERY
     /// link with this policy instead of the per-source fit, so lamp/tube/map
     /// coordinates stay aligned to the original framing (user decision — keep the

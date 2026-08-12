@@ -33,10 +33,17 @@ public sealed record TargetPolicy(
             // a game entry must pin the game: by stable id (preferred) or by rom
             if (GameId is not null) return Eq(GameId, context.StableGameId);
             if (Rom is not null) return Eq(Rom, context.Rom);
-            return false;
+            // no game pinned: the entry speaks for EVERY game of the system. It only
+            // reaches here with a system named — a delta meant for the whole surface
+            // belongs in the surface's base, not in a target entry.
+            return FrontendSystem is not null || CanonicalSystem is not null;
         }
         return true;
     }
+
+    /// <summary>How narrowly this entry aims — a system-wide game entry must be laid
+    /// down BEFORE a game's own, or the broad answer would overwrite the precise one.</summary>
+    public int Specificity => Scope == MediaScope.Game && GameId is null && Rom is null ? 0 : 1;
 
     private static bool Eq(string? a, string? b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 }

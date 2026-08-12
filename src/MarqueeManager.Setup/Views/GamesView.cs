@@ -409,7 +409,9 @@ public sealed class GamesView : UserControl, IDisposable
             string? preview = null;
             if (has && sampleGame != null)
             {
-                preview = GabaritRenderer.GameCachePath(_pluginRoot, cat, surfaceId, sampleGame.System, sampleGame.Rom);
+                preview = allGames
+                    ? GabaritRenderer.GameCachePath(_pluginRoot, cat, surfaceId, GabaritIdentity.AllSentinel, sampleGame.Rom)
+                    : GabaritRenderer.GameCachePath(_pluginRoot, cat, surfaceId, sampleGame.System, sampleGame.Rom);
                 // render it on demand: the runtime only bakes the games you browse, so a
                 // preview that waits for the cache is a preview you never see
                 if (!System.IO.File.Exists(preview))
@@ -418,7 +420,7 @@ public sealed class GamesView : UserControl, IDisposable
                         new SurfacesStore(_pluginRoot).Load().First(x => x.Id.Equals(surfaceId, StringComparison.OrdinalIgnoreCase)),
                         ScreenProbe.Detect());
                     preview = GabaritRenderer.RenderGame(_pluginRoot, cat, surfaceId, sampleGame.System, sampleGame.Rom,
-                        dims.Width, dims.Height, _media.ListAssets(sampleGame.System, sampleGame.Rom));
+                        dims.Width, dims.Height, _media.ListAssets(sampleGame.System, sampleGame.Rom), scope);
                 }
             }
             if (preview != null && System.IO.File.Exists(preview))
@@ -457,6 +459,28 @@ public sealed class GamesView : UserControl, IDisposable
         }
 
         _gameHost.Children.Add(Ui.Card(panel));
+
+        // What every game of this system shows by DEFAULT. The cards need a game to have
+        // anything to draw, so they resolve on the sample — but the click is written for
+        // the whole system, and the banner says so rather than leaving it to be guessed.
+        if (surfaceId == null || allGames) return;
+        var surfaceModel = surfaces.FirstOrDefault(x => x.Id.Equals(surfaceId, StringComparison.OrdinalIgnoreCase));
+        var sampleForChain = RichestSample(system);
+        if (surfaceModel == null || sampleForChain == null) return;
+
+        var engine = new MediaResolutionPreview(_pluginRoot, _media, new CompositionAssignments(_pluginRoot));
+        var chainPanel = new StackPanel();
+        chainPanel.Children.Add(Ui.SectionHeader(L.T($"Par défaut pour tous les jeux de « {system} »",
+            $"Default for all games of “{system}”")));
+        chainPanel.Children.Add(Ui.MutedLabel(L.T(
+            $"Cliquez la source à privilégier : elle s'applique à CHAQUE jeu du système. Aperçu résolu sur {sampleForChain.Rom}, dont ce réglage ne décide pas seul — sa propre fiche le remplace.",
+            $"Click the source to prefer: it applies to EVERY game of the system. Previewed on {sampleForChain.Rom}, which this setting does not decide alone — its own card overrides it.")));
+        var chainCard = new ResolutionCard(engine);
+        var wholeSystem = engine.GameContext(surfaceModel, ScreenProbe.Detect(), system, sampleForChain.Rom)
+            with { WholeSystem = true };
+        chainCard.Update(wholeSystem, onChanged: ShowSystemLevel);
+        chainPanel.Children.Add(chainCard);
+        _gameHost.Children.Add(Ui.Card(chainPanel));
     }
 
     private void RefreshResults()

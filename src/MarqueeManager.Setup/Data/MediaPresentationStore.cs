@@ -135,14 +135,18 @@ public static class MediaPresentationEdits
         if (target.Scope != context.Scope) return false;
         if (!Eq(target.SurfaceId, context.SurfaceId)) return false;
         if (!Eq(target.FrontendSystem, context.FrontendSystem)) return false;
-        return context.Scope != MediaScope.Game || Eq(target.GameId, context.StableGameId);
+        if (context.Scope != MediaScope.Game) return true;
+        return context.WholeSystem
+            ? target.GameId is null && target.Rom is null
+            : Eq(target.GameId, context.StableGameId);
     }
 
     private static TargetPolicy NewTarget(ResolutionContext context, ScopePolicyDelta delta)
         => new(context.Scope, context.SurfaceId, context.FrontendSystem,
             context.Scope == MediaScope.Game ? context.CanonicalSystem : null,
-            context.Scope == MediaScope.Game ? context.StableGameId : null,
-            context.Scope == MediaScope.Game ? context.Rom : null,
+            // a whole-system choice pins NO game: that is what makes it answer for all
+            context.Scope == MediaScope.Game && !context.WholeSystem ? context.StableGameId : null,
+            context.Scope == MediaScope.Game && !context.WholeSystem ? context.Rom : null,
             delta);
 
     private static bool Eq(string? a, string? b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);

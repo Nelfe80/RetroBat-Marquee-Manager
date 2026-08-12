@@ -24,9 +24,9 @@ public sealed class MediaPresentationPolicyProvider : IPresentationPolicyProvide
         var surfaceDelta = context.Scope == MediaScope.System ? surface?.System : surface?.Game;
         effective = PolicyMerge.Apply(effective, surfaceDelta);
 
-        foreach (var target in _document.TargetPolicies)
-            if (target.Matches(context))
-                effective = PolicyMerge.Apply(effective, target.Delta);
+        // broadest first: "every game of this system", then the game's own entry
+        foreach (var target in _document.TargetPolicies.Where(t => t.Matches(context)).OrderBy(t => t.Specificity))
+            effective = PolicyMerge.Apply(effective, target.Delta);
 
         return effective;
     }

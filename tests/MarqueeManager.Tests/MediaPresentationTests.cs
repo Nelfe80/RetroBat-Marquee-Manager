@@ -111,4 +111,49 @@ public sealed class MediaPresentationTests
     [InlineData("not json")]
     public void TryParse_InvalidOrWrongSchema_ReturnsNull(string json)
         => Assert.Null(MediaPresentationSerializer.TryParse(json));
+
+    private static ResolutionContext GameContext(string system, string rom, string gameId)
+        => new("marquee-2", "marquee", 1920, 720, MediaScope.Game,
+            FrontendSystem: system, CanonicalSystem: system, StableGameId: gameId, Rom: rom,
+            DisplayState: "navigation");
+
+    [Fact]
+    public void GameEntryWithoutAGamePinnedSpeaksForEverySystemGame()
+    {
+        var wide = new TargetPolicy(MediaScope.Game, "marquee-2", "lynx", "lynx", null, null,
+            new ScopePolicyDelta());
+
+        Assert.True(wide.Matches(GameContext("lynx", "blue_lightning", "path:aa")));
+        Assert.True(wide.Matches(GameContext("lynx", "chips_challenge", "path:bb")));
+        Assert.False(wide.Matches(GameContext("megadrive", "sonic", "path:cc")));
+    }
+
+    [Fact]
+    public void AGamesOwnChoiceOutranksTheSystemWideOne()
+    {
+        // the broad entry is listed AFTER the precise one on purpose: order in the
+        // document must not decide who wins
+        var document = new MediaPresentationDocument(
+            new Dictionary<string, SurfaceScopeDeltas>(StringComparer.OrdinalIgnoreCase),
+            new[]
+            {
+                new TargetPolicy(MediaScope.Game, "marquee-2", "lynx", "lynx", "path:aa", "blue_lightning",
+                    new ScopePolicyDelta(Sources: new Dictionary<SourceKind, SourceSettingsDelta>
+                    {
+                        [SourceKind.Scraped] = new(Enabled: true)
+                    })),
+                new TargetPolicy(MediaScope.Game, "marquee-2", "lynx", "lynx", null, null,
+                    new ScopePolicyDelta(Sources: new Dictionary<SourceKind, SourceSettingsDelta>
+                    {
+                        [SourceKind.Scraped] = new(Enabled: false)
+                    }))
+            });
+
+        var provider = new MediaPresentationPolicyProvider(document);
+        var pinned = provider.PolicyFor(GameContext("lynx", "blue_lightning", "path:aa"));
+        var other = provider.PolicyFor(GameContext("lynx", "chips_challenge", "path:bb"));
+
+        Assert.True(pinned.Sources[SourceKind.Scraped].Enabled);
+        Assert.False(other.Sources[SourceKind.Scraped].Enabled);
+    }
 }

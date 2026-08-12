@@ -70,20 +70,29 @@ public static class GabaritRenderer
     }
 
     /// <summary>Renders the GAME gabarit for one game → cache path, or null when there
-    /// is no game gabarit. The game's media is provided by the caller (composer palette).</summary>
+    /// is no game gabarit. The game's media is provided by the caller (composer palette).
+    /// <paramref name="scope"/> pins WHICH template to render: the "All games" level must
+    /// show what IT composes, not what the sample game's system happens to override it
+    /// with — that is how its preview showed a layout nobody was editing.</summary>
     public static string? RenderGame(string pluginRoot, string categoryRoot, string surfaceId, string system, string rom,
-        int targetWidth, int targetHeight, IReadOnlyList<GameAsset> gameAssets)
+        int targetWidth, int targetHeight, IReadOnlyList<GameAsset> gameAssets, string? scope = null)
     {
         var store = new MarqueeProjectStore(pluginRoot, categoryRoot, surfaceId);
-        // this system's template, else the one composed for ALL games
-        var project = store.LoadProject(GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(system))
-                      ?? store.LoadProject(GabaritIdentity.SystemId, GabaritIdentity.GameScope);
+        // the pinned scope, else this system's template, else the one for ALL games
+        var project = scope != null
+            ? store.LoadProject(GabaritIdentity.SystemId, scope)
+            : store.LoadProject(GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(system))
+              ?? store.LoadProject(GabaritIdentity.SystemId, GabaritIdentity.GameScope);
         if (project == null || !project.Layers.Any(l => !l.Hidden) || targetWidth <= 0 || targetHeight <= 0)
             return null;
 
         var mediaRoot = Path.GetFullPath(Path.Combine(pluginRoot, "..", "APIExpose", "media"));
         var remapped = Remap(project, gameAssets, rom, targetWidth, targetHeight);
-        var cache = GameCachePath(pluginRoot, categoryRoot, surfaceId, system, rom);
+        // a pinned scope gets its OWN cache file: the two levels rendered the same game
+        // to the same path, so whichever ran last was what both previews showed
+        var cache = scope == null || scope == GabaritIdentity.GameScopeFor(system)
+            ? GameCachePath(pluginRoot, categoryRoot, surfaceId, system, rom)
+            : GameCachePath(pluginRoot, categoryRoot, surfaceId, GabaritIdentity.AllSentinel, rom);
         try
         {
             var composer = new Controls.MarqueeComposer(targetWidth, targetHeight, mediaRoot);
