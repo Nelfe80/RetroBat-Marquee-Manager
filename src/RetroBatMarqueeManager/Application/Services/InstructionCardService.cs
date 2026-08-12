@@ -61,6 +61,12 @@ public sealed class InstructionCardService : IDisposable
         {
             await DisplayAsync(path, cancellationToken);
         }
+        else
+        {
+            // No card for this game: CLEAR. Leaving the previous one made a single
+            // instruction card follow the user across the whole library.
+            _surfaces.SetComponentSource("iccard.cycle", null);
+        }
 
         if (_surfaces.HasComponent("iccard.static"))
         {

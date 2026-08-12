@@ -88,6 +88,19 @@ public sealed class WebSocketListenerService : BackgroundService
     /// render it here, in the background, then re-display if the selection has not moved
     /// on. The Setup no longer has to have opened that sheet for the template to apply.
     /// </summary>
+    /// <summary>
+    /// Changing entry drops EVERYTHING remembered from the previous one. A cached
+    /// media path that outlives its game is how one fanart, or one instruction card,
+    /// ends up following the whole library: a render fired by another stream picks up
+    /// whatever was left behind. No stale value, no fallback — nothing rather than the
+    /// neighbour's.
+    /// </summary>
+    private void ForgetPreviousEntry()
+    {
+        lock (_lastMarqueeKinds) _lastMarqueeKinds.Clear();
+        lock (_lastKindsByCategory) _lastKindsByCategory.Clear();
+    }
+
     /// <summary>Last three path segments — enough to name the GAME, which the file name
     /// alone never does (every game has an artworkanart.jpg).</summary>
     private static string TailOf(string path)
@@ -978,7 +991,9 @@ public sealed class WebSocketListenerService : BackgroundService
             if (path != null) paths.Add(path);
         }
 
-        if (paths.Count == 0) return;
+        // A game without an instruction card CLEARS the previous one. Returning early
+        // left the last game's card on screen — one card following you across the whole
+        // library. Nothing of an entry may survive into the next.
         await _instructionCards.SetCardsAsync(paths, cancellationToken);
     }
 
@@ -1211,7 +1226,11 @@ public sealed class WebSocketListenerService : BackgroundService
             if (selectedRom.Length > 0)
             {
                 var romChanged = !string.Equals(_selectedRom, selectedRom, StringComparison.OrdinalIgnoreCase);
-                if (romChanged) _surfaces.ClearInformation("hiscore");
+                if (romChanged)
+                {
+                    _surfaces.ClearInformation("hiscore");
+                    ForgetPreviousEntry();
+                }
                 _selectedRom = selectedRom;
                 // Lot 3: load the local leaderboard for the newly-selected game so it
                 // shows while browsing ES (debounced so a fast scroll fetches once).
@@ -1223,6 +1242,7 @@ public sealed class WebSocketListenerService : BackgroundService
             else
             {
                 _selectedRom = null;
+                ForgetPreviousEntry();
                 CancelHiscoreFetch();
                 CancelWorldFetch();
                 _surfaces.ClearInformation("hiscore");
