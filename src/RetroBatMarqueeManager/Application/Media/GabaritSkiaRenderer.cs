@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MarqueeManager.Compositions.Core.Composition;
+using System.Text;
 using SkiaSharp;
 
 namespace RetroBatMarqueeManager.Application.Media;
@@ -255,16 +256,71 @@ public sealed class GabaritSkiaRenderer
             IsAntialias = true
         };
 
-        var advance = font.MeasureText(text);
         var metrics = font.Metrics;
+        var lines = layer.WrapWidth > 0
+            ? WrapText(text, font, (float)(layer.WrapWidth * width), layer.MaxLines)
+            : new[] { text };
+
         canvas.Save();
         canvas.Translate((float)(layer.X * width), (float)(layer.Y * height));
         if (layer.FlipH) canvas.Scale(-1, 1);
         if (Math.Abs(layer.Rotation) > 0.01) canvas.RotateDegrees((float)layer.Rotation);
-        // centre the box, then sit on the baseline
-        canvas.DrawText(text, -advance / 2f, -(metrics.Ascent + metrics.Descent) / 2f, font, paint);
+
+        // the whole block is centred on the anchor, then each line within it
+        var lineHeight = metrics.Descent - metrics.Ascent + metrics.Leading;
+        var top = -(lines.Length * lineHeight) / 2f;
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var advance = font.MeasureText(lines[i]);
+            canvas.DrawText(lines[i], -advance / 2f, top + i * lineHeight - metrics.Ascent, font, paint);
+        }
+
         canvas.Restore();
         return true;
+    }
+
+    /// <summary>
+    /// Breaks text on word boundaries to fit a box. A description is 500 to 1500
+    /// characters: drawn as one line it ran off both edges of the surface and was, in
+    /// practice, unusable. When it still does not fit in <paramref name="maxLines"/>,
+    /// the last line is ellipsised rather than silently cut mid-word.
+    /// </summary>
+    private static string[] WrapText(string text, SKFont font, float maxWidth, int maxLines)
+    {
+        if (maxWidth <= 0) return new[] { text };
+        var lines = new List<string>();
+        var current = new StringBuilder();
+
+        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var candidate = current.Length == 0 ? word : current + " " + word;
+            if (font.MeasureText(candidate) <= maxWidth || current.Length == 0)
+            {
+                current.Clear().Append(candidate);
+                continue;
+            }
+
+            lines.Add(current.ToString());
+            current.Clear().Append(word);
+            if (maxLines > 0 && lines.Count == maxLines) break;
+        }
+
+        if (current.Length > 0 && (maxLines <= 0 || lines.Count < maxLines)) lines.Add(current.ToString());
+        if (lines.Count == 0) return new[] { text };
+
+        if (maxLines > 0 && lines.Count == maxLines)
+        {
+            var last = lines[^1];
+            var consumed = lines.Sum(l => l.Length + 1);
+            if (consumed < text.Length)
+            {
+                while (last.Length > 1 && font.MeasureText(last + "…") > maxWidth)
+                    last = last[..^1];
+                lines[^1] = last.TrimEnd() + "…";
+            }
+        }
+
+        return lines.ToArray();
     }
 
     /// <summary>Cover: fills the zone keeping the aspect, overflow cropped.</summary>

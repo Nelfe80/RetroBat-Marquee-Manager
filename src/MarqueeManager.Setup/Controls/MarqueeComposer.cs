@@ -338,9 +338,17 @@ public sealed class MarqueeComposer : UserControl
         return text;
     }
 
-    public void AddTextLayer(string text)
+    /// <param name="wrapWidth">Fraction of the surface width the text wraps inside.
+    /// 0 keeps it on one line. A description needs a box; a game name does not.</param>
+    public void AddTextLayer(string text, double wrapWidth = 0)
     {
-        var layer = new MarqueeLayer { Source = "text", AssetKey = "text", Text = text, Scale = 1.0 };
+        var layer = new MarqueeLayer
+        {
+            Source = "text", AssetKey = "text", Text = text, Scale = 1.0,
+            WrapWidth = wrapWidth,
+            // a description at the default size would fill the surface twice over
+            FontSize = wrapWidth > 0 ? 0.06 : 0.3
+        };
         var visual = AddLayerVisual(layer);
         Select(visual);
         Render();
@@ -629,7 +637,9 @@ public sealed class MarqueeComposer : UserControl
                 Text = ResolveTokens(layer.Text ?? ""),
                 Foreground = new SolidColorBrush(ParseColor(layer.TextColor)),
                 FontWeight = layer.Bold ? FontWeights.Bold : FontWeights.Normal,
-                FontFamily = new FontFamily("Segoe UI")
+                FontFamily = new FontFamily("Segoe UI"),
+                TextWrapping = layer.WrapWidth > 0 ? TextWrapping.Wrap : TextWrapping.NoWrap,
+                TextAlignment = TextAlignment.Center
             };
         }
         else
@@ -667,9 +677,15 @@ public sealed class MarqueeComposer : UserControl
     private Rect Bounds(LayerVisual layer)
     {
         var height = layer.Model.Scale * _displayHeight;
-        var width = layer.Model.Source == "text"
-            ? MeasureText(layer).Width
-            : height * layer.AspectRatio;
+        double width;
+        if (layer.Model.Source == "text")
+        {
+            width = MeasureText(layer).Width;
+        }
+        else
+        {
+            width = height * layer.AspectRatio;
+        }
         // A very wide logo (gamegear…) overflowed the composition: scale is a share of
         // the HEIGHT, so nothing capped the width. Keep it inside the frame, aspect
         // preserved — the height follows.
@@ -692,7 +708,14 @@ public sealed class MarqueeComposer : UserControl
     {
         var text = (TextBlock)layer.Element;
         text.FontSize = Math.Max(4, layer.Model.FontSize * layer.Model.Scale * _displayHeight);
-        text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        // a wrapping layer is measured INSIDE its box, otherwise a description measures
+        // as one enormous line and its bounds run off both edges of the surface
+        var available = layer.Model.WrapWidth > 0
+            ? layer.Model.WrapWidth * DisplayWidth
+            : double.PositiveInfinity;
+        text.TextWrapping = layer.Model.WrapWidth > 0 ? TextWrapping.Wrap : TextWrapping.NoWrap;
+        text.Width = layer.Model.WrapWidth > 0 ? available : double.NaN;
+        text.Measure(new Size(available, double.PositiveInfinity));
         return text.DesiredSize;
     }
 
@@ -712,6 +735,10 @@ public sealed class MarqueeComposer : UserControl
             if (element is Image)
             {
                 element.Height = bounds.Height;
+            }
+            else if (element is TextBlock wrapped && layer.Model.WrapWidth > 0)
+            {
+                wrapped.Width = bounds.Width;
             }
             else if (element is Border)
             {

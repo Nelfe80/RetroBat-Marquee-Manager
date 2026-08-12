@@ -495,6 +495,11 @@ public sealed class GameComposerWindow : Window
             ["publisher"] = Field("publisher", L.T("éditeur", "publisher")),
             ["year"] = release.Length >= 4 ? release[..4] : L.T("année", "year"),
             ["system"] = _system,
+            ["desc"] = Field("desc", L.T("La description du jeu s'affichera ici, dans la langue d'EmulationStation.",
+                                         "The game description appears here, in the EmulationStation language.")),
+            ["genre"] = Field("genre", L.T("genre", "genre")),
+            ["players"] = Field("players", "1-2"),
+            ["rating"] = Field("rating", ""),
         };
     }
 
@@ -719,6 +724,18 @@ public sealed class GameComposerWindow : Window
         panel.Children.Add(publisher);
         var year = Ui.Button(L.T("Texte : année", "Text: year"), (_, _) => _composer.AddTextLayer("{year}"));
         panel.Children.Add(year);
+        // these come from the entry's text block: they arrive on the streams that print
+        // something about a game, and land in a BOX because a description is 500 to
+        // 1500 characters long
+        var desc = Ui.Button(L.T("Texte : description", "Text: description"),
+            (_, _) => _composer.AddTextLayer("{desc}", wrapWidth: 0.8));
+        panel.Children.Add(desc);
+        var genre = Ui.Button(L.T("Texte : genre", "Text: genre"), (_, _) => _composer.AddTextLayer("{genre}"));
+        panel.Children.Add(genre);
+        var players = Ui.Button(L.T("Texte : joueurs", "Text: players"), (_, _) => _composer.AddTextLayer("{players}"));
+        panel.Children.Add(players);
+        var rating = Ui.Button(L.T("Texte : note", "Text: rating"), (_, _) => _composer.AddTextLayer("{rating}"));
+        panel.Children.Add(rating);
 
         // import your own image — used for EVERY system in a gabarit (its key never
         // matches a system asset, so it is not remapped), specific to a creation

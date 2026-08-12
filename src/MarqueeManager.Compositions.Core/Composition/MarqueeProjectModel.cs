@@ -25,6 +25,21 @@ public sealed class MarqueeLayer
     [JsonPropertyName("color")] public string TextColor { get; set; } = "#FFFFFF";
     [JsonPropertyName("bold")] public bool Bold { get; set; } = true;
 
+    /// <summary>
+    /// Wrapping width, as a fraction of the surface width. 0 = one line, whatever its
+    /// length — the behaviour every existing template was authored against, so it stays
+    /// the default. A description runs 500 to 1500 characters and needs a box: set this
+    /// and the text wraps inside it, ellipsised when it still overflows.
+    /// </summary>
+    [JsonPropertyName("wrapWidth")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public double WrapWidth { get; set; }
+
+    /// <summary>Lines the box may hold before the text is cut. 0 = as many as fit.</summary>
+    [JsonPropertyName("maxLines")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public int MaxLines { get; set; }
+
     /// <summary>Locked: selectable but not movable/resizable (template fanart).</summary>
     [JsonPropertyName("locked")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Locked { get; set; }
     /// <summary>Hidden: kept in the project but not rendered nor exported.</summary>

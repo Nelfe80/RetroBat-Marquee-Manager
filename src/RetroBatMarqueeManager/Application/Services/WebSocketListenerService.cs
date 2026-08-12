@@ -170,6 +170,13 @@ public sealed class WebSocketListenerService : BackgroundService
             ["system"] = system,
         };
 
+        // Everything the entry's text block carries becomes a token: {desc}, {genre},
+        // {players}, {rating}… The fields already known from the lighting meta stay
+        // authoritative — they come from the selection itself, not from a scrape.
+        foreach (var (field, value) in CurrentText())
+            if (!tokens.TryGetValue(field, out var existing) || string.IsNullOrEmpty(existing))
+                tokens[field] = value;
+
         _gabaritRenderer.RenderInBackground(category, surfaceId, scope, rom ?? system,
             width, height, Resolve, tokens, output, path =>
             {
@@ -460,6 +467,97 @@ public sealed class WebSocketListenerService : BackgroundService
     /// snapshot for the new entry had simply not arrived yet.</summary>
     private readonly Dictionary<string, (string? Rom, Dictionary<string, string?> Kinds)> _lastKindsByCategory =
         new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The entry's text fields, as published on the streams that print something about a
+    /// game. Stamped with the entry, for the same reason the media tables are: a stream
+    /// that has not caught up still describes the previous game.
+    /// </summary>
+    private (string? Rom, Dictionary<string, string> Fields) _lastText = (null, new(StringComparer.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// What the buttons DO, as published on the instruction-card stream: per button its
+    /// function and its colour, the devices, and the game's note. Kept so a composed
+    /// card can draw a panel without a second subscription.
+    /// </summary>
+    private (string? Rom, ControlsSnapshot? Controls) _lastControls = (null, null);
+
+    public sealed record ControlsSnapshot(
+        int? Players,
+        bool Alternating,
+        string Notes,
+        IReadOnlyList<ControlsButton> Buttons,
+        IReadOnlyList<ControlsDevice> Devices);
+
+    public sealed record ControlsButton(string Player, string Id, string Function, string Color);
+    public sealed record ControlsDevice(string Player, string Label, string Type, string Color);
+
+    private void ReadControlsBlock(JsonElement payload, string? rom)
+    {
+        var block = Child(payload, "Controls", "controls");
+        if (block.ValueKind != JsonValueKind.Object) return;
+
+        var buttons = new List<ControlsButton>();
+        var devices = new List<ControlsDevice>();
+        var buttonList = Child(block, "Buttons", "buttons");
+        if (buttonList.ValueKind == JsonValueKind.Array)
+            foreach (var button in buttonList.EnumerateArray())
+                buttons.Add(new ControlsButton(
+                    Text(button, "Player", "player"), Text(button, "Id", "id"),
+                    Text(button, "Function", "function"), Text(button, "Color", "color")));
+
+        var deviceList = Child(block, "Devices", "devices");
+        if (deviceList.ValueKind == JsonValueKind.Array)
+            foreach (var device in deviceList.EnumerateArray())
+                devices.Add(new ControlsDevice(
+                    Text(device, "Player", "player"), Text(device, "Label", "label"),
+                    Text(device, "Type", "type"), Text(device, "Color", "color")));
+
+        if (buttons.Count == 0 && devices.Count == 0) return;
+
+        var players = Child(block, "Players", "players");
+        _lastControls = (rom, new ControlsSnapshot(
+            players.ValueKind == JsonValueKind.Number ? players.GetInt32() : null,
+            Child(block, "Alternating", "alternating").ValueKind == JsonValueKind.True,
+            Text(block, "Notes", "notes"),
+            buttons,
+            devices));
+    }
+
+    /// <summary>Controls of the CURRENT entry — null when what we hold describes another.</summary>
+    public ControlsSnapshot? CurrentControls()
+    {
+        var (rom, controls) = _lastControls;
+        var current = _lastMarqueeMeta?.Rom;
+        return current is null || rom is null || rom.Equals(current, StringComparison.OrdinalIgnoreCase)
+            ? controls
+            : null;
+    }
+
+    private void ReadTextBlock(JsonElement payload, string? rom)
+    {
+        var block = Child(payload, "Text", "text");
+        if (block.ValueKind != JsonValueKind.Object) return;
+        var fields = Child(block, "Fields", "fields");
+        if (fields.ValueKind != JsonValueKind.Object) return;
+
+        var read = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var field in fields.EnumerateObject())
+            if (field.Value.ValueKind == JsonValueKind.String && field.Value.GetString() is { Length: > 0 } value)
+                read[field.Name] = value;
+
+        if (read.Count > 0) _lastText = (rom, read);
+    }
+
+    /// <summary>Text of the CURRENT entry — empty when what we hold describes another.</summary>
+    private IReadOnlyDictionary<string, string> CurrentText()
+    {
+        var (rom, fields) = _lastText;
+        var current = _lastMarqueeMeta?.Rom;
+        return current is null || rom is null || rom.Equals(current, StringComparison.OrdinalIgnoreCase)
+            ? fields
+            : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    }
 
     private void RememberKinds(string category, string? rom, Dictionary<string, string?> kinds)
     {
@@ -1134,6 +1232,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // the topper stream now carries its own table: flyer, box art, capture — a
         // composition on this surface no longer has to borrow the marquee's media
         ReadAssetTables(payload, topperKinds);
+        ReadTextBlock(payload, meta?.Rom);
         RememberKinds("topper", meta?.Rom, topperKinds);
         var chained = _compositionChains.Resolve("topper", meta, systemScope, source =>
             source.Equals("topper", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Topper")
@@ -1176,6 +1275,16 @@ public sealed class WebSocketListenerService : BackgroundService
     private async Task HandleInstructionCardAsync(JsonElement root, CancellationToken cancellationToken)
     {
         var payload = Payload(root);
+
+        // this stream now carries the ingredients of a COMPOSED card — its media, the
+        // entry's text and what the buttons do — and they are worth keeping even for a
+        // game that ships no ready-made card
+        var icKinds = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        ReadAssetTables(payload, icKinds);
+        if (icKinds.Count > 0) RememberKinds("iccard", _lastMarqueeMeta?.Rom, icKinds);
+        ReadTextBlock(payload, _lastMarqueeMeta?.Rom);
+        ReadControlsBlock(payload, _lastMarqueeMeta?.Rom);
+
         var cards = Child(payload, "Cards", "cards");
         if (cards.ValueKind != JsonValueKind.Array) return;
         // keep the whole catalog: the touch profile can cycle/show any of them
