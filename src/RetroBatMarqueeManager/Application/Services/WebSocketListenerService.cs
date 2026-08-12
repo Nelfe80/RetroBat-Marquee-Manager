@@ -88,6 +88,14 @@ public sealed class WebSocketListenerService : BackgroundService
     /// render it here, in the background, then re-display if the selection has not moved
     /// on. The Setup no longer has to have opened that sheet for the template to apply.
     /// </summary>
+    /// <summary>Last three path segments — enough to name the GAME, which the file name
+    /// alone never does (every game has an artworkanart.jpg).</summary>
+    private static string TailOf(string path)
+    {
+        var parts = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return string.Join('/', parts.Skip(Math.Max(0, parts.Length - 3)));
+    }
+
     private void OnGabaritMissing(string surfaceId, string category, string system, string? rom)
     {
         var (width, height) = _surfaces.SurfacePixelSize(surfaceId);
@@ -121,8 +129,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // the user has browsed to since — that is how every system's template ended up
         // wearing the Mega Drive fanart. The snapshot is also the ONLY media source:
         // APIExpose serves it, MarqueeManager never goes looking in its folders.
-        Dictionary<string, string?> kinds;
-        lock (_lastMarqueeKinds) kinds = new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase);
+        var kinds = KindsFor(category);
 
         // Names the file each layer actually took. Without it, "I see the same fanart on
         // every game" can only be argued about; with it, the log answers in one line.
@@ -131,7 +138,7 @@ public sealed class WebSocketListenerService : BackgroundService
         {
             var resolved = ResolveGabaritLayerMedia(layer, kinds, system);
             var key = string.IsNullOrWhiteSpace(layer.AssetKey) ? "(no key)" : layer.AssetKey;
-            trace.Add($"{key}={(resolved == null ? "—" : Path.GetFileName(Path.GetDirectoryName(resolved)) + "/" + Path.GetFileName(resolved))}");
+            trace.Add($"{key}={(resolved == null ? "—" : TailOf(resolved))}");
             return resolved;
         }
 
@@ -304,6 +311,31 @@ public sealed class WebSocketListenerService : BackgroundService
     }
 
     private readonly Dictionary<string, string?> _lastMarqueeKinds = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Media of the last snapshot OF EACH CATEGORY. A gabarit must be rendered with the
+    /// media of the stream that asked for it: the topper carries its own Topper/Fanart/
+    /// Logo, and reading the marquee's instead rendered a topper with whatever game the
+    /// marquee stream had last described — one game's fanart spreading over all the
+    /// others, exactly as observed.
+    /// </summary>
+    private readonly Dictionary<string, Dictionary<string, string?>> _lastKindsByCategory =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private void RememberKinds(string category, Dictionary<string, string?> kinds)
+    {
+        lock (_lastKindsByCategory) _lastKindsByCategory[category] = kinds;
+    }
+
+    private Dictionary<string, string?> KindsFor(string category)
+    {
+        lock (_lastKindsByCategory)
+        {
+            if (_lastKindsByCategory.TryGetValue(category, out var kinds))
+                return new Dictionary<string, string?>(kinds, StringComparer.OrdinalIgnoreCase);
+        }
+        lock (_lastMarqueeKinds) return new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase);
+    }
     private Application.Lighting.LightingSceneMeta? _lastMarqueeMeta;
 
     /// <summary>A chain asked for a template PNG not yet cached: render it in the
@@ -537,6 +569,7 @@ public sealed class WebSocketListenerService : BackgroundService
             _lastMarqueeKinds["topper"] = MediaPath(media, "Topper");
         }
         _lastMarqueeMeta = snapshotMeta;
+        lock (_lastMarqueeKinds) RememberKinds("marquee", new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase));
 
         // On-disk sources (creation / gabarit / drop) and the card overrides are keyed
         // by the FRONTEND system the user sees in ES and the Setup keys by (mame). The
@@ -896,6 +929,13 @@ public sealed class WebSocketListenerService : BackgroundService
         var meta = ExtractLightingMeta(payload) ?? _lastMarqueeMeta;
         var systemScope = Text(Child(payload, "Selection", "selection"), "Scope", "scope")
             .Equals("system", StringComparison.OrdinalIgnoreCase);
+        RememberKinds("topper", new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["topper"] = MediaPath(media, "Topper"),
+            ["fanart"] = MediaPath(media, "Fanart"),
+            ["logo"] = MediaPath(media, "Logo"),
+            ["marquee"] = MediaPath(media, "Marquee"),
+        });
         var chained = _compositionChains.Resolve("topper", meta, systemScope, source =>
             source.Equals("topper", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Topper")
             : source.Equals("fanart", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Fanart")
