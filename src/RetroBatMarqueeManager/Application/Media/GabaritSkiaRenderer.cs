@@ -64,7 +64,8 @@ public sealed class GabaritSkiaRenderer
     /// media resolution (see the class remarks).
     /// </summary>
     public void RenderInBackground(string category, string surfaceId, string scope, string label,
-        int width, int height, Func<MarqueeLayer, string?> resolveMedia, string outputPath, Action<string> onDone)
+        int width, int height, Func<MarqueeLayer, string?> resolveMedia,
+        IReadOnlyDictionary<string, string> tokens, string outputPath, Action<string> onDone)
     {
         if (width <= 0 || height <= 0) return;
         lock (_sync)
@@ -78,7 +79,7 @@ public sealed class GabaritSkiaRenderer
             {
                 var project = LoadProject(ProjectPath(category, surfaceId, scope));
                 if (project == null || !project.Layers.Any(l => !l.Hidden)) return;
-                if (Render(project, resolveMedia, width, height, outputPath))
+                if (Render(project, resolveMedia, tokens, width, height, outputPath))
                 {
                     _logger.LogInformation("Gabarit rendered ({Scope}) for {Label} on {Surface} → {Path}",
                         scope, label, surfaceId, outputPath);
@@ -118,7 +119,7 @@ public sealed class GabaritSkiaRenderer
     }
 
     private static bool Render(MarqueeProject project, Func<MarqueeLayer, string?> resolveMedia,
-        int width, int height, string outputPath)
+        IReadOnlyDictionary<string, string> tokens, int width, int height, string outputPath)
     {
         using var surface = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul));
         if (surface == null) return false;
@@ -129,7 +130,7 @@ public sealed class GabaritSkiaRenderer
         {
             if (layer.Hidden) continue;
             drew |= layer.Source == "text"
-                ? DrawTextLayer(canvas, layer, width, height)
+                ? DrawTextLayer(canvas, layer, tokens, width, height)
                 : DrawMediaLayer(canvas, layer, width, height, resolveMedia);
         }
 
@@ -223,9 +224,18 @@ public sealed class GabaritSkiaRenderer
         return true;
     }
 
-    private static bool DrawTextLayer(SKCanvas canvas, MarqueeLayer layer, int width, int height)
+    /// <summary>
+    /// A template's text is a TEMPLATE: {name} {year} {developer} {publisher} {system},
+    /// resolved for the entry being rendered. Storing the literal string baked the
+    /// preview entry's name into every game of the system — the window title, even.
+    /// </summary>
+    private static bool DrawTextLayer(SKCanvas canvas, MarqueeLayer layer,
+        IReadOnlyDictionary<string, string> tokens, int width, int height)
     {
         var text = layer.Text ?? "";
+        foreach (var (token, value) in tokens)
+            text = text.Replace("{" + token + "}", value, StringComparison.OrdinalIgnoreCase);
+        text = text.Trim();
         if (text.Length == 0) return false;
 
         var size = (float)Math.Max(4, layer.FontSize * layer.Scale * height);

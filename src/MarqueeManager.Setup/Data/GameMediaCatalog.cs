@@ -285,6 +285,8 @@ public sealed class GameMediaCatalog
         Add("mix", "Mix", "Mix", @"artwork\mix\mixrbv2.png", @"artwork\mix\mixrbv1.png");
         Add("wheel", "Logo (wheel)", "Logo (wheel)", @"ui\wheels\wheel.png");
         Add("marquee", "Marquee scrapé", "Scraped marquee", @"artwork\marquee\marquee.png", @"artwork\marquee\marquee.jpg");
+        Add("generated", "Marquee généré", "Generated marquee", @"artwork\marquee\generated-marquee.png");
+        Add("generateddmd", "DMD généré", "Generated DMD", @"artwork\marquee\generated-dmd.png");
         Add("screenmarquee", "Screen-marquee", "Screen-marquee", @"artwork\marquee\screenmarquee.png");
         Add("flyer", "Flyer", "Flyer", @"artwork\flyer.jpg", @"artwork\flyer.png");
         Add("screentitle", "Écran titre", "Title screen", @"artwork\screentitle.png");
@@ -292,6 +294,25 @@ public sealed class GameMediaCatalog
         Add("box3d", "Boîte 3D", "3D box", @"artwork\box\3d.png");
         Add("boxfront", "Boîte (face)", "Box (front)", @"artwork\box\front.png");
         Add("bezel", "Bezel", "Bezel", @"artwork\bezels\bezel.png");
+
+        // the SYSTEM's own art, usable inside a game composition (a Neo Geo logo over a
+        // game marquee). Distinct keys, so they are never remapped to the game's assets.
+        var systemRoot = Path.Combine(_systemsRoot, ArcadeAliases.Contains(system) ? "arcade" : system);
+        void AddSystem(string key, string fr, string en, params string[] relative)
+        {
+            foreach (var rel in relative)
+            {
+                var path = Path.Combine(systemRoot, rel);
+                if (File.Exists(path))
+                {
+                    assets.Add(new GameAsset(key, Localization.L.T(fr, en), path));
+                    return;
+                }
+            }
+        }
+        AddSystem("systemfanart", "Fanart du système", "System fanart", @"artwork\fanart.jpg", @"artwork\fanart.png");
+        AddSystem("systemwheel", "Logo du système", "System logo", @"ui\wheels\wheel.png");
+        AddSystem("systemmarquee", "Marquee du système", "System marquee", @"artwork\marquee\generated-system-marquee.png");
         return assets;
     }
 

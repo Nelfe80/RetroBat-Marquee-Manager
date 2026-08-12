@@ -160,8 +160,18 @@ public sealed class WebSocketListenerService : BackgroundService
             return resolved;
         }
 
+        var meta = _lastMarqueeMeta;
+        var tokens = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["name"] = meta?.GameName ?? rom ?? system,
+            ["year"] = meta?.Year?.ToString() ?? "",
+            ["developer"] = meta?.Developer ?? "",
+            ["publisher"] = meta?.Publisher ?? "",
+            ["system"] = system,
+        };
+
         _gabaritRenderer.RenderInBackground(category, surfaceId, scope, rom ?? system,
-            width, height, Resolve, output, path =>
+            width, height, Resolve, tokens, output, path =>
             {
                 _logger.LogInformation("Gabarit layers for {Label}: {Trace}", rom ?? system, string.Join(" · ", trace));
                 var current = _lastMarqueeMeta;
@@ -206,6 +216,8 @@ public sealed class WebSocketListenerService : BackgroundService
             "wheel" => "logo",
             "marquee" => "marquee",
             "screenmarquee" => "screenmarquee",
+            "generated" => "generated",
+            "generateddmd" => "dmd-generated",
             "mix" => "mix",
             "boxfront" or "box3d" => "box",
             "screenshot" => "screenshot",
@@ -232,6 +244,24 @@ public sealed class WebSocketListenerService : BackgroundService
     private static string? ResolveBySystemName(string? source, string system)
     {
         if (string.IsNullOrWhiteSpace(source) || !Path.IsPathRooted(source)) return null;
+
+        // A SYSTEM asset lives under …\systems\<sys>\… : swapping that one segment makes
+        // it follow the system being rendered, so a Neo Geo logo placed in a template
+        // becomes the Mega Drive logo on a Mega Drive game. Existence-checked, so a
+        // template can never wear another system's art.
+        var parts = source!.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var systemsAt = Array.FindLastIndex(parts, p => p.Equals("systems", StringComparison.OrdinalIgnoreCase));
+        if (systemsAt >= 0 && systemsAt + 1 < parts.Length)
+        {
+            foreach (var name in Application.Media.CompositionChainResolver.SystemNames(system))
+            {
+                var swapped = (string[])parts.Clone();
+                swapped[systemsAt + 1] = name;
+                var candidate = string.Join(Path.DirectorySeparatorChar, swapped);
+                if (File.Exists(candidate)) return candidate;
+            }
+        }
+
         var directory = Path.GetDirectoryName(source);
         if (directory == null) return null;
 

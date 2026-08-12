@@ -20,6 +20,8 @@ public static class GabaritAssets
         ("wheel", new[] { @"ui\wheels\wheel.png" }),
         ("marquee", new[] { @"artwork\marquee\marquee.png", @"artwork\marquee\marquee.jpg" }),
         ("screenmarquee", new[] { @"artwork\marquee\screenmarquee.png" }),
+        ("generated", new[] { @"artwork\marquee\generated-marquee.png" }),
+        ("generateddmd", new[] { @"artwork\marquee\generated-dmd.png" }),
         ("flyer", new[] { @"artwork\flyer.jpg", @"artwork\flyer.png" }),
         ("screentitle", new[] { @"artwork\screentitle.png" }),
         ("screenshot", new[] { @"artwork\screenshot.png" }),

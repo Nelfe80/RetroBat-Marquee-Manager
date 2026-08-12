@@ -568,10 +568,19 @@ public sealed class GameComposerWindow : Window
         }
 
         panel.Children.Add(Ui.SectionHeader(L.T("Autres", "Other")));
-        var text = Ui.Button(L.T("Texte (titre du jeu)", "Text (game title)"), (_, _) => _composer.AddTextLayer(_displayName));
+        // A template's text is a TEMPLATE, never a frozen string: placing the window's
+        // display name wrote "General template — arcade games" onto the marquee, and the
+        // runtime drew it verbatim on every game of the system.
+        var text = Ui.Button(L.T("Texte : nom du jeu", "Text: game name"), (_, _) => _composer.AddTextLayer("{name}"));
         text.HorizontalAlignment = HorizontalAlignment.Stretch;
         text.HorizontalContentAlignment = HorizontalAlignment.Left;
         panel.Children.Add(text);
+        var developer = Ui.Button(L.T("Texte : développeur", "Text: developer"), (_, _) => _composer.AddTextLayer("{developer}"));
+        panel.Children.Add(developer);
+        var publisher = Ui.Button(L.T("Texte : éditeur", "Text: publisher"), (_, _) => _composer.AddTextLayer("{publisher}"));
+        panel.Children.Add(publisher);
+        var year = Ui.Button(L.T("Texte : année", "Text: year"), (_, _) => _composer.AddTextLayer("{year}"));
+        panel.Children.Add(year);
 
         // import your own image — used for EVERY system in a gabarit (its key never
         // matches a system asset, so it is not remapped), specific to a creation
