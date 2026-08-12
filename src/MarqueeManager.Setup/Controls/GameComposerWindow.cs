@@ -594,6 +594,11 @@ public sealed class GameComposerWindow : Window
         panel.Children.Add(Ui.SectionHeader(L.T("Médias", "Media")));
         panel.Children.Add(Ui.MutedLabel(L.T("Un type → choisir la version → posé en calque.",
             "One type → pick the version → placed as a layer.")));
+        // Say WHICH entry the palette is judging: greyed types are the ones this sample
+        // lacks, and nothing about that should have to be guessed.
+        var availableTypes = _assets.Select(a => a.Key).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        panel.Children.Add(Ui.MutedLabel(L.T($"Échantillon : {_system} / {_rom} — {availableTypes} type(s) disponible(s).",
+            $"Sample: {_system} / {_rom} — {availableTypes} type(s) available.")));
 
         // EVERY composable type is offered, always. Building the palette from what one
         // sample game owns made a whole system's template offer four buttons — the

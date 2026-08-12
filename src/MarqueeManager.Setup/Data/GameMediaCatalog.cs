@@ -148,8 +148,27 @@ public sealed class GameMediaCatalog
         }
     }
 
+    /// <summary>
+    /// Media folder of a game, across the arcade family. APIExpose files arcade art
+    /// under "arcade" while the library calls the system "mame" or "fbneo" — and it
+    /// leaves an EMPTY mame\games\&lt;rom&gt; folder behind, so merely testing that the
+    /// directory exists picked the empty one and the game looked media-less. The
+    /// alias folders are the same game, not a substitute for it: whichever actually
+    /// holds the media wins, and the declared system stays the answer when neither does.
+    /// </summary>
     public string GameRoot(string system, string rom)
-        => Path.Combine(_systemsRoot, system, "games", ResolveMediaFolder(system, rom));
+    {
+        var declared = Path.Combine(_systemsRoot, system, "games", ResolveMediaFolder(system, rom));
+        if (!ArcadeAliases.Contains(system)) return declared;
+
+        var best = declared;
+        var bestScore = FolderRichness(Path.GetDirectoryName(declared)!, Path.GetFileName(declared));
+        var gamesRoot = Path.Combine(_systemsRoot, "arcade", "games");
+        var folder = ResolveMediaFolder("arcade", rom);
+        var score = FolderRichness(gamesRoot, folder);
+        if (score > bestScore) best = Path.Combine(gamesRoot, folder);
+        return best;
+    }
 
     /// <summary>Media folder of a game. The physical rom name ("Sonic The
     /// Hedgehog (USA, Europe)") rarely matches the library slug

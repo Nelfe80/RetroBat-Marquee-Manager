@@ -711,6 +711,13 @@ public sealed class MarqueeComposer : UserControl
             {
                 element.Height = bounds.Height;
             }
+            else if (element is Border)
+            {
+                // A placeholder must occupy EXACTLY the room its real medium will: sized
+                // by its content, it collapsed to a chip in the corner of its own frame.
+                element.Width = bounds.Width;
+                element.Height = bounds.Height;
+            }
 
             var transform = new TransformGroup();
             if (layer.Model.FlipH)
