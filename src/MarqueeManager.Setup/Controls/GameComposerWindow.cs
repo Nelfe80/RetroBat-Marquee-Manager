@@ -567,6 +567,14 @@ public sealed class GameComposerWindow : Window
             return;
         }
         _composer.AddPlaceholderLayer(entry);
+        if (!entry.Served)
+        {
+            _status.Text = L.T(
+                $"{label} : le flux APIExpose ne transporte pas ce média — le calque ne s'affichera pas sur la surface.",
+                $"{label}: the APIExpose stream does not carry this medium — the layer will not display on the surface.");
+            _status.Foreground = Ui.Error;
+            return;
+        }
         _status.Text = _showSamples
             ? L.T($"{label} : l'échantillon n'en a pas — posé en repère, résolu jeu par jeu.",
                   $"{label}: the sample has none — placed as a marker, resolved per entry.")
@@ -634,13 +642,23 @@ public sealed class GameComposerWindow : Window
                             VerticalAlignment = VerticalAlignment.Center,
                             Margin = new Thickness(0, 0, 6, 0)
                         },
-                        new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center }
+                        new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center },
+                        // marks a type the surface will never show, right where it is picked
+                        new TextBlock
+                        {
+                            Text = entry.Served ? "" : "  ⃠",
+                            Foreground = Ui.Error,
+                            VerticalAlignment = VerticalAlignment.Center
+                        }
                     }
                 },
-                ToolTip = owned
-                    ? L.T($"{label} — l'échantillon en possède un", $"{label} — the sample has one")
-                    : L.T($"{label} — posé en repère, résolu jeu par jeu",
-                          $"{label} — placed as a marker, resolved per entry"),
+                ToolTip = !entry.Served
+                    ? L.T($"{label} — le flux APIExpose ne le transporte pas : composable ici, mais il ne s'affichera pas sur la surface.",
+                          $"{label} — the APIExpose stream does not carry it: composable here, but it will not display on the surface.")
+                    : owned
+                        ? L.T($"{label} — l'échantillon en possède un", $"{label} — the sample has one")
+                        : L.T($"{label} — posé en repère, résolu jeu par jeu",
+                              $"{label} — placed as a marker, resolved per entry"),
                 Margin = new Thickness(0, 2, 0, 2),
                 Padding = new Thickness(8, 4, 8, 4),
                 HorizontalAlignment = HorizontalAlignment.Stretch,

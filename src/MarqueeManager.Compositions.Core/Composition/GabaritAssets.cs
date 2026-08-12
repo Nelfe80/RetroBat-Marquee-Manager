@@ -54,19 +54,19 @@ public static class GabaritAssets
     public static readonly IReadOnlyList<PaletteEntry> Palette = new PaletteEntry[]
     {
         new("fanart",         "both",   "Fanart",             "Fanart",             "#3D5A80", 16.0 / 9),
-        new("mix",            "game",   "Mix (mixrbv2)",      "Mix (mixrbv2)",      "#4C6E91", 4.0 / 3),
+        new("mix",            "game",   "Mix (mixrbv2)",      "Mix (mixrbv2)",      "#4C6E91", 4.0 / 3, false),
         new("wheel",          "game",   "Logo du jeu",        "Game logo",          "#E0A458", 3.4),
         new("marquee",        "game",   "Marquee",            "Marquee",            "#8E5572", 4.0),
         new("screenmarquee",  "game",   "Screen marquee",     "Screen marquee",     "#A3688A", 4.0),
         new("generated",      "game",   "Marquee généré",     "Generated marquee",  "#6D8B74", 4.0),
         new("generateddmd",   "game",   "DMD généré",         "Generated DMD",      "#5C7A63", 4.0),
-        new("flyer",          "game",   "Flyer",              "Flyer",              "#B56576", 0.7),
-        new("screentitle",    "game",   "Écran-titre",        "Title screen",       "#6A7FA8", 4.0 / 3),
-        new("screenshot",     "game",   "Capture d'écran",    "Screenshot",         "#7B8FB5", 4.0 / 3),
-        new("box3d",          "game",   "Boîte 3D",           "3D box",             "#9C6644", 0.75),
-        new("boxfront",       "game",   "Jaquette",           "Box front",          "#B08968", 0.72),
-        new("bezel",          "game",   "Bezel",              "Bezel",              "#4A4E69", 16.0 / 9),
-        new("video",          "game",   "Vidéo",              "Video",              "#5F4B8B", 4.0 / 3),
+        new("flyer",          "game",   "Flyer",              "Flyer",              "#B56576", 0.7, false),
+        new("screentitle",    "game",   "Écran-titre",        "Title screen",       "#6A7FA8", 4.0 / 3, false),
+        new("screenshot",     "game",   "Capture d'écran",    "Screenshot",         "#7B8FB5", 4.0 / 3, false),
+        new("box3d",          "game",   "Boîte 3D",           "3D box",             "#9C6644", 0.75, false),
+        new("boxfront",       "game",   "Jaquette",           "Box front",          "#B08968", 0.72, false),
+        new("bezel",          "game",   "Bezel",              "Bezel",              "#4A4E69", 16.0 / 9, false),
+        new("video",          "game",   "Vidéo",              "Video",              "#5F4B8B", 4.0 / 3, false),
         new("systemfanart",   "system", "Fanart du système",  "System fanart",      "#33658A", 16.0 / 9),
         new("systemwheel",    "system", "Logo du système",    "System logo",        "#F6AE2D", 3.4),
         new("systemmarquee",  "system", "Marquee du système", "System marquee",     "#86BBD8", 4.0)
@@ -74,7 +74,18 @@ public static class GabaritAssets
 
     /// <summary>A composable media type: what the palette offers and what a placeholder
     /// stands for until the entry's real medium is resolved.</summary>
-    public sealed record PaletteEntry(string Key, string Scope, string Fr, string En, string Color, double Aspect);
+    /// <param name="Served">
+    /// Whether the RUNTIME can put this type on a surface. APIExpose's marquee stream
+    /// publishes nine assets — marquee, generated marquee, screen marquee (+small), DMD,
+    /// topper, fanart, logo, video — and MarqueeManager reads the stream, never the
+    /// folders. A type outside that list can be composed and previewed in the Setup,
+    /// where the disk is right there, and then draws NOTHING in front of the cabinet.
+    /// Video is in the stream but a template bakes to a still image, so it cannot move.
+    /// Saying so in the palette is the whole point: a layer that will never appear must
+    /// not look like one that will.
+    /// </param>
+    public sealed record PaletteEntry(string Key, string Scope, string Fr, string En, string Color, double Aspect,
+        bool Served = true);
 
     /// <summary>True when the key is a resolvable media type — as opposed to a one-off
     /// (an import, a download, a gradient) that carries its own file and must never be

@@ -107,7 +107,7 @@ public sealed class WebSocketListenerService : BackgroundService
     }
 
     /// <summary>Last three path segments — enough to name the GAME, which the file name
-    /// alone never does (every game has an artworkanart.jpg).</summary>
+    /// alone never does (every game has an artwork/fanart.jpg).</summary>
     private static string TailOf(string path)
     {
         var parts = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -202,7 +202,8 @@ public sealed class WebSocketListenerService : BackgroundService
         // whose game folder never changes — so a template composed on Sonic served
         // Sonic's art to every game of the system.
         if (key is "systemfanart" or "systemwheel" or "systemmarquee")
-            return SwapSystemSegment(layer.Source, system);
+            return SwapSystemSegment(layer.Source, system)
+                   ?? SystemAssetBeside(kinds, system, key);
 
         if (key == null)
         {
@@ -249,6 +250,50 @@ public sealed class WebSocketListenerService : BackgroundService
     /// system-scoped keys — a game asset's folder never changes, so swapping there
     /// served the sample game's art to the whole system.
     /// </summary>
+    /// <summary>
+    /// The system's own art, for a layer that carries no composed path — a template
+    /// authored on TYPES has none, which is why a system logo placed that way drew
+    /// nothing. It is derived from a path the SNAPSHOT already gave us (the entry's own
+    /// media, which lives under …\systems\&lt;sys&gt;\…): the system segment is swapped and
+    /// the known tail appended, then checked. Nothing is hunted for on disk — APIExpose
+    /// does not publish system art inside a game payload, so this is the only thing the
+    /// stream leaves to work with.
+    /// </summary>
+    private static string? SystemAssetBeside(IReadOnlyDictionary<string, string?> kinds, string system, string key)
+    {
+        var tails = key switch
+        {
+            "systemfanart" => new[]
+            {
+                Path.Combine("artwork", "fanart.jpg"),
+                Path.Combine("artwork", "fanart.png")
+            },
+            "systemwheel" => new[] { Path.Combine("ui", "wheels", "wheel.png") },
+            _ => new[]
+            {
+                Path.Combine("artwork", "marquee", "generated-system-marquee.png"),
+                Path.Combine("artwork", "marquee", "marquee.png")
+            }
+        };
+
+        foreach (var known in kinds.Values)
+        {
+            if (known is not { Length: > 0 } path || !Path.IsPathRooted(path)) continue;
+            var parts = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var systemsAt = Array.FindLastIndex(parts, p => p.Equals("systems", StringComparison.OrdinalIgnoreCase));
+            if (systemsAt < 0 || systemsAt + 1 >= parts.Length) continue;
+            var root = string.Join(Path.DirectorySeparatorChar, parts.Take(systemsAt + 1));
+
+            foreach (var name in Application.Media.CompositionChainResolver.SystemNames(system))
+                foreach (var tail in tails)
+                {
+                    var candidate = Path.Combine(root, name, tail);
+                    if (File.Exists(candidate)) return candidate;
+                }
+        }
+        return null;
+    }
+
     private static string? SwapSystemSegment(string? source, string system)
     {
         if (string.IsNullOrWhiteSpace(source) || !Path.IsPathRooted(source)) return null;
