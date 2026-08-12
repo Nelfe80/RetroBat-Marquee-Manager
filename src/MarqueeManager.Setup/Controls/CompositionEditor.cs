@@ -94,8 +94,7 @@ public sealed class CompositionEditor : Window
         foreach (var (key, fr, en) in new[]
                  {
                      ("navigation", "Navigation ES", "ES browsing"),
-                     ("ingame", "En jeu", "Ingame"),
-                     ("both", "Navigation ES + En jeu", "ES browsing + Ingame")
+                     ("ingame", "En jeu", "Ingame")
                  })
         {
             var tab = Ui.Button(L.T(fr, en), (_, _) =>
@@ -257,7 +256,7 @@ public sealed class CompositionEditor : Window
         }
         foreach (var component in made)
         {
-            if (_state != "both") component.When = _state;
+            component.When = _state;
             _surface.Components.Add(component);
         }
         _selected = made.LastOrDefault();
@@ -267,8 +266,7 @@ public sealed class CompositionEditor : Window
     // ================= canvas =================
 
     private IEnumerable<ComponentModel> EditableComponents()
-        => _surface.Components.Where(c => _state == "both"
-            || c.When.Equals("both", StringComparison.OrdinalIgnoreCase)
+        => _surface.Components.Where(c => c.When.Equals("both", StringComparison.OrdinalIgnoreCase)
             || c.When.Equals(_state, StringComparison.OrdinalIgnoreCase));
 
     private (double W, double H) CanvasSize()
@@ -653,6 +651,43 @@ public sealed class CompositionEditor : Window
         for (var i = 0; i < slots.Count; i++) components[slots[i].Index] = desired[i];
     }
 
+    private static string StateName(string state)
+        => state == "ingame" ? L.T("En jeu", "Ingame") : L.T("Navigation ES", "ES browsing");
+
+    /// <summary>👁 shown here · ◌ absent from this state · — off everywhere.</summary>
+    private static string EyeGlyph(ComponentModel component, bool inState)
+        => !component.Visible ? "—" : inState ? "👁" : "◌";
+
+    /// <summary>
+    /// The eye means "shown in THIS state". The two states are independent, but the
+    /// state a layer belongs to lives in When while Visible has no state dimension at
+    /// all: hiding a both-states layer while browsing used to switch off the single
+    /// flag the two tabs share, so it went dark ingame too. Hiding now scopes the layer
+    /// out of the state you are looking at, and only a layer that belongs to this state
+    /// alone is switched off outright.
+    /// </summary>
+    private void ToggleInState(ComponentModel component)
+    {
+        var other = _state == "ingame" ? "navigation" : "ingame";
+        if (!component.Visible)
+        {
+            component.Visible = true;
+            if (!component.When.Equals(_state, StringComparison.OrdinalIgnoreCase)) component.When = "both";
+        }
+        else if (component.When.Equals("both", StringComparison.OrdinalIgnoreCase))
+        {
+            component.When = other; // kept where it still belongs
+        }
+        else if (component.When.Equals(_state, StringComparison.OrdinalIgnoreCase))
+        {
+            component.Visible = false; // this was its only state: nothing left to scope
+        }
+        else
+        {
+            component.When = "both"; // bring it back into the state you are looking at
+        }
+    }
+
     private void RenderLayers()
     {
         _layersPanel.Children.Clear();
@@ -674,17 +709,24 @@ public sealed class CompositionEditor : Window
             if (!pinned && (position == 0 || IsPinned(ordered[position - 1].Type)))
                 _layersPanel.Children.Add(ZoneSeparator());
 
-            var inState = _state == "both" || component.When is "both"
+            var inState = component.When is "both"
                           || component.When.Equals(_state, StringComparison.OrdinalIgnoreCase);
             var row = new DockPanel { Margin = new Thickness(0, 1, 0, 1), Opacity = inState ? 1 : 0.4 };
 
-            var eye = Ui.Button(component.Visible ? "👁" : "—", (_, _) =>
+            var eye = Ui.Button(EyeGlyph(component, inState), (_, _) =>
             {
                 SnapshotHistory();
-                component.Visible = !component.Visible;
+                ToggleInState(component);
                 RenderAll();
             });
             eye.Padding = new Thickness(4, 2, 4, 2);
+            eye.ToolTip = !component.Visible
+                ? L.T("Éteint partout — cliquez pour rallumer ici.", "Off everywhere — click to switch it back on here.")
+                : inState
+                    ? L.T($"Affiché en {StateName(_state)} — cliquez pour le retirer de cet état.",
+                          $"Shown in {StateName(_state)} — click to drop it from this state.")
+                    : L.T($"Absent en {StateName(_state)} — cliquez pour l'y afficher.",
+                          $"Absent in {StateName(_state)} — click to show it here.");
             row.Children.Add(eye);
             if (!pinned)
             {

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using MarqueeManager.Compositions.Core.Composition;
 
 namespace MarqueeManager.Setup.Data;
 
@@ -181,11 +182,15 @@ public sealed class GameMediaCatalog
             {
                 foreach (var dir in Directory.EnumerateDirectories(gamesRoot))
                 {
-                    var name = Path.GetFileName(dir);
-                    var score = FolderRichness(gamesRoot, name);
-                    if (score <= bestScore) continue;
-                    bestScore = score;
-                    best = name;
+                    var score = SampleScore(dir);
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        best = Path.GetFileName(dir);
+                    }
+                    // a game carrying most of the types is all a palette needs: stop
+                    // rather than walk the 1591 folders of arcade to find a better one
+                    if (bestScore >= 6) return Remember(system, ToRom(system, best!));
                 }
             }
             catch
@@ -194,14 +199,37 @@ public sealed class GameMediaCatalog
             }
         }
 
-        // the folder is a slug; the window needs the rom the library knows
-        var rom = best == null
+        return Remember(system, ToRom(system, best));
+    }
+
+    /// <summary>How many media types a folder carries — one stat per type, no recursive
+    /// walk: scoring by file count meant enumerating every file of every game.</summary>
+    private static int SampleScore(string gameRoot)
+    {
+        var score = 0;
+        foreach (var (_, relatives) in GabaritAssets.Table)
+        {
+            foreach (var relative in relatives)
+            {
+                if (!File.Exists(Path.Combine(gameRoot, relative))) continue;
+                score++;
+                break;
+            }
+        }
+        return score;
+    }
+
+    /// <summary>The media folder is a slug; the window needs the rom the library knows.</summary>
+    private string? ToRom(string system, string? folder)
+        => folder == null
             ? null
             : ListGames().FirstOrDefault(g =>
                   g.System.Equals(system, StringComparison.OrdinalIgnoreCase)
-                  && ResolveMediaFolder(system, g.Rom).Equals(best, StringComparison.OrdinalIgnoreCase))?.Rom
-              ?? best;
+                  && ResolveMediaFolder(system, g.Rom).Equals(folder, StringComparison.OrdinalIgnoreCase))?.Rom
+              ?? folder;
 
+    private string? Remember(string system, string? rom)
+    {
         lock (_sync)
         {
             _richestSample[system] = rom;
