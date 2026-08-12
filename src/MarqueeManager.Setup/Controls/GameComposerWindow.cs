@@ -182,8 +182,31 @@ public sealed class GameComposerWindow : Window
         RenderInspectorPanel();
     }
 
+    /// <summary>The SAME wording as the palette button that placed it. A layer called
+    /// "wheel" when the button said "Logo (wheel)" forces the user to translate between
+    /// two vocabularies for one thing.</summary>
     private string LayerName(MarqueeLayer layer)
-        => layer.Source == "text" ? $"{L.T("Texte", "Text")} « {layer.Text} »" : layer.AssetKey;
+    {
+        if (layer.Source == "text") return $"{L.T("Texte", "Text")} « {layer.Text} »";
+        return layer.AssetKey.ToLowerInvariant() switch
+        {
+            "fanart" => "Fanart",
+            "mix" => "Mix",
+            "wheel" => L.T("Logo (wheel)", "Logo (wheel)"),
+            "marquee" => L.T("Marquee scrapé", "Scraped marquee"),
+            "screenmarquee" => L.T("Screen-marquee", "Screen-marquee"),
+            "flyer" => "Flyer",
+            "screentitle" => L.T("Écran titre", "Title screen"),
+            "screenshot" => L.T("Capture de jeu", "In-game screenshot"),
+            "box3d" => L.T("Boîte 3D", "3D box"),
+            "boxfront" => L.T("Boîte (face)", "Box (front)"),
+            "bezel" => "Bezel",
+            "gradient" => L.T("Gradient", "Gradient"),
+            "import" => L.T("Image importée", "Imported image"),
+            "download" => L.T("Média téléchargé", "Downloaded media"),
+            _ => layer.AssetKey.Length > 0 ? layer.AssetKey : L.T("Calque", "Layer")
+        };
+    }
 
     private void RenderLayersPanel()
     {

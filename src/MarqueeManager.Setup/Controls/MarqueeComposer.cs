@@ -579,6 +579,14 @@ public sealed class MarqueeComposer : UserControl
         var width = layer.Model.Source == "text"
             ? MeasureText(layer).Width
             : height * layer.AspectRatio;
+        // A very wide logo (gamegear…) overflowed the composition: scale is a share of
+        // the HEIGHT, so nothing capped the width. Keep it inside the frame, aspect
+        // preserved — the height follows.
+        if (layer.Model.Source != "text" && width > DisplayWidth)
+        {
+            height *= DisplayWidth / width;
+            width = DisplayWidth;
+        }
         if (layer.Model.Source == "text")
         {
             height = MeasureText(layer).Height;

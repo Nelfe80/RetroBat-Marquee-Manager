@@ -201,6 +201,13 @@ public sealed class GabaritSkiaRenderer
 
         var h = (float)(layer.Scale * height);
         var w = h * bitmap.Width / bitmap.Height;
+        // scale is a share of the HEIGHT, so a very wide logo overflowed the frame with
+        // nothing to cap it. Keep it inside, aspect preserved — same rule as the editor.
+        if (w > width)
+        {
+            h *= width / w;
+            w = width;
+        }
         var cx = (float)(layer.X * width);
         var cy = (float)(layer.Y * height);
 
