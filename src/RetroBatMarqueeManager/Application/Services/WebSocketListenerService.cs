@@ -202,8 +202,19 @@ public sealed class WebSocketListenerService : BackgroundService
         // whose game folder never changes — so a template composed on Sonic served
         // Sonic's art to every game of the system.
         if (key is "systemfanart" or "systemwheel" or "systemmarquee")
-            return SwapSystemSegment(layer.Source, system)
+        {
+            // the snapshot now carries the system's own table, kept apart from the
+            // game's: ask it before deriving anything from a neighbouring path
+            var declared = key switch
+            {
+                "systemfanart" => Lookup(kinds, "system:fanart"),
+                "systemwheel" => Lookup(kinds, "system:wheel", "system:logo"),
+                _ => Lookup(kinds, "system:marquee", "system:generated-marquee")
+            };
+            return declared
+                   ?? SwapSystemSegment(layer.Source, system)
                    ?? SystemAssetBeside(kinds, system, key);
+        }
 
         if (key == null)
         {
@@ -217,30 +228,48 @@ public sealed class WebSocketListenerService : BackgroundService
                 : null;
         }
 
-        var kind = key.ToLowerInvariant() switch
+        // Palette key -> the kinds the snapshot may carry it under. Canonical MediaKinds
+        // first (what APIExpose publishes in its asset tables), then the legacy field
+        // name for a snapshot that predates them. The old mapping guessed names the
+        // stream never used — "box", "screenshot", "mix" — so those layers resolved to
+        // nothing however well the file existed on disk.
+        var candidates = key.ToLowerInvariant() switch
         {
-            "fanart" => "fanart",
-            "wheel" => "logo",
-            "marquee" => "marquee",
-            "screenmarquee" => "screenmarquee",
-            "generated" => "generated",
-            "generateddmd" => "dmd-generated",
-            "mix" => "mix",
-            "boxfront" or "box3d" => "box",
-            "screenshot" => "screenshot",
-            "screentitle" => "screentitle",
+            "fanart" => new[] { "fanart" },
+            "wheel" => new[] { "wheel", "logo" },
+            "marquee" => new[] { "marquee" },
+            "screenmarquee" => new[] { "screen-marquee", "screenmarquee" },
+            "generated" => new[] { "generated-marquee", "generated" },
+            "generateddmd" => new[] { "generated-dmd", "dmd-generated" },
+            "mix" => new[] { "mixrbv2", "mixrbv1" },
+            "boxfront" => new[] { "box-front" },
+            "box3d" => new[] { "box-3d" },
+            "screenshot" => new[] { "thumbnail" },
+            "screentitle" => new[] { "image" },
+            "flyer" => new[] { "flyer" },
+            "bezel" => new[] { "bezel" },
+            "video" => new[] { "video" },
             _ => null
         };
         // A key that is not a GAME media kind — "gradient", or anything the composer
         // labelled itself — names a fixed decoration, identical for every entry: it
         // keeps its own file. Returning null here silently dropped the readability
         // gradient of every template that had one.
-        if (kind == null)
+        if (candidates == null)
             return layer.Source is { Length: > 0 } fixedAsset && Path.IsPathRooted(fixedAsset) && File.Exists(fixedAsset)
                 ? fixedAsset
                 : null;
 
-        return kinds.TryGetValue(kind, out var path) ? path : null;
+        return Lookup(kinds, candidates);
+    }
+
+    /// <summary>First of these kinds the snapshot actually carries.</summary>
+    private static string? Lookup(IReadOnlyDictionary<string, string?> kinds, params string[] names)
+    {
+        foreach (var name in names)
+            if (kinds.TryGetValue(name, out var path) && path is { Length: > 0 })
+                return path;
+        return null;
     }
 
     /// <summary>
@@ -425,12 +454,16 @@ public sealed class WebSocketListenerService : BackgroundService
     /// marquee stream had last described — one game's fanart spreading over all the
     /// others, exactly as observed.
     /// </summary>
-    private readonly Dictionary<string, Dictionary<string, string?>> _lastKindsByCategory =
+    /// <summary>Media of the last snapshot of each stream, STAMPED with the entry it
+    /// describes. Each stream fills its own table at its own pace: merging them blind
+    /// served the previous game's screenshot to the next one, because the topper
+    /// snapshot for the new entry had simply not arrived yet.</summary>
+    private readonly Dictionary<string, (string? Rom, Dictionary<string, string?> Kinds)> _lastKindsByCategory =
         new(StringComparer.OrdinalIgnoreCase);
 
-    private void RememberKinds(string category, Dictionary<string, string?> kinds)
+    private void RememberKinds(string category, string? rom, Dictionary<string, string?> kinds)
     {
-        lock (_lastKindsByCategory) _lastKindsByCategory[category] = kinds;
+        lock (_lastKindsByCategory) _lastKindsByCategory[category] = (rom, kinds);
     }
 
     /// <summary>
@@ -445,14 +478,21 @@ public sealed class WebSocketListenerService : BackgroundService
         var merged = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         lock (_lastKindsByCategory)
         {
-            foreach (var (name, kinds) in _lastKindsByCategory)
+            // Only tables that describe the entry on screen. A stream that has not
+            // caught up yet still holds the previous game, and merging it blind is how
+            // 19xx ended up wearing the screenshot of 1945kiii.
+            var current = _lastMarqueeMeta?.Rom;
+            bool Describes(string? rom)
+                => current is null || rom is null || rom.Equals(current, StringComparison.OrdinalIgnoreCase);
+
+            foreach (var (name, entry) in _lastKindsByCategory)
             {
-                if (name.Equals(category, StringComparison.OrdinalIgnoreCase)) continue;
-                foreach (var (kind, path) in kinds)
+                if (name.Equals(category, StringComparison.OrdinalIgnoreCase) || !Describes(entry.Rom)) continue;
+                foreach (var (kind, path) in entry.Kinds)
                     if (path is { Length: > 0 }) merged[kind] = path;
             }
-            if (_lastKindsByCategory.TryGetValue(category, out var own))
-                foreach (var (kind, path) in own)
+            if (_lastKindsByCategory.TryGetValue(category, out var own) && Describes(own.Rom))
+                foreach (var (kind, path) in own.Kinds)
                     if (path is { Length: > 0 }) merged[kind] = path;
         }
         lock (_lastMarqueeKinds)
@@ -686,6 +726,10 @@ public sealed class WebSocketListenerService : BackgroundService
         // remember the snapshot kinds: template renders and component feeds use them
         lock (_lastMarqueeKinds)
         {
+            // rebuilt, never accumulated: the legacy fields below are always assigned —
+            // null included — but the asset table only ADDS what the entry owns, so a
+            // medium the next game lacks would have survived into it
+            _lastMarqueeKinds.Clear();
             _lastMarqueeKinds["logo"] = MediaPath(media, "Logo");
             _lastMarqueeKinds["fanart"] = MediaPath(media, "Fanart");
             _lastMarqueeKinds["marquee"] = MediaPath(media, "Marquee");
@@ -693,9 +737,10 @@ public sealed class WebSocketListenerService : BackgroundService
             _lastMarqueeKinds["screenmarquee"] = MediaPath(media, "ScreenMarquee");
             _lastMarqueeKinds["screenmarquee-small"] = MediaPath(media, "ScreenMarqueeSmall");
             _lastMarqueeKinds["topper"] = MediaPath(media, "Topper");
+            ReadAssetTables(payload, _lastMarqueeKinds);
         }
         _lastMarqueeMeta = snapshotMeta;
-        lock (_lastMarqueeKinds) RememberKinds("marquee", new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase));
+        lock (_lastMarqueeKinds) RememberKinds("marquee", snapshotMeta?.Rom, new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase));
 
         // On-disk sources (creation / gabarit / drop) and the card overrides are keyed
         // by the FRONTEND system the user sees in ES and the Setup keys by (mame). The
@@ -1079,13 +1124,17 @@ public sealed class WebSocketListenerService : BackgroundService
         var meta = ExtractLightingMeta(payload) ?? _lastMarqueeMeta;
         var systemScope = Text(Child(payload, "Selection", "selection"), "Scope", "scope")
             .Equals("system", StringComparison.OrdinalIgnoreCase);
-        RememberKinds("topper", new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+        var topperKinds = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
         {
             ["topper"] = MediaPath(media, "Topper"),
             ["fanart"] = MediaPath(media, "Fanart"),
             ["logo"] = MediaPath(media, "Logo"),
             ["marquee"] = MediaPath(media, "Marquee"),
-        });
+        };
+        // the topper stream now carries its own table: flyer, box art, capture — a
+        // composition on this surface no longer has to borrow the marquee's media
+        ReadAssetTables(payload, topperKinds);
+        RememberKinds("topper", meta?.Rom, topperKinds);
         var chained = _compositionChains.Resolve("topper", meta, systemScope, source =>
             source.Equals("topper", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Topper")
             : source.Equals("fanart", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Fanart")
@@ -1673,6 +1722,29 @@ public sealed class WebSocketListenerService : BackgroundService
 
     private static string NormalizeRom(string value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : Path.GetFileNameWithoutExtension(value.Trim().Trim('"')).ToLowerInvariant();
+
+    /// <summary>
+    /// Reads the canonical asset tables APIExpose now publishes alongside the legacy
+    /// named fields. Keys are MediaKinds ("box-3d", "mixrbv2"…), and the system table is
+    /// kept under a "system:" prefix: the legacy fields silently fall back from the game
+    /// to its system, so a path alone never said whose art it was. Here the two scopes
+    /// stay apart, and a key is present only when the entry really owns that medium.
+    /// </summary>
+    private void ReadAssetTables(JsonElement payload, Dictionary<string, string?> kinds)
+    {
+        Read(Child(payload, "Assets", "assets"), string.Empty);
+        Read(Child(payload, "SystemAssets", "systemAssets"), "system:");
+
+        void Read(JsonElement table, string prefix)
+        {
+            if (table.ValueKind != JsonValueKind.Object) return;
+            foreach (var asset in table.EnumerateObject())
+            {
+                var path = ResolveLocal(Text(asset.Value, "Path", "path"));
+                if (path != null) kinds[prefix + asset.Name] = path;
+            }
+        }
+    }
 
     private string? MediaPath(JsonElement source, string name)
     {
