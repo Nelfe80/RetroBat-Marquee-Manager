@@ -178,6 +178,12 @@ public sealed class CompositionEditor : Window
 
     // ================= palette =================
 
+    /// <summary>
+    /// My setup places LIVE elements — things fed by the streams. Image composing
+    /// belongs to My systems / My games, where a layout is built for a system or a game
+    /// and resolved with that entry's media. Offering both here meant the same picture
+    /// could be built in two places, from two screens, with no way to tell which won.
+    /// </summary>
     private List<Preset> Presets()
     {
         ComponentModel C(string type, double x = 0, double y = 0, double w = 1, double h = 1,
@@ -188,66 +194,19 @@ public sealed class CompositionEditor : Window
             return component;
         }
 
-        // orientation-aware fanart (user rule): full width when landscape, full height when portrait
-        List<ComponentModel> Fanart() => new() { C("media.fanart") };
-        List<ComponentModel> Logo()
-        {
-            var w = 0.5;
-            var h = Math.Min(1, 0.5 * _aspect * 0.5); // roughly half width, aspect-kept by Uniform stretch
-            return new() { C("media.logo", (1 - w) / 2, (1 - h) / 2, w, h) };
-        }
-
         return new List<Preset>
         {
-            new("🖼 " + L.T("Médias", "Media"), "Fanart", Fanart),
-            new("🖼 " + L.T("Médias", "Media"), L.T("Logo (50 %)", "Logo (50 %)"), Logo),
-            // "media.flux" is deliberately NOT offered: the resolved media is shown by
-            // default, full frame, at the very back. It is a behaviour, not a layer —
-            // its rectangle was always ignored, and making it placeable only meant a
-            // surface could silently lose the output of the whole resolution chain.
-            new("🖼 " + L.T("Médias", "Media"), L.T("Vidéo du jeu", "Game video"), () => new() { C("media.video", 0, 0, 1, 1, ("sources", "local")) }),
-            new("🖼 " + L.T("Médias", "Media"), L.T("Image (kind)", "Image (kind)"), () => new() { C("media.image", 0.25, 0.25, 0.5, 0.5, ("kind", "screenmarquee")) }),
-
-            new("🃏 " + L.T("Infos du jeu", "Game info"), L.T("Titre du jeu", "Game title"), () => new() { C("text.meta", 0.05, 0.75, 0.9, 0.2, ("template", "{name}")) }),
-            new("🃏 " + L.T("Infos du jeu", "Game info"), L.T("Année · éditeur", "Year · publisher"), () => new() { C("text.meta", 0.05, 0.85, 0.9, 0.12, ("template", "{year} — {publisher}")) }),
-            new("🃏 " + L.T("Infos du jeu", "Game info"), "Instruction card", () => new() { C("iccard.cycle") }),
-
             new("📊 Live", "Hiscores", () => new() { C("overlay.hiscore", 0.7, 0.05, 0.28, 0.6) }),
             new("📊 Live", L.T("Score live", "Live score"), () => new() { C("overlay.live.score", 0.02, 0.7, 0.3, 0.28) }),
             new("📊 Live", L.T("Timer live", "Live timer"), () => new() { C("overlay.live.timer", 0.68, 0.7, 0.3, 0.28) }),
+            new("📊 Live", L.T("Web (Twitch/YouTube)", "Web (Twitch/YouTube)"),
+                () => new() { C("external.web", 0, 0, 1, 1, ("url", "")) }),
+            new("📊 Live", L.T("Chat Twitch", "Twitch chat"),
+                () => new() { C("external.web", 0.7, 0, 0.3, 1, ("url", "https://www.twitch.tv/embed/MA_CHAINE/chat?parent=twitch.tv&darkpopout")) }),
 
             new("🏆 RetroAchievements", L.T("Badges", "Badges"), () => new() { C("overlay.ra.badges", 0, 0.85, 1, 0.15) }),
             new("🏆 RetroAchievements", L.T("Infos RA", "RA info"), () => new() { C("overlay.ra.info", 0, 0.7, 1, 0.3) }),
             new("🏆 RetroAchievements", "Speedrun", () => new() { C("overlay.ra.speedrun") }),
-
-            new("🔷 " + L.T("Décoration", "Decoration"), L.T("Gradient (lisibilité)", "Gradient (readability)"),
-                () => new() { C("shape.gradient", 0, 0.35, 1, 0.65, ("color", "#000000"), ("direction", "down"), ("opacity", "0.75")) }),
-            new("🔷 " + L.T("Décoration", "Decoration"), L.T("Texte libre", "Custom text"), () => new() { C("text.custom", 0.1, 0.4, 0.8, 0.2, ("text", "Mon texte")) }),
-            new("🔷 " + L.T("Décoration", "Decoration"), L.T("Web (Twitch/YouTube)", "Web (Twitch/YouTube)"), () => new() { C("external.web", 0, 0, 1, 1, ("url", "")) }),
-
-            // Lighting, lamps, animated events and the game image are RAILS, always
-            // present and pinned in the layers panel: they are the boundaries of the
-            // sandwich, not elements you add. Offering them here only meant a surface
-            // could end up with two, or with none.
-
-            new("🧩 " + L.T("Composites", "Composites"), L.T("Marquee (fanart+gradient+logo)", "Marquee (fanart+gradient+logo)"),
-                () => Fanart()
-                    .Append(C("shape.gradient", 0, 0.35, 1, 0.65, ("color", "#000000"), ("direction", "down"), ("opacity", "0.75")))
-                    .Concat(Logo()).ToList()),
-            new("🧩 " + L.T("Composites", "Composites"), L.T("Score complet (fond+titres+liste)", "Full score (bg+titles+list)"),
-                () => new()
-                {
-                    C("shape.gradient", 0, 0, 1, 1, ("color", "#000010"), ("direction", "down"), ("opacity", "0.9")),
-                    C("text.meta", 0.05, 0.02, 0.9, 0.18, ("template", "{name}")),
-                    C("text.meta", 0.05, 0.2, 0.9, 0.1, ("template", "HIGH SCORES — {system}")),
-                    C("overlay.hiscore", 0.1, 0.32, 0.8, 0.64)
-                }),
-            new("🧩 " + L.T("Composites", "Composites"), L.T("Live media (fanart+logo+vidéo)", "Live media (fanart+logo+video)"),
-                () => Fanart()
-                    .Append(C("media.video", 0.55, 0.1, 0.4, 0.8, ("sources", "twitch-live|youtube|local")))
-                    .Concat(Logo().Select(l => { l.X = 0.05; l.W = 0.4; return l; })).ToList()),
-            new("🧩 " + L.T("Composites", "Composites"), L.T("Chat Twitch", "Twitch chat"),
-                () => new() { C("external.web", 0.7, 0, 0.3, 1, ("url", "https://www.twitch.tv/embed/MA_CHAINE/chat?parent=twitch.tv&darkpopout")) })
         };
     }
 
