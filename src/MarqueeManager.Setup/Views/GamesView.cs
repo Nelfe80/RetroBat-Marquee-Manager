@@ -354,9 +354,21 @@ public sealed class GamesView : UserControl, IDisposable
 
             // what this template currently produces, on this surface, for a sample game
             var sampleGame = _allGames.FirstOrDefault(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase));
-            var preview = sampleGame != null
-                ? GabaritRenderer.GameCachePath(_pluginRoot, cat, surfaceId, sampleGame.System, sampleGame.Rom)
-                : null;
+            string? preview = null;
+            if (has && sampleGame != null)
+            {
+                preview = GabaritRenderer.GameCachePath(_pluginRoot, cat, surfaceId, sampleGame.System, sampleGame.Rom);
+                // render it on demand: the runtime only bakes the games you browse, so a
+                // preview that waits for the cache is a preview you never see
+                if (!System.IO.File.Exists(preview))
+                {
+                    var dims = MediaResolutionPreview.TargetOf(
+                        new SurfacesStore(_pluginRoot).Load().First(x => x.Id.Equals(surfaceId, StringComparison.OrdinalIgnoreCase)),
+                        ScreenProbe.Detect());
+                    preview = GabaritRenderer.RenderGame(_pluginRoot, cat, surfaceId, sampleGame.System, sampleGame.Rom,
+                        dims.Width, dims.Height, _media.ListAssets(sampleGame.System, sampleGame.Rom));
+                }
+            }
             if (preview != null && System.IO.File.Exists(preview))
             {
                 panel.Children.Add(Ui.MutedLabel(L.T($"Aperçu (exemple : {sampleGame!.Rom})", $"Preview (sample: {sampleGame!.Rom})")));
@@ -386,6 +398,7 @@ public sealed class GamesView : UserControl, IDisposable
                 ShowSystemLevel();
             }, primary: true);
             edit.Margin = new Thickness(0, 8, 0, 0);
+            edit.HorizontalAlignment = HorizontalAlignment.Left;
             panel.Children.Add(edit);
         }
 

@@ -345,14 +345,34 @@ public sealed class WebSocketListenerService : BackgroundService
         lock (_lastKindsByCategory) _lastKindsByCategory[category] = kinds;
     }
 
+    /// <summary>
+    /// Every medium known about the CURRENT entry, the asking category winning where
+    /// both describe the same kind. Partitioning strictly by category starved the topper
+    /// gabarit: its stream carries no fanart, so a template built on one rendered
+    /// nothing at all. The leak to avoid was never cross-stream — it was cross-ENTRY,
+    /// and that is closed by clearing everything when the selection changes.
+    /// </summary>
     private Dictionary<string, string?> KindsFor(string category)
     {
+        var merged = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         lock (_lastKindsByCategory)
         {
-            if (_lastKindsByCategory.TryGetValue(category, out var kinds))
-                return new Dictionary<string, string?>(kinds, StringComparer.OrdinalIgnoreCase);
+            foreach (var (name, kinds) in _lastKindsByCategory)
+            {
+                if (name.Equals(category, StringComparison.OrdinalIgnoreCase)) continue;
+                foreach (var (kind, path) in kinds)
+                    if (path is { Length: > 0 }) merged[kind] = path;
+            }
+            if (_lastKindsByCategory.TryGetValue(category, out var own))
+                foreach (var (kind, path) in own)
+                    if (path is { Length: > 0 }) merged[kind] = path;
         }
-        lock (_lastMarqueeKinds) return new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase);
+        lock (_lastMarqueeKinds)
+        {
+            foreach (var (kind, path) in _lastMarqueeKinds)
+                if (path is { Length: > 0 } && !merged.ContainsKey(kind)) merged[kind] = path;
+        }
+        return merged;
     }
     private Application.Lighting.LightingSceneMeta? _lastMarqueeMeta;
 

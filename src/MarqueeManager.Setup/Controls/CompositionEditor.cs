@@ -381,7 +381,16 @@ public sealed class CompositionEditor : Window
                 "media.fanart" => "fanart",
                 "media.logo" => "logo",
                 "media.image" => component.Options.TryGetValue("kind", out var k) ? k : "screenmarquee",
-                "media.flux" => "marquee",
+                // the background shows the media of THIS surface's stream, not the
+                // marquee's: a topper previewed with a marquee is a lie, and "why does
+                // this show up when I asked for nothing?" starts exactly there
+                "media.flux" => _surface.Category.ToLowerInvariant() switch
+                {
+                    "topper" => "topper",
+                    "iccard" => "iccard",
+                    "dmd-virtual" or "dmd" => "dmd",
+                    _ => "marquee"
+                },
                 _ => null
             };
             if (kind != null && _exampleMedia.TryGetValue(kind, out var mediaPath))
