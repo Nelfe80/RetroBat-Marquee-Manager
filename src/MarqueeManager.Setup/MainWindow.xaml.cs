@@ -239,7 +239,29 @@ public partial class MainWindow : Window
             + "\n" + (MarqueeManagerProcess.IsRunning()
                 ? L.T("MarqueeManager : en cours", "MarqueeManager: running")
                 : L.T("MarqueeManager : arrêté", "MarqueeManager: stopped"))
-            + $"\n{_pluginRoot}";
+            + $"\n{_pluginRoot}"
+            // "am I even testing the build I just deployed?" — the question costs an
+            // hour every time it is asked, so the answer is on screen.
+            + $"\n{BuildStamp()}";
+    }
+
+    /// <summary>Version + build time of THIS executable, and of the runtime beside it.</summary>
+    private string BuildStamp()
+    {
+        static string Stamp(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) return "—";
+                var version = System.Diagnostics.FileVersionInfo.GetVersionInfo(path).FileVersion;
+                return $"{version} · {File.GetLastWriteTime(path):dd/MM HH:mm}";
+            }
+            catch { return "—"; }
+        }
+
+        var self = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName
+                   ?? Path.Combine(_pluginRoot, "MarqueeManagerSetup.exe");
+        return $"Setup {Stamp(self)}\nRuntime {Stamp(Path.Combine(_pluginRoot, "MarqueeManager.exe"))}";
     }
 
     /// <summary>Native caption color (DWMWA_USE_IMMERSIVE_DARK_MODE), so the title

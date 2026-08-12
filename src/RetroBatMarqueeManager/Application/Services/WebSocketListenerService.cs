@@ -125,7 +125,7 @@ public sealed class WebSocketListenerService : BackgroundService
         lock (_lastMarqueeKinds) kinds = new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase);
 
         _gabaritRenderer.RenderInBackground(category, surfaceId, scope, rom ?? system,
-            width, height, layer => ResolveGabaritLayerMedia(layer, kinds), output, path =>
+            width, height, layer => ResolveGabaritLayerMedia(layer, kinds, system), output, path =>
             {
                 var current = _lastMarqueeMeta;
                 if (!systemScope && !string.Equals(current?.Rom, rom, StringComparison.OrdinalIgnoreCase)) return;
@@ -142,8 +142,16 @@ public sealed class WebSocketListenerService : BackgroundService
     /// decoration) is used as-is.
     /// </summary>
     private static string? ResolveGabaritLayerMedia(MarqueeManager.Compositions.Core.Composition.MarqueeLayer layer,
-        IReadOnlyDictionary<string, string?> kinds)
+        IReadOnlyDictionary<string, string?> kinds, string system)
     {
+        // A general template may point OUTSIDE the APIExpose library — an ES theme
+        // background is stored per system as …/art/background/<system>.jpg. Composed on
+        // arcade, it must follow to lynx, or the template only ever serves the system it
+        // was authored on. The swap is existence-checked, so it can never substitute
+        // another system's picture.
+        var themed = ResolveBySystemName(layer.Source, system);
+        if (themed != null) return themed;
+
         // A background carries no AssetKey, only the path picked while composing:
         // infer the key from it, or the template stays bound to that one game.
         var key = string.IsNullOrWhiteSpace(layer.AssetKey)
@@ -168,6 +176,29 @@ public sealed class WebSocketListenerService : BackgroundService
             _ => null
         };
         return kind != null && kinds.TryGetValue(kind, out var path) ? path : null;
+    }
+
+    /// <summary>
+    /// A stored path whose FILE NAME is a system name (the ES theme's
+    /// art\background\arcade.jpg) re-points to the current system. Returns null unless
+    /// the swapped file really exists — a template never borrows another system's image.
+    /// </summary>
+    private static string? ResolveBySystemName(string? source, string system)
+    {
+        if (string.IsNullOrWhiteSpace(source) || !Path.IsPathRooted(source)) return null;
+        var directory = Path.GetDirectoryName(source);
+        if (directory == null) return null;
+
+        var extension = Path.GetExtension(source);
+        foreach (var name in Application.Media.CompositionChainResolver.SystemNames(system))
+        {
+            foreach (var candidateExtension in new[] { extension, ".jpg", ".png" })
+            {
+                var candidate = Path.Combine(directory, name + candidateExtension);
+                if (File.Exists(candidate)) return candidate;
+            }
+        }
+        return null;
     }
 
     private readonly Application.Media.DynamicSurfaceRenderer _dynamicRenderer;

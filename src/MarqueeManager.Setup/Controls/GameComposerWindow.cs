@@ -21,7 +21,7 @@ namespace MarqueeManager.Setup.Controls;
 /// </summary>
 public sealed class GameComposerWindow : Window
 {
-    private sealed record Target(string Label, string Category, string SurfaceId, int W, int H);
+    private sealed record Target(string Label, string Category, string SurfaceId, int W, int H, bool Suspended = false);
 
     private readonly string _pluginRoot;
     private readonly string _system;
@@ -82,7 +82,17 @@ public sealed class GameComposerWindow : Window
         var targetPicker = Ui.ComboBox(340);
         foreach (var target in _targets)
         {
-            targetPicker.Items.Add(new ComboBoxItem { Content = target.Label, Tag = target });
+            // a surface on a screen MarqueeManager does not manage never displays
+            // anything: offering it as a target only invites composing into the void
+            targetPicker.Items.Add(new ComboBoxItem
+            {
+                Content = target.Suspended
+                    ? target.Label + L.T("  — écran ignoré", "  — screen ignored")
+                    : target.Label,
+                Tag = target,
+                IsEnabled = !target.Suspended,
+                Foreground = target.Suspended ? Ui.Muted : null
+            });
         }
         targetPicker.SelectedIndex = Math.Max(0, _targets.IndexOf(_target));
         targetPicker.SelectionChanged += (_, _) =>
@@ -97,6 +107,11 @@ public sealed class GameComposerWindow : Window
 
         var barRight = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         barRight.Children.Add(Ui.Button(L.T("Fermer", "Close"), (_, _) => Close()));
+        // destructive action next to its counterpart, not buried at the bottom of the
+        // left rail where it was found by accident
+        _deleteButton = Ui.Button(L.T("Supprimer ma création graphique", "Delete my graphic creation"), (_, _) => DeleteComposition());
+        _deleteButton.Visibility = Visibility.Collapsed;
+        barRight.Children.Add(_deleteButton);
         barRight.Children.Add(Ui.Button(L.T("Enregistrer ma création graphique", "Save my graphic creation"), (_, _) => Save(), primary: true));
         DockPanel.SetDock(barRight, Dock.Right);
         bar.Children.Add(barRight);
@@ -147,6 +162,7 @@ public sealed class GameComposerWindow : Window
 
         Content = root;
         MountComposer(LoadProjectFor(_target));
+        RefreshDeleteButton();
 
         // the canvas follows the REAL window width (the window may not open
         // maximized everywhere): remount on significant size changes
@@ -350,12 +366,28 @@ public sealed class GameComposerWindow : Window
 
     // ================= targets =================
 
+    private Button? _deleteButton;
+
+    /// <summary>The delete button only exists when there IS a creation to delete, and
+    /// it must follow the target the user switches to.</summary>
+    private void RefreshDeleteButton()
+    {
+        if (_deleteButton == null) return;
+        _deleteButton.Visibility = StoreFor(_target).HasComposition(_system, _rom)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
     private void BuildTargets()
     {
         try
         {
-            var surfaces = new SurfacesStore(_pluginRoot).Load();
+            var store = new SurfacesStore(_pluginRoot);
+            var surfaces = store.Load();
             var screens = ScreenProbe.Detect();
+            // the stored screens carry the "managed by MarqueeManager" flag; the probe
+            // only knows the physical layout
+            var configured = store.LoadScreens();
             foreach (var surface in surfaces)
             {
                 var category = surface.Category.ToLowerInvariant() switch
@@ -365,13 +397,17 @@ public sealed class GameComposerWindow : Window
                     _ => "marquees"
                 };
                 var screenIndex = surface.Screens.Count > 0 ? surface.Screens[0] : -1;
+                // a screen the user excluded from MarqueeManager gets no window at all
+                var suspended = screenIndex < 0
+                                || screenIndex >= screens.Count
+                                || configured.FirstOrDefault(sc => sc.WindowsIndex == screenIndex) is { ManagedByMarqueeManager: false };
                 var w = surface.Width ?? (screenIndex >= 0 && screenIndex < screens.Count ? screens[screenIndex].Bounds.Width : 1920);
                 var h = surface.Height ?? (screenIndex >= 0 && screenIndex < screens.Count ? screens[screenIndex].Bounds.Height : 360);
                 if (w <= 0 || h <= 0) continue;
                 _targets.Add(new Target(
                     L.T($"Surface {surface.Id} ({surface.Category}) — écran {screenIndex}, {w}×{h}",
                         $"Surface {surface.Id} ({surface.Category}) — screen {screenIndex}, {w}×{h}"),
-                    category, surface.Id, w, h));
+                    category, surface.Id, w, h, suspended));
             }
         }
         catch
@@ -462,6 +498,7 @@ public sealed class GameComposerWindow : Window
         _status.Text = L.T($"Cible : {target.Label} — la création est propre à CETTE surface.",
             $"Target: {target.Label} — the creation belongs to THIS surface.");
         _status.Foreground = Ui.Muted;
+        RefreshDeleteButton();
     }
 
     // ================= media palette =================
@@ -557,13 +594,6 @@ public sealed class GameComposerWindow : Window
         };
         panel.Children.Add(background);
 
-        if (StoreFor(_target).HasComposition(_system, _rom))
-        {
-            var delete = Ui.Button(L.T("Supprimer ma création graphique", "Delete my graphic creation"), (_, _) => DeleteComposition());
-            delete.Margin = new Thickness(0, 12, 0, 0);
-            panel.Children.Add(delete);
-        }
-
         return new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     }
 
@@ -646,6 +676,7 @@ public sealed class GameComposerWindow : Window
                 $"✔ Création graphique enregistrée pour cette surface : {store.PngPath(_system, _rom)} — affichée à la prochaine sélection.",
                 $"✔ Graphic creation saved for this surface: {store.PngPath(_system, _rom)} — shown on the next selection.");
             _status.Foreground = Ui.Ok;
+            RefreshDeleteButton();
         }
         catch (Exception ex)
         {
@@ -663,6 +694,7 @@ public sealed class GameComposerWindow : Window
         _status.Text = L.T("Création graphique supprimée — la chaîne de sources reprend la main.",
             "Graphic creation deleted — the source chain takes over again.");
         _status.Foreground = Ui.Muted;
+        RefreshDeleteButton();
     }
 
     private static string Safe(string name)
