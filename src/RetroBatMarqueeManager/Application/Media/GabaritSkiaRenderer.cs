@@ -245,7 +245,11 @@ public sealed class GabaritSkiaRenderer
         text = text.Trim();
         if (text.Length == 0) return false;
 
-        var size = (float)Math.Max(4, layer.FontSize * layer.Scale * height);
+        // in a BOX the type size is its own property: the rectangle is sized by the
+        // handles, the reading size by the inspector, and neither drags the other
+        var size = (float)Math.Max(4, layer.IsTextBox
+            ? layer.FontSize * height
+            : layer.FontSize * layer.Scale * height);
         using var typeface = SKTypeface.FromFamilyName(null,
             layer.Bold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal,
             SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
@@ -266,13 +270,33 @@ public sealed class GabaritSkiaRenderer
         if (layer.FlipH) canvas.Scale(-1, 1);
         if (Math.Abs(layer.Rotation) > 0.01) canvas.RotateDegrees((float)layer.Rotation);
 
-        // the whole block is centred on the anchor, then each line within it
         var lineHeight = metrics.Descent - metrics.Ascent + metrics.Leading;
-        var top = -(lines.Length * lineHeight) / 2f;
+        var blockHeight = lines.Length * lineHeight;
+        var boxWidth = (float)(layer.WrapWidth * width);
+        var boxHeight = layer.BoxHeight > 0 ? (float)(layer.BoxHeight * height) : blockHeight;
+
+        // the block sits where the layer says INSIDE its box, not always in the middle
+        var top = layer.IsTextBox
+            ? layer.VAlign?.ToLowerInvariant() switch
+            {
+                "top" => -boxHeight / 2f,
+                "bottom" => boxHeight / 2f - blockHeight,
+                _ => -blockHeight / 2f
+            }
+            : -blockHeight / 2f;
+
         for (var i = 0; i < lines.Length; i++)
         {
             var advance = font.MeasureText(lines[i]);
-            canvas.DrawText(lines[i], -advance / 2f, top + i * lineHeight - metrics.Ascent, font, paint);
+            var x = layer.IsTextBox
+                ? layer.HAlign?.ToLowerInvariant() switch
+                {
+                    "left" => -boxWidth / 2f,
+                    "right" => boxWidth / 2f - advance,
+                    _ => -advance / 2f
+                }
+                : -advance / 2f;
+            canvas.DrawText(lines[i], x, top + i * lineHeight - metrics.Ascent, font, paint);
         }
 
         canvas.Restore();

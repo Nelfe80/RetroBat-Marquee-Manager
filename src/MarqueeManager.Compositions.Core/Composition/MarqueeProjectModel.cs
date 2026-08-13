@@ -40,6 +40,31 @@ public sealed class MarqueeLayer
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int MaxLines { get; set; }
 
+    /// <summary>
+    /// Height of the box, as a fraction of the surface height. Only meaningful with
+    /// <see cref="WrapWidth"/>: together they make the layer a RECTANGLE the handles
+    /// resize in both directions, the type size staying whatever the inspector says.
+    /// 0 = the box is as tall as its lines.
+    /// </summary>
+    [JsonPropertyName("boxHeight")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public double BoxHeight { get; set; }
+
+    /// <summary>left | center | right — where the lines sit across the box.</summary>
+    [JsonPropertyName("hAlign")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string HAlign { get; set; } = "center";
+
+    /// <summary>top | middle | bottom — where the block of lines sits down the box.</summary>
+    [JsonPropertyName("vAlign")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string VAlign { get; set; } = "middle";
+
+    /// <summary>True when this layer is a text BOX: sized by its rectangle, not by the
+    /// length of what lands in it.</summary>
+    [JsonIgnore]
+    public bool IsTextBox => Source == "text" && WrapWidth > 0;
+
     /// <summary>Locked: selectable but not movable/resizable (template fanart).</summary>
     [JsonPropertyName("locked")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Locked { get; set; }
     /// <summary>Hidden: kept in the project but not rendered nor exported.</summary>

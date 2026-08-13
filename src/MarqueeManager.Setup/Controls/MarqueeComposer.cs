@@ -351,6 +351,9 @@ public sealed class MarqueeComposer : UserControl
         {
             Source = "text", AssetKey = "text", Text = text, Scale = 1.0,
             WrapWidth = wrapWidth,
+            // a box needs a height from the start, otherwise its corners sit on whatever
+            // the text happens to measure and there is nothing steady to grab
+            BoxHeight = wrapWidth > 0 ? 0.5 : 0,
             // a description at the default size would fill the surface twice over
             FontSize = wrapWidth > 0 ? 0.06 : 0.3
         };
@@ -439,6 +442,24 @@ public sealed class MarqueeComposer : UserControl
                 _selected.Model.X = Math.Clamp(_dragOrigin.X + (position.X - _dragStart.X) / DisplayWidth, -0.5, 1.5);
                 _selected.Model.Y = Math.Clamp(_dragOrigin.Y + (position.Y - _dragStart.Y) / _displayHeight, -0.5, 1.5);
                 break;
+            case Handle.Resize when _selected.Model.IsTextBox:
+                // a box is dragged like a rectangle: the grabbed corner follows the
+                // pointer in BOTH directions, the opposite one stays put, and the type
+                // size does not move — it belongs to the inspector
+                var ax = _gestureAnchor.X;
+                var ay = _gestureAnchor.Y;
+                var w = Math.Clamp(Math.Abs(position.X - ax) / DisplayWidth, 0.05, 1.5);
+                var h = Math.Clamp(Math.Abs(position.Y - ay) / _displayHeight, 0.03, 1.5);
+                _selected.Model.WrapWidth = w;
+                _selected.Model.BoxHeight = h;
+                _selected.Model.X = Math.Clamp(
+                    (ax + Math.Sign(position.X - ax) * w * DisplayWidth / 2) / DisplayWidth, -0.5, 1.5);
+                _selected.Model.Y = Math.Clamp(
+                    (ay + Math.Sign(position.Y - ay) * h * _displayHeight / 2) / _displayHeight, -0.5, 1.5);
+                SyncInspector();
+                StackChanged?.Invoke();
+                break;
+
             case Handle.Resize:
                 var ratio = Dist(_gestureAnchor, position) / _gestureStartDist;
                 _selected.Model.Scale = Math.Clamp(_gestureStartScale * ratio, 0.05, 3.0);
@@ -698,6 +719,19 @@ public sealed class MarqueeComposer : UserControl
 
     private Rect Bounds(LayerVisual layer)
     {
+        // A text BOX is its rectangle, whatever lands inside it. Measuring the text
+        // instead made the handles report the length of the words, so dragging a corner
+        // could only ever change the height.
+        if (layer.Model.IsTextBox)
+        {
+            var boxW = layer.Model.WrapWidth * DisplayWidth;
+            var boxH = layer.Model.BoxHeight > 0
+                ? layer.Model.BoxHeight * _displayHeight
+                : MeasureText(layer).Height;
+            return new Rect(layer.Model.X * DisplayWidth - boxW / 2,
+                            layer.Model.Y * _displayHeight - boxH / 2, boxW, boxH);
+        }
+
         var height = layer.Model.Scale * _displayHeight;
         double width;
         if (layer.Model.Source == "text")
@@ -729,7 +763,11 @@ public sealed class MarqueeComposer : UserControl
     private Size MeasureText(LayerVisual layer)
     {
         var text = (TextBlock)layer.Element;
-        text.FontSize = Math.Max(4, layer.Model.FontSize * layer.Model.Scale * _displayHeight);
+        // in a box the type size is set in the inspector and nowhere else: the handles
+        // resize the RECTANGLE, they must not change the reading size at the same time
+        text.FontSize = Math.Max(4, layer.Model.IsTextBox
+            ? layer.Model.FontSize * _displayHeight
+            : layer.Model.FontSize * layer.Model.Scale * _displayHeight);
         // a wrapping layer is measured INSIDE its box, otherwise a description measures
         // as one enormous line and its bounds run off both edges of the surface
         var available = layer.Model.WrapWidth > 0
@@ -737,6 +775,12 @@ public sealed class MarqueeComposer : UserControl
             : double.PositiveInfinity;
         text.TextWrapping = layer.Model.WrapWidth > 0 ? TextWrapping.Wrap : TextWrapping.NoWrap;
         text.Width = layer.Model.WrapWidth > 0 ? available : double.NaN;
+        text.TextAlignment = layer.Model.HAlign?.ToLowerInvariant() switch
+        {
+            "left" => TextAlignment.Left,
+            "right" => TextAlignment.Right,
+            _ => TextAlignment.Center
+        };
         text.Measure(new Size(available, double.PositiveInfinity));
         return text.DesiredSize;
     }
@@ -762,6 +806,7 @@ public sealed class MarqueeComposer : UserControl
             {
                 wrapped.Width = bounds.Width;
             }
+
             else if (element is Border)
             {
                 // A placeholder must occupy EXACTLY the room its real medium will: sized
@@ -783,7 +828,20 @@ public sealed class MarqueeComposer : UserControl
             element.RenderTransformOrigin = new Point(0.5, 0.5);
 
             Canvas.SetLeft(element, bounds.X);
-            Canvas.SetTop(element, bounds.Y);
+            // inside a box the block of lines sits where the layer says, not always in
+            // the middle: measure it and offset within the rectangle
+            var top = bounds.Y;
+            if (layer.Model.IsTextBox && layer.Model.BoxHeight > 0)
+            {
+                var textHeight = MeasureText(layer).Height;
+                top += layer.Model.VAlign?.ToLowerInvariant() switch
+                {
+                    "top" => 0,
+                    "bottom" => Math.Max(0, bounds.Height - textHeight),
+                    _ => Math.Max(0, (bounds.Height - textHeight) / 2)
+                };
+            }
+            Canvas.SetTop(element, top);
             _canvas.Children.Add(element);
 
             if (layer == _selected)

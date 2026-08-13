@@ -355,9 +355,45 @@ public sealed class GameComposerWindow : Window
             _inspectorPanel.Children.Add(slider);
         }
 
-        SliderRow(L.T("Taille", "Size"), 0.05, 3.0, layer.Scale, v => layer.Scale = v);
+        // a text box is sized by its handles; "Size" would fight them
+        if (!layer.IsTextBox)
+        {
+            SliderRow(L.T("Taille", "Size"), 0.05, 3.0, layer.Scale, v => layer.Scale = v);
+        }
         SliderRow("Rotation", -180, 180, layer.Rotation, v => layer.Rotation = v);
         SliderRow(L.T("Opacité", "Opacity"), 0.05, 1.0, layer.Opacity, v => layer.Opacity = v);
+
+        if (layer.IsTextBox)
+        {
+            // the handles resize the RECTANGLE, so the reading size lives here — and
+            // nowhere else. Mixing the two is what made the box only grow downwards.
+            SliderRow(L.T("Corps du texte", "Type size"), 0.02, 0.30, layer.FontSize, v => layer.FontSize = v);
+
+            void AlignRow(string label, (string Key, string Fr, string En)[] options, string current, Action<string> onPick)
+            {
+                _inspectorPanel.Children.Add(Ui.MutedLabel(label, 11));
+                var row = new WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
+                foreach (var (key, fr, en) in options)
+                {
+                    var button = Ui.Button(L.T(fr, en), (_, _) =>
+                    {
+                        _composer.ApplyToLayer(layer, _ => onPick(key));
+                        RenderSidePanels();
+                    }, primary: key.Equals(current, StringComparison.OrdinalIgnoreCase));
+                    button.Margin = new Thickness(0, 0, 4, 0);
+                    button.Padding = new Thickness(8, 3, 8, 3);
+                    row.Children.Add(button);
+                }
+                _inspectorPanel.Children.Add(row);
+            }
+
+            AlignRow(L.T("Alignement horizontal", "Horizontal alignment"),
+                new[] { ("left", "Gauche", "Left"), ("center", "Centre", "Center"), ("right", "Droite", "Right") },
+                layer.HAlign, key => layer.HAlign = key);
+            AlignRow(L.T("Alignement vertical", "Vertical alignment"),
+                new[] { ("top", "Haut", "Top"), ("middle", "Milieu", "Middle"), ("bottom", "Bas", "Bottom") },
+                layer.VAlign, key => layer.VAlign = key);
+        }
 
         if (layer.Source == "text")
         {
@@ -731,28 +767,30 @@ public sealed class GameComposerWindow : Window
         // A template's text is a TEMPLATE, never a frozen string: placing the window's
         // display name wrote "General template — arcade games" onto the marquee, and the
         // runtime drew it verbatim on every game of the system.
-        var text = Ui.Button(L.T("Texte : nom du jeu", "Text: game name"), (_, _) => _composer.AddTextLayer("{name}"));
-        text.HorizontalAlignment = HorizontalAlignment.Stretch;
-        text.HorizontalContentAlignment = HorizontalAlignment.Left;
-        panel.Children.Add(text);
-        var developer = Ui.Button(L.T("Texte : développeur", "Text: developer"), (_, _) => _composer.AddTextLayer("{developer}"));
-        panel.Children.Add(developer);
-        var publisher = Ui.Button(L.T("Texte : éditeur", "Text: publisher"), (_, _) => _composer.AddTextLayer("{publisher}"));
-        panel.Children.Add(publisher);
-        var year = Ui.Button(L.T("Texte : année", "Text: year"), (_, _) => _composer.AddTextLayer("{year}"));
-        panel.Children.Add(year);
+        // every palette button reads the same way: full width, label on the left
+        void AddPaletteButton(FrameworkElement button)
+        {
+            if (button is Button b)
+            {
+                b.HorizontalAlignment = HorizontalAlignment.Stretch;
+                b.HorizontalContentAlignment = HorizontalAlignment.Left;
+                b.Margin = new Thickness(0, 2, 0, 2);
+            }
+            panel.Children.Add(button);
+        }
+
+        AddPaletteButton(Ui.Button(L.T("Texte : nom du jeu", "Text: game name"), (_, _) => _composer.AddTextLayer("{name}")));
+        AddPaletteButton(Ui.Button(L.T("Texte : développeur", "Text: developer"), (_, _) => _composer.AddTextLayer("{developer}")));
+        AddPaletteButton(Ui.Button(L.T("Texte : éditeur", "Text: publisher"), (_, _) => _composer.AddTextLayer("{publisher}")));
+        AddPaletteButton(Ui.Button(L.T("Texte : année", "Text: year"), (_, _) => _composer.AddTextLayer("{year}")));
         // these come from the entry's text block: they arrive on the streams that print
         // something about a game, and land in a BOX because a description is 500 to
         // 1500 characters long
-        var desc = Ui.Button(L.T("Texte : description", "Text: description"),
-            (_, _) => _composer.AddTextLayer("{desc}", wrapWidth: 0.8));
-        panel.Children.Add(desc);
-        var genre = Ui.Button(L.T("Texte : genre", "Text: genre"), (_, _) => _composer.AddTextLayer("{genre}"));
-        panel.Children.Add(genre);
-        var players = Ui.Button(L.T("Texte : joueurs", "Text: players"), (_, _) => _composer.AddTextLayer("{players}"));
-        panel.Children.Add(players);
-        var rating = Ui.Button(L.T("Texte : note", "Text: rating"), (_, _) => _composer.AddTextLayer("{rating}"));
-        panel.Children.Add(rating);
+        AddPaletteButton(Ui.Button(L.T("Texte : description", "Text: description"),
+            (_, _) => _composer.AddTextLayer("{desc}", wrapWidth: 0.8)));
+        AddPaletteButton(Ui.Button(L.T("Texte : genre", "Text: genre"), (_, _) => _composer.AddTextLayer("{genre}")));
+        AddPaletteButton(Ui.Button(L.T("Texte : joueurs", "Text: players"), (_, _) => _composer.AddTextLayer("{players}")));
+        AddPaletteButton(Ui.Button(L.T("Texte : note", "Text: rating"), (_, _) => _composer.AddTextLayer("{rating}")));
 
         // import your own image — used for EVERY system in a gabarit (its key never
         // matches a system asset, so it is not remapped), specific to a creation
