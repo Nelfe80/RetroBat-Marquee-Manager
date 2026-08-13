@@ -40,7 +40,7 @@ french.SelectDirDesc=Choisissez le dossier plugins\MarqueeManager de VOTRE Retro
 [Files]
 ; Tout l'arbre runtime du plugin, moins le dev/build/état/docs (calqué sur release.ps1)
 Source: "..\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; \
-    Excludes: "\src\*,\docs\*,\wiki\*,\media\*,\state\*,\artifacts\*,\dist\*,\installer\*,\tests\*,\.git\*,\.github\*,\.log\*,\.cache\*,\.versioning\*,\.archive\*,\.temp\*,\.graceful_exit\*,\obj\*,\bin\*,\site\*,\.gitignore,\.gitattributes,\mkdocs.yml,\RetroBatMarqueeManager.sln,\Directory.Build.props,\build.bat,\build-Setup.bat,\release.ps1,\config.ini,\config.ini.bak,\DmdDevice.log,\MARQUEE_MANAGER_SETUP.md,\RetroBat-Marquee-Manager-Plan-Developpement-UX-UI.md,\scripts\optimize-sprite-gifs.ps1,\tools\rbmarquee-gen\obj\*,\tools\rbmarquee-gen\bin\*,\Resources\sprites\master\*,CAHIER*,*.log,*.pdb,*.lib,__pycache__\*,*.pyc"
+    Excludes: "\src\*,\docs\*,\wiki\*,\media\*,\state\*,\artifacts\*,\dist\*,\installer\*,\tests\*,\.git\*,\.github\*,\.log\*,\.cache\*,\.versioning\*,\.archive\*,\.temp\*,\.graceful_exit\*,\obj\*,\bin\*,\site\*,\.gitignore,\.gitattributes,\mkdocs.yml,\RetroBatMarqueeManager.sln,\Directory.Build.props,\build.bat,\build-Setup.bat,\release.ps1,\config.ini,\config.ini.bak,\DmdDevice.log,\MARQUEE_MANAGER_SETUP.md,\RetroBat-Marquee-Manager-Plan-Developpement-UX-UI.md,\scripts\optimize-sprite-gifs.ps1,\tools\rbmarquee-gen\obj\*,\tools\rbmarquee-gen\bin\*,\Resources\sprites\master\*,CAHIER*,*.log,*.pdb,*.lib,__pycache__\*,*.pyc,*.bak,*.ps1,*.py"
 
 ; Dépendance APIExpose (dossier frère) — DÉTECTION (fournit ApiExposeInstalled) ;
 ; on avertit dans [Code] si absent (installée par APIExpose-Cabinet-Setup, pas ici)

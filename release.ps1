@@ -37,7 +37,12 @@ $ex = @(
     # le pack runtime (sinon full/update explosent). Idem APIExpose.
     "-x!$name\dist", "-x!$name\installer",
     '-xr!obj', '-xr!bin',
-    '-xr!CAHIER_DES_CHARGES*', '-xr!*.log', '-xr!__pycache__', '-xr!*.pyc'
+    '-xr!CAHIER_DES_CHARGES*', '-xr!*.log', '-xr!__pycache__', '-xr!*.pyc',
+    # Sauvegardes de travail (config.ini.bak, overrides et scenes .bak) : sans interet
+    # pour une installation, et elles laisseraient planer un doute sur laquelle fait foi.
+    '-xr!*.bak',
+    # Outillage interne : aucun script ne part dans un pack runtime.
+    '-xr!*.ps1', '-xr!*.py'
 )
 
 Set-Location $root
@@ -89,7 +94,7 @@ function Assert-ArchiveContent {
         [Parameter(Mandatory = $true)][string[]]$Listing,
         [Parameter(Mandatory = $true)][int]$ExpectedSpriteCount
     )
-    $leaks = $Listing | Select-String '\\src\\|\\docs\\|CAHIER|\.git|crash|checkpoint|EmbeddedSecretDefaults|\.env|\\Resources\\sprites\\master(?:\\|$)'
+    $leaks = $Listing | Select-String '\\src\\|\\docs\\|CAHIER|\.git|crash|checkpoint|EmbeddedSecretDefaults|\.env|\.bak|\.ps1$|\.py$|\\Resources\\sprites\\master(?:\\|$)'
     if ($leaks) { throw "FUITE DETECTEE dans $ArchiveName : $($leaks[0])" }
     $runtimeSprites = @($Listing | Select-String '\\Resources\\sprites\\[^\\]+\.gif$')
     if ($runtimeSprites.Count -ne $ExpectedSpriteCount) {
