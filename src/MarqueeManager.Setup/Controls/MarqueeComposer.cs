@@ -47,11 +47,11 @@ public sealed class MarqueeComposer : UserControl
     private double _gestureStartDist;
     private double _gestureStartRotation;
     private double _gestureStartAngle;
-    /// <summary>Corner kept fixed while resizing, and the centre when the gesture began:
-    /// together they let the grabbed corner follow the pointer while its opposite stays
-    /// anchored.</summary>
+    /// <summary>Corner kept fixed while resizing, and WHICH corner it is: the anchor is
+    /// re-applied against the real bounds after each change, so it holds for a layer
+    /// whose box does not grow uniformly.</summary>
     private Point _gestureAnchor;
-    private Point _gestureStartCenter;
+    private int _gestureAnchorIndex;
     private const double HandleSize = 9;   // px square/dot side
     private const double HandleHit = 8;    // px pick tolerance
     private const double RotateArm = 22;   // px from top edge to rotation dot
@@ -410,8 +410,8 @@ public sealed class MarqueeComposer : UserControl
             _mode = Handle.Resize;
             // the OPPOSITE corner is the fixed point: scaling around the centre moved
             // both edges at once, so an element aligned on one side never stayed put
-            _gestureAnchor = g.corners[(grabbed + 2) % 4];
-            _gestureStartCenter = g.center;
+            _gestureAnchorIndex = (grabbed + 2) % 4;
+            _gestureAnchor = g.corners[_gestureAnchorIndex];
             _gestureStartScale = layer.Model.Scale;
             _gestureStartDist = Math.Max(1, Dist(_gestureAnchor, position));
             _canvas.CaptureMouse();
@@ -442,14 +442,16 @@ public sealed class MarqueeComposer : UserControl
             case Handle.Resize:
                 var ratio = Dist(_gestureAnchor, position) / _gestureStartDist;
                 _selected.Model.Scale = Math.Clamp(_gestureStartScale * ratio, 0.05, 3.0);
-                // move the centre so the anchored corner stays exactly where it was.
-                // Uses the CLAMPED scale, otherwise the layer keeps sliding once the
-                // size has stopped changing.
-                var applied = _selected.Model.Scale / _gestureStartScale;
+                // Put the anchored corner back where it was, measured on the REAL bounds
+                // rather than assumed from the scale ratio. A wrapped text box does not
+                // grow uniformly — its width is fixed by WrapWidth and only its height
+                // follows the font — so scaling the centre by the ratio let the anchor
+                // drift sideways. This holds for any layer, rotated or not.
+                var after = HandleGeometry(_selected).corners[_gestureAnchorIndex];
                 _selected.Model.X = Math.Clamp(
-                    (_gestureAnchor.X + (_gestureStartCenter.X - _gestureAnchor.X) * applied) / DisplayWidth, -0.5, 1.5);
+                    _selected.Model.X + (_gestureAnchor.X - after.X) / DisplayWidth, -0.5, 1.5);
                 _selected.Model.Y = Math.Clamp(
-                    (_gestureAnchor.Y + (_gestureStartCenter.Y - _gestureAnchor.Y) * applied) / _displayHeight, -0.5, 1.5);
+                    _selected.Model.Y + (_gestureAnchor.Y - after.Y) / _displayHeight, -0.5, 1.5);
                 SyncInspector();
                 StackChanged?.Invoke();
                 break;

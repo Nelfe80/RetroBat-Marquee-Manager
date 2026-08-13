@@ -495,8 +495,10 @@ public sealed class GameComposerWindow : Window
             ["publisher"] = Field("publisher", L.T("éditeur", "publisher")),
             ["year"] = release.Length >= 4 ? release[..4] : L.T("année", "year"),
             ["system"] = _system,
-            ["desc"] = Field("desc", L.T("La description du jeu s'affichera ici, dans la langue d'EmulationStation.",
-                                         "The game description appears here, in the EmulationStation language.")),
+            // A real description runs 500 to 1500 characters. When the sample has none,
+            // stand in with filler of that LENGTH rather than a short sentence: the box
+            // is sized against what will actually land in it.
+            ["desc"] = Field("desc", LoremIpsum),
             ["genre"] = Field("genre", L.T("genre", "genre")),
             ["players"] = Field("players", "1-2"),
             ["rating"] = Field("rating", ""),
@@ -595,6 +597,21 @@ public sealed class GameComposerWindow : Window
             _assets.FirstOrDefault(a => a.Key.Equals(key, StringComparison.OrdinalIgnoreCase)) is { } asset
             && File.Exists(asset.Path) ? asset.Path : null, on);
     }
+
+    /// <summary>~900 characters of filler — the middle of the range a scraped
+    /// description occupies, so a box sized on it holds a real one.</summary>
+    private const string LoremIpsum =
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor "
+        + "incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis "
+        + "nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+        + "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu "
+        + "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+        + "culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde "
+        + "omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam "
+        + "rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto "
+        + "beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit "
+        + "aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui "
+        + "ratione voluptatem sequi nesciunt.";
 
     private static Color ParseHex(string hex)
     {
