@@ -65,12 +65,21 @@ if ($LASTEXITCODE -ne 0) { throw "Ajout des sprites a update.7z echoue (exit $LA
 # flush disque) : "7z l" renvoie alors une liste vide. On relit avec quelques essais.
 function Get-ArchiveListing {
     param([string]$SevenZip, [string]$Archive)
-    for ($i = 0; $i -lt 6; $i++) {
-        if ($i -gt 0) { Start-Sleep -Milliseconds 500 }
-        $listing = & $SevenZip l $Archive
-        if ($listing) { return $listing }
+    # Le listing de 7-Zip contient des LIGNES VIDES (autour de l'en-tete et de la table).
+    # On les retire ici, car un parametre [string[]] declare Mandatory valide CHAQUE
+    # element : une seule chaine vide dans le tableau et la liaison echoue avec
+    # "il s'agit d'une chaine vide". Le symptome ressemblait a un listing vide - d'ou le
+    # diagnostic historique d'archive verrouillee - alors que 7-Zip repondait
+    # parfaitement.
+    #
+    # On exige aussi un listing PLEIN : une reponse partielle passerait sinon le controle
+    # anti-fuite pour "rien de suspect".
+    for ($i = 0; $i -lt 12; $i++) {
+        if ($i -gt 0) { Start-Sleep -Milliseconds 1000 }
+        $listing = @(& $SevenZip l $Archive | Where-Object { $_ -ne '' })
+        if ($listing.Count -ge 10 -and ($listing -join '') -match '7-Zip') { return $listing }
     }
-    throw "Listing de $Archive vide apres plusieurs tentatives (fichier verrouille ?)."
+    throw "Listing de $Archive incomplet apres plusieurs tentatives (fichier verrouille ?)."
 }
 $fullListing = Get-ArchiveListing $sz $full
 $updateListing = Get-ArchiveListing $sz $update
@@ -115,7 +124,14 @@ $($hashes -join "`n")
 "@
 $notesFile = Join-Path $out 'notes.md'
 $notes | Set-Content $notesFile -Encoding utf8
-$draftFlag = if ($Publish) { @() } else { @('--draft') }
-gh release create "v$ver" --repo Nelfe80/RetroBat-Marquee-Manager --target main @draftFlag --title "MarqueeManager $ver" --notes-file $notesFile $full $update
+# Arguments assembles en TABLEAU puis passes en une fois, comme le fait APIExpose :
+# un splat au milieu d'une ligne de commande native fait interpreter le drapeau par
+# l'expansion de gh ("no matches found for `-`") au lieu d'etre transmis tel quel.
+$ghArgs = @('release', 'create', "v$ver",
+    '--repo', 'Nelfe80/RetroBat-Marquee-Manager', '--target', 'main',
+    '--title', "MarqueeManager $ver", '--notes-file', $notesFile)
+if (-not $Publish) { $ghArgs += '--draft' }
+$ghArgs += @($full, $update)
+& gh @ghArgs
 if ($LASTEXITCODE -ne 0) { throw "gh release create a echoue (exit $LASTEXITCODE)." }
 Write-Host "Release v$ver creee$(if (-not $Publish) { ' (draft, a publier sur GitHub)' })."
