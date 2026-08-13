@@ -14,9 +14,15 @@ Choisissez la **surface** (les surfaces suspendues sont masquées par défaut) :
 
 Le **compositeur** et la **suppression** vivent sur la carte « Ma création pour ce jeu » (**Composer / Modifier**, **Supprimer**). Chaque **surface a sa propre création** : changez de surface pour voir et éditer celle de chaque surface.
 
-Le **gabarit général des jeux est par système** : « Modifier le gabarit général » compose une mise en page générique qui s'applique à **tous les jeux de ce système** (megadrive et nes peuvent avoir la leur), chaque jeu la recevant avec ses propres médias. **Mon dossier médias** propose « **Ouvrir le dossier** » pour déposer un fichier brut (au niveau jeu : `media\marquees\user\<système>\<rom>.png`).
+Le sélecteur de systèmes commence par « **Tous les jeux** » : c'est le gabarit de **dernier recours**, celui qui habille un jeu dont ni sa fiche ni son système ne dit rien. En dessous, le **gabarit général des jeux est par système** : « Modifier le gabarit général » compose une mise en page générique qui s'applique à **tous les jeux de ce système** (megadrive et nes peuvent avoir la leur), chaque jeu la recevant avec ses propres médias — et il l'emporte sur celui de « Tous les jeux ». Un système sélectionné donne aussi accès à « **Par défaut pour tous les jeux de ce système** » : la source à privilégier pour chaque jeu du système, qu'une fiche de jeu peut toujours remplacer. **Mon dossier médias** propose « **Ouvrir le dossier** » pour déposer un fichier brut (au niveau jeu : `media\marquees\user\<système>\<rom>.png`).
 
-L'interface de création : cible (écran/surface) en haut, **médias par type** à gauche (clic = choisir la version dans une modale par source, gradients statiques et **import d'image** inclus), canvas au centre (glisser, molette = taille, Maj+molette = rotation, **poignées** de redimension/rotation sur le calque sélectionné), **calques** à droite (œil, cadenas, flèches ▲▼ et glisser-déposer pour l'ordre) avec l'inspecteur du calque (taille, rotation, opacité, texte, miroir).
+L'interface de création : cible (écran/surface) en haut, **médias par type** à gauche, canvas au centre, **calques** à droite (œil, cadenas, flèches ▲▼ et glisser-déposer pour l'ordre) avec l'inspecteur du calque.
+
+**La palette liste tous les types composables**, qu'ils existent ou non pour l'échantillon : fanart, mix, logo, marquee, screen marquee, marquee et DMD générés, flyer, écran-titre, capture, boîte 3D, jaquette, bezel, plus le fanart, le logo et le marquee du **système**. Un type sans image derrière lui se pose en **carré de couleur** portant son nom — la mise en page se compose sur des **types**, l'image arrive jeu par jeu. La case « **Afficher les échantillons** » bascule la pile sur les vrais médias d'un jeu pour juger le rendu. Un type que les flux ne transportent pas est marqué : il se compose ici mais ne s'affichera pas sur la surface.
+
+Côté texte : « Texte : nom du jeu », développeur, éditeur, année, **description**, genre, joueurs, note. La description se pose dans une **boîte** que les poignées redimensionnent dans les deux sens ; son **corps de texte** et ses **alignements** (gauche/centre/droite, haut/milieu/bas) se règlent dans les propriétés. Un calque qui ne porte qu'une balise n'a pas de champ de saisie : son contenu appartient au jeu.
+
+Sur le canvas : glisser pour déplacer, molette = taille, Maj+molette = rotation, **poignées** de redimension et de rotation sur le calque sélectionné — le coin **opposé** à celui que vous saisissez reste fixe.
 
 ## Récupérer des médias en ligne
 

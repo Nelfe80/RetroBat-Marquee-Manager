@@ -35,7 +35,11 @@ A surface's “**Configure**” button opens the graphic creation interface, Pho
 - **center, the canvas** at the surface's real scale: drag, resize handle, magnetic guides, Del, Ctrl+D (duplicate), Ctrl+Z/Y (undo/redo) — with a real example game's media;
 - **right, the layers** (eye to hide, padlock to lock, ↑↓ for z-order) and the **inspector**: layout (x, y, width, height as fractions — the creation survives any resolution change), content (visibility state, `{name}` `{year}` templates…), style.
 
-The **ES browsing / Ingame / Both** tabs at the top filter editing per state.
+The **ES browsing / Ingame** tabs at the top filter editing per state. A layer's **eye** means “shown in THIS state”: 👁 it is, ◌ it is absent from this state but present in the other, — it is off everywhere.
+
+Four layers are **pinned** and cannot be deleted: **Animated events**, **Lamps** and **Lighting** at the top, the **Game image** at the very bottom. They cover the whole surface by definition and therefore do not move. Switching one off does more than hide it: its engine is **not built** and costs nothing at all.
+
+The **live score, live timer and RetroAchievements** overlays belong to the **Ingame** state only: there is no score and no session to report while browsing. Their eye only switches them on or off.
 
 !!! tip "A well-placed fanart"
     The Fanart preset covers the whole frame; the readability gradient sits above it and the centered logo takes 50 % of the width — the generated-marquee recipe, now editable.

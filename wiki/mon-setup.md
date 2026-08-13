@@ -35,7 +35,11 @@ Le bouton « **Configurer** » d'une surface ouvre l'interface de création grap
 - **au centre, le canvas** à l'échelle réelle de la surface : glisser, poignée de redimensionnement, guides magnétiques, Suppr, Ctrl+D (dupliquer), Ctrl+Z/Y (annuler/rétablir) — avec les vrais médias d'un jeu d'exemple ;
 - **à droite, les calques** (œil pour masquer, cadenas pour verrouiller, ↑↓ pour l'ordre) et l'**inspecteur** : disposition (x, y, largeur, hauteur en fractions — la création survit à tout changement de résolution), contenu (état de visibilité, gabarits `{name}` `{year}`…), style.
 
-Les onglets **Navigation ES / En jeu / Les deux** en haut filtrent l'édition par état.
+Les onglets **Navigation ES / En jeu** en haut filtrent l'édition par état. L'**œil** d'un calque veut dire « affiché dans CET état » : 👁 il l'est, ◌ il est absent de cet état mais présent dans l'autre, — il est éteint partout.
+
+Quatre calques sont **épinglés** et ne se suppriment pas : en haut **Événements animés**, **Lampes** et **Lumière**, tout au fond l'**Image du jeu**. Ils couvrent toute la surface par définition et ne se déplacent donc pas. Éteindre l'un d'eux ne fait pas que le cacher : son moteur **n'est pas construit** et ne consomme plus rien.
+
+Les overlays **score live, timer live et RetroAchievements** sont réservés à l'état **En jeu** : il n'y a ni score ni session à rapporter pendant la navigation. Leur œil ne fait que les allumer ou les éteindre.
 
 !!! tip "Un fanart bien posé"
     Le préréglage Fanart couvre tout le cadre ; le gradient de lisibilité s'insère au-dessus, le logo centré occupe 50 % de la largeur — la recette des marquees générés, éditable.

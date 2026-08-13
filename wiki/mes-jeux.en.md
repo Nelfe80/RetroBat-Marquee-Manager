@@ -14,9 +14,15 @@ Pick the **surface** (suspended surfaces are hidden by default): below the picke
 
 The **composer** and the **delete** live on the “My creation for this game” card (**Compose / Edit**, **Delete**). Every **surface carries its own creation**: switch surface to see and edit each one.
 
-The **games' general template is per system**: “Edit the general template” composes a generic layout that applies to **every game of this system** (megadrive and nes can each have their own), each game receiving it with its own media. **My media folder** offers “**Open the folder**” to drop a raw file (game level: `media\marquees\user\<system>\<rom>.png`).
+The system picker starts with “**All games**”: the template of **last resort**, the one that dresses a game neither its own card nor its system speaks for. Below it, the **games' general template is per system**: “Edit the general template” composes a generic layout that applies to **every game of this system** (megadrive and nes can each have their own), each game receiving it with its own media — and it outranks the “All games” one. A selected system also offers “**Default for all games of this system**”: the source to prefer for every game of the system, which a game's own card can always override. **My media folder** offers “**Open the folder**” to drop a raw file (game level: `media\marquees\user\<system>\<rom>.png`).
 
-The creation interface: target (screen/surface) at the top, **media by type** on the left (click = pick the version in a per-source modal, static gradients and **image import** included), canvas in the middle (drag, wheel = size, Shift+wheel = rotate, resize/rotate **handles** on the selected layer), **layers** on the right (eye, padlock, ▲▼ arrows and drag & drop for z-order) with the layer inspector (size, rotation, opacity, text, mirror).
+The creation interface: target (screen/surface) at the top, **media by type** on the left, canvas in the middle, **layers** on the right (eye, padlock, ▲▼ arrows and drag & drop for z-order) with the layer inspector.
+
+**The palette lists every composable type**, whether or not the sample owns one: fanart, mix, logo, marquee, screen marquee, generated marquee and DMD, flyer, title screen, screenshot, 3D box, box front, bezel, plus the **system**'s fanart, logo and marquee. A type with no picture behind it is placed as a **coloured square** carrying its name — a layout is composed against **types**, the picture arrives game by game. The “**Show samples**” box swaps the stack to a real game's media to judge the result. A type the streams do not carry is marked: it composes here but will not display on the surface.
+
+For text: “Text: game name”, developer, publisher, year, **description**, genre, players, rating. The description lands in a **box** the handles resize in both directions; its **type size** and its **alignments** (left/center/right, top/middle/bottom) are set in the properties. A layer carrying nothing but a tag has no text field: its content belongs to the game.
+
+On the canvas: drag to move, wheel = size, Shift+wheel = rotate, resize and rotate **handles** on the selected layer — the corner **opposite** the one you grab stays put.
 
 ## Fetch media online
 
