@@ -156,7 +156,28 @@ public sealed class MonSetupView : UserControl
         for (var i = 0; i < _detected.Count; i++)
         {
             var info = _detected[i];
+            var resolution = $"{info.Bounds.Width}x{info.Bounds.Height}";
             var known = plan.FirstOrDefault(s => s.Id.Equals(info.DeviceName, StringComparison.OrdinalIgnoreCase));
+
+            // The name did not match. Windows device names are POSITIONAL — unplug a
+            // monitor and plug it back and the same panel returns as another DISPLAYn —
+            // so before inventing a screen, look for a saved one that is currently
+            // disconnected and has this exact resolution. Only when there is EXACTLY one
+            // such candidate: two identical panels would otherwise swap their settings
+            // behind the user's back, which is worse than an extra entry.
+            if (known == null)
+            {
+                var orphans = plan.Where(sc => !sc.Connected
+                                               && !sc.Id.Equals(PhysicalDmdId, StringComparison.OrdinalIgnoreCase)
+                                               && sc.Resolution.Equals(resolution, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                if (orphans.Count == 1)
+                {
+                    known = orphans[0];
+                    known.Id = info.DeviceName; // re-anchor on the name it answers to now
+                }
+            }
+
             if (known == null)
             {
                 known = new ScreenModel
@@ -172,6 +193,7 @@ public sealed class MonSetupView : UserControl
             }
             known.WindowsIndex = i;
             known.Connected = true;
+            known.Resolution = resolution;
         }
 
         // the physical DMD is a plan citizen: draggable, position persisted
@@ -441,6 +463,31 @@ public sealed class MonSetupView : UserControl
         managed.Unchecked += (_, _) => { screen.ManagedByMarqueeManager = false; RenderMap(); RenderScreenPanel(); };
         card.Children.Add(managed);
         card.Children.Add(managedHint);
+
+        // An absent screen can be dropped from the plan. Matching by resolution catches
+        // the ordinary unplug/replug, but nothing catches every case — a panel replaced
+        // by a different model leaves an entry no rule can recognise, and it must not be
+        // permanent furniture.
+        if (!screen.Connected && !screen.Id.Equals(PhysicalDmdId, StringComparison.OrdinalIgnoreCase))
+        {
+            var forget = Ui.Button(L.T("Retirer cet écran du plan", "Remove this screen from the plan"), (_, _) =>
+            {
+                _plan.Remove(screen);
+                _selected = null;
+                _store.Save(_surfaces, _plan);
+                RenderMap();
+                RenderScreenPanel();
+                _status.Text = L.T($"« {screen.Name} » retiré. Rebranchez-le et il reviendra.",
+                                   $"“{screen.Name}” removed. Plug it back in and it returns.");
+                _status.Foreground = Ui.Muted;
+            });
+            forget.Margin = new Thickness(0, 6, 0, 0);
+            forget.HorizontalAlignment = HorizontalAlignment.Left;
+            card.Children.Add(forget);
+            card.Children.Add(Ui.MutedLabel(L.T(
+                "Écran absent : ses surfaces sont conservées et suspendues tant qu'il ne revient pas.",
+                "Absent screen: its surfaces are kept and suspended until it comes back.")));
+        }
 
         // rename + identify + test pattern
         var tools = new WrapPanel { Margin = new Thickness(0, 4, 0, 4) };

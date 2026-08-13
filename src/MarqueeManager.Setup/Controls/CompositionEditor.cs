@@ -602,6 +602,19 @@ public sealed class CompositionEditor : Window
 
     /// <summary>Live layers are fed by the streams; baked under the light they would be
     /// covered by the opaque lit artwork.</summary>
+    /// <summary>
+    /// Overlays that only mean something WHILE PLAYING: a live score, a live timer, the
+    /// RetroAchievements panels. There is no score, no run and no session to report
+    /// while browsing the library — shown there they were simply the last game's
+    /// figures, left on screen. The state is not a preference for these, so it is
+    /// forced rather than offered.
+    /// </summary>
+    private static readonly HashSet<string> IngameOnlyTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "overlay.live.score", "overlay.live.timer",
+        "overlay.ra.info", "overlay.ra.badges", "overlay.ra.speedrun"
+    };
+
     private static readonly HashSet<string> LiveTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "media.video", "iccard.static", "iccard.cycle", "external.web",
@@ -665,6 +678,12 @@ public sealed class CompositionEditor : Window
             rail.W = 1;
             rail.H = 1;
         }
+
+        // 5. the ingame-only overlays are pinned to their state, whatever a composition
+        //    saved before this rule says. This is also the migration: an RA panel left
+        //    on "both" kept showing the previous session's badges over the library.
+        foreach (var overlay in components.Where(c => IngameOnlyTypes.Contains(c.Type)))
+            overlay.When = "ingame";
     }
 
     private static string StateName(string state)
@@ -684,6 +703,15 @@ public sealed class CompositionEditor : Window
     /// </summary>
     private void ToggleInState(ComponentModel component)
     {
+        // an ingame-only overlay has no state to be scoped into: the eye switches it on
+        // or off, nothing more
+        if (IngameOnlyTypes.Contains(component.Type))
+        {
+            component.Visible = !component.Visible;
+            component.When = "ingame";
+            return;
+        }
+
         var other = _state == "ingame" ? "navigation" : "ingame";
         if (!component.Visible)
         {
@@ -736,7 +764,10 @@ public sealed class CompositionEditor : Window
                 RenderAll();
             });
             eye.Padding = new Thickness(4, 2, 4, 2);
-            eye.ToolTip = !component.Visible
+            eye.ToolTip = IngameOnlyTypes.Contains(component.Type)
+                ? L.T("Uniquement en jeu : il n'y a ni score ni session a montrer pendant la navigation.",
+                      "Ingame only: there is no score and no session to report while browsing.")
+                : !component.Visible
                 ? L.T("Éteint partout — cliquez pour rallumer ici.", "Off everywhere — click to switch it back on here.")
                 : inState
                     ? L.T($"Affiché en {StateName(_state)} — cliquez pour le retirer de cet état.",

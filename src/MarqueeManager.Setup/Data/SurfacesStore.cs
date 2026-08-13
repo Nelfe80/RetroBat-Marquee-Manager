@@ -40,6 +40,14 @@ public sealed class ScreenModel
     public bool Connected { get; set; } = true;    // recomputed at load
     public string Usage { get; set; } = "";        // marquee/topper/iccard/dmd/game/mixed/custom
 
+    /// <summary>
+    /// Resolution last seen for this screen, "1920x720". Windows device names are
+    /// POSITIONAL: unplug a monitor and plug it back and the same panel can return as
+    /// DISPLAY3, so matching on the name alone invented a second screen and left the
+    /// first behind as "absent". This is the fallback identity used to recognise it.
+    /// </summary>
+    public string Resolution { get; set; } = "";
+
     /// <summary>Independent of <see cref="Usage"/>: when false, MarqueeManager
     /// creates NO window for this screen (its surfaces are kept but suspended, and
     /// it is offered to no composer). Defaults to true so every existing document
@@ -113,6 +121,7 @@ public sealed class SurfacesStore
                     PhysicalY = Dbl(element, "physicalY") ?? 0,
                     Rotation = Int(element, "rotation") ?? 0,
                     Usage = Str(element, "usage"),
+                    Resolution = Str(element, "resolution"),
                     // absent = managed (existing documents predate this field)
                     ManagedByMarqueeManager = Bool(element, "managedByMarqueeManager") ?? true
                 };
@@ -275,6 +284,7 @@ public sealed class SurfacesStore
                 ["physicalY"] = screen.PhysicalY,
                 ["rotation"] = screen.Rotation,
                 ["usage"] = screen.Usage,
+                ["resolution"] = screen.Resolution,
                 ["managedByMarqueeManager"] = screen.ManagedByMarqueeManager
             }).ToList(),
             ["surfaces"] = surfaces.Select(Serialize).ToList()
