@@ -210,6 +210,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 ApplyDynamicSuppression(); // the flattened run differs per state
                 ScopeLayer(_lightingHost, "lighting.engine");
                 ScopeLayer(_effectsHost, "effects.engine");
+                ScopeBuiltInOverlays();
                 if (_surface != null && !_surface.When.Equals("both", StringComparison.OrdinalIgnoreCase))
                 {
                     var active = _surface.ActiveIn(scene);
@@ -275,6 +276,36 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// also draws the rbmarquee lamps driven by live MAME outputs, so it can never
         /// be navigation-only. Only applied once the layer has been started.
         /// The events layer additionally unmounts whenever it draws nothing.</summary>
+        /// <summary>
+        /// The information overlays are BUILT-IN: ComponentHost skips them, so they have
+        /// no visual in its list and RefreshVisibility never sees them. Their content is
+        /// pushed by the services and stayed on screen for as long as nobody took it
+        /// away — which is why the badges of a finished session followed the user around
+        /// the library. New updates were already refused out of scope
+        /// (WindowsWithComponent tests ActiveIn); what was missing was clearing what had
+        /// already been drawn when the state changes.
+        /// </summary>
+        private void ScopeBuiltInOverlays()
+        {
+            if (!IsComponentActive("overlay.ra.badges")) ClearBadgeTray();
+            if (!IsComponentActive("overlay.ra.speedrun")) ResetSpeedrunCache();
+
+            foreach (var owner in _informationOverlays.Keys.ToArray())
+            {
+                if (!IsComponentActive(ComponentForOverlayOwner(owner))) RemoveInformationOverlay(owner);
+            }
+        }
+
+        /// <summary>Mirror of the controller's owner → component mapping: the same
+        /// owners must answer to the same component on both sides.</summary>
+        private static string ComponentForOverlayOwner(string owner)
+        {
+            if (owner.StartsWith("hiscore", StringComparison.OrdinalIgnoreCase)) return "overlay.hiscore";
+            if (owner.StartsWith("live-score", StringComparison.OrdinalIgnoreCase)) return "overlay.live.score";
+            if (owner.StartsWith("live-timer", StringComparison.OrdinalIgnoreCase)) return "overlay.live.timer";
+            return "overlay.ra.info";
+        }
+
         private void ScopeLayer(WpfSkiaSurfaceHost? host, string componentType)
         {
             if (host == null || !host.IsRunning) return;
