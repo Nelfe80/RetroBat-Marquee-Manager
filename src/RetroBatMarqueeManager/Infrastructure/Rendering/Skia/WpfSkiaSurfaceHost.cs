@@ -106,6 +106,14 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     /// showing a layer that has not started yet.</summary>
     public bool IsRunning => _renderThread != null;
 
+    /// <summary>
+    /// Out of scope: the loop stops rasterising instead of merely being hidden. A
+    /// hidden host kept painting frames nobody could see — CPU spent on a layer the
+    /// user had switched off, which is exactly what "hide the lighting" was meant to
+    /// stop.
+    /// </summary>
+    public volatile bool Suspended;
+
     public void Start(ISkiaFrameRenderer renderer)
     {
         if (_renderThread != null) return;
@@ -201,6 +209,12 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
 
         while (!ct.IsCancellationRequested)
         {
+            if (Suspended)
+            {
+                Thread.Sleep(100); // nothing to draw, and nothing watching
+                continue;
+            }
+
             var frameStart = clock.ElapsedTicks;
             // §6: pace to what the content actually needs, never above the config cap
             var targetFps = Math.Clamp(Math.Min(_fpsLimit, _renderer?.DesiredFps ?? _fpsLimit), 1, 240);

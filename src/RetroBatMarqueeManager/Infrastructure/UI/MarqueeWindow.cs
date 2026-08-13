@@ -284,6 +284,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             // every effect would trigger a measure/arrange pass over the whole window
             // — a layout storm on a layer that toggles several times a second.
             host.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+            host.Suspended = !visible; // stop drawing, not just stop showing
         }
 
         private bool _effectsHasContent;

@@ -49,6 +49,15 @@ public sealed record SurfaceDefinition(
     public bool HasComponent(string type)
         => Components.Any(c => c.Type.Equals(type, StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>
+    /// True when a component of this type could show at SOME point: it exists and its
+    /// eye is on. Building an engine on the mere existence of its component meant a
+    /// lamp scene switched off in both states still ran, and still drove its outputs —
+    /// hidden is not the same as skipped.
+    /// </summary>
+    public bool HasVisibleComponent(string type)
+        => Components.Any(c => c.Type.Equals(type, StringComparison.OrdinalIgnoreCase) && c.Visible);
+
     public ComponentDefinition? Component(string type)
         => Components.FirstOrDefault(c => c.Type.Equals(type, StringComparison.OrdinalIgnoreCase));
 

@@ -106,10 +106,10 @@ public sealed class MarqueeController : IDisposable
                         continue;
                     }
 
-                    var lighting = surface.HasComponent("lighting.engine") ? lightingOptions : null;
+                    var lighting = surface.HasVisibleComponent("lighting.engine") ? lightingOptions : null;
                     // the events layer has its own host: it must exist even where no
                     // lighting scene does (fanart surface, video marquee, iccard…)
-                    var effects = surface.HasComponent("effects.engine") ? effectsOptions : null;
+                    var effects = surface.HasVisibleComponent("effects.engine") ? effectsOptions : null;
                     var window = new MarqueeWindow(screen, _logger,
                         lighting,
                         surface.Bounds,

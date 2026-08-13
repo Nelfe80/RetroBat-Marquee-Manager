@@ -460,7 +460,10 @@ public sealed class CompositionEditor : Window
                                   && position.X >= Canvas.GetLeft(el) && position.X <= Canvas.GetLeft(el) + el.Width
                                   && position.Y >= Canvas.GetTop(el) && position.Y <= Canvas.GetTop(el) + el.Height);
         _selected = hit?.Tag as ComponentModel;
-        if (_selected is { Locked: false })
+        // a rail covers the surface by definition: it is selectable, so its properties
+        // stay reachable, but dragging or resizing it would only produce a frame that
+        // means nothing
+        if (_selected is { Locked: false } && !IsPinned(_selected.Type))
         {
             SnapshotHistory();
             _dragging = _selected;
@@ -649,6 +652,19 @@ public sealed class CompositionEditor : Window
             .Reverse() // list order is back → front, PinnedFront is front → back
             .ToList();
         for (var i = 0; i < slots.Count; i++) components[slots[i].Index] = desired[i];
+
+        // 4. a rail covers the WHOLE surface, always. The lighting lights what is under
+        //    it, the lamps sit on the cabinet, the game image is the floor: none of the
+        //    three means anything as a rectangle you can drag into a corner. Forcing the
+        //    frame here also keeps a rail that was moved before this rule from staying
+        //    stuck off-centre.
+        foreach (var rail in components.Where(c => IsPinned(c.Type)))
+        {
+            rail.X = 0;
+            rail.Y = 0;
+            rail.W = 1;
+            rail.H = 1;
+        }
     }
 
     private static string StateName(string state)
