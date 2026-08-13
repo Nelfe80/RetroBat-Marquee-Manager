@@ -837,6 +837,9 @@ public sealed class WebSocketListenerService : BackgroundService
             _lastMarqueeKinds["topper"] = MediaPath(media, "Topper");
             ReadAssetTables(payload, _lastMarqueeKinds);
         }
+        // a marquee prints the game's name, its genre, its description: the text has to
+        // be here BEFORE the gabarit renders, not on a stream that arrives afterwards
+        ReadTextBlock(payload, snapshotMeta?.Rom);
         _lastMarqueeMeta = snapshotMeta;
         lock (_lastMarqueeKinds) RememberKinds("marquee", snapshotMeta?.Rom, new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase));
 

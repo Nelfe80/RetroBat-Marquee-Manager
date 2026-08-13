@@ -47,6 +47,11 @@ public sealed class MarqueeComposer : UserControl
     private double _gestureStartDist;
     private double _gestureStartRotation;
     private double _gestureStartAngle;
+    /// <summary>Corner kept fixed while resizing, and the centre when the gesture began:
+    /// together they let the grabbed corner follow the pointer while its opposite stays
+    /// anchored.</summary>
+    private Point _gestureAnchor;
+    private Point _gestureStartCenter;
     private const double HandleSize = 9;   // px square/dot side
     private const double HandleHit = 8;    // px pick tolerance
     private const double RotateArm = 22;   // px from top edge to rotation dot
@@ -396,12 +401,19 @@ public sealed class MarqueeComposer : UserControl
             _canvas.CaptureMouse();
             return true;
         }
-        if (layer.Model.Source != "text" && g.corners.Any(c => Near(position, c)))
+        // Text resizes like anything else. Excluding it meant a caption could only be
+        // sized from the inspector, which is why aligning one against a logo was such a
+        // fight.
+        var grabbed = Array.FindIndex(g.corners, c => Near(position, c));
+        if (grabbed >= 0)
         {
             _mode = Handle.Resize;
-            _gestureCenter = g.center;
+            // the OPPOSITE corner is the fixed point: scaling around the centre moved
+            // both edges at once, so an element aligned on one side never stayed put
+            _gestureAnchor = g.corners[(grabbed + 2) % 4];
+            _gestureStartCenter = g.center;
             _gestureStartScale = layer.Model.Scale;
-            _gestureStartDist = Math.Max(1, Dist(g.center, position));
+            _gestureStartDist = Math.Max(1, Dist(_gestureAnchor, position));
             _canvas.CaptureMouse();
             return true;
         }
@@ -428,8 +440,16 @@ public sealed class MarqueeComposer : UserControl
                 _selected.Model.Y = Math.Clamp(_dragOrigin.Y + (position.Y - _dragStart.Y) / _displayHeight, -0.5, 1.5);
                 break;
             case Handle.Resize:
-                var ratio = Dist(_gestureCenter, position) / _gestureStartDist;
+                var ratio = Dist(_gestureAnchor, position) / _gestureStartDist;
                 _selected.Model.Scale = Math.Clamp(_gestureStartScale * ratio, 0.05, 3.0);
+                // move the centre so the anchored corner stays exactly where it was.
+                // Uses the CLAMPED scale, otherwise the layer keeps sliding once the
+                // size has stopped changing.
+                var applied = _selected.Model.Scale / _gestureStartScale;
+                _selected.Model.X = Math.Clamp(
+                    (_gestureAnchor.X + (_gestureStartCenter.X - _gestureAnchor.X) * applied) / DisplayWidth, -0.5, 1.5);
+                _selected.Model.Y = Math.Clamp(
+                    (_gestureAnchor.Y + (_gestureStartCenter.Y - _gestureAnchor.Y) * applied) / _displayHeight, -0.5, 1.5);
                 SyncInspector();
                 StackChanged?.Invoke();
                 break;
@@ -790,8 +810,9 @@ public sealed class MarqueeComposer : UserControl
     }
 
     /// <summary>Draws the direct-manipulation handles of the selected layer: a
-    /// rotation arm + dot above the top edge, and corner squares to resize
-    /// (media only — text is sized by its font, not by Scale).</summary>
+    /// rotation arm + dot above the top edge, and corner squares to resize. EVERY layer
+    /// gets them, text included: its Scale drives its font size just as it drives a
+    /// medium's height.</summary>
     private void DrawHandles(LayerVisual layer)
     {
         var g = HandleGeometry(layer);
@@ -802,12 +823,9 @@ public sealed class MarqueeComposer : UserControl
             Stroke = Ui.Accent, StrokeThickness = 1.2, IsHitTestVisible = false
         });
         _canvas.Children.Add(HandleDot(g.rotate, round: true));
-        if (layer.Model.Source != "text")
+        foreach (var corner in g.corners)
         {
-            foreach (var corner in g.corners)
-            {
-                _canvas.Children.Add(HandleDot(corner, round: false));
-            }
+            _canvas.Children.Add(HandleDot(corner, round: false));
         }
     }
 
