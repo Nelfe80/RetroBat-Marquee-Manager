@@ -51,6 +51,7 @@ public sealed class SurfacesView : UserControl
         ("overlay.ra.speedrun", "Speedrun RA", "RA speedrun"),
         ("iccard.static", "Carte fixe", "Static card"),
         ("iccard.cycle", "Carte variable", "Cycling card"),
+        ("panel.controls", "Panneau de contrôle (joueur)", "Control panel (player)"),
         ("shape.gradient", "Gradient (lisibilité)", "Gradient (readability)"),
         ("external.web", "Web embarqué (Twitch, YouTube…)", "Embedded web (Twitch, YouTube…)")
     };
@@ -397,6 +398,7 @@ public sealed class SurfacesView : UserControl
                 "iccard.static" => "card",
                 "shape.gradient" => "color",
                 "media.video" => "sources",
+                "panel.controls" => "player",
                 _ => null
             };
             if (optionKey != null)

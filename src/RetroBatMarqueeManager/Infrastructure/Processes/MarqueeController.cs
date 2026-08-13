@@ -125,6 +125,8 @@ public sealed class MarqueeController : IDisposable
                     // apply the INITIAL display state: an ingame-only surface must
                     // not sit over ES from startup until the first scene event
                     window.SetDisplayScene("navigation");
+                    // …and whatever the panel stream said before this window existed
+                    ReplayPanelState(window);
                     _logger.LogInformation("Surface {Id} ({Category}) opened on screen {Screen}, bounds={Bounds}",
                         surface.Id, surface.Category, screen, surface.Bounds);
                 }
@@ -234,6 +236,57 @@ public sealed class MarqueeController : IDisposable
             window.UpdateComponentMedia(kinds);
             window.UpdateComponentMeta(meta);
         }
+    }
+
+    // The panel description is RETAINED on the stream: it arrives once, on connection,
+    // and the surfaces open two seconds later — so a window born afterwards would never
+    // learn what the cabinet looks like and would keep drawing the fallback panel. Kept
+    // here and replayed to each window as it opens.
+    private readonly object _panelLock = new();
+    private Core.Surfaces.PanelBoardConfig? _lastPanelConfig;
+    private readonly Dictionary<int, IReadOnlyDictionary<int, Core.Surfaces.PanelBoardButton>> _lastPanelButtons = new();
+
+    /// <summary>Cabinet panel description (retained on /ws/panel) → every panel
+    /// component, whichever surface carries it.</summary>
+    public void UpdatePanelConfig(Core.Surfaces.PanelBoardConfig config)
+    {
+        lock (_panelLock) _lastPanelConfig = config;
+        foreach (var window in AllWindows()) window.UpdatePanelConfig(config);
+    }
+
+    /// <summary>What the selected game does with each place of one player's panel.</summary>
+    public void UpdatePanelButtons(int player, IReadOnlyDictionary<int, Core.Surfaces.PanelBoardButton> buttons)
+    {
+        lock (_panelLock) _lastPanelButtons[player] = buttons;
+        foreach (var window in AllWindows()) window.UpdatePanelButtons(player, buttons);
+    }
+
+    /// <summary>Hands a freshly opened window what the stream already said. Without it
+    /// the panel would wait for the next reconfiguration — which may never come.</summary>
+    private void ReplayPanelState(MarqueeWindow window)
+    {
+        Core.Surfaces.PanelBoardConfig? config;
+        KeyValuePair<int, IReadOnlyDictionary<int, Core.Surfaces.PanelBoardButton>>[] buttons;
+        lock (_panelLock)
+        {
+            config = _lastPanelConfig;
+            buttons = _lastPanelButtons.ToArray();
+        }
+
+        if (config != null) window.UpdatePanelConfig(config);
+        foreach (var (player, slots) in buttons) window.UpdatePanelButtons(player, slots);
+    }
+
+    /// <summary>A physical press/release resolved to a slot.</summary>
+    public void SetPanelInput(int player, int? slot, string? system, bool pressed)
+    {
+        foreach (var window in AllWindows()) window.SetPanelInput(player, slot, system, pressed);
+    }
+
+    /// <summary>Every panel light out.</summary>
+    public void ReleasePanelInputs()
+    {
+        foreach (var window in AllWindows()) window.ReleasePanelInputs();
     }
 
     /// <summary>Feeds one component type directly (instruction card split…).</summary>

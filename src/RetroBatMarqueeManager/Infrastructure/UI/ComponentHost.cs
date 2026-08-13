@@ -159,6 +159,51 @@ public sealed class ComponentHost : Canvas
         }
     }
 
+    /// <summary>The cabinet's own panel description (retained on /ws/panel, so it
+    /// arrives on connection). Every panel component takes it: the cabinet is the same
+    /// on both sides, only the player differs.</summary>
+    public void ApplyPanelConfig(Core.Surfaces.PanelBoardConfig config)
+    {
+        foreach (var (_, element) in _visuals)
+        {
+            if (element is PanelControlsView panel) panel.ApplyConfig(config);
+        }
+    }
+
+    /// <summary>What the SELECTED game does with each place, per player. Being on a
+    /// game's card in ES is enough — nothing has to be launched for the panel to tell
+    /// what its buttons do.</summary>
+    public void ApplyPanelButtons(int player, IReadOnlyDictionary<int, Core.Surfaces.PanelBoardButton> buttons)
+    {
+        foreach (var (_, element) in _visuals)
+        {
+            if (element is PanelControlsView panel && panel.Player == player) panel.ApplyButtons(buttons);
+        }
+    }
+
+    /// <summary>A physical press, already resolved to a slot by APIExpose. Only the
+    /// panel of the player who pressed lights up — that a press on panel 2 lights
+    /// panel 2 is itself part of what the check verifies.</summary>
+    public void SetPanelInput(int player, int? slot, string? system, bool pressed)
+    {
+        foreach (var (_, element) in _visuals)
+        {
+            if (element is not PanelControlsView panel || panel.Player != player) continue;
+            if (slot.HasValue) panel.SetSlotPressed(slot.Value, pressed);
+            else if (!string.IsNullOrEmpty(system)) panel.SetSystemPressed(system, pressed);
+        }
+    }
+
+    /// <summary>Everything goes dark — the panel state on screen no longer describes
+    /// what is being pressed.</summary>
+    public void ReleasePanelInputs()
+    {
+        foreach (var (_, element) in _visuals)
+        {
+            if (element is PanelControlsView panel) panel.ReleaseAll();
+        }
+    }
+
     // ================= construction =================
 
     private FrameworkElement? Build(ComponentDefinition component)
@@ -226,6 +271,14 @@ public sealed class ComponentHost : Canvas
                         start, end)
                 };
             }
+
+            case "panel.controls":
+                // one component per player panel: a two-player cabinet places two of
+                // them, each drawing its own side
+                return new PanelControlsView(
+                    int.TryParse(component.Option("player", "1"), out var player) ? player : 1,
+                    component.Option("labels", "true") != "false",
+                    component.Option("system", "true") != "false");
 
             case "external.web":
                 return BuildWebView(component);

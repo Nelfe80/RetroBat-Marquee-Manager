@@ -38,6 +38,11 @@ public sealed class WebSocketListenerService : BackgroundService
     private string? _selectedSystem;
     private string? _selectedRom;
     private string? _runningRom;
+    // The cabinet's panel description, kept so the stick colour published with a GAME
+    // can be folded into it without waiting for the cabinet to be described again.
+    private Core.Surfaces.PanelBoardConfig? _panelConfig;
+    private string _panelStickColor = string.Empty;
+    private bool _panelInputSeen;
     // Deferred ingame effects (sequenced actions) belong to the current play
     // session: a sprite scheduled 1.5 s out must NOT fire after the game ended or
     // another game started (§5 "Effets différés").
@@ -657,6 +662,9 @@ public sealed class WebSocketListenerService : BackgroundService
                 var uri = new Uri($"{_config.ApiExposeWebSocketBaseUrl}/ws/{stream}");
                 await socket.ConnectAsync(uri, cancellationToken);
                 _logger.LogInformation("Connected to APIExpose {Stream} stream", stream);
+                // A release that happened while we were disconnected will never arrive:
+                // start from a dark panel rather than from a button we only THINK is held.
+                if (stream.Equals("panel", StringComparison.OrdinalIgnoreCase)) _surfaces.ReleasePanelInputs();
                 await ReceiveAsync(socket, stream, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
@@ -720,12 +728,17 @@ public sealed class WebSocketListenerService : BackgroundService
                 batch.Clear();
                 while (reader.TryRead(out var pending)) batch.Add(pending);
 
-                var lastSnapshot = -1;
-                for (var i = batch.Count - 1; i >= 0; i--)
+                // Coalescing is per SUBJECT, not per stream: two messages only supersede
+                // each other when they describe the same thing. Dropping everything but
+                // the last message of a stream lost the cabinet's panel description
+                // whenever the game's panel state followed it in the same batch — two
+                // different subjects, one of them silently gone.
+                var newest = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                var keys = new string?[batch.Count];
+                for (var i = 0; i < batch.Count; i++)
                 {
-                    if (!IsSnapshotMessage(stream, batch[i])) continue;
-                    lastSnapshot = i;
-                    break;
+                    keys[i] = CoalescingKey(stream, batch[i]);
+                    if (keys[i] is { } key) newest[key] = i;
                 }
 
                 var skipped = 0;
@@ -734,7 +747,7 @@ public sealed class WebSocketListenerService : BackgroundService
                     var document = batch[i];
                     try
                     {
-                        if (i < lastSnapshot && IsSnapshotMessage(stream, document))
+                        if (keys[i] is { } key && newest[key] != i)
                         {
                             skipped++;
                             continue;
@@ -765,12 +778,26 @@ public sealed class WebSocketListenerService : BackgroundService
         }
     }
 
-    /// <summary>frontend carries both state (`*.selected*`) and lifecycle events;
-    /// the other state streams are pure snapshots.</summary>
-    private static bool IsSnapshotMessage(string stream, JsonDocument document)
+    /// <summary>
+    /// What this message would supersede: two messages sharing a key describe the same
+    /// subject, so only the newest is worth processing. A null key means "never skip" —
+    /// the message is an EVENT, not a state, and skipping it loses something that
+    /// happened.
+    ///
+    /// frontend: every `*.selected*` shares one key (they are one subject, the current
+    /// selection); its lifecycle events (game started/ended) are never skipped.
+    /// panel: the presses are events — a press and its release arrive milliseconds
+    /// apart, and coalescing them dropped the press and kept the release, so the button
+    /// never lit and nothing looked broken.
+    /// </summary>
+    private static string? CoalescingKey(string stream, JsonDocument document)
     {
-        if (!stream.Equals("frontend", StringComparison.OrdinalIgnoreCase)) return true;
-        return Text(document.RootElement, "Type", "type").Contains(".selected", StringComparison.OrdinalIgnoreCase);
+        var type = Text(document.RootElement, "Type", "type");
+        if (stream.Equals("frontend", StringComparison.OrdinalIgnoreCase))
+            return type.Contains(".selected", StringComparison.OrdinalIgnoreCase) ? "selection" : null;
+        if (stream.Equals("panel", StringComparison.OrdinalIgnoreCase))
+            return type.StartsWith("panel.input.", StringComparison.OrdinalIgnoreCase) ? null : type;
+        return type.Length > 0 ? type : stream;
     }
 
     private async Task ProcessAsync(string stream, JsonElement root, CancellationToken cancellationToken)
@@ -805,7 +832,7 @@ public sealed class WebSocketListenerService : BackgroundService
                 await HandleInstructionCardAsync(root, cancellationToken);
                 return;
             case "panel":
-                await HandleSimpleMediaAsync(root, "lcd", cancellationToken);
+                await HandlePanelAsync(root, cancellationToken);
                 return;
             case "hiscore":
                 HandleHiscore(root, cancellationToken);
@@ -1302,6 +1329,176 @@ public sealed class WebSocketListenerService : BackgroundService
         // left the last game's card on screen — one card following you across the whole
         // library. Nothing of an entry may survive into the next.
         await _instructionCards.SetCardsAsync(paths, cancellationToken);
+    }
+
+    /// <summary>
+    /// The panel stream carries three different things, and each has its own life:
+    /// the CABINET's description (retained, changes only when the user reconfigures),
+    /// what the SELECTED GAME makes of each button (changes with every selection), and
+    /// the PRESSES themselves (events, never coalesced).
+    ///
+    /// Anything else on the stream keeps its historical route to the lcd surface.
+    /// </summary>
+    private async Task HandlePanelAsync(JsonElement root, CancellationToken cancellationToken)
+    {
+        var type = Text(root, "Type", "type");
+
+        if (type.StartsWith("panel.input.", StringComparison.OrdinalIgnoreCase))
+        {
+            HandlePanelInput(root, type.EndsWith(".pressed", StringComparison.OrdinalIgnoreCase));
+            return;
+        }
+
+        if (type.Equals("panel.config.changed", StringComparison.OrdinalIgnoreCase))
+        {
+            HandlePanelConfig(root);
+            return;
+        }
+
+        if (type.Equals("panel.state", StringComparison.OrdinalIgnoreCase))
+        {
+            HandlePanelState(root);
+            return;
+        }
+
+        await HandleSimpleMediaAsync(root, "lcd", cancellationToken);
+    }
+
+    /// <summary>The cabinet's own description: how many panels, how many buttons each,
+    /// where they sit. Read from the stream and NOT from APIExpose's settings file —
+    /// the panel drawn has to be the panel the API is publishing.</summary>
+    private void HandlePanelConfig(JsonElement root)
+    {
+        var payload = Payload(root);
+        var cabinet = Child(payload, "Cabinet", "cabinet");
+        var layout = Child(payload, "Layout", "layout");
+
+        var rows = new List<IReadOnlyList<int>>();
+        var rowsElement = Child(layout, "Rows", "rows");
+        if (rowsElement.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var row in rowsElement.EnumerateArray())
+            {
+                if (row.ValueKind != JsonValueKind.Array) continue;
+                var slots = row.EnumerateArray()
+                    .Where(x => x.ValueKind == JsonValueKind.Number)
+                    .Select(x => x.GetInt32())
+                    .ToArray();
+                if (slots.Length > 0) rows.Add(slots);
+            }
+        }
+
+        // no rows, no drawing: without the arrangement we know WHICH buttons the cabinet
+        // has but not where they go, and inventing a layout would show a panel that is
+        // not this cabinet's
+        if (rows.Count == 0) return;
+
+        var config = new Core.Surfaces.PanelBoardConfig(
+            Math.Max(1, Integer(cabinet, "PlayerCount", "playerCount") ?? 1),
+            Integer(cabinet, "ButtonsPerPlayer", "buttonsPerPlayer") ?? rows.Sum(r => r.Count),
+            rows,
+            Boolean(cabinet, "ArcadeJoystick", "arcadeJoystick") || Boolean(cabinet, "AnalogJoystick", "analogJoystick"),
+            _panelStickColor);
+
+        _panelConfig = config;
+        _surfaces.UpdatePanelConfig(config);
+        _logger.LogInformation("Panel config: {Players} panel(s), {Buttons} button(s), {Rows} row(s)",
+            config.PlayerCount, config.ButtonsPerPlayer, rows.Count);
+    }
+
+    /// <summary>
+    /// What the selected game does with each place. Being on the game's card in ES is
+    /// enough — nothing has to be launched — which is exactly how a player uses it:
+    /// browse the library, read what each button does, game after game.
+    /// </summary>
+    private void HandlePanelState(JsonElement root)
+    {
+        var payload = Payload(root);
+        var panel = Child(payload, "ActivePanel", "activePanel");
+        var inputs = Child(Child(panel, "ControlMap", "controlMap"), "Inputs", "inputs");
+        if (inputs.ValueKind != JsonValueKind.Array) return;
+
+        var byPlayer = new Dictionary<int, Dictionary<int, Core.Surfaces.PanelBoardButton>>();
+        string? stickColor = null;
+
+        foreach (var input in inputs.EnumerateArray())
+        {
+            var color = Text(input, "Color", "color");
+            if (stickColor == null && color.Length > 0
+                && Text(input, "DeviceType", "deviceType").Contains("joy", StringComparison.OrdinalIgnoreCase))
+            {
+                // the stick's colour is data too (1941 red, sf2 blue), not a decoration
+                // to invent
+                stickColor = color;
+            }
+
+            if (Integer(input, "Slot", "slot") is not { } slot) continue;
+            var player = Math.Max(1, Integer(input, "Player", "player") ?? 1);
+            var function = Text(input, "Function", "function");
+            var used = function.Length > 0;
+
+            var slots = byPlayer.TryGetValue(player, out var existing)
+                ? existing
+                : byPlayer[player] = new Dictionary<int, Core.Surfaces.PanelBoardButton>();
+
+            // a place described twice keeps the description that says something: an entry
+            // with no function must not erase the one that has one
+            if (slots.TryGetValue(slot, out var already) && already.Used && !used) continue;
+
+            var label = Text(input, "Label", "label");
+            slots[slot] = new Core.Surfaces.PanelBoardButton(
+                slot,
+                label.Length > 0 ? label : slot.ToString(),
+                function,
+                color,
+                used);
+        }
+
+        if (stickColor != null && !string.Equals(stickColor, _panelStickColor, StringComparison.OrdinalIgnoreCase))
+        {
+            _panelStickColor = stickColor;
+            if (_panelConfig != null) _surfaces.UpdatePanelConfig(_panelConfig with { StickColor = stickColor });
+        }
+
+        // Every panel the cabinet has, even those this game says nothing about: a player
+        // 2 panel left describing the PREVIOUS game would be a lie, and the rule is the
+        // same as for media — nothing of an entry survives into the next.
+        var panels = Math.Max(_panelConfig?.PlayerCount ?? 1, byPlayer.Keys.DefaultIfEmpty(1).Max());
+        for (var player = 1; player <= panels; player++)
+        {
+            _surfaces.UpdatePanelButtons(player,
+                byPlayer.TryGetValue(player, out var slots)
+                    ? slots
+                    : new Dictionary<int, Core.Surfaces.PanelBoardButton>());
+        }
+    }
+
+    /// <summary>A physical press, already resolved to a slot by APIExpose: the panel
+    /// lights the place that was pressed. If another place lights, the wiring is not
+    /// what the cabinet's map claims — which is the whole reason this exists.</summary>
+    private void HandlePanelInput(JsonElement root, bool pressed)
+    {
+        var payload = Payload(root);
+        var player = Math.Max(1, Integer(payload, "Player", "player") ?? 1);
+        var slot = Integer(payload, "Slot", "slot");
+        var system = Text(payload, "System", "system");
+        _surfaces.SetPanelInput(player, slot, system.Length > 0 ? system : null, pressed);
+
+        // The first press of a session is worth a line: it is the proof the whole chain
+        // is alive — cabinet, API, stream, surface — and the one thing a support log
+        // needs when someone reports "my panel does not light up". After that it would
+        // be one line per press, so it says nothing more.
+        if (pressed && !_panelInputSeen)
+        {
+            _panelInputSeen = true;
+            _logger.LogInformation("First panel press received: player {Player}, slot {Slot}, system {System}",
+                player, slot?.ToString() ?? "-", system.Length > 0 ? system : "-");
+        }
+        else if (pressed)
+        {
+            _logger.LogDebug("Panel press: player {Player}, slot {Slot}, system {System}",
+                player, slot?.ToString() ?? "-", system.Length > 0 ? system : "-");
+        }
     }
 
     private async Task HandleSimpleMediaAsync(JsonElement root, string defaultTarget, CancellationToken cancellationToken)
@@ -1900,6 +2097,17 @@ public sealed class WebSocketListenerService : BackgroundService
         var value = Child(source, names);
         return value.ValueKind == JsonValueKind.String ? value.GetString() ?? string.Empty : value.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null ? string.Empty : value.ToString();
     }
+    private static bool Boolean(JsonElement source, params string[] names)
+    {
+        var value = Child(source, names);
+        return value.ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.String => bool.TryParse(value.GetString(), out var parsed) && parsed,
+            _ => false
+        };
+    }
+
     private static int? Integer(JsonElement source, params string[] names)
     {
         var value = Child(source, names);

@@ -73,6 +73,34 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 foreach (var host in _componentHosts) host.ApplyMeta(meta);
             }));
 
+        /// <summary>Cabinet panel description → the panel components.</summary>
+        public void UpdatePanelConfig(Core.Surfaces.PanelBoardConfig config)
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.ApplyPanelConfig(config);
+            }));
+
+        /// <summary>What the selected game does with each place, for one player.</summary>
+        public void UpdatePanelButtons(int player, IReadOnlyDictionary<int, Core.Surfaces.PanelBoardButton> buttons)
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.ApplyPanelButtons(player, buttons);
+            }));
+
+        /// <summary>A physical press or release, resolved to a slot.</summary>
+        public void SetPanelInput(int player, int? slot, string? system, bool pressed)
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.SetPanelInput(player, slot, system, pressed);
+            }));
+
+        /// <summary>Drops every light: what was held belonged to the previous state.</summary>
+        public void ReleasePanelInputs()
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.ReleasePanelInputs();
+            }));
+
         /// <summary>Direct feed of one component type (instruction cards…).</summary>
         public void SetComponentSource(string type, string? path)
             => Dispatcher.BeginInvoke(new Action(() =>

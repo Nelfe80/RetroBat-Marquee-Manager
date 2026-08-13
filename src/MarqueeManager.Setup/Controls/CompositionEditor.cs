@@ -207,6 +207,11 @@ public sealed class CompositionEditor : Window
             new("📊 Live", L.T("Chat Twitch", "Twitch chat"),
                 () => new() { C("external.web", 0.7, 0, 0.3, 1, ("url", "https://www.twitch.tv/embed/MA_CHAINE/chat?parent=twitch.tv&darkpopout")) }),
 
+            // The cabinet's own panel: what its buttons do in the selected game, and
+            // which one is being pressed right now.
+            new("📊 Live", L.T("Panneau de contrôle", "Control panel"),
+                () => new() { C("panel.controls", 0.25, 0.5, 0.5, 0.45, ("player", "1")) }),
+
             new("🏆 RetroAchievements", L.T("Badges", "Badges"), () => new() { C("overlay.ra.badges", 0, 0.85, 1, 0.15) }),
             new("🏆 RetroAchievements", L.T("Infos RA", "RA info"), () => new() { C("overlay.ra.info", 0, 0.7, 1, 0.3) }),
             new("🏆 RetroAchievements", "Speedrun", () => new() { C("overlay.ra.speedrun") }),
@@ -619,7 +624,10 @@ public sealed class CompositionEditor : Window
     {
         "media.video", "iccard.static", "iccard.cycle", "external.web",
         "overlay.hiscore", "overlay.live.score", "overlay.live.timer",
-        "overlay.ra.info", "overlay.ra.badges", "overlay.ra.speedrun"
+        "overlay.ra.info", "overlay.ra.badges", "overlay.ra.speedrun",
+        // the panel lights up under the player's fingers: a baked copy would be a
+        // photograph of a panel nobody is pressing
+        "panel.controls"
     };
 
     private static string PinnedLabel(string type) => type.ToLowerInvariant() switch
@@ -930,6 +938,40 @@ public sealed class CompositionEditor : Window
             content.Children.Add(Ui.MutedLabel(L.T(
                 "D'où vient ce média ? Flux APIExpose du jeu courant, selon les priorités du système (Mes systèmes).",
                 "Where does this media come from? The current game's APIExpose stream, per the system priorities (My systems).")));
+        }
+        if (component.Type == "panel.controls")
+        {
+            // One component draws ONE player's panel. A two-player cabinet places two of
+            // them, each set to its side — that a press on panel 2 lights panel 2 is part
+            // of what the wiring check verifies.
+            var players = Ui.ComboBox(180);
+            var currentPlayer = component.Options.TryGetValue("player", out var pv) && pv.Length > 0 ? pv : "1";
+            for (var player = 1; player <= 4; player++)
+            {
+                var item = new ComboBoxItem { Content = L.T($"Joueur {player}", $"Player {player}"), Tag = player.ToString() };
+                players.Items.Add(item);
+                if (item.Tag as string == currentPlayer) players.SelectedItem = item;
+            }
+            if (players.SelectedItem == null) players.SelectedIndex = 0;
+            players.SelectionChanged += (_, _) =>
+            {
+                if ((players.SelectedItem as ComboBoxItem)?.Tag is string tag) component.Options["player"] = tag;
+            };
+            content.Children.Add(Ui.Row(L.T("Panneau", "Panel"), players, labelWidth: 90));
+
+            CheckBox PanelToggle(string key, string fr, string en)
+            {
+                var cb = Ui.CheckBox(L.T(fr, en),
+                    !component.Options.TryGetValue(key, out var v) || !v.Equals("false", StringComparison.OrdinalIgnoreCase));
+                cb.Checked += (_, _) => component.Options[key] = "true";
+                cb.Unchecked += (_, _) => component.Options[key] = "false";
+                return cb;
+            }
+            content.Children.Add(PanelToggle("labels", "Afficher la fonction des boutons", "Show what each button does"));
+            content.Children.Add(PanelToggle("system", "Afficher SELECT et START", "Show SELECT and START"));
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "Les boutons que le jeu n'utilise pas restent visibles, en transparence : le panneau montre la borne telle qu'elle est. Un appui physique allume le bouton correspondant — c'est ainsi qu'on vérifie son câblage.",
+                "Buttons the game does not use stay visible, faded: the panel shows the cabinet as it is. Pressing a physical button lights the matching one — that is how you check your wiring.")));
         }
         if (component.Type == "overlay.hiscore")
         {
