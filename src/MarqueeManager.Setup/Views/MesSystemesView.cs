@@ -196,7 +196,8 @@ public sealed class MesSystemesView : UserControl
             {
                 new GameComposerWindow(pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.SystemScope,
                     L.T($"Gabarit — tous les systèmes (aperçu : {sample})", $"Template — all systems (preview: {sample})"),
-                    SystemAssets(pluginRoot, sample), surface.Id, gabaritMode: true)
+                    SystemAssets(pluginRoot, sample), surface.Id, gabaritMode: true,
+                    sample: ("systems", sample))
                 {
                     Owner = System.Windows.Window.GetWindow(this)
                 }.ShowDialog();
@@ -257,7 +258,8 @@ public sealed class MesSystemesView : UserControl
                     // The selected system provides the assets for a concrete preview.
                     new GameComposerWindow(pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.SystemScope,
                         L.T($"Gabarit — tous les systèmes (aperçu : {system})", $"Template — all systems (preview: {system})"),
-                        SystemAssets(pluginRoot, system), surface.Id, gabaritMode: true)
+                        SystemAssets(pluginRoot, system), surface.Id, gabaritMode: true,
+                        sample: ("systems", system))
                     {
                         Owner = System.Windows.Window.GetWindow(this)
                     }.ShowDialog();

@@ -266,6 +266,15 @@ public sealed class MarqueeComposer : UserControl
         Changed?.Invoke();
     }
 
+    /// <summary>True when the layer's text is nothing but a token: its content belongs to
+    /// the entry, not to the template, so there is nothing for a human to type here.</summary>
+    public static bool IsTokenOnly(string? text)
+    {
+        var trimmed = (text ?? "").Trim();
+        return trimmed.Length > 2 && trimmed.StartsWith('{') && trimmed.EndsWith('}')
+               && !trimmed.AsSpan(1, trimmed.Length - 2).ContainsAny('{', '}');
+    }
+
     /// <summary>Places a media TYPE with no file behind it: the layout is authored on
     /// the type, the entry supplies the picture at render time.</summary>
     public void AddPlaceholderLayer(GabaritAssets.PaletteEntry entry)
@@ -736,7 +745,9 @@ public sealed class MarqueeComposer : UserControl
         double width;
         if (layer.Model.Source == "text")
         {
-            width = MeasureText(layer).Width;
+            // an empty token ({rating} on a game that has none) measures near zero and
+            // left a sliver nothing could be grabbed by: keep a minimum handle target
+            width = Math.Max(MeasureText(layer).Width, 24);
         }
         else
         {

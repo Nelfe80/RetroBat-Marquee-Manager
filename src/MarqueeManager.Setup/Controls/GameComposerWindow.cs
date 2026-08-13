@@ -28,6 +28,8 @@ public sealed class GameComposerWindow : Window
     private readonly string _rom;
     private readonly string _displayName;
     private readonly IReadOnlyList<GameAsset> _assets;
+    private readonly string _sampleSystem;
+    private readonly string _sampleRom;
     /// <summary>Placeholders by default: a template is authored on TYPES. Ticking the box
     /// swaps in one entry's real media to judge the layout against a real picture.</summary>
     private bool _showSamples;
@@ -49,12 +51,19 @@ public sealed class GameComposerWindow : Window
     /// surface 1 and creation B on surface 2 can coexist for the same game.
     /// System scope: system="systems", rom=&lt;system id&gt;. initialSurfaceId binds
     /// the target selector to the surface picked in the calling view.</summary>
+    /// <param name="sample">Entry the PREVIEW resolves against. A gabarit is stored under
+    /// a synthetic identity ("__gabarit__" / "game-arcade"), so resolving tokens against
+    /// it found no metadata at all and every one of them fell back to its own name —
+    /// the preview read "developer", "genre", "year" instead of the game's values.</param>
     public GameComposerWindow(string pluginRoot, string system, string rom, string displayName,
-        IReadOnlyList<GameAsset> assets, string? initialSurfaceId = null, bool gabaritMode = false)
+        IReadOnlyList<GameAsset> assets, string? initialSurfaceId = null, bool gabaritMode = false,
+        (string System, string Rom)? sample = null)
     {
         _pluginRoot = pluginRoot;
         _system = system;
         _rom = rom;
+        _sampleSystem = sample?.System ?? system;
+        _sampleRom = sample?.Rom ?? rom;
         _displayName = displayName;
         _assets = assets;
         _hasSystemAssets = true; // system logo/fanart/marquee exist for every system
@@ -397,10 +406,23 @@ public sealed class GameComposerWindow : Window
 
         if (layer.Source == "text")
         {
-            var textBox = Ui.TextBox(layer.Text ?? "", 200);
-            textBox.TextChanged += (_, _) => _composer.ApplyToLayer(layer, l => l.Text = textBox.Text);
-            _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Texte", "Text"), 11));
-            _inspectorPanel.Children.Add(textBox);
+            // A layer holding nothing but a token has no editable content: it is filled
+            // per entry at render time. Offering the raw "{developer}" as a text field
+            // invited editing something that is not text.
+            if (MarqueeComposer.IsTokenOnly(layer.Text))
+            {
+                _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Contenu", "Content"), 11));
+                _inspectorPanel.Children.Add(Ui.MutedLabel(
+                    L.T($"{TokenLabel(layer.Text)} — rempli pour chaque jeu.",
+                        $"{TokenLabel(layer.Text)} — filled in per game.")));
+            }
+            else
+            {
+                var textBox = Ui.TextBox(layer.Text ?? "", 200);
+                textBox.TextChanged += (_, _) => _composer.ApplyToLayer(layer, l => l.Text = textBox.Text);
+                _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Texte", "Text"), 11));
+                _inspectorPanel.Children.Add(textBox);
+            }
             var colorBox = Ui.TextBox(layer.TextColor, 100);
             colorBox.TextChanged += (_, _) => _composer.ApplyToLayer(layer, l => l.TextColor = colorBox.Text.Trim());
             _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Couleur", "Color"), 11));
@@ -517,7 +539,7 @@ public sealed class GameComposerWindow : Window
         {
             try
             {
-                var value = catalog.ReadMetadata(_system, _rom, field);
+                var value = catalog.ReadMetadata(_sampleSystem, _sampleRom, field);
                 return string.IsNullOrWhiteSpace(value) ? fallback : value!;
             }
             catch { return fallback; }
@@ -526,18 +548,18 @@ public sealed class GameComposerWindow : Window
         var release = Field("releasedate", "");
         return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["name"] = Field("name", _rom),
+            ["name"] = Field("name", _sampleRom),
             ["developer"] = Field("developer", L.T("développeur", "developer")),
             ["publisher"] = Field("publisher", L.T("éditeur", "publisher")),
             ["year"] = release.Length >= 4 ? release[..4] : L.T("année", "year"),
-            ["system"] = _system,
+            ["system"] = _sampleSystem,
             // A real description runs 500 to 1500 characters. When the sample has none,
             // stand in with filler of that LENGTH rather than a short sentence: the box
             // is sized against what will actually land in it.
             ["desc"] = Field("desc", LoremIpsum),
             ["genre"] = Field("genre", L.T("genre", "genre")),
             ["players"] = Field("players", "1-2"),
-            ["rating"] = Field("rating", ""),
+            ["rating"] = Field("rating", "14"),
         };
     }
 
@@ -649,6 +671,21 @@ public sealed class GameComposerWindow : Window
         + "aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui "
         + "ratione voluptatem sequi nesciunt.";
 
+    /// <summary>Human name of the single token a layer carries.</summary>
+    private static string TokenLabel(string? text) => (text ?? "").Trim().Trim('{', '}').ToLowerInvariant() switch
+    {
+        "name" => L.T("Nom du jeu", "Game name"),
+        "desc" => L.T("Description", "Description"),
+        "developer" => L.T("Développeur", "Developer"),
+        "publisher" => L.T("Éditeur", "Publisher"),
+        "year" => L.T("Année", "Year"),
+        "genre" => L.T("Genre", "Genre"),
+        "players" => L.T("Joueurs", "Players"),
+        "rating" => L.T("Note", "Rating"),
+        "system" => L.T("Système", "System"),
+        var other => other
+    };
+
     private static Color ParseHex(string hex)
     {
         try { return (Color)ColorConverter.ConvertFromString(hex); }
@@ -664,8 +701,8 @@ public sealed class GameComposerWindow : Window
         // Say WHICH entry the palette is judging: greyed types are the ones this sample
         // lacks, and nothing about that should have to be guessed.
         var availableTypes = _assets.Select(a => a.Key).Distinct(StringComparer.OrdinalIgnoreCase).Count();
-        panel.Children.Add(Ui.MutedLabel(L.T($"Échantillon : {_system} / {_rom} — {availableTypes} type(s) disponible(s).",
-            $"Sample: {_system} / {_rom} — {availableTypes} type(s) available.")));
+        panel.Children.Add(Ui.MutedLabel(L.T($"Échantillon : {_sampleSystem} / {_sampleRom} — {availableTypes} type(s) disponible(s).",
+            $"Sample: {_sampleSystem} / {_sampleRom} — {availableTypes} type(s) available.")));
 
         // EVERY composable type is offered, always. Building the palette from what one
         // sample game owns made a whole system's template offer four buttons — the

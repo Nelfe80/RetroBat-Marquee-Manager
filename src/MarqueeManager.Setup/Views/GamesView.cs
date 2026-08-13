@@ -446,7 +446,8 @@ public sealed class GamesView : UserControl, IDisposable
                     allGames
                         ? L.T("Gabarit — tous les jeux", "Template — all games")
                         : L.T($"Gabarit général — jeux {system}", $"General template — {system} games"),
-                    assets, surfaceId, gabaritMode: true)
+                    assets, surfaceId, gabaritMode: true,
+                    sample: sample is null ? null : (sample.System, sample.Rom))
                 {
                     Owner = Window.GetWindow(this)
                 }.ShowDialog();
@@ -808,7 +809,8 @@ public sealed class GamesView : UserControl, IDisposable
                     // concrete preview; it applies to every game of THIS system (per-system)
                     new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(entry.System),
                         L.T($"Gabarit général — jeux {entry.System} (aperçu : {entry.Rom})", $"General template — {entry.System} games (preview: {entry.Rom})"),
-                        data.Assets, s.Id, gabaritMode: true)
+                        data.Assets, s.Id, gabaritMode: true,
+                        sample: (entry.System, entry.Rom))
                     {
                         Owner = Window.GetWindow(this)
                     }.ShowDialog();
