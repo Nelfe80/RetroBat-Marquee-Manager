@@ -278,13 +278,18 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private void ScopeLayer(WpfSkiaSurfaceHost? host, string componentType)
         {
             if (host == null || !host.IsRunning) return;
-            var visible = IsComponentActive(componentType)
-                          && (!ReferenceEquals(host, _effectsHost) || _effectsHasContent);
+            var inScope = IsComponentActive(componentType);
+            var visible = inScope && (!ReferenceEquals(host, _effectsHost) || _effectsHasContent);
             // Hidden, NOT Collapsed: Collapsed removes the element from layout, so
             // every effect would trigger a measure/arrange pass over the whole window
             // — a layout storm on a layer that toggles several times a second.
             host.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
-            host.Suspended = !visible; // stop drawing, not just stop showing
+
+            // Suspended on SCOPE only — never on "nothing to draw". The effects renderer
+            // announces new content from its OWN render thread, so a host suspended for
+            // lack of content could never notice a sprite arriving: it would never wake.
+            // An idle-but-in-scope layer keeps ticking at its idle rate instead.
+            host.Suspended = !inScope;
         }
 
         private bool _effectsHasContent;
