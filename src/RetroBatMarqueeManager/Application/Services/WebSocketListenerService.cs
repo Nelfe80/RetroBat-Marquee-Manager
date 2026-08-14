@@ -1454,6 +1454,11 @@ public sealed class WebSocketListenerService : BackgroundService
                 used);
         }
 
+        // the two drawn views of this same panel, written by APIExpose for the themes —
+        // read from the path the stream gives, never from a folder we went looking for
+        var svg = Child(payload, "Svg", "svg");
+        _surfaces.UpdatePanelArt(ReadArt(Child(svg, "Top", "top")), ReadArt(Child(svg, "Front", "front")));
+
         if (stickColor != null && !string.Equals(stickColor, _panelStickColor, StringComparison.OrdinalIgnoreCase))
         {
             _panelStickColor = stickColor;
@@ -1471,6 +1476,41 @@ public sealed class WebSocketListenerService : BackgroundService
                     ? slots
                     : new Dictionary<int, Core.Surfaces.PanelBoardButton>());
         }
+    }
+
+    /// <summary>One drawn view: where the file is, how big the drawing is, and where
+    /// each button landed in it. Null when APIExpose drew nothing for this game — the
+    /// panel then falls back to its own plain shapes.</summary>
+    private Core.Surfaces.PanelBoardArt? ReadArt(JsonElement view)
+    {
+        if (view.ValueKind != JsonValueKind.Object) return null;
+        var path = ResolveLocal(Text(view, "Path", "path"));
+        if (path is null) return null;
+
+        var width = Number(view, "Width", "width");
+        var height = Number(view, "Height", "height");
+        if (width is not > 0 || height is not > 0) return null;
+
+        var buttons = new List<Core.Surfaces.PanelArtButton>();
+        var list = Child(view, "Buttons", "buttons");
+        if (list.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var button in list.EnumerateArray())
+            {
+                if (Integer(button, "Slot", "slot") is not { } slot) continue;
+                buttons.Add(new Core.Surfaces.PanelArtButton(
+                    slot,
+                    Number(button, "Cx", "cx") ?? 0,
+                    Number(button, "Cy", "cy") ?? 0,
+                    Number(button, "R", "r") ?? 0));
+            }
+        }
+
+        // a drawing whose buttons we cannot place would light nothing: better the plain
+        // panel, which at least answers when a button is pressed
+        return buttons.Count > 0
+            ? new Core.Surfaces.PanelBoardArt(path, width.Value, height.Value, buttons)
+            : null;
     }
 
     /// <summary>A physical press, already resolved to a slot by APIExpose: the panel
@@ -2097,6 +2137,17 @@ public sealed class WebSocketListenerService : BackgroundService
         var value = Child(source, names);
         return value.ValueKind == JsonValueKind.String ? value.GetString() ?? string.Empty : value.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null ? string.Empty : value.ToString();
     }
+    private static double? Number(JsonElement source, params string[] names)
+    {
+        var value = Child(source, names);
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out var result)) return result;
+        return value.ValueKind == JsonValueKind.String
+               && double.TryParse(value.GetString(), System.Globalization.NumberStyles.Float,
+                   System.Globalization.CultureInfo.InvariantCulture, out result)
+            ? result
+            : null;
+    }
+
     private static bool Boolean(JsonElement source, params string[] names)
     {
         var value = Child(source, names);

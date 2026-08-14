@@ -967,8 +967,10 @@ public sealed class CompositionEditor : Window
                 cb.Unchecked += (_, _) => component.Options[key] = "false";
                 return cb;
             }
-            content.Children.Add(PanelToggle("labels", "Afficher la fonction des boutons", "Show what each button does"));
-            content.Children.Add(PanelToggle("system", "Afficher SELECT et START", "Show SELECT and START"));
+            // both only apply to the plain drawing: the artwork carries its own labels,
+            // and has no SELECT/START to show
+            content.Children.Add(PanelToggle("labels", "Afficher la fonction des boutons (aspect simple)", "Show what each button does (plain look)"));
+            content.Children.Add(PanelToggle("system", "Afficher SELECT et START (aspect simple)", "Show SELECT and START (plain look)"));
             content.Children.Add(Ui.MutedLabel(L.T(
                 "Les boutons que le jeu n'utilise pas restent visibles, en transparence : le panneau montre la borne telle qu'elle est. Un appui physique allume le bouton correspondant — c'est ainsi qu'on vérifie son câblage.",
                 "Buttons the game does not use stay visible, faded: the panel shows the cabinet as it is. Pressing a physical button lights the matching one — that is how you check your wiring.")));
@@ -1114,6 +1116,49 @@ public sealed class CompositionEditor : Window
             stretch.Checked += (_, _) => component.Options["stretch"] = "fill";
             stretch.Unchecked += (_, _) => component.Options.Remove("stretch");
             style.Children.Add(stretch);
+        }
+        else if (component.Type == "panel.controls")
+        {
+            // The drawn views are APIExpose's own artwork — the very SVG it writes for
+            // EmulationStation themes — so the panel on the marquee and the panel in a
+            // theme are the same picture. "Plain" needs no artwork at all, which is also
+            // what a cabinet whose theme files were never generated falls back to.
+            var looks = Ui.ComboBox(200);
+            var currentLook = component.Options.TryGetValue("style", out var sv) && sv.Length > 0 ? sv : "top";
+            foreach (var (tag, fr, en) in new[]
+                     {
+                         ("top", "Vue de dessus (dessinée)", "Top view (artwork)"),
+                         ("3d", "Vue de face 3D (dessinée)", "3D front view (artwork)"),
+                         ("default", "Simple (formes)", "Plain (shapes)")
+                     })
+            {
+                var item = new ComboBoxItem { Content = L.T(fr, en), Tag = tag };
+                looks.Items.Add(item);
+                if (tag.Equals(currentLook, StringComparison.OrdinalIgnoreCase)) looks.SelectedItem = item;
+            }
+            if (looks.SelectedItem == null) looks.SelectedIndex = 0;
+            looks.SelectionChanged += (_, _) =>
+            {
+                if ((looks.SelectedItem as ComboBoxItem)?.Tag is string tag) component.Options["style"] = tag;
+            };
+            style.Children.Add(Ui.Row(L.T("Aspect", "Look"), looks, labelWidth: 90));
+
+            // A backdrop behind the panel: the artwork is drawn on transparency, and over
+            // a busy fanart the buttons lose their edges. Empty colour = no backdrop, so
+            // it costs nothing to anyone who does not want one.
+            var background = Ui.TextBox(component.Options.TryGetValue("bg", out var bg) ? bg : "", 100);
+            background.TextChanged += (_, _) => component.Options["bg"] = background.Text.Trim();
+            var backgroundLine = new WrapPanel();
+            backgroundLine.Children.Add(background);
+            backgroundLine.Children.Add(Ui.ColorPalette(background));
+            style.Children.Add(Ui.Row(L.T("Fond", "Background"), backgroundLine, labelWidth: 90));
+
+            var backgroundOpacity = Ui.TextBox(component.Options.TryGetValue("bgOpacity", out var bo) ? bo : "0.5", 100);
+            backgroundOpacity.TextChanged += (_, _) => component.Options["bgOpacity"] = backgroundOpacity.Text.Trim();
+            style.Children.Add(Ui.Row(L.T("Opacité du fond", "Background opacity"), backgroundOpacity, labelWidth: 90));
+            style.Children.Add(Ui.MutedLabel(L.T(
+                "Fond vide = aucun fond. Opacité de 0 (invisible) à 1 (opaque).",
+                "Empty background = none. Opacity from 0 (invisible) to 1 (opaque).")));
         }
         else
         {

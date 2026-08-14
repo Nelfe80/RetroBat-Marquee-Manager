@@ -181,6 +181,17 @@ public sealed class ComponentHost : Canvas
         }
     }
 
+    /// <summary>The two drawn views of the panel. Each component takes the one its
+    /// style asked for — seen from above, or from the front.</summary>
+    public void ApplyPanelArt(Core.Surfaces.PanelBoardArt? top, Core.Surfaces.PanelBoardArt? front)
+    {
+        foreach (var (_, element) in _visuals)
+        {
+            if (element is not PanelControlsView panel || !panel.WantsArtwork) continue;
+            panel.ApplyArt(panel.WantsFrontView ? front : top);
+        }
+    }
+
     /// <summary>A physical press, already resolved to a slot by APIExpose. Only the
     /// panel of the player who pressed lights up — that a press on panel 2 lights
     /// panel 2 is itself part of what the check verifies.</summary>
@@ -278,7 +289,14 @@ public sealed class ComponentHost : Canvas
                 return new PanelControlsView(
                     int.TryParse(component.Option("player", "1"), out var player) ? player : 1,
                     component.Option("labels", "true") != "false",
-                    component.Option("system", "true") != "false");
+                    component.Option("system", "true") != "false",
+                    component.Option("style", "top"),
+                    component.Option("bg"),
+                    double.TryParse(component.Option("bgOpacity", "0.5"),
+                        System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out var panelVeil)
+                        ? panelVeil
+                        : 0.5);
 
             case "external.web":
                 return BuildWebView(component);

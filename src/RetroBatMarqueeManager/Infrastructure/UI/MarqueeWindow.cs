@@ -87,6 +87,13 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 foreach (var host in _componentHosts) host.ApplyPanelButtons(player, buttons);
             }));
 
+        /// <summary>The panel as APIExpose drew it, both views.</summary>
+        public void UpdatePanelArt(Core.Surfaces.PanelBoardArt? top, Core.Surfaces.PanelBoardArt? front)
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.ApplyPanelArt(top, front);
+            }));
+
         /// <summary>A physical press or release, resolved to a slot.</summary>
         public void SetPanelInput(int player, int? slot, string? system, bool pressed)
             => Dispatcher.BeginInvoke(new Action(() =>

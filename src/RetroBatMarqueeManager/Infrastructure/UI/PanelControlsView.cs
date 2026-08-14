@@ -59,22 +59,97 @@ public sealed class PanelControlsView : Viewbox
     private readonly Dictionary<string, Lamp> _systemButtons = new(StringComparer.OrdinalIgnoreCase);
     private readonly bool _showLabels;
     private readonly bool _showSystemButtons;
+    private readonly string _style;
+    private readonly string _background;
+    private readonly double _backgroundOpacity;
 
     private PanelBoardConfig _config = PanelBoardConfig.Unknown;
     private IReadOnlyDictionary<int, PanelBoardButton> _buttons = new Dictionary<int, PanelBoardButton>();
+    private PanelBoardArt? _art;
+    private string _artStamp = string.Empty;
+    private int _artRetries;
 
     /// <summary>Which panel this component draws. A two-player cabinet carries two
     /// components, one per player, each positioned where its side of the panel is.</summary>
     public int Player { get; }
 
-    public PanelControlsView(int player, bool showLabels, bool showSystemButtons)
+    public PanelControlsView(int player, bool showLabels, bool showSystemButtons, string style,
+        string background, double backgroundOpacity)
     {
         Player = Math.Max(1, player);
         _showLabels = showLabels;
         _showSystemButtons = showSystemButtons;
+        _style = string.IsNullOrWhiteSpace(style) ? "default" : style.Trim().ToLowerInvariant();
+        _background = background;
+        _backgroundOpacity = Math.Clamp(backgroundOpacity, 0, 1);
         Child = _canvas;
         Stretch = Stretch.Uniform;
         Build();
+    }
+
+    /// <summary>
+    /// A backdrop behind the panel. The artwork is drawn on transparency, so over a busy
+    /// fanart the buttons lose their edges; a veil under them gives the drawing something
+    /// to sit on. Drawn slightly larger than the panel, so the outer buttons are not
+    /// touching its edge.
+    /// </summary>
+    private void DrawBackground(double width, double height)
+    {
+        if (string.IsNullOrWhiteSpace(_background) || _backgroundOpacity <= 0) return;
+
+        var bleed = Math.Max(width, height) * 0.03;
+        var veil = new System.Windows.Shapes.Rectangle
+        {
+            Width = width + bleed * 2,
+            Height = height + bleed * 2,
+            RadiusX = bleed * 2,
+            RadiusY = bleed * 2,
+            Fill = new SolidColorBrush(ParseColor(_background, Colors.Black)),
+            Opacity = _backgroundOpacity
+        };
+        Canvas.SetLeft(veil, -bleed);
+        Canvas.SetTop(veil, -bleed);
+        _canvas.Children.Add(veil);
+    }
+
+    /// <summary>True when this component wants the drawn artwork rather than the plain
+    /// shapes — "top" (seen from above) or "3d" (seen from the front).</summary>
+    public bool WantsArtwork => _style is "top" or "3d";
+
+    /// <summary>Which of the two drawn views this component asked for.</summary>
+    public bool WantsFrontView => _style == "3d";
+
+    /// <summary>
+    /// The panel as APIExpose drew it, for the view this component asked for. Null —
+    /// no file yet for this game — falls back to the plain shapes rather than to an
+    /// empty rectangle: the wiring check has to work on a cabinet whose theme artwork
+    /// was never generated.
+    /// </summary>
+    public void ApplyArt(PanelBoardArt? art)
+    {
+        // The path alone does not identify the drawing: every system that is not arcade
+        // shares a single "default.svg", rewritten with each game's own colours and
+        // functions. Same name, different panel — so the file's own timestamp is what
+        // says whether this is still the same picture.
+        var stamp = Stamp(art);
+        if (stamp == _artStamp) return;
+        _artStamp = stamp;
+        _art = art;
+        _artRetries = 0; // a new drawing deserves its own attempts
+        Build();
+    }
+
+    private static string Stamp(PanelBoardArt? art)
+    {
+        if (art is null) return string.Empty;
+        try
+        {
+            return $"{art.Path}|{File.GetLastWriteTimeUtc(art.Path).Ticks}";
+        }
+        catch
+        {
+            return art.Path;
+        }
     }
 
     /// <summary>The cabinet's own description. Rebuilds the drawing: a panel that grew
@@ -127,6 +202,8 @@ public sealed class PanelControlsView : Viewbox
         _slots.Clear();
         _systemButtons.Clear();
 
+        if (WantsArtwork && BuildFromArtwork()) return;
+
         var rows = _config.Rows.Count > 0 ? _config.Rows : PanelBoardConfig.Unknown.Rows;
         var columns = rows.Max(row => row.Count);
         var stickWidth = _config.HasStick ? StickRadius * 2 + ButtonGap * 2 : 0;
@@ -136,6 +213,7 @@ public sealed class PanelControlsView : Viewbox
 
         _canvas.Width = width;
         _canvas.Height = height;
+        DrawBackground(width, height);
 
         if (_config.HasStick)
         {
@@ -176,6 +254,104 @@ public sealed class PanelControlsView : Viewbox
                 x += 74;
             }
         }
+    }
+
+    /// <summary>
+    /// The drawn panel: APIExpose's own artwork, rasterised, with a light placed over
+    /// each button at the coordinates that artwork reported.
+    ///
+    /// Nothing is drawn on top of it besides the lights — the picture already carries
+    /// the buttons, their colours and what they do in this game, and drawing our own
+    /// over it would show two panels at once.
+    ///
+    /// Returns false when the file cannot be read: the caller then falls back to the
+    /// plain shapes. A cabinet whose theme artwork was never generated still deserves
+    /// its wiring check.
+    /// </summary>
+    private bool BuildFromArtwork()
+    {
+        if (_art is null || _art.Width <= 0 || _art.Height <= 0) return false;
+
+        var bitmap = PanelArtworkCache.Render(_art.Path, _art.Width, _art.Height);
+        if (bitmap is null)
+        {
+            // The file can be unreadable for a moment — it is rewritten the instant a
+            // game starts, and an antivirus can hold it just as briefly. Falling back to
+            // the plain shapes for good on a moment like that is how the panel "lost its
+            // artwork the second you launched a game". Try again shortly; the plain
+            // drawing stands in meanwhile, so the wiring check never stops working.
+            ScheduleArtworkRetry();
+            return false;
+        }
+
+        _artRetries = 0;
+
+        _canvas.Width = _art.Width;
+        _canvas.Height = _art.Height;
+        DrawBackground(_art.Width, _art.Height);
+
+        var picture = new System.Windows.Controls.Image
+        {
+            Source = bitmap,
+            Width = _art.Width,
+            Height = _art.Height,
+            Stretch = Stretch.Fill // the bitmap IS this drawing, rendered at its own ratio
+        };
+        Canvas.SetLeft(picture, 0);
+        Canvas.SetTop(picture, 0);
+        _canvas.Children.Add(picture);
+
+        foreach (var button in _art.Buttons)
+        {
+            var lamp = AddArtworkLamp(button.Cx, button.Cy, button.R);
+            _slots[button.Slot] = lamp;
+            _buttons.TryGetValue(button.Slot, out var described);
+            lamp.Describe(described);
+        }
+
+        return true;
+    }
+
+    /// <summary>Comes back for the drawing in a moment, a few times, then gives up and
+    /// leaves the plain panel in place.</summary>
+    private void ScheduleArtworkRetry()
+    {
+        if (_artRetries >= 4) return;
+        _artRetries++;
+
+        var timer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher)
+        {
+            Interval = TimeSpan.FromMilliseconds(300)
+        };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            if (_art != null) Build();
+        };
+        timer.Start();
+    }
+
+    /// <summary>A light with NO body of its own: the artwork underneath is the button,
+    /// and this only adds what a press adds — a ring and a glow.</summary>
+    private Lamp AddArtworkLamp(double cx, double cy, double radius)
+    {
+        var lit = new Ellipse
+        {
+            Width = radius * 2,
+            Height = radius * 2,
+            Stroke = Brushes.White,
+            StrokeThickness = Math.Max(2, radius * 0.12),
+            Opacity = 0
+        };
+        Canvas.SetLeft(lit, cx - radius);
+        Canvas.SetTop(lit, cy - radius);
+        _canvas.Children.Add(lit);
+
+        // the invisible body carries the resting opacity so the lamp logic is the same
+        // in both modes; over artwork it must never paint anything
+        var ghost = new Ellipse { Width = 0, Height = 0, Opacity = 0 };
+        _canvas.Children.Add(ghost);
+        return new Lamp(ghost, lit, null, Dispatcher) { PaintsBody = false };
     }
 
     private void DrawStick(double cx, double cy)
@@ -345,6 +521,10 @@ public sealed class PanelControlsView : Viewbox
         private DateTime _pressedAt;
         private bool _releasePending;
 
+        /// <summary>False over the drawn artwork: the picture already IS the button, so
+        /// this lamp contributes the light and nothing else.</summary>
+        public bool PaintsBody { get; init; } = true;
+
         public Lamp(Shape body, Shape lit, TextBlock? label, Dispatcher dispatcher)
         {
             _body = body;
@@ -369,8 +549,9 @@ public sealed class PanelControlsView : Viewbox
         {
             var used = button?.Used == true;
             var color = used ? ParseColor(button!.Color, Neutral) : Neutral;
-            _body.Fill = new SolidColorBrush(color);
-            _lit.Fill = new SolidColorBrush(color);
+            if (PaintsBody) _body.Fill = new SolidColorBrush(color);
+            // over artwork the fill would hide the drawn button: only its glow is ours
+            _lit.Fill = PaintsBody ? new SolidColorBrush(color) : null;
             _lit.Effect = new DropShadowEffect
             {
                 Color = color,

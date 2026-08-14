@@ -31,6 +31,24 @@ public sealed record PanelBoardConfig(
         true, string.Empty);
 }
 
+/// <summary>
+/// The panel as APIExpose DREW it — the same SVG it writes for EmulationStation themes,
+/// plus where each button landed inside that drawing.
+///
+/// The coordinates travel with the file on purpose: the light of a press has to sit
+/// exactly on the button the artwork drew. Recomputing that layout here would be the
+/// renderer's geometry copied into a second place, and the first time a row moves, the
+/// lights would land beside the buttons with nothing to explain why.
+/// </summary>
+public sealed record PanelBoardArt(
+    string Path,
+    double Width,
+    double Height,
+    IReadOnlyList<PanelArtButton> Buttons);
+
+/// <summary>Where one button sits in the drawing, in the drawing's own units.</summary>
+public sealed record PanelArtButton(int Slot, double Cx, double Cy, double R);
+
 /// <summary>One physical place on the panel: what the selected game makes of it.
 /// <paramref name="Used"/> false means the cabinet has this button but the game does
 /// not speak to it — it is still drawn, faded, because the panel must tell the truth

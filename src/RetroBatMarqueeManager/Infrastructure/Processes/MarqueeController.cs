@@ -245,6 +245,8 @@ public sealed class MarqueeController : IDisposable
     private readonly object _panelLock = new();
     private Core.Surfaces.PanelBoardConfig? _lastPanelConfig;
     private readonly Dictionary<int, IReadOnlyDictionary<int, Core.Surfaces.PanelBoardButton>> _lastPanelButtons = new();
+    private Core.Surfaces.PanelBoardArt? _lastPanelArtTop;
+    private Core.Surfaces.PanelBoardArt? _lastPanelArtFront;
 
     /// <summary>Cabinet panel description (retained on /ws/panel) → every panel
     /// component, whichever surface carries it.</summary>
@@ -267,14 +269,26 @@ public sealed class MarqueeController : IDisposable
     {
         Core.Surfaces.PanelBoardConfig? config;
         KeyValuePair<int, IReadOnlyDictionary<int, Core.Surfaces.PanelBoardButton>>[] buttons;
+        Core.Surfaces.PanelBoardArt? top;
+        Core.Surfaces.PanelBoardArt? front;
         lock (_panelLock)
         {
             config = _lastPanelConfig;
             buttons = _lastPanelButtons.ToArray();
+            top = _lastPanelArtTop;
+            front = _lastPanelArtFront;
         }
 
         if (config != null) window.UpdatePanelConfig(config);
         foreach (var (player, slots) in buttons) window.UpdatePanelButtons(player, slots);
+        if (top != null || front != null) window.UpdatePanelArt(top, front);
+    }
+
+    /// <summary>The drawn panel (both views) → the components that asked for artwork.</summary>
+    public void UpdatePanelArt(Core.Surfaces.PanelBoardArt? top, Core.Surfaces.PanelBoardArt? front)
+    {
+        lock (_panelLock) { _lastPanelArtTop = top; _lastPanelArtFront = front; }
+        foreach (var window in AllWindows()) window.UpdatePanelArt(top, front);
     }
 
     /// <summary>A physical press/release resolved to a slot.</summary>
