@@ -335,16 +335,7 @@ public sealed class PanelControlsView : Viewbox
     /// and this only adds what a press adds — a ring and a glow.</summary>
     private Lamp AddArtworkLamp(double cx, double cy, double radius)
     {
-        var lit = new Ellipse
-        {
-            Width = radius * 2,
-            Height = radius * 2,
-            Stroke = Brushes.White,
-            StrokeThickness = Math.Max(2, radius * 0.12),
-            Opacity = 0
-        };
-        Canvas.SetLeft(lit, cx - radius);
-        Canvas.SetTop(lit, cy - radius);
+        var lit = Glow(cx, cy, radius);
         _canvas.Children.Add(lit);
 
         // the invisible body carries the resting opacity so the lamp logic is the same
@@ -352,6 +343,62 @@ public sealed class PanelControlsView : Viewbox
         var ghost = new Ellipse { Width = 0, Height = 0, Opacity = 0 };
         _canvas.Children.Add(ghost);
         return new Lamp(ghost, lit, null, Dispatcher) { PaintsBody = false };
+    }
+
+    /// <summary>
+    /// A lamp, built like the lighting engine builds its own: a wide soft halo with a
+    /// hotter core, in the button's colour, and nothing else. A ring drawn around the
+    /// button was an ANNOTATION — a marker pointing at a button — where a cabinet's
+    /// answer to a press is light. The engine's lamps read as light because they have
+    /// no edge; this follows them, so both belong to the same picture.
+    ///
+    /// It spreads well past the button: that is what makes it read as a glow rather
+    /// than as a coloured disc pasted over the artwork.
+    /// </summary>
+    private static Ellipse Glow(double cx, double cy, double radius)
+    {
+        var reach = radius * 2.6;
+        var lamp = new Ellipse
+        {
+            Width = reach * 2,
+            Height = reach * 2,
+            Opacity = 0,
+            IsHitTestVisible = false
+        };
+        Canvas.SetLeft(lamp, cx - reach);
+        Canvas.SetTop(lamp, cy - reach);
+        return lamp;
+    }
+
+    /// <summary>The lamp's own light, in one colour. Stops follow the engine's two
+    /// passes — a bright core inside a much wider, much fainter halo — and the core
+    /// is pulled towards white the way a filament is hotter than the glass.</summary>
+    private static System.Windows.Media.Brush GlowBrush(Color color)
+    {
+        Color Hot(double amount) => Color.FromRgb(
+            (byte)(color.R + (255 - color.R) * amount),
+            (byte)(color.G + (255 - color.G) * amount),
+            (byte)(color.B + (255 - color.B) * amount));
+
+        return new RadialGradientBrush
+        {
+            GradientOrigin = new System.Windows.Point(0.5, 0.5),
+            Center = new System.Windows.Point(0.5, 0.5),
+            RadiusX = 0.5,
+            RadiusY = 0.5,
+            // Alphas stay in the engine's range — its own lamps top out around 200 — so
+            // the light SITS ON the button instead of erasing it. At full opacity the cap
+            // disappeared under a white disc, which reads as a hole in the panel rather
+            // than as a button answering.
+            GradientStops = new GradientStopCollection
+            {
+                new(Color.FromArgb(170, Hot(0.55).R, Hot(0.55).G, Hot(0.55).B), 0.0),
+                new(Color.FromArgb(140, Hot(0.20).R, Hot(0.20).G, Hot(0.20).B), 0.20),
+                new(Color.FromArgb(96, color.R, color.G, color.B), 0.36),
+                new(Color.FromArgb(32, color.R, color.G, color.B), 0.64),
+                new(Color.FromArgb(0, color.R, color.G, color.B), 1.0)
+            }
+        };
     }
 
     private void DrawStick(double cx, double cy)
@@ -391,19 +438,9 @@ public sealed class PanelControlsView : Viewbox
         Canvas.SetLeft(body, cx - radius);
         Canvas.SetTop(body, cy - radius);
 
-        // the lit copy sits on top at zero opacity and is animated: the resting button
-        // keeps its own colour and opacity, so a press adds light instead of replacing
-        // the drawing
-        var lit = new Ellipse
-        {
-            Width = radius * 2,
-            Height = radius * 2,
-            Stroke = Brushes.White,
-            StrokeThickness = 3,
-            Opacity = 0
-        };
-        Canvas.SetLeft(lit, cx - radius);
-        Canvas.SetTop(lit, cy - radius);
+        // the light sits on top at zero opacity and is animated: the resting button keeps
+        // its own colour, so a press ADDS light rather than replacing the drawing
+        var lit = Glow(cx, cy, radius);
 
         TextBlock? label = null;
         if (_showLabels)
@@ -443,18 +480,17 @@ public sealed class PanelControlsView : Viewbox
         Canvas.SetLeft(body, x);
         Canvas.SetTop(body, y);
 
-        var lit = new System.Windows.Shapes.Rectangle
+        // same lamp as the game buttons, flattened to the pill's shape: a press must
+        // read the same way wherever it lands on the panel
+        var lit = new Ellipse
         {
-            Width = 62,
-            Height = 20,
-            RadiusX = 10,
-            RadiusY = 10,
-            Stroke = Brushes.White,
-            StrokeThickness = 2,
-            Opacity = 0
+            Width = 62 * 2.2,
+            Height = 20 * 4.4,
+            Opacity = 0,
+            IsHitTestVisible = false
         };
-        Canvas.SetLeft(lit, x);
-        Canvas.SetTop(lit, y);
+        Canvas.SetLeft(lit, x + 31 - lit.Width / 2);
+        Canvas.SetTop(lit, y + 10 - lit.Height / 2);
 
         var caption = new TextBlock
         {
@@ -550,15 +586,13 @@ public sealed class PanelControlsView : Viewbox
             var used = button?.Used == true;
             var color = used ? ParseColor(button!.Color, Neutral) : Neutral;
             if (PaintsBody) _body.Fill = new SolidColorBrush(color);
-            // over artwork the fill would hide the drawn button: only its glow is ours
-            _lit.Fill = PaintsBody ? new SolidColorBrush(color) : null;
-            _lit.Effect = new DropShadowEffect
-            {
-                Color = color,
-                BlurRadius = 26,
-                ShadowDepth = 0,
-                Opacity = 0.95
-            };
+
+            // A button the game does not use still answers when pressed — it just has no
+            // colour of its own to answer WITH, so it lights white. Lighting it in the
+            // neutral plastic grey would have shown almost nothing, and "I pressed and
+            // nothing happened" is the one answer this panel must never give wrongly.
+            _lit.Fill = GlowBrush(used ? color : Color.FromRgb(0xff, 0xf3, 0xd6));
+
             if (_label != null) _label.Text = used ? button!.Function : string.Empty;
             SetRestingOpacity(used ? 1.0 : UnusedOpacity);
         }
