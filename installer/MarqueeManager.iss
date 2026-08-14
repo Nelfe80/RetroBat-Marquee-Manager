@@ -1,4 +1,4 @@
-; ─────────────────────────────────────────────────────────────────────────────
+﻿; ─────────────────────────────────────────────────────────────────────────────
 ; RetroBat Marquee Manager — installeur de BORNE (Inno Setup)
 ; Installe le plugin dans <RetroBat>\plugins\MarqueeManager, branche son hook
 ; EmulationStation, et — via apiexpose-bootstrap.iss — installe APIExpose dans le
@@ -9,7 +9,7 @@
 ; ─────────────────────────────────────────────────────────────────────────────
 
 #define AppName "RetroBat Marquee Manager"
-#define AppVersion "2.7.0"
+#define AppVersion "2.8.0"
 #define AppExe "MarqueeManager.exe"
 
 [Setup]
