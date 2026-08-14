@@ -47,6 +47,14 @@ Les overlays **score live, timer live et RetroAchievements** sont réservés à 
 !!! note "Vidéo live"
     Le composant vidéo peut suivre une chaîne **stream Twitch en direct > YouTube > vidéo locale** : s'il existe un live sur le jeu affiché, il prend la place de la vidéo. Identifiants dans Options → Sources en ligne ; sans clé, la vidéo locale s'affiche simplement.
 
+### Les calques texte
+
+**Texte méta** affiche les données du jeu sélectionné, par gabarit : `{name}`, `{year}`, `{developer}`, `{publisher}`, `{system}`, mais aussi tout ce que porte la fiche — `{desc}`, `{genre}`, `{players}`, `{rating}`.
+
+Le **corps** est sur *auto* par défaut : le texte s'ajuste tout seul à sa zone. C'est ce qui permet au même calque de porter un nom de jeu ou une description de 1 500 caractères sans qu'on ait à le lui dire. Réglé à la main, le corps est une **fraction de la hauteur de la surface** — il garde donc sa taille quand vous redimensionnez la zone.
+
+Les autres réglages (groupe *Style*) : **alignement** gauche / centré / droite / justifié, **position verticale** haut / milieu / bas, et **graisse** grasse ou normale — une description en gras sur 1 500 caractères est un mur.
+
 ### Le panneau de contrôle
 
 Le composant **Panneau de contrôle** (palette *Live*) dessine le panneau de votre borne, avec ce que chaque bouton fait dans le jeu **sélectionné** — être sur sa fiche dans ES suffit, rien n'a besoin d'être lancé.
@@ -63,6 +71,28 @@ Les boutons que le jeu **n'utilise pas** restent visibles, en transparence : le 
 
 !!! note "L'allumage"
     Un appui allume une **lampe colorée**, comme celles du moteur de lumière : la couleur du bouton, un halo doux, aucun contour. Elle reste allumée un minimum de temps même sur un appui bref, puis s'éteint en fondu — sinon une rafale de boutons se lirait comme un scintillement.
+
+### Les cartes d'instructions
+
+Beaucoup de bornes affichent la **carte d'instructions** du jeu : les coups spéciaux, les objets, les points bonus. Deux calques la portent, et ils sont séparés à dessein — sur une borne, l'écran tactile et l'écran qui montre la carte sont rarement le même.
+
+**Carte d'instructions** (palette *Cartes d'instructions*) affiche les fiches du jeu sélectionné. Ses options :
+
+- **Joueur** — pour qui cette carte s'affiche. *Tous les joueurs* pour une carte partagée.
+- **Rôle affiché** — le rôle est le **dossier** de la fiche dans le média du jeu : un personnage (`cody`), un thème (`items-and-weaponry`), un stage. Laissé vide, le calque parcourt **toutes** les fiches du jeu.
+- **Suivre le personnage annoncé par le jeu** — quand le jeu sait dire qui a été choisi, la carte bascule sur ce personnage et tourne dans **ses** fiches uniquement.
+
+**Zone tactile** est le calque qu'on presse. Son rectangle **est** la zone : ce que vous dessinez est ce que le doigt peut toucher. Ses options :
+
+- **Au toucher** — fiche suivante, fiche précédente, revenir à la première, afficher une fiche ou un rôle précis, rôle suivant/précédent, ou suivre/ne plus suivre le jeu.
+- **Texte affiché** et **Encadrer la zone** — rien n'est dessiné par défaut : un écran tactile qui marche n'a pas besoin d'être marqué. Ces deux réglages servent aux bornes dont les joueurs ignorent que la zone existe.
+- **Retour auto (ms)** — revenir à la fiche de départ après un délai.
+
+!!! note "Le canal, pour relier les deux"
+    Une zone pilote la carte qui porte le **même canal**. Le canal se déduit de ce que le calque dit déjà — son joueur, sinon son rôle — donc une borne ordinaire n'a rien à nommer : une carte réglée sur *Joueur 2* et une zone réglée sur *Joueur 2* se répondent. Le champ **Canal** ne sert qu'aux montages libres : un bandeau tactile sur le marquee qui fait défiler des astuces sur le topper, par exemple.
+
+!!! tip "D'où viennent les fiches"
+    Du dossier média du jeu, dans `artwork\ic` : `ic.png` à la racine, ou `artwork\ic\<rôle>\ic-1.png` pour une fiche qui appartient à un personnage ou à un thème. Le nom du dossier **est** le rôle.
 
 ### Le tableau de scores
 

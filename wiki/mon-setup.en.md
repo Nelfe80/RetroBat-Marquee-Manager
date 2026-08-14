@@ -47,6 +47,14 @@ The **live score, live timer and RetroAchievements** overlays belong to the **In
 !!! note "Live video"
     The video component can follow a **live Twitch stream > YouTube > local video** chain: if a live stream exists for the displayed game, it takes the video's place. Credentials in Options → Online sources; without keys, the local video simply shows.
 
+### Text layers
+
+**Meta text** shows the selected game's data through a template: `{name}`, `{year}`, `{developer}`, `{publisher}`, `{system}`, and everything else the entry carries — `{desc}`, `{genre}`, `{players}`, `{rating}`.
+
+**Type size** defaults to *auto*: the text fits itself to its zone. That is what lets one layer carry a game name or a 1,500-character description without being told which. Set by hand, the size is a **fraction of the surface height** — so it keeps its size when you resize the zone.
+
+The rest (*Style* group): **alignment** left / centered / right / justified, **vertical position** top / middle / bottom, and **weight** bold or normal — a 1,500-character description in bold is a wall.
+
 ### The control panel
 
 The **Control panel** component (*Live* palette) draws your cabinet's panel, with what each button does in the **selected** game — being on its card in ES is enough, nothing has to be launched.
@@ -63,6 +71,28 @@ Buttons the game **does not use** stay visible, faded: the panel tells the truth
 
 !!! note "The light"
     A press lights a **coloured lamp**, like the lighting engine's own: the button's colour, a soft halo, no outline. It stays lit for a minimum time even on a quick tap, then fades out — otherwise a rattle of buttons would read as flicker.
+
+### Instruction cards
+
+Many cabinets show the game's **instruction card**: special moves, items, bonus points. Two layers carry it, and they are separate on purpose — on a cabinet, the touchscreen and the screen showing the card are rarely the same one.
+
+**Instruction card** (*Instruction cards* palette) shows the selected game's pages. Its options:
+
+- **Player** — who this card is for. *All players* for a shared card.
+- **Displayed role** — the role is the page's **folder** in the game media: a character (`cody`), a topic (`items-and-weaponry`), a stage. Left empty, the layer walks **every** page of the game.
+- **Follow the character the game announces** — when the game can tell who was picked, the card switches to that character and cycles through **his** pages only.
+
+**Touch zone** is the layer you press. Its rectangle **is** the zone: what you draw is what a finger can touch. Its options:
+
+- **On tap** — next page, previous page, back to the first, show one page or one role, next/previous role, or follow / stop following the game.
+- **Displayed text** and **Outline the zone** — nothing is drawn by default: a touchscreen that works needs no marking. Both settings are for cabinets whose players do not know the zone is there.
+- **Auto return (ms)** — come back to the starting page after a delay.
+
+!!! note "The channel, to bind the two"
+    A zone drives the card carrying the **same channel**. The channel follows what the layer already says — its player, otherwise its role — so an ordinary cabinet has nothing to name: a card set to *Player 2* and a zone set to *Player 2* answer each other. The **Channel** field only matters for free-form setups: a touch strip on the marquee scrolling tips shown on the topper, for instance.
+
+!!! tip "Where the pages come from"
+    From the game's media folder, under `artwork\ic`: `ic.png` at the root, or `artwork\ic\<role>\ic-1.png` for a page belonging to a character or a topic. The folder name **is** the role.
 
 ### The score board
 
