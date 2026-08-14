@@ -75,16 +75,24 @@ public sealed class InstructionCardService : IDisposable
 
         public int Index { get; set; }
         public string? Side { get; set; }
+
+        /// <summary>The entry framed inside the card, when the game named something the
+        /// card holds. Cleared as soon as the player browses: a frame pointing at what he
+        /// no longer carries is worse than no frame.</summary>
+        public InstructionCardCatalog.CardPanel? Panel { get; set; }
         public System.Threading.Timer? Revert { get; set; }
 
         public string EffectiveRole => EventRole ?? Role;
     }
 
+    /// <summary>What one channel must show right now: its card, and the entry to frame.</summary>
+    private sealed record Shown(string Channel, string? Path, double[]? Panel);
+
     /// <summary>New game selected: replace the catalog and put every channel back on its
     /// first card.</summary>
     public async Task SetCardsAsync(IReadOnlyList<InstructionCardCatalog.CardSource> cards, CancellationToken cancellationToken)
     {
-        List<(string Channel, string? Path)> updates;
+        List<Shown> updates;
         lock (_lock)
         {
             _groups = InstructionCardCatalog.BuildGroups(cards);
@@ -96,18 +104,19 @@ public sealed class InstructionCardService : IDisposable
                 // of the game you just left has no card here.
                 channel.EventRole = null;
                 channel.Side = null;
+                channel.Panel = null;
                 channel.Index = DefaultIndex(channel);
             }
 
-            updates = _channels.Values.Select(c => (c.Name, PathOf(c))).ToList();
+            updates = _channels.Values.Select(Snapshot).ToList();
         }
 
-        foreach (var (channel, path) in updates)
+        foreach (var shown in updates)
         {
             // A game without an instruction card CLEARS the previous one. Returning early
             // left the last game's card on screen — one card following you across the whole
             // library. Nothing of an entry may survive into the next.
-            await DisplayAsync(channel, path, cancellationToken);
+            await DisplayAsync(shown, cancellationToken);
         }
 
         if (_surfaces.HasComponent("iccard.static"))
@@ -133,37 +142,84 @@ public sealed class InstructionCardService : IDisposable
     /// </summary>
     public async Task OnNameAnnouncedAsync(int player, string name, CancellationToken cancellationToken)
     {
-        List<(string Channel, string? Path)> updates;
+        List<Shown> updates;
         lock (_lock)
         {
             if (_groups.Count == 0) return;
+
+            // Two ways a name can be carried by the cards: it is a ROLE — a folder of its
+            // own, a character with his own pages — or it is one ENTRY inside a shared
+            // card, like the weapons of Ghouls'n Ghosts drawn side by side. The folder
+            // wins: it is the richer answer, several pages instead of one frame.
             var role = InstructionCardCatalog.MatchRole(_groups, name);
-            if (role == null)
+            if (role == null && InstructionCardCatalog.FindPanel(_groups, name) == null)
             {
-                // No card for that name: the viewer keeps what it shows. Blanking it would
-                // punish the player for a card the pack simply does not carry.
-                _logger.LogDebug("Announced name {Name} matches no card role ({Count} groups)", name, _groups.Count);
+                // Nothing in this game's cards names it: the viewer keeps what it shows.
+                // Blanking it would punish the player for a card the pack does not carry.
+                _logger.LogDebug("Announced name {Name} matches no role and no entry ({Count} cards)",
+                    name, _groups.Count);
                 return;
             }
 
-            updates = new List<(string, string?)>();
+            updates = new List<Shown>();
             foreach (var channel in _channels.Values)
             {
                 if (!channel.Auto || (channel.Player is { } p && p != player)) continue;
-                if (string.Equals(channel.EventRole, role, StringComparison.OrdinalIgnoreCase)) continue;
                 CancelRevert(channel);
-                channel.EventRole = role;
+                if (role != null)
+                {
+                    if (string.Equals(channel.EventRole, role, StringComparison.OrdinalIgnoreCase)) continue;
+                    channel.EventRole = role;
+                    channel.Index = 0;
+                    channel.Panel = null;
+                }
+                else if (!PointAtEntry(channel, name))
+                {
+                    continue;
+                }
+
                 channel.Side = null;
-                channel.Index = 0;
-                updates.Add((channel.Name, PathOf(channel)));
+                updates.Add(Snapshot(channel));
             }
 
             if (updates.Count == 0) return;
-            _logger.LogInformation("Player {Player} is on {Name}: {Count} viewer(s) switched to role {Role}",
-                player, name, updates.Count, role);
+            _logger.LogInformation("Player {Player} is on {Name}: {Count} viewer(s) → {What}",
+                player, name, updates.Count, role != null ? "role " + role : "entry framed in the card");
         }
 
-        foreach (var (channel, path) in updates) await DisplayAsync(channel, path, cancellationToken);
+        foreach (var shown in updates) await DisplayAsync(shown, cancellationToken);
+    }
+
+    /// <summary>
+    /// Points this channel at the entry that names what was announced — the weapon just
+    /// picked up, drawn among the others on a shared card.
+    ///
+    /// Looked up in the channel's OWN cards first: an index is only meaningful inside the
+    /// list the channel walks, and a viewer pinned to a role walks a shorter one. Found
+    /// elsewhere, the channel moves to the card's role — otherwise it would carry the
+    /// index of a card it cannot show.
+    /// </summary>
+    private bool PointAtEntry(Channel channel, string name)
+    {
+        var own = GroupsOf(channel);
+        var hit = InstructionCardCatalog.FindPanel(own, name);
+        if (hit != null)
+        {
+            channel.Index = hit.GroupIndex;
+            channel.Panel = hit.Panel;
+            return true;
+        }
+
+        var wide = InstructionCardCatalog.FindPanel(_groups, name);
+        if (wide == null) return false;
+
+        var card = _groups[wide.GroupIndex];
+        channel.EventRole = card.Role;
+        var index = GroupsOf(channel).IndexOf(card);
+        if (index < 0) return false;
+        channel.Index = index;
+        channel.Panel = wide.Panel;
+        return true;
     }
 
     // ================= channels =================
@@ -204,6 +260,16 @@ public sealed class InstructionCardService : IDisposable
     /// <summary>The cards this channel walks: its role's, or all of them.</summary>
     private List<InstructionCardCatalog.CardGroup> GroupsOf(Channel channel)
         => InstructionCardCatalog.ForRole(_groups, channel.EffectiveRole);
+
+    /// <summary>What this channel shows: its card, and the entry to frame inside it. The
+    /// frame travels WITH the card — sent apart, it would land on the previous drawing
+    /// for one frame, pointing at nothing.</summary>
+    private Shown Snapshot(Channel channel)
+    {
+        var panel = channel.Panel;
+        var rect = panel == null ? null : new[] { panel.X, panel.Y, panel.W, panel.H };
+        return new Shown(channel.Name, PathOf(channel), rect);
+    }
 
     private string? PathOf(Channel channel)
     {
@@ -311,7 +377,7 @@ public sealed class InstructionCardService : IDisposable
 
     private async Task ExecuteAsync(string channelName, TouchAction tap, CancellationToken cancellationToken)
     {
-        string? path;
+        Shown shown;
         lock (_lock)
         {
             if (_groups.Count == 0) return;
@@ -402,7 +468,11 @@ public sealed class InstructionCardService : IDisposable
                     return;
             }
 
-            path = PathOf(channel);
+            // The finger takes over: whatever the game had pointed at is no longer what
+            // the player is looking at, and a frame left behind would designate an entry of
+            // another card.
+            channel.Panel = null;
+            shown = Snapshot(channel);
 
             // temporary card: come back to the default one after the delay
             var isDefault = channel.Index == DefaultIndex(channel) && channel.Side is null && channel.EventRole is null;
@@ -415,7 +485,7 @@ public sealed class InstructionCardService : IDisposable
             }
         }
 
-        await DisplayAsync(channelName, path, cancellationToken);
+        await DisplayAsync(shown, cancellationToken);
     }
 
     private static bool IsRoleAction(string action) => action.ToLowerInvariant()
@@ -423,7 +493,7 @@ public sealed class InstructionCardService : IDisposable
 
     private void RevertToDefault(string channelName)
     {
-        string? path;
+        Shown shown;
         lock (_lock)
         {
             if (!_channels.TryGetValue(channelName, out var channel)) return;
@@ -434,10 +504,11 @@ public sealed class InstructionCardService : IDisposable
             channel.EventRole = null;
             channel.Index = index;
             channel.Side = null;
-            path = PathOf(channel);
+            channel.Panel = null;
+            shown = Snapshot(channel);
         }
 
-        _ = DisplayAsync(channelName, path, CancellationToken.None);
+        _ = DisplayAsync(shown, CancellationToken.None);
     }
 
     private static void CancelRevert(Channel channel)
@@ -446,21 +517,21 @@ public sealed class InstructionCardService : IDisposable
         channel.Revert = null;
     }
 
-    private async Task DisplayAsync(string channelName, string? path, CancellationToken cancellationToken)
+    private async Task DisplayAsync(Shown shown, CancellationToken cancellationToken)
     {
-        var isMain = channelName.Equals(MainChannel, StringComparison.OrdinalIgnoreCase);
-        if (isMain && path != null)
+        var isMain = shown.Channel.Equals(MainChannel, StringComparison.OrdinalIgnoreCase);
+        if (isMain && shown.Path != null)
         {
             foreach (var target in _config.GetTargetsForContent("iccard"))
             {
-                await _surfaces.DisplayMediaAsync(path, target, cancellationToken);
+                await _surfaces.DisplayMediaAsync(shown.Path, target, cancellationToken);
             }
         }
 
         // split rendering (fixed card + cycling card side by side): the viewers of this
         // channel follow every card change, the static one is pinned on its configured
         // card and only moves on a game change (SetCardsAsync)
-        _surfaces.SetCardSource(channelName, path);
+        _surfaces.SetCardSource(shown.Channel, shown.Path, shown.Panel);
     }
 
     /// <summary>Path of the card pinned by an iccard.static component ("card" option,

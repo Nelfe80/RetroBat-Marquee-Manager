@@ -101,6 +101,33 @@ public sealed class InstructionCardCatalogTests
         Assert.Equal(@"C:\media\ic\ic-1-left.png", group.PathFor("middle"));
     }
 
+    [Fact]
+    public void An_announced_name_can_be_an_entry_inside_a_card()
+    {
+        // Ghouls'n Ghosts: one drawing holds every weapon, so the name does not point at a
+        // folder — it points INSIDE the card, and only a frame can answer.
+        var panels = new[]
+        {
+            new InstructionCardCatalog.CardPanel("controls", "panel", true, null, 0, 0.30, 1, 0.19),
+            new InstructionCardCatalog.CardPanel("normal-armor", "panel", true, null, 0, 0.49, 1, 0.24),
+            new InstructionCardCatalog.CardPanel("fire-water", "panel", true, "Fire Water", 0, 0.75, 1, 0.20)
+        };
+        var groups = InstructionCardCatalog.BuildGroups(new[]
+        {
+            Card(@"C:\media\ic\bonus-points\ic.png", "bonus-points"),
+            new InstructionCardCatalog.CardSource(@"C:\media\ic\items-and-weaponry\ic.png", "items-and-weaponry", panels)
+        });
+
+        var hit = InstructionCardCatalog.FindPanel(groups, "Normal Armor");
+        Assert.NotNull(hit);
+        Assert.Equal(1, hit!.GroupIndex);
+        Assert.Equal(0.49, hit.Panel.Y, 3);
+
+        // the label names it too, when the folder name would not
+        Assert.Equal("fire-water", InstructionCardCatalog.FindPanel(groups, "FIRE WATER")!.Panel.Role);
+        Assert.Null(InstructionCardCatalog.FindPanel(groups, "Excalibur"));
+    }
+
     [Theory]
     // explicit name wins, then the player, then the role, then the historical channel
     [InlineData("cartes", "cody", "1", "cartes")]

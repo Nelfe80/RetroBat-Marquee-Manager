@@ -117,6 +117,43 @@ public static class InstructionCardCatalog
         return null;
     }
 
+    /// <summary>An entry found inside a card: which card holds it, and where it sits.</summary>
+    public sealed record PanelHit(int GroupIndex, CardPanel Panel);
+
+    /// <summary>
+    /// The entry that NAMES what the game just announced — the armor picked up, the
+    /// weapon in hand — among these cards. This is what lets a card point at itself:
+    /// Ghouls'n Ghosts has one drawing holding every weapon, and only the frame says
+    /// which one you are carrying.
+    ///
+    /// The first side of a card is enough to look in: the two sides of one page hold the
+    /// same entries, drawn for the left and right player.
+    /// </summary>
+    public static PanelHit? FindPanel(IReadOnlyList<CardGroup> groups, string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return null;
+        var wanted = Slug(name);
+        if (wanted.Length == 0) return null;
+
+        for (var i = 0; i < groups.Count; i++)
+        {
+            foreach (var variant in groups[i].Variants)
+            {
+                foreach (var panel in variant.Panels)
+                {
+                    if (Slug(panel.Role).Equals(wanted, StringComparison.OrdinalIgnoreCase)
+                        || (panel.Label is { Length: > 0 } label
+                            && Slug(label).Equals(wanted, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return new PanelHit(i, panel);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>"Fire Water" → "fire-water": the nomenclature of the folders, so a name
     /// coming from a .MEM entry can be compared to a role.</summary>
     public static string Slug(string value)

@@ -115,11 +115,12 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 foreach (var host in _componentHosts) host.SetSource(type, path);
             }));
 
-        /// <summary>Feeds the instruction card viewers of one channel.</summary>
-        public void SetCardSource(string channel, string? path)
+        /// <summary>Feeds the instruction card viewers of one channel: the card, and the
+        /// entry to frame inside it.</summary>
+        public void SetCardSource(string channel, string? path, double[]? highlight)
             => Dispatcher.BeginInvoke(new Action(() =>
             {
-                foreach (var host in _componentHosts) host.SetCardSource(channel, path);
+                foreach (var host in _componentHosts) host.SetCardSource(channel, path, highlight);
             }));
 
         public bool HasSurfaceComponent(string type) => _surface?.HasComponent(type) == true;

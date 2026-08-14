@@ -734,6 +734,34 @@ public sealed class CompositionEditor : Window
                 + "Sinon elle parcourt tout : jamais la carte d'un autre.",
                 "When the game can tell who was picked (.MEM files), the card switches to that character and cycles through HIS pages. "
                 + "Otherwise it walks everything: never someone else's card.")));
+
+            // Some cards hold every entry in one drawing — les armes de Ghouls'n Ghosts
+            // côte à côte. Là, ce n'est pas la carte qui change, c'est l'entrée qu'on
+            // désigne dedans.
+            var highlight = Ui.ComboBox(220);
+            var currentHighlight = Value("highlight", "frame");
+            foreach (var (tag, fr, en) in new[]
+                     {
+                         ("frame", "Encadrer la fiche", "Frame the entry"),
+                         ("spotlight", "Encadrer et assombrir le reste", "Frame it and dim the rest"),
+                         ("none", "Ne rien signaler", "Signal nothing")
+                     })
+            {
+                var item = new ComboBoxItem { Content = L.T(fr, en), Tag = tag };
+                highlight.Items.Add(item);
+                if (tag.Equals(currentHighlight, StringComparison.OrdinalIgnoreCase)) highlight.SelectedItem = item;
+            }
+            if (highlight.SelectedItem == null) highlight.SelectedIndex = 0;
+            highlight.SelectionChanged += (_, _) =>
+            {
+                if ((highlight.SelectedItem as ComboBoxItem)?.Tag is string tag) component.Options["highlight"] = tag;
+            };
+            content.Children.Add(Ui.Row(L.T("Objet annoncé", "Announced item"), highlight, labelWidth: 110));
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "Certaines cartes réunissent toutes les entrées sur un seul dessin — les armes côte à côte. "
+                + "Quand le jeu annonce celle qu'on vient de ramasser, elle est encadrée sur la carte. L'encadrement disparaît dès qu'on touche la zone.",
+                "Some cards hold every entry in a single drawing — weapons side by side. "
+                + "When the game announces the one just picked up, it gets framed on the card. The frame goes away as soon as the zone is touched.")));
         }
         else
         {

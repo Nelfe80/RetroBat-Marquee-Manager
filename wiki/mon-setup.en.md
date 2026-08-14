@@ -81,6 +81,10 @@ Many cabinets show the game's **instruction card**: special moves, items, bonus 
 - **Player** — who this card is for. *All players* for a shared card.
 - **Displayed role** — the role is the page's **folder** in the game media: a character (`cody`), a topic (`items-and-weaponry`), a stage. Left empty, the layer walks **every** page of the game.
 - **Follow the character the game announces** — when the game can tell who was picked, the card switches to that character and cycles through **his** pages only.
+- **Announced item** — *Frame the entry*, *Frame it and dim the rest*, or *Signal nothing*.
+
+!!! tip "When the card does not change, the entry lights up"
+    Some games hold everything in one drawing — the weapons of Ghouls'n Ghosts side by side. There is no card to switch to: when the game announces the weapon you just picked up, **that entry gets framed** on the card. The frame goes away as soon as a zone is touched: a frame pointing at what the player no longer holds is worse than no frame.
 
 **Touch zone** is the layer you press. Its rectangle **is** the zone: what you draw is what a finger can touch. Its options:
 

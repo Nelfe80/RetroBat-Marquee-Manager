@@ -326,9 +326,9 @@ public sealed class MarqueeController : IDisposable
     /// <summary>Feeds the viewers of ONE channel (instruction cards). The historical
     /// components answer on the main channel, so a composition made before channels
     /// existed keeps working.</summary>
-    public void SetCardSource(string channel, string? path)
+    public void SetCardSource(string channel, string? path, double[]? highlight = null)
     {
-        foreach (var window in AllWindows()) window.SetCardSource(channel, path);
+        foreach (var window in AllWindows()) window.SetCardSource(channel, path, highlight);
     }
 
     /// <summary>Every declared component of this type, across all surfaces — with its

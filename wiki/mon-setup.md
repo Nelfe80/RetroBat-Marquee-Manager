@@ -81,6 +81,10 @@ Beaucoup de bornes affichent la **carte d'instructions** du jeu : les coups spé
 - **Joueur** — pour qui cette carte s'affiche. *Tous les joueurs* pour une carte partagée.
 - **Rôle affiché** — le rôle est le **dossier** de la fiche dans le média du jeu : un personnage (`cody`), un thème (`items-and-weaponry`), un stage. Laissé vide, le calque parcourt **toutes** les fiches du jeu.
 - **Suivre le personnage annoncé par le jeu** — quand le jeu sait dire qui a été choisi, la carte bascule sur ce personnage et tourne dans **ses** fiches uniquement.
+- **Objet annoncé** — *Encadrer la fiche*, *Encadrer et assombrir le reste*, ou *Ne rien signaler*.
+
+!!! tip "Quand la carte ne change pas, c'est la fiche qui s'allume"
+    Certains jeux réunissent tout sur un seul dessin — les armes de Ghouls'n Ghosts côte à côte. Là, il n'y a pas de carte à changer : quand le jeu annonce l'arme que vous venez de ramasser, **c'est elle qui s'encadre** sur la carte. L'encadrement disparaît dès qu'on touche une zone : un cadre qui désigne ce que le joueur n'a plus est pire que pas de cadre.
 
 **Zone tactile** est le calque qu'on presse. Son rectangle **est** la zone : ce que vous dessinez est ce que le doigt peut toucher. Ses options :
 

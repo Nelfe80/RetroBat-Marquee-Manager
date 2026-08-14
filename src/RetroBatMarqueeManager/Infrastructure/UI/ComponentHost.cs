@@ -71,6 +71,7 @@ public sealed class ComponentHost : Canvas
         var hasContent = element switch
         {
             Image image => image.Source != null,
+            InstructionCardView card => card.Picture.Source != null,
             ContentControl host => host.Content != null,
             TextBlock text => text.Text.Length > 0,
             _ => true // shapes, gradients, web views
@@ -153,7 +154,7 @@ public sealed class ComponentHost : Canvas
     /// channel, which is also what an unconfigured zone drives. A composition made
     /// before channels existed therefore behaves exactly as it did.
     /// </summary>
-    public void SetCardSource(string channel, string? path)
+    public void SetCardSource(string channel, string? path, double[]? highlight)
     {
         foreach (var (definition, element) in _visuals)
         {
@@ -165,6 +166,9 @@ public sealed class ComponentHost : Canvas
                     definition.Option("channel"), definition.Option("role"), definition.Option("player"));
             if (!own.Equals(channel, StringComparison.OrdinalIgnoreCase)) continue;
             SetImage(element, path);
+            // the frame is set AFTER the picture: it is placed against the drawing, and
+            // the drawing has to be the right one first
+            if (element is InstructionCardView card) card.SetPanel(highlight);
             RefreshVisibility(definition, element);
         }
     }
@@ -254,9 +258,15 @@ public sealed class ComponentHost : Canvas
             case "media.logo":
             case "media.fanart":
             case "media.image":
+            case "iccard.viewer":
+                // a card can be pointed AT — the entry the game just announced gets framed —
+                // so it is a picture plus an overlay, not a bare picture
+                return new InstructionCardView(
+                    component.Option("stretch") == "fill" ? Stretch.UniformToFill : Stretch.Uniform,
+                    component.Option("highlight", "frame"));
+
             case "iccard.static":
             case "iccard.cycle":
-            case "iccard.viewer":
                 return new Image
                 {
                     // A media is NEVER distorted: "fill" fills the zone keeping aspect
@@ -529,6 +539,8 @@ public sealed class ComponentHost : Canvas
     /// SEQUENCE guard (an older decode finishing late never clobbers a newer one).</summary>
     private static void SetImage(FrameworkElement element, string? path)
     {
+        // a card view is a picture with an overlay: the file goes to the picture
+        if (element is InstructionCardView card) element = card.Picture;
         if (element is not Image image) return;
         var state = _imageState.GetOrCreateValue(image);
 
