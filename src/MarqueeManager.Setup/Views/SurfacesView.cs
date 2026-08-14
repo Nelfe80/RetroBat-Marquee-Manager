@@ -51,6 +51,8 @@ public sealed class SurfacesView : UserControl
         ("overlay.ra.speedrun", "Speedrun RA", "RA speedrun"),
         ("iccard.static", "Carte fixe", "Static card"),
         ("iccard.cycle", "Carte variable", "Cycling card"),
+        ("iccard.viewer", "Carte d'instructions (rôle / joueur)", "Instruction card (role / player)"),
+        ("iccard.touch", "Zone tactile (carte d'instructions)", "Touch zone (instruction card)"),
         ("panel.controls", "Panneau de contrôle (joueur)", "Control panel (player)"),
         ("shape.gradient", "Gradient (lisibilité)", "Gradient (readability)"),
         ("external.web", "Web embarqué (Twitch, YouTube…)", "Embedded web (Twitch, YouTube…)")
@@ -396,6 +398,10 @@ public sealed class SurfacesView : UserControl
                 "text.custom" => "text",
                 "text.meta" => "template",
                 "iccard.static" => "card",
+                // the viewer's role and the zone's action are set in the composition
+                // editor, where the zone is drawn — here the essential is enough
+                "iccard.viewer" => "role",
+                "iccard.touch" => "action",
                 "shape.gradient" => "color",
                 "media.video" => "sources",
                 "panel.controls" => "player",

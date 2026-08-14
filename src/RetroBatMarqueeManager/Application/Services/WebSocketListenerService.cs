@@ -1080,6 +1080,18 @@ public sealed class WebSocketListenerService : BackgroundService
             ["system"] = meta?.System ?? ""
         };
 
+        // The entry's whole text block becomes tokens too — {desc}, {genre}, {players},
+        // {rating}. The gabarit already resolved them; a text LAYER could not, so a
+        // layer written as {desc} showed the tag itself. Fields known from the selection
+        // stay authoritative: they come from the entry, not from a scrape.
+        foreach (var (field, value) in CurrentText())
+        {
+            if (!metaValues.TryGetValue(field, out var existing) || string.IsNullOrEmpty(existing))
+            {
+                metaValues[field] = value;
+            }
+        }
+
         _surfaces.UpdateComponentMedia(kinds, metaValues);
         _ = ResolveLiveVideoAsync(meta);
     }
@@ -1317,18 +1329,52 @@ public sealed class WebSocketListenerService : BackgroundService
 
         var cards = Child(payload, "Cards", "cards");
         if (cards.ValueKind != JsonValueKind.Array) return;
-        // keep the whole catalog: the touch profile can cycle/show any of them
-        var paths = new List<string>();
+        // keep the whole catalog, with what each card is ABOUT: the role is the folder
+        // the card sits in, and it is what lets a viewer follow one character instead of
+        // walking the whole game
+        var sources = new List<InstructionCardCatalog.CardSource>();
         foreach (var card in cards.EnumerateArray())
         {
             var path = ResolveLocal(Text(card, "Path", "path"));
-            if (path != null) paths.Add(path);
+            if (path == null) continue;
+            sources.Add(new InstructionCardCatalog.CardSource(path, Text(card, "Role", "role"), ReadCardPanels(card)));
         }
 
         // A game without an instruction card CLEARS the previous one. Returning early
         // left the last game's card on screen — one card following you across the whole
         // library. Nothing of an entry may survive into the next.
-        await _instructionCards.SetCardsAsync(paths, cancellationToken);
+        await _instructionCards.SetCardsAsync(sources, cancellationToken);
+    }
+
+    /// <summary>Where each entry sits inside a card, when the card's companion file says
+    /// so. Rects come as fractions [x, y, w, h] of the drawing, so they survive any
+    /// display size; a card without a companion simply has none.</summary>
+    private static IReadOnlyList<InstructionCardCatalog.CardPanel> ReadCardPanels(JsonElement card)
+    {
+        var panels = Child(card, "Panels", "panels");
+        if (panels.ValueKind != JsonValueKind.Array) return Array.Empty<InstructionCardCatalog.CardPanel>();
+
+        var result = new List<InstructionCardCatalog.CardPanel>();
+        foreach (var panel in panels.EnumerateArray())
+        {
+            var rect = Child(panel, "Rect", "rect");
+            if (rect.ValueKind != JsonValueKind.Array) continue;
+            var values = rect.EnumerateArray()
+                .Where(v => v.ValueKind == JsonValueKind.Number)
+                .Select(v => v.GetDouble())
+                .ToArray();
+            if (values.Length != 4) continue;
+
+            var label = Text(panel, "Label", "label");
+            result.Add(new InstructionCardCatalog.CardPanel(
+                Text(panel, "Role", "role"),
+                Text(panel, "Kind", "kind"),
+                Boolean(panel, "Named", "named"),
+                label.Length > 0 ? label : null,
+                values[0], values[1], values[2], values[3]));
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -1910,6 +1956,24 @@ public sealed class WebSocketListenerService : BackgroundService
 
         // flow lifecycle changes gate the speedrun leaderboard (no timer during demos)
         _presentation.OnGameplayFlow(action);
+
+        // Two actions do not describe a change, they NAME what a player has in hand —
+        // their description is "Cody", "Fire Water". That name is a card's role, so the
+        // viewers following that player switch to it. Handled before the effect lookup:
+        // a game announcing a character has something to show even when no light effect
+        // is bound to it.
+        if (action.Equals("CHARACTER_SELECTED", StringComparison.OrdinalIgnoreCase)
+            || action.Equals("WEAPON_SELECTED", StringComparison.OrdinalIgnoreCase))
+        {
+            var name = Text(payload, "SourceCategory", "sourceCategory");
+            if (name.Length == 0 && signal.ValueKind == JsonValueKind.Object)
+                name = Text(signal, "SourceDescription", "sourceDescription");
+            if (name.Length > 0)
+            {
+                var player = Integer(payload, "Player", "player") ?? 1;
+                _ = _instructionCards.OnNameAnnouncedAsync(player, name, CancellationToken.None);
+            }
+        }
 
         var sequence = _ingameEffects.Resolve(action, family.Length > 0 ? family : null);
         if (sequence.Count == 0) return;

@@ -56,6 +56,10 @@ public sealed class CompositionEditor : Window
         ["external.web"] = Color.FromRgb(0xE8, 0x5C, 0x5C),
         ["iccard.static"] = Color.FromRgb(0x20, 0xE8, 0xE8),
         ["iccard.cycle"] = Color.FromRgb(0x20, 0xE8, 0xE8),
+        ["iccard.viewer"] = Color.FromRgb(0x20, 0xE8, 0xE8),
+        // a zone is not a picture: it gets its own colour so a composition shows at a
+        // glance where the fingers go
+        ["iccard.touch"] = Color.FromRgb(0xFF, 0x6F, 0x3C),
         ["effects.engine"] = Color.FromRgb(0x39, 0xD3, 0x53)
     };
 
@@ -211,6 +215,30 @@ public sealed class CompositionEditor : Window
             // which one is being pressed right now.
             new("📊 Live", L.T("Panneau de contrôle", "Control panel"),
                 () => new() { C("panel.controls", 0.25, 0.5, 0.5, 0.45, ("player", "1")) }),
+
+            // A card and the finger that turns it. They are two separate layers on
+            // purpose: the card can sit on the topper while the buttons are on a
+            // touchscreen, and a zone can drive a viewer that is not on its surface.
+            new("🃏 Cartes d'instructions", L.T("Carte du joueur 1", "Player 1 card"),
+                () => new() { C("iccard.viewer", 0, 0, 0.5, 1, ("player", "1"), ("auto", "true")) }),
+            new("🃏 Cartes d'instructions", L.T("Carte du joueur 2", "Player 2 card"),
+                () => new() { C("iccard.viewer", 0.5, 0, 0.5, 1, ("player", "2"), ("auto", "true")) }),
+            new("🃏 Cartes d'instructions", L.T("Carte (toutes les fiches)", "Card (all pages)"),
+                () => new() { C("iccard.viewer", 0, 0, 1, 1, ("auto", "false")) }),
+            new("🃏 Cartes d'instructions", L.T("Deux cartes + zones tactiles", "Two cards + touch zones"),
+                () => new()
+                {
+                    C("iccard.viewer", 0, 0, 0.5, 0.85, ("player", "1"), ("auto", "true")),
+                    C("iccard.viewer", 0.5, 0, 0.5, 0.85, ("player", "2"), ("auto", "true")),
+                    C("iccard.touch", 0, 0.85, 0.5, 0.15, ("channel", "p1"), ("action", "next-card"),
+                        ("label", L.T("Joueur 1 ▸", "Player 1 ▸")), ("hint", "true")),
+                    C("iccard.touch", 0.5, 0.85, 0.5, 0.15, ("channel", "p2"), ("action", "next-card"),
+                        ("label", L.T("Joueur 2 ▸", "Player 2 ▸")), ("hint", "true"))
+                }),
+            new("🃏 Cartes d'instructions", L.T("Zone tactile — fiche suivante", "Touch zone — next page"),
+                () => new() { C("iccard.touch", 0.6, 0.8, 0.4, 0.2, ("action", "next-card")) }),
+            new("🃏 Cartes d'instructions", L.T("Zone tactile — fiche précédente", "Touch zone — previous page"),
+                () => new() { C("iccard.touch", 0, 0.8, 0.4, 0.2, ("action", "previous-card")) }),
 
             new("🏆 RetroAchievements", L.T("Badges", "Badges"), () => new() { C("overlay.ra.badges", 0, 0.85, 1, 0.15) }),
             new("🏆 RetroAchievements", L.T("Infos RA", "RA info"), () => new() { C("overlay.ra.info", 0, 0.7, 1, 0.3) }),
@@ -628,6 +656,156 @@ public sealed class CompositionEditor : Window
         => component.Name.Length > 0 ? component.Name : component.Type;
 
     /// <summary>
+    /// The two instruction-card layers, side by side in the inspector because they are
+    /// two halves of the same thing: a viewer SHOWS a channel, a zone DRIVES one. What
+    /// binds them is the channel name, and it is derived from the player or the role so
+    /// that the ordinary cabinet never has to name anything.
+    /// </summary>
+    private void BuildInstructionCardOptions(ComponentModel component, StackPanel content)
+    {
+        var isViewer = component.Type == "iccard.viewer";
+
+        string Value(string key, string fallback = "")
+            => component.Options.TryGetValue(key, out var v) && v.Length > 0 ? v : fallback;
+
+        TextBox Text(string key, string hintFr, string hintEn, double width = 170)
+        {
+            var box = Ui.TextBox(Value(key), width);
+            box.TextChanged += (_, _) => component.Options[key] = box.Text.Trim();
+            content.Children.Add(Ui.Row(L.T(hintFr, hintEn), box, labelWidth: 110));
+            return box;
+        }
+
+        // --- who this layer is for ---
+        var players = Ui.ComboBox(180);
+        var currentPlayer = Value("player", "0");
+        foreach (var (tag, fr, en) in new[]
+                 {
+                     ("0", "Tous les joueurs", "All players"),
+                     ("1", "Joueur 1", "Player 1"), ("2", "Joueur 2", "Player 2"),
+                     ("3", "Joueur 3", "Player 3"), ("4", "Joueur 4", "Player 4")
+                 })
+        {
+            var item = new ComboBoxItem { Content = L.T(fr, en), Tag = tag };
+            players.Items.Add(item);
+            if (tag == currentPlayer) players.SelectedItem = item;
+        }
+        if (players.SelectedItem == null) players.SelectedIndex = 0;
+
+        var channelBox = Ui.TextBox(Value("channel"), 170);
+        var channelHint = Ui.MutedLabel("");
+        void RefreshChannel()
+        {
+            var derived = InstructionCardChannel(Value("channel"), Value("role"), Value("player"));
+            channelHint.Text = L.T(
+                $"Canal : {derived}. Une zone et une carte qui portent le même canal se répondent — laissez vide, il se déduit du joueur ou du rôle.",
+                $"Channel: {derived}. A zone and a card sharing a channel answer each other — leave empty and it follows the player or the role.");
+        }
+
+        players.SelectionChanged += (_, _) =>
+        {
+            if ((players.SelectedItem as ComboBoxItem)?.Tag is not string tag) return;
+            // "all players" is the absence of a player, not player zero
+            if (tag == "0") component.Options.Remove("player");
+            else component.Options["player"] = tag;
+            RefreshChannel();
+        };
+        content.Children.Add(Ui.Row(L.T("Joueur", "Player"), players, labelWidth: 110));
+
+        if (isViewer)
+        {
+            var role = Text("role", "Rôle affiché", "Displayed role");
+            role.TextChanged += (_, _) => RefreshChannel();
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "Le rôle est le dossier de la carte dans le média du jeu (un personnage, « items-and-weaponry », un stage). "
+                + "Vide = toutes les fiches du jeu, ce qui est la bonne réponse tant qu'on ne sait pas qui joue.",
+                "The role is the card's folder in the game media (a character, \"items-and-weaponry\", a stage). "
+                + "Empty = every page of the game, which is the right answer as long as nobody knows who is playing.")));
+
+            var auto = Ui.CheckBox(L.T(
+                    "Suivre le personnage annoncé par le jeu",
+                    "Follow the character the game announces"),
+                !Value("auto", "true").Equals("false", StringComparison.OrdinalIgnoreCase));
+            auto.Checked += (_, _) => component.Options["auto"] = "true";
+            auto.Unchecked += (_, _) => component.Options["auto"] = "false";
+            content.Children.Add(auto);
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "Quand le jeu sait dire qui a été choisi (fichiers .MEM), la carte bascule sur ce personnage et tourne dans SES fiches. "
+                + "Sinon elle parcourt tout : jamais la carte d'un autre.",
+                "When the game can tell who was picked (.MEM files), the card switches to that character and cycles through HIS pages. "
+                + "Otherwise it walks everything: never someone else's card.")));
+        }
+        else
+        {
+            var actions = Ui.ComboBox(220);
+            var currentAction = Value("action", "next-card");
+            foreach (var (tag, fr, en) in new[]
+                     {
+                         ("next-card", "Fiche suivante", "Next page"),
+                         ("previous-card", "Fiche précédente", "Previous page"),
+                         ("default-card", "Revenir à la première", "Back to the first"),
+                         ("show-card", "Afficher une fiche précise", "Show one page"),
+                         ("show-role", "Afficher un rôle précis", "Show one role"),
+                         ("next-role", "Rôle suivant", "Next role"),
+                         ("previous-role", "Rôle précédent", "Previous role"),
+                         ("toggle-auto", "Suivre le jeu / ne plus suivre", "Follow the game / stop following")
+                     })
+            {
+                var item = new ComboBoxItem { Content = L.T(fr, en), Tag = tag };
+                actions.Items.Add(item);
+                if (tag.Equals(currentAction, StringComparison.OrdinalIgnoreCase)) actions.SelectedItem = item;
+            }
+            if (actions.SelectedItem == null) actions.SelectedIndex = 0;
+            actions.SelectionChanged += (_, _) =>
+            {
+                if ((actions.SelectedItem as ComboBoxItem)?.Tag is string tag) component.Options["action"] = tag;
+            };
+            content.Children.Add(Ui.Row(L.T("Au toucher", "On tap"), actions, labelWidth: 110));
+
+            var role = Text("role", "Rôle visé", "Target role");
+            role.TextChanged += (_, _) => RefreshChannel();
+            Text("card", "Fiche visée", "Target page");
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "« Rôle visé » et « Fiche visée » ne servent qu'aux deux actions qui les nomment.",
+                "\"Target role\" and \"target page\" only matter for the two actions that name them.")));
+
+            Text("label", "Texte affiché", "Displayed text");
+            var hint = Ui.CheckBox(L.T("Encadrer la zone", "Outline the zone"),
+                Value("hint", "false").Equals("true", StringComparison.OrdinalIgnoreCase));
+            hint.Checked += (_, _) => component.Options["hint"] = "true";
+            hint.Unchecked += (_, _) => component.Options["hint"] = "false";
+            content.Children.Add(hint);
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "Le rectangle EST la zone tactile : ce que vous dessinez ici est ce que le doigt peut presser. "
+                + "Rien n'est dessiné par défaut — un écran tactile qui marche n'a pas besoin d'être marqué.",
+                "The rectangle IS the touch zone: what you draw here is what a finger can press. "
+                + "Nothing is drawn by default — a touchscreen that works needs no marking.")));
+
+            Text("durationMs", "Retour auto (ms)", "Auto return (ms)", 100);
+        }
+
+        channelBox.TextChanged += (_, _) =>
+        {
+            component.Options["channel"] = channelBox.Text.Trim();
+            RefreshChannel();
+        };
+        content.Children.Add(Ui.Row(L.T("Canal", "Channel"), channelBox, labelWidth: 110));
+        RefreshChannel();
+        content.Children.Add(channelHint);
+    }
+
+    /// <summary>Same rule as the runtime: an explicit name, else the player, else the
+    /// role, else the historical channel. Kept here so the editor SHOWS the name the two
+    /// layers will actually meet on.</summary>
+    private static string InstructionCardChannel(string channel, string role, string player)
+    {
+        if (channel.Length > 0) return channel.ToLowerInvariant();
+        if (int.TryParse(player, out var number) && number >= 1) return "p" + number;
+        if (role.Length > 0) return new string(role.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray());
+        return "main";
+    }
+
+    /// <summary>
     /// The four RAILS of a surface, in render order. They are not layers you compose:
     /// they are the boundaries of the sandwich, and the rendering pipeline fixes their
     /// order. Pinned means: eye only — no delete, no move. Losing one by recomposing is
@@ -661,7 +839,7 @@ public sealed class CompositionEditor : Window
 
     private static readonly HashSet<string> LiveTypes = new(StringComparer.OrdinalIgnoreCase)
     {
-        "media.video", "iccard.static", "iccard.cycle", "external.web",
+        "media.video", "iccard.static", "iccard.cycle", "iccard.viewer", "iccard.touch", "external.web",
         "overlay.hiscore", "overlay.live.score", "overlay.live.timer",
         "overlay.ra.info", "overlay.ra.badges", "overlay.ra.speedrun",
         // the panel lights up under the player's fingers: a baked copy would be a
@@ -1014,6 +1192,10 @@ public sealed class CompositionEditor : Window
                 "Les boutons que le jeu n'utilise pas restent visibles, en transparence : le panneau montre la borne telle qu'elle est. Un appui physique allume le bouton correspondant — c'est ainsi qu'on vérifie son câblage.",
                 "Buttons the game does not use stay visible, faded: the panel shows the cabinet as it is. Pressing a physical button lights the matching one — that is how you check your wiring.")));
         }
+        if (component.Type is "iccard.viewer" or "iccard.touch")
+        {
+            BuildInstructionCardOptions(component, content);
+        }
         if (component.Type == "overlay.hiscore")
         {
             ComboBox Combo(string key, string defaultValue, params (string tag, string fr, string en)[] items)
@@ -1147,6 +1329,48 @@ public sealed class CompositionEditor : Window
             line.Children.Add(box);
             line.Children.Add(Ui.ColorPalette(box));
             style.Children.Add(Ui.Row(L.T("Couleur", "Color"), line, labelWidth: 90));
+
+            ComboBox Choice(string key, string fallback, params (string tag, string fr, string en)[] items)
+            {
+                var combo = Ui.ComboBox(160);
+                var now = component.Options.TryGetValue(key, out var cv) && cv.Length > 0 ? cv : fallback;
+                foreach (var (tag, fr, en) in items)
+                {
+                    var entry = new ComboBoxItem { Content = L.T(fr, en), Tag = tag };
+                    combo.Items.Add(entry);
+                    if (tag.Equals(now, StringComparison.OrdinalIgnoreCase)) combo.SelectedItem = entry;
+                }
+                if (combo.SelectedItem == null) combo.SelectedIndex = 0;
+                combo.SelectionChanged += (_, _) =>
+                {
+                    if ((combo.SelectedItem as ComboBoxItem)?.Tag is string tag) component.Options[key] = tag;
+                };
+                return combo;
+            }
+
+            style.Children.Add(Ui.Row(L.T("Alignement", "Alignment"),
+                Choice("align", "center",
+                    ("left", "Gauche", "Left"), ("center", "Centré", "Centered"),
+                    ("right", "Droite", "Right"), ("justify", "Justifié", "Justified")),
+                labelWidth: 90));
+
+            style.Children.Add(Ui.Row(L.T("Vertical", "Vertical"),
+                Choice("valign", "top",
+                    ("top", "Haut", "Top"), ("middle", "Milieu", "Middle"), ("bottom", "Bas", "Bottom")),
+                labelWidth: 90));
+
+            style.Children.Add(Ui.Row(L.T("Graisse", "Weight"),
+                Choice("weight", "bold", ("bold", "Grasse", "Bold"), ("normal", "Normale", "Normal")),
+                labelWidth: 90));
+
+            // 0 = the text fits ITSELF to its zone, which is what a description needs:
+            // a name and a 1500-character paragraph cannot share one fixed size.
+            style.Children.Add(OptionSlider(component, "size", 0, 0, 0.3,
+                L.T("Corps", "Type size"),
+                value => value <= 0.001 ? L.T("auto", "auto") : $"{value * 100:0.0} %"));
+            style.Children.Add(Ui.MutedLabel(L.T(
+                "Corps sur « auto » : le texte s'ajuste à sa zone. Sinon, une fraction de la hauteur de la surface — il garde sa taille quand on redimensionne la zone.",
+                "Type size on \"auto\": the text fits its own zone. Otherwise a fraction of the surface height — it keeps its size when the zone is resized.")));
         }
         else if (component.Type.StartsWith("media."))
         {

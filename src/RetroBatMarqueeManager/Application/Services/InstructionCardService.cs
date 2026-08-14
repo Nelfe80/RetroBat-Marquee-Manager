@@ -2,33 +2,44 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using RetroBatMarqueeManager.Core.Interfaces;
+using RetroBatMarqueeManager.Core.Surfaces;
 using RetroBatMarqueeManager.Infrastructure.Processes;
 
 namespace RetroBatMarqueeManager.Application.Services;
 
 /// <summary>
-/// Instruction card catalog + touch interaction. APIExpose sends the full Cards
-/// array for the current game; this service keeps the whole list (the legacy path
-/// only showed the first one) and, when state\surfaces.profile.json enables touch
-/// on the iccard surface, maps taps to zone actions: cycle-card, show-card,
-/// show-player-card, default-card. Written by MarqueeManagerSetup.
+/// Instruction card catalog + touch interaction. APIExpose sends the full Cards array
+/// for the current game, each card carrying the ROLE it belongs to; this service keeps
+/// the whole list and shows it through CHANNELS.
 ///
-/// Media naming (APIExpose artwork\ic): `ic.png` or `ic-N[-variant].png` — e.g.
-/// mercs ships ic-1-left … ic-5-right. Files sharing the same N are ONE logical
-/// card in two panel positions: left (player 1 side) and right (player 2 side).
-/// Cycling and "icN" ids work on logical cards; show-player-card picks the side.
+/// A channel is one reading position: a viewer displays it, a touch zone drives it.
+/// They are two different layers on purpose — a cabinet can have its buttons on a
+/// touchscreen and its card on the topper, so the finger and the card are not on the
+/// same surface. The channel is what ties them together, and it is derived from what
+/// the viewer already says (its player, its role) so the common cases need no naming.
+///
+/// Each channel holds its own place in the catalog: which role it is on, which card of
+/// that role, and whether it follows the character the game announces. Cycling stays
+/// INSIDE the current role — Cody 01 → 02 → 03 → 01 — which is what makes a card usable
+/// mid-game. With no role, it walks the whole catalog: when nothing says who is being
+/// played, showing everything is the honest answer.
+///
+/// Media naming (APIExpose artwork\ic): `ic.png` or `ic-N[-variant].png`, under an
+/// optional role folder. Files sharing the same N are ONE logical card in two panel
+/// positions: left (player 1 side) and right (player 2 side).
 /// </summary>
 public sealed class InstructionCardService : IDisposable
 {
+    private const string MainChannel = "main";
+
     private readonly IConfigService _config;
     private readonly MarqueeController _surfaces;
     private readonly ILogger<InstructionCardService> _logger;
     private readonly object _lock = new();
     private readonly TouchSettings? _touch;
+    private readonly Dictionary<string, Channel> _channels = new(StringComparer.OrdinalIgnoreCase);
     private List<InstructionCardCatalog.CardGroup> _groups = new();
-    private int _groupIndex;
-    private string? _sidePreference;
-    private System.Threading.Timer? _revertTimer;
+    private bool _channelsResolved;
 
     public InstructionCardService(IConfigService config, MarqueeController surfaces, ILogger<InstructionCardService> logger)
     {
@@ -36,36 +47,67 @@ public sealed class InstructionCardService : IDisposable
         _surfaces = surfaces;
         _logger = logger;
         _touch = LoadTouchProfile();
+        _surfaces.SurfaceTapped += OnTap;
         if (_touch is { Enabled: true })
         {
-            _surfaces.IcCardTapped += OnTap;
             _logger.LogInformation("Instruction card touch enabled: mode={Mode}, {ZoneCount} zone(s)",
                 _touch.Mode, _touch.Zones.Count);
         }
     }
 
-    /// <summary>New game selected: replace the catalog and show the default card.</summary>
-    public async Task SetCardsAsync(IReadOnlyList<string> cards, CancellationToken cancellationToken)
+    /// <summary>One reading position in the catalog. Named by the viewer that shows it
+    /// and by the zones that drive it.</summary>
+    private sealed class Channel
     {
-        string? path;
+        public required string Name { get; init; }
+
+        /// <summary>The role the user pinned on the viewer. Empty = the whole catalog.</summary>
+        public string Role { get; set; } = string.Empty;
+
+        /// <summary>The role an event pinned (the character this player just chose).
+        /// Beats the configured one, and only auto mode ever sets it.</summary>
+        public string? EventRole { get; set; }
+
+        public int? Player { get; set; }
+
+        /// <summary>Follows what the game announces. Off = the zones drive it alone.</summary>
+        public bool Auto { get; set; }
+
+        public int Index { get; set; }
+        public string? Side { get; set; }
+        public System.Threading.Timer? Revert { get; set; }
+
+        public string EffectiveRole => EventRole ?? Role;
+    }
+
+    /// <summary>New game selected: replace the catalog and put every channel back on its
+    /// first card.</summary>
+    public async Task SetCardsAsync(IReadOnlyList<InstructionCardCatalog.CardSource> cards, CancellationToken cancellationToken)
+    {
+        List<(string Channel, string? Path)> updates;
         lock (_lock)
         {
             _groups = InstructionCardCatalog.BuildGroups(cards);
-            _groupIndex = DefaultGroupIndex();
-            _sidePreference = null;
-            CancelRevert();
-            path = _groups.Count > 0 ? _groups[_groupIndex].PathFor(null) : null;
+            ResolveChannels();
+            foreach (var channel in _channels.Values)
+            {
+                CancelRevert(channel);
+                // A game change forgets what the previous game announced: the character
+                // of the game you just left has no card here.
+                channel.EventRole = null;
+                channel.Side = null;
+                channel.Index = DefaultIndex(channel);
+            }
+
+            updates = _channels.Values.Select(c => (c.Name, PathOf(c))).ToList();
         }
 
-        if (path != null)
+        foreach (var (channel, path) in updates)
         {
-            await DisplayAsync(path, cancellationToken);
-        }
-        else
-        {
-            // No card for this game: CLEAR. Leaving the previous one made a single
-            // instruction card follow the user across the whole library.
-            _surfaces.SetComponentSource("iccard.cycle", null);
+            // A game without an instruction card CLEARS the previous one. Returning early
+            // left the last game's card on screen — one card following you across the whole
+            // library. Nothing of an entry may survive into the next.
+            await DisplayAsync(channel, path, cancellationToken);
         }
 
         if (_surfaces.HasComponent("iccard.static"))
@@ -75,29 +117,167 @@ public sealed class InstructionCardService : IDisposable
             {
                 staticPath = StaticCardPath();
             }
+
             _surfaces.SetComponentSource("iccard.static", staticPath);
         }
     }
 
-    private int DefaultGroupIndex()
+    /// <summary>Legacy entry point: a flat list of paths, no roles.</summary>
+    public Task SetCardsAsync(IReadOnlyList<string> cards, CancellationToken cancellationToken)
+        => SetCardsAsync(cards.Select(InstructionCardCatalog.CardSource.Of).ToList(), cancellationToken);
+
+    /// <summary>
+    /// The game announced what a player has in hand (CHARACTER_SELECTED / WEAPON_SELECTED
+    /// carry a NAME in their description). Channels in auto mode for that player jump to
+    /// the matching role — and stay there, cycling inside it.
+    /// </summary>
+    public async Task OnNameAnnouncedAsync(int player, string name, CancellationToken cancellationToken)
     {
-        var byId = _touch?.DefaultCard is { Length: > 0 } id ? ResolveGroupIndex(id) : null;
-        return byId is { } index && index >= 0 && index < _groups.Count ? index : 0;
+        List<(string Channel, string? Path)> updates;
+        lock (_lock)
+        {
+            if (_groups.Count == 0) return;
+            var role = InstructionCardCatalog.MatchRole(_groups, name);
+            if (role == null)
+            {
+                // No card for that name: the viewer keeps what it shows. Blanking it would
+                // punish the player for a card the pack simply does not carry.
+                _logger.LogDebug("Announced name {Name} matches no card role ({Count} groups)", name, _groups.Count);
+                return;
+            }
+
+            updates = new List<(string, string?)>();
+            foreach (var channel in _channels.Values)
+            {
+                if (!channel.Auto || (channel.Player is { } p && p != player)) continue;
+                if (string.Equals(channel.EventRole, role, StringComparison.OrdinalIgnoreCase)) continue;
+                CancelRevert(channel);
+                channel.EventRole = role;
+                channel.Side = null;
+                channel.Index = 0;
+                updates.Add((channel.Name, PathOf(channel)));
+            }
+
+            if (updates.Count == 0) return;
+            _logger.LogInformation("Player {Player} is on {Name}: {Count} viewer(s) switched to role {Role}",
+                player, name, updates.Count, role);
+        }
+
+        foreach (var (channel, path) in updates) await DisplayAsync(channel, path, cancellationToken);
     }
 
-    private void OnTap(double fx, double fy)
+    // ================= channels =================
+
+    /// <summary>Reads the channels off the surfaces: one per viewer, plus the historical
+    /// one which the legacy components and the iccard surface still answer on.</summary>
+    private void ResolveChannels()
     {
+        var viewers = _surfaces.ComponentsOfType("iccard.viewer");
+        if (_channelsResolved && viewers.Count == 0) return;
+        _channelsResolved = true;
+
+        foreach (var viewer in viewers)
+        {
+            var player = int.TryParse(viewer.Option("player"), out var parsed) && parsed >= 1 ? parsed : (int?)null;
+            var name = InstructionCardCatalog.ChannelOf(viewer.Option("channel"), viewer.Option("role"), viewer.Option("player"));
+            var channel = ChannelFor(name);
+            channel.Role = viewer.Option("role").Trim();
+            channel.Player = player;
+            channel.Auto = !viewer.Option("auto", "true").Equals("false", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // the historical channel always exists: iccard.cycle, the iccard surface and any
+        // zone that names no target answer on it
+        ChannelFor(MainChannel);
+    }
+
+    private Channel ChannelFor(string name)
+    {
+        if (!_channels.TryGetValue(name, out var channel))
+        {
+            _channels[name] = channel = new Channel { Name = name };
+        }
+
+        return channel;
+    }
+
+    /// <summary>The cards this channel walks: its role's, or all of them.</summary>
+    private List<InstructionCardCatalog.CardGroup> GroupsOf(Channel channel)
+        => InstructionCardCatalog.ForRole(_groups, channel.EffectiveRole);
+
+    private string? PathOf(Channel channel)
+    {
+        var groups = GroupsOf(channel);
+        if (groups.Count == 0) return null;
+        var index = Math.Clamp(channel.Index, 0, groups.Count - 1);
+        return groups[index].PathFor(channel.Side ?? SideOf(channel));
+    }
+
+    /// <summary>A card drawn in two panel positions shows the player his own side.</summary>
+    private static string? SideOf(Channel channel) => channel.Player switch
+    {
+        1 => "left",
+        2 => "right",
+        _ => null
+    };
+
+    private int DefaultIndex(Channel channel)
+    {
+        var groups = GroupsOf(channel);
+        if (groups.Count == 0) return 0;
+        // the profile's pinned card only applies to the historical channel: it was
+        // written when there was a single reading position
+        if (channel.Name.Equals(MainChannel, StringComparison.OrdinalIgnoreCase)
+            && _touch?.DefaultCard is { Length: > 0 } id
+            && ResolveGroupIndex(groups, id) is { } index)
+        {
+            return index;
+        }
+
+        return 0;
+    }
+
+    // ================= touch =================
+
+    /// <summary>
+    /// A tap on a surface. The zones the user drew in the composition win — they are
+    /// visible, they carry their own action, and they can sit on ANY surface. The
+    /// historical profile (state\surfaces.profile.json) still answers on the iccard
+    /// surface when the composition has no zone under the finger.
+    /// </summary>
+    private void OnTap(SurfaceDefinition surface, string scene, double fx, double fy)
+    {
+        var zone = FindTouchLayer(surface, scene, fx, fy);
+        if (zone != null)
+        {
+            var action = zone.Option("action", "next-card");
+            var channel = InstructionCardCatalog.ChannelOf(zone.Option("channel"), zone.Option("role"), zone.Option("player"));
+            _logger.LogDebug("Tap ({Fx:0.##},{Fy:0.##}) on {Surface} -> {Action} on channel {Channel}",
+                fx, fy, surface.Id, action, channel);
+            _ = ExecuteAsync(channel, new TouchAction
+            {
+                Action = action,
+                Card = zone.Option("card"),
+                Role = zone.Option("role"),
+                Player = int.TryParse(zone.Option("player"), out var player) && player >= 1 ? player : null,
+                DurationMs = int.TryParse(zone.Option("durationMs"), out var ms) && ms > 0 ? ms : null
+            }, CancellationToken.None);
+            return;
+        }
+
+        if (!surface.Category.Equals("iccard", StringComparison.OrdinalIgnoreCase)) return;
+
         TouchZone? hit = null;
         lock (_lock)
         {
             if (_touch is not { Enabled: true } || _groups.Count == 0) return;
             // first matching zone wins: generated profiles list the specific zone
             // (e.g. center) before the catch-all
-            foreach (var zone in _touch.Zones)
+            foreach (var legacy in _touch.Zones)
             {
-                if (zone.Contains(fx, fy))
+                if (legacy.Contains(fx, fy))
                 {
-                    hit = zone;
+                    hit = legacy;
                     break;
                 }
             }
@@ -106,105 +286,181 @@ public sealed class InstructionCardService : IDisposable
         if (hit?.Tap == null) return;
         _logger.LogDebug("Instruction card tap ({Fx:0.##},{Fy:0.##}) -> zone {Zone}, action {Action}",
             fx, fy, hit.Id, hit.Tap.Action);
-        _ = ExecuteAsync(hit.Tap, CancellationToken.None);
+        _ = ExecuteAsync(MainChannel, hit.Tap, CancellationToken.None);
     }
 
-    private async Task ExecuteAsync(TouchAction tap, CancellationToken cancellationToken)
+    /// <summary>The front-most touch layer under the finger, among those the current
+    /// scene shows. Front-most first: a zone drawn over another one is the one the user
+    /// sees, so it is the one he means.</summary>
+    private static ComponentDefinition? FindTouchLayer(SurfaceDefinition surface, string scene, double fx, double fy)
     {
-        string? path = null;
-        var revertMs = 0;
+        for (var i = surface.Components.Count - 1; i >= 0; i--)
+        {
+            var component = surface.Components[i];
+            if (!component.Type.Equals("iccard.touch", StringComparison.OrdinalIgnoreCase)) continue;
+            if (!component.ActiveIn(scene)) continue;
+            if (fx >= component.X && fx <= component.X + component.W
+                                  && fy >= component.Y && fy <= component.Y + component.H)
+            {
+                return component;
+            }
+        }
+
+        return null;
+    }
+
+    private async Task ExecuteAsync(string channelName, TouchAction tap, CancellationToken cancellationToken)
+    {
+        string? path;
         lock (_lock)
         {
             if (_groups.Count == 0) return;
+            ResolveChannels();
+            var channel = ChannelFor(channelName);
+            var groups = GroupsOf(channel);
+            // a role action is allowed to leave an empty role — that is how you get out
+            // of one; everything else needs a card to move to
+            if (groups.Count == 0 && !IsRoleAction(tap.Action)) return;
+
             switch (tap.Action.ToLowerInvariant())
             {
+                case "next-card":
                 case "cycle-card":
-                    _groupIndex = (_groupIndex + 1) % _groups.Count;
+                    channel.Index = (channel.Index + 1) % groups.Count;
+                    break;
+
+                case "previous-card":
+                    channel.Index = (channel.Index - 1 + groups.Count) % groups.Count;
                     break;
 
                 case "show-card":
-                    if (tap.Card is not { Length: > 0 } card || ResolveGroupIndex(card) is not { } found)
+                    if (tap.Card is not { Length: > 0 } card || ResolveGroupIndex(groups, card) is not { } found)
                     {
-                        _logger.LogDebug("show-card resolved no card for id {Card} ({Count} groups)", tap.Card, _groups.Count);
+                        _logger.LogDebug("show-card resolved no card for id {Card} ({Count} groups)", tap.Card, groups.Count);
                         return;
                     }
 
-                    _groupIndex = found;
+                    channel.Index = found;
                     break;
+
+                case "show-role":
+                {
+                    // an explicit role stops following the game: the user asked for THIS
+                    // card, and an announcement must not take it away under his finger
+                    var role = tap.Role?.Trim() ?? string.Empty;
+                    channel.EventRole = role.Length > 0 ? role : null;
+                    channel.Role = role;
+                    channel.Index = 0;
+                    channel.Side = null;
+                    break;
+                }
+
+                case "next-role":
+                case "previous-role":
+                {
+                    var roles = InstructionCardCatalog.Roles(_groups);
+                    if (roles.Count == 0) return;
+                    var current = roles.FindIndex(r => r.Equals(channel.EffectiveRole, StringComparison.OrdinalIgnoreCase));
+                    var step = tap.Action.StartsWith("previous", StringComparison.OrdinalIgnoreCase) ? -1 : 1;
+                    // no role yet: the first step lands on the first role, not the second
+                    var next = current < 0
+                        ? (step > 0 ? 0 : roles.Count - 1)
+                        : (current + step + roles.Count) % roles.Count;
+                    channel.EventRole = roles[next];
+                    channel.Index = 0;
+                    channel.Side = null;
+                    break;
+                }
 
                 case "show-player-card":
                     if (tap.Player is not { } player) return;
                     // a file explicitly named for the player wins; otherwise the side
                     // convention: left holder = player 1, right holder = player 2
-                    if (ResolvePlayerGroupIndex(player) is { } playerGroup)
+                    if (ResolvePlayerGroupIndex(groups, player) is { } playerGroup)
                     {
-                        _groupIndex = playerGroup;
+                        channel.Index = playerGroup;
                     }
                     else
                     {
-                        _sidePreference = player switch { 1 => "left", 2 => "right", _ => null };
+                        channel.Side = player switch { 1 => "left", 2 => "right", _ => null };
                     }
 
                     break;
 
+                case "auto":
+                case "toggle-auto":
+                    channel.Auto = !channel.Auto;
+                    if (!channel.Auto) channel.EventRole = null;
+                    break;
+
                 case "default-card":
-                    _groupIndex = DefaultGroupIndex();
-                    _sidePreference = null;
+                    channel.Index = DefaultIndex(channel);
+                    channel.Side = null;
                     break;
 
                 default:
                     return;
             }
 
-            path = _groups[_groupIndex].PathFor(_sidePreference);
+            path = PathOf(channel);
 
             // temporary card: come back to the default one after the delay
-            var isDefault = _groupIndex == DefaultGroupIndex() && _sidePreference is null;
-            revertMs = !isDefault ? tap.DurationMs ?? _touch!.ReturnToDefaultMs : 0;
-            CancelRevert();
+            var isDefault = channel.Index == DefaultIndex(channel) && channel.Side is null && channel.EventRole is null;
+            var revertMs = !isDefault ? tap.DurationMs ?? _touch?.ReturnToDefaultMs ?? 0 : 0;
+            CancelRevert(channel);
             if (revertMs > 0)
             {
-                _revertTimer = new System.Threading.Timer(_ => RevertToDefault(), null, revertMs, Timeout.Infinite);
+                var name = channel.Name;
+                channel.Revert = new System.Threading.Timer(_ => RevertToDefault(name), null, revertMs, Timeout.Infinite);
             }
         }
 
-        await DisplayAsync(path!, cancellationToken);
+        await DisplayAsync(channelName, path, cancellationToken);
     }
 
-    private void RevertToDefault()
+    private static bool IsRoleAction(string action) => action.ToLowerInvariant()
+        is "show-role" or "next-role" or "previous-role" or "auto" or "toggle-auto";
+
+    private void RevertToDefault(string channelName)
     {
         string? path;
         lock (_lock)
         {
-            CancelRevert();
+            if (!_channels.TryGetValue(channelName, out var channel)) return;
+            CancelRevert(channel);
             if (_groups.Count == 0) return;
-            var index = DefaultGroupIndex();
-            if (index == _groupIndex && _sidePreference is null) return;
-            _groupIndex = index;
-            _sidePreference = null;
-            path = _groups[index].PathFor(null);
+            var index = DefaultIndex(channel);
+            if (index == channel.Index && channel.Side is null && channel.EventRole is null) return;
+            channel.EventRole = null;
+            channel.Index = index;
+            channel.Side = null;
+            path = PathOf(channel);
         }
 
-        _ = DisplayAsync(path!, CancellationToken.None);
+        _ = DisplayAsync(channelName, path, CancellationToken.None);
     }
 
-    private void CancelRevert()
+    private static void CancelRevert(Channel channel)
     {
-        _revertTimer?.Dispose();
-        _revertTimer = null;
+        channel.Revert?.Dispose();
+        channel.Revert = null;
     }
 
-    private async Task DisplayAsync(string path, CancellationToken cancellationToken)
+    private async Task DisplayAsync(string channelName, string? path, CancellationToken cancellationToken)
     {
-        foreach (var target in _config.GetTargetsForContent("iccard"))
+        var isMain = channelName.Equals(MainChannel, StringComparison.OrdinalIgnoreCase);
+        if (isMain && path != null)
         {
-            await _surfaces.DisplayMediaAsync(path, target, cancellationToken);
+            foreach (var target in _config.GetTargetsForContent("iccard"))
+            {
+                await _surfaces.DisplayMediaAsync(path, target, cancellationToken);
+            }
         }
 
-        // split rendering (fixed card + cycling card side by side): the cycling
-        // component follows every card change, the static one is pinned on its
-        // configured card and only moves on a game change (SetCardsAsync)
-        _surfaces.SetComponentSource("iccard.cycle", path);
+        // split rendering (fixed card + cycling card side by side): the viewers of this
+        // channel follow every card change, the static one is pinned on its configured
+        // card and only moves on a game change (SetCardsAsync)
+        _surfaces.SetCardSource(channelName, path);
     }
 
     /// <summary>Path of the card pinned by an iccard.static component ("card" option,
@@ -218,18 +474,18 @@ public sealed class InstructionCardService : IDisposable
     }
 
     /// <summary>"ic2" / "2" → logical card n°2; otherwise match by file name fragment.</summary>
-    private int? ResolveGroupIndex(string card)
+    private static int? ResolveGroupIndex(List<InstructionCardCatalog.CardGroup> groups, string card)
     {
         var match = Regex.Match(card, "^(?:ic)?-?([0-9]+)$", RegexOptions.IgnoreCase);
         if (match.Success && int.TryParse(match.Groups[1].Value, out var number) && number >= 1)
         {
-            var byNumber = _groups.FindIndex(g => g.Number == number);
+            var byNumber = groups.FindIndex(g => g.Number == number);
             return byNumber >= 0 ? byNumber : null;
         }
 
-        for (var i = 0; i < _groups.Count; i++)
+        for (var i = 0; i < groups.Count; i++)
         {
-            if (_groups[i].Variants.Any(v =>
+            if (groups[i].Variants.Any(v =>
                     Path.GetFileNameWithoutExtension(v.Path).Contains(card, StringComparison.OrdinalIgnoreCase)))
             {
                 return i;
@@ -240,12 +496,12 @@ public sealed class InstructionCardService : IDisposable
     }
 
     /// <summary>Group holding a file explicitly named for the player (p1/player1), if any.</summary>
-    private int? ResolvePlayerGroupIndex(int player)
+    private static int? ResolvePlayerGroupIndex(List<InstructionCardCatalog.CardGroup> groups, int player)
     {
         var pattern = new Regex($@"(?:^|[^a-z0-9])p(?:layer)?{player}(?:[^0-9]|$)", RegexOptions.IgnoreCase);
-        for (var i = 0; i < _groups.Count; i++)
+        for (var i = 0; i < groups.Count; i++)
         {
-            if (_groups[i].Variants.Any(v => pattern.IsMatch(Path.GetFileNameWithoutExtension(v.Path))))
+            if (groups[i].Variants.Any(v => pattern.IsMatch(Path.GetFileNameWithoutExtension(v.Path))))
             {
                 return i;
             }
@@ -273,7 +529,13 @@ public sealed class InstructionCardService : IDisposable
         }
     }
 
-    public void Dispose() => CancelRevert();
+    public void Dispose()
+    {
+        lock (_lock)
+        {
+            foreach (var channel in _channels.Values) CancelRevert(channel);
+        }
+    }
 
     // --- profile model (subset written by MarqueeManagerSetup) ---
 
@@ -343,12 +605,16 @@ public sealed class InstructionCardService : IDisposable
 
     public sealed class TouchAction
     {
-        /// <summary>cycle-card | show-card | show-player-card | default-card</summary>
+        /// <summary>next-card | previous-card | show-card | show-role | next-role |
+        /// previous-role | show-player-card | toggle-auto | default-card</summary>
         [JsonPropertyName("action")]
-        public string Action { get; set; } = "cycle-card";
+        public string Action { get; set; } = "next-card";
 
         [JsonPropertyName("card")]
         public string? Card { get; set; }
+
+        [JsonPropertyName("role")]
+        public string? Role { get; set; }
 
         [JsonPropertyName("player")]
         public int? Player { get; set; }

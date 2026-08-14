@@ -15,8 +15,14 @@ public sealed class MarqueeController : IDisposable
     private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private Thread? _uiThread;
 
-    /// <summary>Tap on an iccard surface, as fractions (0..1). Consumed by InstructionCardService.</summary>
-    public event Action<double, double>? IcCardTapped;
+    /// <summary>Tap on a surface that has something to answer — an instruction card
+    /// surface, or any surface carrying touch zones — as fractions (0..1), with the
+    /// surface itself and the state it is displaying. Consumed by InstructionCardService.
+    ///
+    /// The surface travels with the tap because the zones live IN the composition now: a
+    /// finger on a touchscreen can drive a card shown on the topper, so the surface that
+    /// was touched is not the one that changes.</summary>
+    public event Action<Core.Surfaces.SurfaceDefinition, string, double, double>? SurfaceTapped;
 
     public MarqueeController(IConfigService config, IDmdService dmd, ILogger<MarqueeController> logger)
     {
@@ -119,8 +125,16 @@ public sealed class MarqueeController : IDisposable
                         effects);
                     if (!_windows.TryGetValue(surface.Id, out var list)) _windows[surface.Id] = list = new();
                     list.Add(window);
-                    if (surface.Category.Equals("iccard", StringComparison.OrdinalIgnoreCase))
-                        window.SurfaceTapped += (fx, fy) => IcCardTapped?.Invoke(fx, fy);
+                    // a surface answers to the finger when it IS an instruction card
+                    // surface (historical touch profile) or when the user drew zones on it
+                    if (surface.Category.Equals("iccard", StringComparison.OrdinalIgnoreCase)
+                        || surface.HasVisibleComponent("iccard.touch"))
+                    {
+                        var tapped = surface;
+                        var source = window;
+                        window.SurfaceTapped += (fx, fy) =>
+                            SurfaceTapped?.Invoke(tapped, source.ActiveScene, fx, fy);
+                    }
                     window.Show();
                     // apply the INITIAL display state: an ingame-only surface must
                     // not sit over ES from startup until the first scene event
@@ -308,6 +322,22 @@ public sealed class MarqueeController : IDisposable
     {
         foreach (var window in AllWindows()) window.SetComponentSource(type, path);
     }
+
+    /// <summary>Feeds the viewers of ONE channel (instruction cards). The historical
+    /// components answer on the main channel, so a composition made before channels
+    /// existed keeps working.</summary>
+    public void SetCardSource(string channel, string? path)
+    {
+        foreach (var window in AllWindows()) window.SetCardSource(channel, path);
+    }
+
+    /// <summary>Every declared component of this type, across all surfaces — with its
+    /// options, which is what tells a service how each one is set up.</summary>
+    public IReadOnlyList<Core.Surfaces.ComponentDefinition> ComponentsOfType(string type)
+        => _surfaces.Values
+            .SelectMany(surface => surface.Components)
+            .Where(component => component.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
     /// <summary>True when at least one surface carries this component.</summary>
     public bool HasComponent(string type)

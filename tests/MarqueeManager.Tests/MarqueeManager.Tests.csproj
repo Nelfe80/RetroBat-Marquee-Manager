@@ -21,4 +21,12 @@
     <ProjectReference Include="..\..\src\MarqueeManager.Compositions.Core\MarqueeManager.Compositions.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The instruction card catalog is pure logic living in the WPF runtime, which a
+         net8.0 test project cannot reference. Compiling the file itself is what lets it
+         be tested at all — and it is written dependency-free precisely for that. -->
+    <Compile Include="..\..\src\RetroBatMarqueeManager\Application\Services\InstructionCardCatalog.cs"
+             Link="Linked\InstructionCardCatalog.cs" />
+  </ItemGroup>
+
 </Project>

@@ -122,7 +122,8 @@ public sealed class ComponentHost : Canvas
                     break;
                 case "iccard.static":
                 case "iccard.cycle":
-                    // fed by InstructionCardService through SetSource
+                case "iccard.viewer":
+                    // fed by InstructionCardService through SetSource / SetCardSource
                     break;
             }
             RefreshVisibility(definition, element);
@@ -143,6 +144,31 @@ public sealed class ComponentHost : Canvas
         }
     }
 
+    /// <summary>
+    /// Feeds the instruction card viewers tuned to ONE channel. A viewer says which
+    /// channel it reads through its options — explicitly, or through its player or its
+    /// role, so the usual setups need no naming at all.
+    ///
+    /// The historical `iccard.cycle` has no options to say it: it answers on the main
+    /// channel, which is also what an unconfigured zone drives. A composition made
+    /// before channels existed therefore behaves exactly as it did.
+    /// </summary>
+    public void SetCardSource(string channel, string? path)
+    {
+        foreach (var (definition, element) in _visuals)
+        {
+            var type = definition.Type.ToLowerInvariant();
+            if (type is not ("iccard.viewer" or "iccard.cycle")) continue;
+            var own = type == "iccard.cycle"
+                ? "main"
+                : Application.Services.InstructionCardCatalog.ChannelOf(
+                    definition.Option("channel"), definition.Option("role"), definition.Option("player"));
+            if (!own.Equals(channel, StringComparison.OrdinalIgnoreCase)) continue;
+            SetImage(element, path);
+            RefreshVisibility(definition, element);
+        }
+    }
+
     /// <summary>Renders the text.meta template ({name} {year} {developer} {publisher}
     /// {system}) with the current selection values.</summary>
     public void ApplyMeta(IReadOnlyDictionary<string, string> meta)
@@ -157,6 +183,10 @@ public sealed class ComponentHost : Canvas
             text.Text = template.Trim();
             RefreshVisibility(definition, element);
         }
+
+        // the fit depends on the TEXT, not only on the zone: a one-line name and a
+        // 1500-character description in the same layer do not take the same size
+        Relayout();
     }
 
     /// <summary>The cabinet's own panel description (retained on /ws/panel, so it
@@ -226,6 +256,7 @@ public sealed class ComponentHost : Canvas
             case "media.image":
             case "iccard.static":
             case "iccard.cycle":
+            case "iccard.viewer":
                 return new Image
                 {
                     // A media is NEVER distorted: "fill" fills the zone keeping aspect
@@ -246,9 +277,17 @@ public sealed class ComponentHost : Canvas
                 {
                     Text = component.Option("text"),
                     Foreground = ParseBrush(component.Option("color", "#FFFFFF")),
-                    FontWeight = FontWeights.Bold,
+                    // A description is a paragraph, not a title: bold at 1500 characters
+                    // is a wall. The weight follows the intent instead of being fixed.
+                    FontWeight = component.Option("weight", "bold") == "normal" ? FontWeights.Normal : FontWeights.Bold,
                     TextWrapping = TextWrapping.Wrap,
-                    TextAlignment = TextAlignment.Center,
+                    TextAlignment = component.Option("align", "center").ToLowerInvariant() switch
+                    {
+                        "left" => TextAlignment.Left,
+                        "right" => TextAlignment.Right,
+                        "justify" => TextAlignment.Justify,
+                        _ => TextAlignment.Center
+                    },
                     Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 6, ShadowDepth = 0 }
                 };
                 return text;
@@ -295,6 +334,9 @@ public sealed class ComponentHost : Canvas
                     Fraction(component.Option("bgOpacity"), 0.5),
                     Fraction(component.Option("bgPadding"), 0.03));
 
+            case "iccard.touch":
+                return BuildTouchZone(component);
+
             case "external.web":
                 return BuildWebView(component);
 
@@ -302,6 +344,53 @@ public sealed class ComponentHost : Canvas
                 _logger.LogWarning("Unknown surface component type {Type} ignored", component.Type);
                 return null;
         }
+    }
+
+    /// <summary>
+    /// A zone that answers to the finger. The rectangle IS the zone — what the user drew
+    /// in the editor is what he can press — and the tap itself is handled by the window,
+    /// which owns the touch events; this only draws what the player must SEE of it.
+    ///
+    /// Nothing by default: a working touchscreen needs no marking, and a card covered in
+    /// boxes is a worse card. `label` writes a word in the zone, `hint` outlines it —
+    /// both for a cabinet whose players do not know the zone is there.
+    /// </summary>
+    private static FrameworkElement BuildTouchZone(ComponentDefinition component)
+    {
+        var label = component.Option("label");
+        var hint = component.Option("hint", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
+        var opacity = double.TryParse(component.Option("opacity", "0.35"),
+            System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture,
+            out var parsed)
+            ? Math.Clamp(parsed, 0, 1)
+            : 0.35;
+
+        var border = new Border
+        {
+            // transparent, always: the zone must never hide the card it drives
+            Background = Brushes.Transparent,
+            BorderBrush = Brushes.White,
+            BorderThickness = new Thickness(hint ? 2 : 0),
+            CornerRadius = new CornerRadius(8),
+            Opacity = label.Length > 0 || hint ? opacity : 0
+        };
+
+        if (label.Length > 0)
+        {
+            border.Child = new TextBlock
+            {
+                Text = label,
+                Foreground = Brushes.White,
+                FontWeight = FontWeights.Bold,
+                TextWrapping = TextWrapping.Wrap,
+                TextAlignment = TextAlignment.Center,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 6, ShadowDepth = 0 }
+            };
+        }
+
+        return border;
     }
 
     /// <summary>Embedded web player (Twitch/YouTube embeds, any page). WebView2's
@@ -357,9 +446,64 @@ public sealed class ComponentHost : Canvas
             element.Height = height;
             SetLeft(element, definition.X * ActualWidth);
             SetTop(element, definition.Y * ActualHeight);
-            if (element is TextBlock text)
-                text.FontSize = Math.Max(8, height * 0.5);
+            if (element is TextBlock text) LayoutText(definition, text, width, height);
         }
+    }
+
+    /// <summary>
+    /// Sizes and places a text inside its zone.
+    ///
+    /// The size used to be half the zone's height, which only ever worked for a title:
+    /// a game description is 500 to 1500 characters, and in a zone 300 px tall that rule
+    /// asked for a 150 px font — one word on screen. The text is FITTED instead: it
+    /// starts from what a single line would take and shrinks until the whole paragraph
+    /// fits, so the same layer holds a name or a paragraph without being told which.
+    ///
+    /// Vertical placement is done by moving the block rather than by wrapping it in a
+    /// container: a wrapper would change the element type, and the meta feed, the
+    /// visibility rule and this very layout all recognise a text by being a TextBlock.
+    /// </summary>
+    private void LayoutText(ComponentDefinition definition, TextBlock text, double width, double height)
+    {
+        var explicitSize = definition.Option("size");
+        if (double.TryParse(explicitSize, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var fraction) && fraction > 0)
+        {
+            // a fraction of the SURFACE height, not of the zone: the text then keeps its
+            // size when the zone is resized, which is what "I want it this big" means
+            text.FontSize = Math.Max(8, fraction * ActualHeight);
+        }
+        else
+        {
+            text.FontSize = FitFontSize(text, width, height);
+        }
+
+        text.Height = double.NaN; // measured, not stretched
+        text.Measure(new System.Windows.Size(width, double.PositiveInfinity));
+        var used = Math.Min(text.DesiredSize.Height, height);
+        var offset = definition.Option("valign", "top").ToLowerInvariant() switch
+        {
+            "middle" or "center" => (height - used) / 2,
+            "bottom" => height - used,
+            _ => 0
+        };
+        SetTop(text, definition.Y * ActualHeight + Math.Max(0, offset));
+    }
+
+    /// <summary>The largest size at which the whole text still fits, found by shrinking.
+    /// Bounded: a dozen steps, and never below what stays readable on a marquee.</summary>
+    private static double FitFontSize(TextBlock text, double width, double height)
+    {
+        var size = Math.Max(8, height * 0.5);
+        for (var attempt = 0; attempt < 14; attempt++)
+        {
+            text.FontSize = size;
+            text.Measure(new System.Windows.Size(width, double.PositiveInfinity));
+            if (text.DesiredSize.Height <= height || size <= 9) break;
+            size *= 0.85;
+        }
+
+        return Math.Max(8, size);
     }
 
     private static string? Lookup(IReadOnlyDictionary<string, string?> kinds, string kind)

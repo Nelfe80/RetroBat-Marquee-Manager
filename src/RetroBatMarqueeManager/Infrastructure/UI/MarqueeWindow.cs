@@ -115,9 +115,20 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 foreach (var host in _componentHosts) host.SetSource(type, path);
             }));
 
+        /// <summary>Feeds the instruction card viewers of one channel.</summary>
+        public void SetCardSource(string channel, string? path)
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.SetCardSource(channel, path);
+            }));
+
         public bool HasSurfaceComponent(string type) => _surface?.HasComponent(type) == true;
 
         private string _activeScene = "navigation";
+
+        /// <summary>What this window is displaying right now — navigation or ingame.
+        /// A touch zone scoped to one of the two must not answer in the other.</summary>
+        public string ActiveScene => _activeScene;
         private FrameworkElement? _mediaEffectOverlay;
 
         /// <summary>User effect media (webm via MediaElement, animated gif via
