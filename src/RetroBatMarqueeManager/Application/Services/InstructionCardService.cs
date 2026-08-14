@@ -156,8 +156,12 @@ public sealed class InstructionCardService : IDisposable
             {
                 // Nothing in this game's cards names it: the viewer keeps what it shows.
                 // Blanking it would punish the player for a card the pack does not carry.
-                _logger.LogDebug("Announced name {Name} matches no role and no entry ({Count} cards)",
-                    name, _groups.Count);
+                //
+                // Said out loud, not whispered in Debug: when a player wonders why his card
+                // did not follow him, the answer has to be readable — the game DID announce
+                // something, and these are the names its cards do carry.
+                _logger.LogInformation("Player {Player} announced \"{Name}\", which no card names. Known roles: {Roles}",
+                    player, name, string.Join(", ", InstructionCardCatalog.Roles(_groups)));
                 return;
             }
 

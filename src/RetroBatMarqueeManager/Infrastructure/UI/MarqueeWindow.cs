@@ -500,6 +500,15 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         [DllImport("gdi32.dll")]
         private static extern bool DeleteObject(IntPtr hObject);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        private const int GWL_EXSTYLE = -20;
+        private const int WS_EX_NOACTIVATE = 0x08000000;
+
         private const uint SWP_SHOWWINDOW = 0x0040;
         private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         private static readonly Lazy<System.Drawing.Text.PrivateFontCollection?> SpeedrunFontCollection = new(LoadSpeedrunFontCollection);
@@ -792,7 +801,38 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private void OnSourceInitialized(object? sender, EventArgs e)
         {
             PositionWindow();
+            ApplyNeverActivate();
         }
+
+        /// <summary>
+        /// A surface that answers to the finger must NEVER take the focus.
+        ///
+        /// Touching the marquee sent the running game behind its launcher: the window
+        /// came forward, and the emulator lost the foreground — the player pressed a card
+        /// and lost sight of his game. WS_EX_NOACTIVATE keeps the clicks (a non-activating
+        /// window still receives them) and drops the activation, which is exactly what a
+        /// display surface wants: it is looked at and touched, never worked in.
+        ///
+        /// Only applied where taps are wired: nothing changes for the other surfaces.
+        /// </summary>
+        private void ApplyNeverActivate()
+        {
+            if (!NeverActivate) return;
+            try
+            {
+                var handle = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                if (handle == IntPtr.Zero) return;
+                var style = GetWindowLong(handle, GWL_EXSTYLE);
+                SetWindowLong(handle, GWL_EXSTYLE, style | WS_EX_NOACTIVATE);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning("Could not make the surface non-activating: {Message}", ex.Message);
+            }
+        }
+
+        /// <summary>Set before Show() for the surfaces wired to taps.</summary>
+        public bool NeverActivate { get; set; }
 
         private void PositionWindow()
         {

@@ -1968,9 +1968,13 @@ public sealed class WebSocketListenerService : BackgroundService
             var name = Text(payload, "SourceCategory", "sourceCategory");
             if (name.Length == 0 && signal.ValueKind == JsonValueKind.Object)
                 name = Text(signal, "SourceDescription", "sourceDescription");
+            var player = Integer(payload, "Player", "player") ?? 1;
+            // logged whatever happens next: an announcement that names nothing is the one
+            // case where silence leaves no way to tell "the game said nothing" from
+            // "nothing matched what it said"
+            _logger.LogInformation("Player {Player} {Action}: \"{Name}\"", player, action, name);
             if (name.Length > 0)
             {
-                var player = Integer(payload, "Player", "player") ?? 1;
                 _ = _instructionCards.OnNameAnnouncedAsync(player, name, CancellationToken.None);
             }
         }

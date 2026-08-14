@@ -134,6 +134,9 @@ public sealed class MarqueeController : IDisposable
                         var source = window;
                         window.SurfaceTapped += (fx, fy) =>
                             SurfaceTapped?.Invoke(tapped, source.ActiveScene, fx, fy);
+                        // and it must never come forward: a finger on the marquee sent the
+                        // running game behind its launcher
+                        window.NeverActivate = true;
                     }
                     window.Show();
                     // apply the INITIAL display state: an ingame-only surface must
