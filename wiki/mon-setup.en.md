@@ -47,6 +47,23 @@ The **live score, live timer and RetroAchievements** overlays belong to the **In
 !!! note "Live video"
     The video component can follow a **live Twitch stream > YouTube > local video** chain: if a live stream exists for the displayed game, it takes the video's place. Credentials in Options → Online sources; without keys, the local video simply shows.
 
+### The control panel
+
+The **Control panel** component (*Live* palette) draws your cabinet's panel, with what each button does in the **selected** game — being on its card in ES is enough, nothing has to be launched.
+
+And above all: **press a button on the cabinet and it lights up on the panel**. That is a full wiring check, working **with LedManager not installed**. If the neighbouring button lights instead, the wiring is not what your cabinet declares.
+
+Its options (inspector):
+
+- **Panel** (*Content* group) — Player 1 to 4. One component = one panel: a two-sided cabinet places two, each set to its own side.
+- **Look** (*Style* group) — *Top view* and *3D front view* show APIExpose's **real artwork**, the very drawing it writes for EmulationStation themes; *Plain* draws shapes. With no drawing available for a game, the look falls back to the shapes rather than to an empty frame.
+- **Background** — none, black, white, red, yellow or blue, with its **opacity** and **padding** on sliders. The artwork is drawn on transparency: over a busy fanart, a veil makes the buttons readable.
+
+Buttons the game **does not use** stay visible, faded: the panel tells the truth about the cabinet, not about the game. They still light when pressed, in white — having no colour of their own to answer with.
+
+!!! note "The light"
+    A press lights a **coloured lamp**, like the lighting engine's own: the button's colour, a soft halo, no outline. It stays lit for a minimum time even on a quick tap, then fades out — otherwise a rattle of buttons would read as flicker.
+
 ### The score board
 
 The **Hiscores** component shows the current game's leaderboard. Its options (inspector, *Content* group):

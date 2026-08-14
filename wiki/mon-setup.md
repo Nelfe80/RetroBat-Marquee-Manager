@@ -47,6 +47,23 @@ Les overlays **score live, timer live et RetroAchievements** sont réservés à 
 !!! note "Vidéo live"
     Le composant vidéo peut suivre une chaîne **stream Twitch en direct > YouTube > vidéo locale** : s'il existe un live sur le jeu affiché, il prend la place de la vidéo. Identifiants dans Options → Sources en ligne ; sans clé, la vidéo locale s'affiche simplement.
 
+### Le panneau de contrôle
+
+Le composant **Panneau de contrôle** (palette *Live*) dessine le panneau de votre borne, avec ce que chaque bouton fait dans le jeu **sélectionné** — être sur sa fiche dans ES suffit, rien n'a besoin d'être lancé.
+
+Et surtout : **appuyez sur un bouton de la borne, il s'allume sur le panneau**. C'est une vérification de câblage complète, qui fonctionne **sans LedManager installé**. Si c'est le bouton voisin qui s'allume, le câblage n'est pas celui que votre borne déclare.
+
+Ses options (inspecteur) :
+
+- **Panneau** (groupe *Contenu*) — Joueur 1 à 4. Un composant = un panneau : une borne à deux côtés en pose deux, chacun réglé sur le sien.
+- **Aspect** (groupe *Style*) — *Vue de dessus* et *Vue de face 3D* affichent le **dessin réel** d'APIExpose, celui-là même qu'il écrit pour les thèmes EmulationStation ; *Simple* dessine des formes. Sans dessin disponible pour ce jeu, l'aspect retombe sur les formes plutôt que sur un cadre vide.
+- **Fond** — aucun, noir, blanc, rouge, jaune ou bleu, avec son **opacité** et sa **marge** au curseur. Le dessin est sur fond transparent : au-dessus d'un fanart chargé, un voile rend les boutons lisibles.
+
+Les boutons que le jeu **n'utilise pas** restent visibles, en transparence : le panneau dit la vérité sur la borne, pas sur le jeu. Ils s'allument quand même à l'appui, en blanc — n'ayant pas de couleur à eux pour répondre.
+
+!!! note "L'allumage"
+    Un appui allume une **lampe colorée**, comme celles du moteur de lumière : la couleur du bouton, un halo doux, aucun contour. Elle reste allumée un minimum de temps même sur un appui bref, puis s'éteint en fondu — sinon une rafale de boutons se lirait comme un scintillement.
+
 ### Le tableau de scores
 
 Le composant **Hiscores** affiche le classement du jeu courant. Ses options (inspecteur, groupe *Contenu*) :
