@@ -292,11 +292,8 @@ public sealed class ComponentHost : Canvas
                     component.Option("system", "true") != "false",
                     component.Option("style", "top"),
                     component.Option("bg"),
-                    double.TryParse(component.Option("bgOpacity", "0.5"),
-                        System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out var panelVeil)
-                        ? panelVeil
-                        : 0.5);
+                    Fraction(component.Option("bgOpacity"), 0.5),
+                    Fraction(component.Option("bgPadding"), 0.03));
 
             case "external.web":
                 return BuildWebView(component);
@@ -494,6 +491,15 @@ public sealed class ComponentHost : Canvas
             host.Content = null;
         }
     }
+
+    /// <summary>A 0..1 option written by a slider, invariant-culture. An unreadable value
+    /// keeps the default rather than collapsing to zero — a background that vanished
+    /// because a comma slipped into a decimal point would be a puzzle, not a setting.</summary>
+    private static double Fraction(string value, double fallback)
+        => double.TryParse(value, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : fallback;
 
     private static System.Windows.Media.Brush ParseBrush(string hex)
     {

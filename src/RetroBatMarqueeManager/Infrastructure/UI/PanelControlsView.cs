@@ -62,6 +62,7 @@ public sealed class PanelControlsView : Viewbox
     private readonly string _style;
     private readonly string _background;
     private readonly double _backgroundOpacity;
+    private readonly double _backgroundPadding;
 
     private PanelBoardConfig _config = PanelBoardConfig.Unknown;
     private IReadOnlyDictionary<int, PanelBoardButton> _buttons = new Dictionary<int, PanelBoardButton>();
@@ -74,7 +75,7 @@ public sealed class PanelControlsView : Viewbox
     public int Player { get; }
 
     public PanelControlsView(int player, bool showLabels, bool showSystemButtons, string style,
-        string background, double backgroundOpacity)
+        string background, double backgroundOpacity, double backgroundPadding)
     {
         Player = Math.Max(1, player);
         _showLabels = showLabels;
@@ -82,6 +83,7 @@ public sealed class PanelControlsView : Viewbox
         _style = string.IsNullOrWhiteSpace(style) ? "default" : style.Trim().ToLowerInvariant();
         _background = background;
         _backgroundOpacity = Math.Clamp(backgroundOpacity, 0, 1);
+        _backgroundPadding = Math.Clamp(backgroundPadding, 0, 0.2);
         Child = _canvas;
         Stretch = Stretch.Uniform;
         Build();
@@ -97,7 +99,7 @@ public sealed class PanelControlsView : Viewbox
     {
         if (string.IsNullOrWhiteSpace(_background) || _backgroundOpacity <= 0) return;
 
-        var bleed = Math.Max(width, height) * 0.03;
+        var bleed = Math.Max(width, height) * _backgroundPadding;
         var veil = new System.Windows.Shapes.Rectangle
         {
             Width = width + bleed * 2,

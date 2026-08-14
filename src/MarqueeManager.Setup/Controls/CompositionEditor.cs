@@ -585,6 +585,45 @@ public sealed class CompositionEditor : Window
 
     // ================= layers (Photoshop-style) =================
 
+    /// <summary>
+    /// A slider for one numeric option, with its value written next to it. A slider
+    /// rather than a text field: these are proportions you judge by eye on the marquee,
+    /// not numbers you know in advance — and it makes an out-of-range value impossible
+    /// to type.
+    /// </summary>
+    private static FrameworkElement OptionSlider(ComponentModel component, string key, double fallback,
+        double min, double max, string label, Func<double, string> format)
+    {
+        var current = component.Options.TryGetValue(key, out var raw)
+                      && double.TryParse(raw, System.Globalization.NumberStyles.Float,
+                          System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? Math.Clamp(parsed, min, max)
+            : fallback;
+
+        var readout = Ui.MutedLabel(format(current));
+        readout.Margin = new Thickness(8, 0, 0, 0);
+        readout.MinWidth = 46;
+
+        var slider = new Slider
+        {
+            Minimum = min,
+            Maximum = max,
+            Value = current,
+            Width = 150,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        slider.ValueChanged += (_, args) =>
+        {
+            readout.Text = format(args.NewValue);
+            component.Options[key] = args.NewValue.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+        };
+
+        var line = new StackPanel { Orientation = Orientation.Horizontal };
+        line.Children.Add(slider);
+        line.Children.Add(readout);
+        return Ui.Row(label, line, labelWidth: 90);
+    }
+
     private string LayerName(ComponentModel component)
         => component.Name.Length > 0 ? component.Name : component.Type;
 
@@ -1144,21 +1183,39 @@ public sealed class CompositionEditor : Window
             style.Children.Add(Ui.Row(L.T("Aspect", "Look"), looks, labelWidth: 90));
 
             // A backdrop behind the panel: the artwork is drawn on transparency, and over
-            // a busy fanart the buttons lose their edges. Empty colour = no backdrop, so
-            // it costs nothing to anyone who does not want one.
-            var background = Ui.TextBox(component.Options.TryGetValue("bg", out var bg) ? bg : "", 100);
-            background.TextChanged += (_, _) => component.Options["bg"] = background.Text.Trim();
-            var backgroundLine = new WrapPanel();
-            backgroundLine.Children.Add(background);
-            backgroundLine.Children.Add(Ui.ColorPalette(background));
-            style.Children.Add(Ui.Row(L.T("Fond", "Background"), backgroundLine, labelWidth: 90));
+            // a busy fanart the buttons lose their edges.
+            //
+            // A short list rather than a free colour: this veil exists to make the panel
+            // readable, and a hand-typed colour is how you end up with a tinted rectangle
+            // fighting the game's own artwork. Five neutrals cover it, and "none" is the
+            // default, so it costs nothing to anyone who does not want one.
+            var backgrounds = Ui.ComboBox(200);
+            var currentBackground = component.Options.TryGetValue("bg", out var bg) && bg.Length > 0 ? bg : "";
+            foreach (var (tag, fr, en) in new[]
+                     {
+                         ("", "Aucun", "None"),
+                         ("#000000", "Noir", "Black"),
+                         ("#FFFFFF", "Blanc", "White"),
+                         ("#D64545", "Rouge", "Red"),
+                         ("#E0B038", "Jaune", "Yellow"),
+                         ("#3D6FD6", "Bleu", "Blue")
+                     })
+            {
+                var item = new ComboBoxItem { Content = L.T(fr, en), Tag = tag };
+                backgrounds.Items.Add(item);
+                if (tag.Equals(currentBackground, StringComparison.OrdinalIgnoreCase)) backgrounds.SelectedItem = item;
+            }
+            if (backgrounds.SelectedItem == null) backgrounds.SelectedIndex = 0;
+            backgrounds.SelectionChanged += (_, _) =>
+            {
+                if ((backgrounds.SelectedItem as ComboBoxItem)?.Tag is string tag) component.Options["bg"] = tag;
+            };
+            style.Children.Add(Ui.Row(L.T("Fond", "Background"), backgrounds, labelWidth: 90));
 
-            var backgroundOpacity = Ui.TextBox(component.Options.TryGetValue("bgOpacity", out var bo) ? bo : "0.5", 100);
-            backgroundOpacity.TextChanged += (_, _) => component.Options["bgOpacity"] = backgroundOpacity.Text.Trim();
-            style.Children.Add(Ui.Row(L.T("Opacité du fond", "Background opacity"), backgroundOpacity, labelWidth: 90));
-            style.Children.Add(Ui.MutedLabel(L.T(
-                "Fond vide = aucun fond. Opacité de 0 (invisible) à 1 (opaque).",
-                "Empty background = none. Opacity from 0 (invisible) to 1 (opaque).")));
+            style.Children.Add(OptionSlider(component, "bgOpacity", 0.5, 0, 1,
+                L.T("Opacité du fond", "Background opacity"), value => $"{value * 100:0} %"));
+            style.Children.Add(OptionSlider(component, "bgPadding", 0.03, 0, 0.12,
+                L.T("Marge du fond", "Background padding"), value => $"{value * 100:0.0} %"));
         }
         else
         {
