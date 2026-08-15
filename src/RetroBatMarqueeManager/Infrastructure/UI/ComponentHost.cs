@@ -375,14 +375,30 @@ public sealed class ComponentHost : Canvas
             ? Math.Clamp(parsed, 0, 1)
             : 0.35;
 
+        // A tint says "press here" better than an outline does. Transparency stays the
+        // default — a working touchscreen needs no marking — and the alpha lives in the
+        // BRUSH rather than on the element, so a faint backdrop never fades the label
+        // written on it.
+        var fill = Brushes.Transparent;
+        if (component.Option("bg") is { Length: > 0 } background
+            && ParseBrush(background) is SolidColorBrush tint)
+        {
+            var alpha = double.TryParse(component.Option("bgOpacity", "0.25"),
+                System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture,
+                out var parsedAlpha)
+                ? Math.Clamp(parsedAlpha, 0, 1)
+                : 0.25;
+            fill = new SolidColorBrush(Color.FromArgb((byte)(alpha * 255),
+                tint.Color.R, tint.Color.G, tint.Color.B));
+        }
+
         var border = new Border
         {
-            // transparent, always: the zone must never hide the card it drives
-            Background = Brushes.Transparent,
-            BorderBrush = Brushes.White,
+            // it covers the touch zone EXACTLY: what the player sees is what answers
+            Background = fill,
+            BorderBrush = new SolidColorBrush(Color.FromArgb((byte)(opacity * 255), 255, 255, 255)),
             BorderThickness = new Thickness(hint ? 2 : 0),
-            CornerRadius = new CornerRadius(8),
-            Opacity = label.Length > 0 || hint ? opacity : 0
+            CornerRadius = new CornerRadius(8)
         };
 
         if (label.Length > 0)
@@ -390,7 +406,7 @@ public sealed class ComponentHost : Canvas
             border.Child = new TextBlock
             {
                 Text = label,
-                Foreground = Brushes.White,
+                Foreground = new SolidColorBrush(Color.FromArgb((byte)(opacity * 255), 255, 255, 255)),
                 FontWeight = FontWeights.Bold,
                 TextWrapping = TextWrapping.Wrap,
                 TextAlignment = TextAlignment.Center,

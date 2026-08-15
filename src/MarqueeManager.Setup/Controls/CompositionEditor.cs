@@ -1469,6 +1469,44 @@ public sealed class CompositionEditor : Window
             style.Children.Add(OptionSlider(component, "bgPadding", 0.03, 0, 0.12,
                 L.T("Marge du fond", "Background padding"), value => $"{value * 100:0.0} %"));
         }
+        else if (component.Type == "iccard.touch")
+        {
+            // A touch zone is invisible by construction — that is its default and it is
+            // the right one on a screen whose players know it. On a cabinet where they
+            // do not, the zone has to be SEEN, and a tinted rectangle says "press here"
+            // better than an outline does.
+            //
+            // Same short list as the panel backdrop, and for the same reason: this veil
+            // sits over the game's own artwork, and a hand-typed colour is how you end up
+            // fighting it.
+            var zoneBackgrounds = Ui.ComboBox(200);
+            var currentZoneBg = component.Options.TryGetValue("bg", out var zbg) && zbg.Length > 0 ? zbg : "";
+            foreach (var (tag, fr, en) in new[]
+                     {
+                         ("", "Aucun", "None"),
+                         ("#000000", "Noir", "Black"),
+                         ("#FFFFFF", "Blanc", "White"),
+                         ("#D64545", "Rouge", "Red"),
+                         ("#E0B038", "Jaune", "Yellow"),
+                         ("#3D6FD6", "Bleu", "Blue")
+                     })
+            {
+                var item = new ComboBoxItem { Content = L.T(fr, en), Tag = tag };
+                zoneBackgrounds.Items.Add(item);
+                if (tag.Equals(currentZoneBg, StringComparison.OrdinalIgnoreCase)) zoneBackgrounds.SelectedItem = item;
+            }
+            if (zoneBackgrounds.SelectedItem == null) zoneBackgrounds.SelectedIndex = 0;
+            zoneBackgrounds.SelectionChanged += (_, _) =>
+            {
+                if ((zoneBackgrounds.SelectedItem as ComboBoxItem)?.Tag is string tag) component.Options["bg"] = tag;
+            };
+            style.Children.Add(Ui.Row(L.T("Fond", "Background"), zoneBackgrounds, labelWidth: 90));
+            style.Children.Add(OptionSlider(component, "bgOpacity", 0.25, 0, 1,
+                L.T("Opacité du fond", "Background opacity"), value => $"{value * 100:0} %"));
+            style.Children.Add(Ui.MutedLabel(L.T(
+                "Le fond montre où appuyer. Il couvre exactement la zone tactile : ce qu'on voit est ce qui répond au doigt.",
+                "The background shows where to press. It covers the touch zone exactly: what you see is what answers the finger.")));
+        }
         else
         {
             style.Children.Add(Ui.MutedLabel(L.T("Aucun réglage de style pour ce type.", "No style setting for this type.")));
