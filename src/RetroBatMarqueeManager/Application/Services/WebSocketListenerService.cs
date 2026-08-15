@@ -2181,12 +2181,41 @@ public sealed class WebSocketListenerService : BackgroundService
         return null;
     }
 
+    /// <summary>
+    /// A media path from the stream, turned into a file we can open.
+    ///
+    /// APIExpose sends RELATIVE paths, against one of two roots: the APIExpose plugin
+    /// when the file lives there, RetroBat itself otherwise — an EmulationStation theme,
+    /// for instance. Nothing in the payload says which, so the reader has to try.
+    ///
+    /// It only ever tried the first. A theme's media therefore resolved to
+    /// plugins\APIExpose\emulationstation\… — a path that does not exist — and the file
+    /// was dropped with no trace: the media was published, and simply never appeared.
+    /// The Carbon theme's system art fell exactly there.
+    /// </summary>
     private string? ResolveLocal(string value)
     {
         if (string.IsNullOrWhiteSpace(value) || Uri.TryCreate(value, UriKind.Absolute, out var uri) && !uri.IsFile) return null;
-        var path = Path.IsPathRooted(value) ? value : Path.GetFullPath(Path.Combine(_config.BaseDirectory, "..", "APIExpose", value));
-        return File.Exists(path) ? path : null;
+        if (Path.IsPathRooted(value)) return File.Exists(value) ? value : null;
+
+        var apiExpose = Path.GetFullPath(Path.Combine(_config.BaseDirectory, "..", "APIExpose", value));
+        if (File.Exists(apiExpose)) return apiExpose;
+
+        // …\plugins\MarqueeManager\..\.. = the RetroBat root
+        var retroBat = Path.GetFullPath(Path.Combine(_config.BaseDirectory, "..", "..", value));
+        if (!File.Exists(retroBat)) return null;
+
+        if (!_resolvedOutsideApiExposeLogged)
+        {
+            _resolvedOutsideApiExposeLogged = true;
+            _logger.LogInformation("Media resolved outside APIExpose, against the RetroBat root: {Path}", retroBat);
+        }
+
+        return retroBat;
     }
+
+    /// <summary>Said once: proof that the second root is used, without a line per media.</summary>
+    private bool _resolvedOutsideApiExposeLogged;
 
     private static JsonElement Payload(JsonElement root)
     {
