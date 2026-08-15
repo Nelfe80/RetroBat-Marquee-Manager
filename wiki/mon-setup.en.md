@@ -81,6 +81,8 @@ Many cabinets show the game's **instruction card**: special moves, items, bonus 
 - **Player** — who this card is for. *All players* for a shared card.
 - **Displayed role** — the role is the page's **folder** in the game media: a character (`cody`), a topic (`items-and-weaponry`), a stage. Left empty, the layer walks **every** page of the game.
 - **Follow the character the game announces** — when the game can tell who was picked, the card switches to that character and cycles through **his** pages only.
+- **Resting card** — the page shown at start (`2`, `ic2`…). Empty = the first one of its role.
+- **Auto return (ms)** — how long before coming back when a zone showed another one. Empty or 0 = it stays.
 - **Announced item** — *Frame the entry*, *Frame it and dim the rest*, or *Signal nothing*.
 
 !!! tip "When the card does not change, the entry lights up"
@@ -115,7 +117,7 @@ The **Hiscores** component shows the current game's leaderboard. Its options (in
 - **Identify screens** shows a big number on every physical screen.
 - **Show test pattern** fills the selected screen with an adjustment grid.
 - **Physical DMD…** opens the real panel settings (ZeDMD, Pin2DMD… see [DMD and ZeDMD](dmd.md)).
-- **Touch (IC card)…** appears on touch screens: simple (one tap = next card), center→IC2, dual player (left half player 1, right half player 2) and mouse-drawn free zones. The mouse triggers the same actions — handy for testing.
+- **Touch is configured in the composition**, not here: drop a *Touch zone* layer where the finger must answer. A tap and a mouse click do the same thing — handy for testing without a touchscreen.
 
 !!! note "Card naming (APIExpose media)"
     In a game's `artwork\ic`: `ic.png` for a single card, or `ic-1.png`, `ic-2.png`… for several. The `-left`/`-right` suffixes (e.g. mercs: `ic-1-left.png` … `ic-5-right.png`) are the panel's **two card holders**: player 1 side and player 2 side. Navigation moves card by card, and dual player mode shows the side of the player who tapped.

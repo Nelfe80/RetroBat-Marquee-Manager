@@ -81,6 +81,8 @@ Beaucoup de bornes affichent la **carte d'instructions** du jeu : les coups spé
 - **Joueur** — pour qui cette carte s'affiche. *Tous les joueurs* pour une carte partagée.
 - **Rôle affiché** — le rôle est le **dossier** de la fiche dans le média du jeu : un personnage (`cody`), un thème (`items-and-weaponry`), un stage. Laissé vide, le calque parcourt **toutes** les fiches du jeu.
 - **Suivre le personnage annoncé par le jeu** — quand le jeu sait dire qui a été choisi, la carte bascule sur ce personnage et tourne dans **ses** fiches uniquement.
+- **Carte au repos** — le numéro de la fiche affichée au départ (`2`, `ic2`…). Vide = la première de son rôle.
+- **Retour auto (ms)** — au bout de combien de temps y revenir quand une zone en a montré une autre. Vide ou 0 = elle reste.
 - **Objet annoncé** — *Encadrer la fiche*, *Encadrer et assombrir le reste*, ou *Ne rien signaler*.
 
 !!! tip "Quand la carte ne change pas, c'est la fiche qui s'allume"
@@ -115,7 +117,7 @@ Le composant **Hiscores** affiche le classement du jeu courant. Ses options (ins
 - **Identifier les écrans** affiche un grand numéro sur chaque écran physique.
 - **Afficher la mire** remplit l'écran sélectionné d'une grille de réglage.
 - **DMD physique…** ouvre le réglage du panneau réel (ZeDMD, Pin2DMD… voir [DMD et ZeDMD](dmd.md)).
-- **Tactile (IC card)…** apparaît sur les écrans tactiles : modes simple (un tap = carte suivante), centre→IC2, dual player (moitié gauche joueur 1, moitié droite joueur 2), zones libres dessinées à la souris. La souris déclenche les mêmes actions — pratique pour tester.
+- **Le tactile se règle dans la composition**, pas ici : posez un calque *Zone tactile* là où le doigt doit répondre. Un tap et un clic de souris déclenchent la même chose — pratique pour tester sans écran tactile.
 
 !!! note "Nommage des cartes (médias APIExpose)"
     Dans `artwork\ic` d'un jeu : `ic.png` pour une carte unique, ou `ic-1.png`, `ic-2.png`… pour plusieurs cartes. Les suffixes `-left`/`-right` (ex. mercs : `ic-1-left.png` … `ic-5-right.png`) sont les **deux porte-cartes du panel** : côté joueur 1 et côté joueur 2. La navigation passe de carte en carte, et le mode dual player affiche le côté du joueur qui a tapé.
