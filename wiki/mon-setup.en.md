@@ -79,10 +79,10 @@ Many cabinets show the game's **instruction card**: special moves, items, bonus 
 **Instruction card** (*Instruction cards* palette) shows the selected game's pages. Its options:
 
 - **Player** — who this card is for. *All players* for a shared card.
-- **Displayed role** — the role is the page's **folder** in the game media: a character (`cody`), a topic (`items-and-weaponry`), a stage. Left empty, the layer walks **every** page of the game.
+- **Displayed role** — *Every page*, *Items and weaponry*, *Bonus points* or *Vitality*. These are the **only three roles that run across the library**: topic pages carrying the same name from one game to the next. Characters are not there — they only exist in their own game, and the auto mode is what follows them.
 - **Follow the character the game announces** — when the game can tell who was picked, the card switches to that character and cycles through **his** pages only.
-- **Resting card** — the page shown at start (`2`, `ic2`…). Empty = the first one of its role.
-- **Auto return (ms)** — how long before coming back when a zone showed another one. Empty or 0 = it stays.
+- **Resting card** — *The first one*, or page 2 to 8. A game without that page falls back to the first.
+- **Auto return** — never, 3, 5, 8, 15 or 30 seconds before coming back when a zone showed another one.
 - **Announced item** — *Frame the entry*, *Frame it and dim the rest*, or *Signal nothing*.
 
 !!! tip "When the card does not change, the entry lights up"

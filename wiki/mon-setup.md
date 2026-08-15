@@ -79,10 +79,10 @@ Beaucoup de bornes affichent la **carte d'instructions** du jeu : les coups spé
 **Carte d'instructions** (palette *Cartes d'instructions*) affiche les fiches du jeu sélectionné. Ses options :
 
 - **Joueur** — pour qui cette carte s'affiche. *Tous les joueurs* pour une carte partagée.
-- **Rôle affiché** — le rôle est le **dossier** de la fiche dans le média du jeu : un personnage (`cody`), un thème (`items-and-weaponry`), un stage. Laissé vide, le calque parcourt **toutes** les fiches du jeu.
+- **Rôle affiché** — *Toutes les fiches*, *Objets et armes*, *Points bonus* ou *Vitalité*. Ce sont les **trois seuls rôles qui traversent la ludothèque** : des pages thématiques portant le même nom d'un jeu à l'autre. Les personnages n'y figurent pas — ils n'existent que dans leur jeu, et c'est le mode auto qui les suit.
 - **Suivre le personnage annoncé par le jeu** — quand le jeu sait dire qui a été choisi, la carte bascule sur ce personnage et tourne dans **ses** fiches uniquement.
-- **Carte au repos** — le numéro de la fiche affichée au départ (`2`, `ic2`…). Vide = la première de son rôle.
-- **Retour auto (ms)** — au bout de combien de temps y revenir quand une zone en a montré une autre. Vide ou 0 = elle reste.
+- **Carte au repos** — *La première*, ou la fiche 2 à 8. Un jeu qui n'a pas cette page retombe sur la première.
+- **Retour auto** — jamais, 3, 5, 8, 15 ou 30 secondes avant d'y revenir quand une zone en a montré une autre.
 - **Objet annoncé** — *Encadrer la fiche*, *Encadrer et assombrir le reste*, ou *Ne rien signaler*.
 
 !!! tip "Quand la carte ne change pas, c'est la fiche qui s'allume"

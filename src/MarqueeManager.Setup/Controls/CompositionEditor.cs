@@ -682,14 +682,6 @@ public sealed class CompositionEditor : Window
         string Value(string key, string fallback = "")
             => component.Options.TryGetValue(key, out var v) && v.Length > 0 ? v : fallback;
 
-        TextBox Text(string key, string hintFr, string hintEn, double width = ControlWidth)
-        {
-            var box = Ui.TextBox(Value(key), width);
-            box.TextChanged += (_, _) => component.Options[key] = box.Text.Trim();
-            content.Children.Add(Ui.Row(L.T(hintFr, hintEn), box, labelWidth: LabelWidth));
-            return box;
-        }
-
         // --- who this layer is for ---
         var players = Ui.ComboBox(ControlWidth);
         var currentPlayer = Value("player", "0");
@@ -745,24 +737,29 @@ public sealed class CompositionEditor : Window
 
         if (isViewer)
         {
-            var role = Text("role", "Rôle affiché", "Displayed role");
-            role.TextChanged += (_, _) => RefreshChannel();
+            var role = Choice(component, "role", "", SharedRoles);
+            role.SelectionChanged += (_, _) => RefreshChannel();
+            content.Children.Add(Ui.Row(L.T("Rôle affiché", "Displayed role"), role, labelWidth: LabelWidth));
             content.Children.Add(Ui.MutedLabel(L.T(
-                "Le rôle est le dossier de la carte dans le média du jeu (un personnage, « items-and-weaponry », un stage). "
-                + "Vide = toutes les fiches du jeu, ce qui est la bonne réponse tant qu'on ne sait pas qui joue.",
-                "The role is the card's folder in the game media (a character, \"items-and-weaponry\", a stage). "
-                + "Empty = every page of the game, which is the right answer as long as nobody knows who is playing.")));
+                "Trois rôles seulement traversent la ludothèque : ce sont des pages thématiques qui portent le même nom d'un jeu à l'autre. "
+                + "Les personnages n'y sont pas — ils n'existent que dans leur jeu, et c'est le mode auto ci-dessous qui les suit. "
+                + "« Toutes les fiches » est la bonne réponse tant qu'on ne sait pas qui joue.",
+                "Only three roles run across the library: topic pages carrying the same name from one game to the next. "
+                + "Characters are not there — they only exist in their own game, and the auto mode below is what follows them. "
+                + "\"Every page\" is the right answer as long as nobody knows who is playing.")));
 
             // Where this viewer sits when nobody has touched anything — and what it comes
             // back to. Both were settings of the old touch profile; they belong to the
             // viewer, which is the thing that shows a card.
-            Text("card", "Carte au repos", "Resting card", 100);
-            Text("returnMs", "Retour auto (ms)", "Auto return (ms)", 100);
+            content.Children.Add(Ui.Row(L.T("Carte au repos", "Resting card"),
+                Choice(component, "card", "", RestingCards), labelWidth: LabelWidth));
+            content.Children.Add(Ui.Row(L.T("Retour auto", "Auto return"),
+                Choice(component, "returnMs", "", Durations), labelWidth: LabelWidth));
             content.Children.Add(Ui.MutedLabel(L.T(
-                "« Carte au repos » : le numéro de la fiche affichée au départ (2, ic2…), vide = la première. "
-                + "« Retour auto » : après combien de temps y revenir quand une zone en a montré une autre — vide ou 0 = elle reste.",
-                "\"Resting card\": the page shown at start (2, ic2…), empty = the first one. "
-                + "\"Auto return\": how long before coming back when a zone showed another one — empty or 0 = it stays.")));
+                "La carte au repos est celle affichée au départ, et celle où l'on revient. "
+                + "Un jeu qui n'a pas cette page retombe sur la première — « fiche 5 » ne veut rien dire pour un jeu qui en a deux.",
+                "The resting card is the one shown at start, and the one it comes back to. "
+                + "A game without that page falls back to the first — \"page 5\" means nothing to a game that has two.")));
 
             var auto = Ui.CheckBox(L.T(
                     "Suivre le personnage annoncé par le jeu",
@@ -862,6 +859,34 @@ public sealed class CompositionEditor : Window
     /// clipped on the right, and the value one was reading was cut in half.</summary>
     private const double LabelWidth = 90;
     private const double ControlWidth = 130;
+
+    /// <summary>
+    /// The roles worth offering: on 38 games carrying roles, 171 distinct names — and only
+    /// these three run across the library. All the others name a CHARACTER, which exists
+    /// only in its own game and which auto mode follows on its own, because the game
+    /// announces it.
+    /// </summary>
+    private static readonly (string Tag, string Fr, string En)[] SharedRoles =
+    {
+        ("", "Toutes les fiches", "Every page"),
+        ("items-and-weaponry", "Objets et armes", "Items and weaponry"),
+        ("bonus-points", "Points bonus", "Bonus points"),
+        ("vitality", "Vitalité", "Vitality")
+    };
+
+    /// <summary>Which page a viewer rests on. A number, not a free id: "ic2" and "2" said
+    /// the same thing and only one of them was obvious.</summary>
+    private static readonly (string Tag, string Fr, string En)[] RestingCards =
+    {
+        ("", "La première", "The first one"),
+        ("2", "Fiche 2", "Page 2"),
+        ("3", "Fiche 3", "Page 3"),
+        ("4", "Fiche 4", "Page 4"),
+        ("5", "Fiche 5", "Page 5"),
+        ("6", "Fiche 6", "Page 6"),
+        ("7", "Fiche 7", "Page 7"),
+        ("8", "Fiche 8", "Page 8")
+    };
 
     /// <summary>Delays offered to a zone. Free milliseconds invited a number nobody could
     /// judge — 250 ms is a blink, 60 000 a forgotten card.</summary>
