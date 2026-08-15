@@ -90,9 +90,9 @@ Beaucoup de bornes affichent la **carte d'instructions** du jeu : les coups spé
 
 **Zone tactile** est le calque qu'on presse. Son rectangle **est** la zone : ce que vous dessinez est ce que le doigt peut toucher. Ses options :
 
-- **Au toucher** — fiche suivante, fiche précédente, revenir à la première, afficher une fiche ou un rôle précis, rôle suivant/précédent, ou suivre/ne plus suivre le jeu.
-- **Texte affiché** et **Encadrer la zone** — rien n'est dessiné par défaut : un écran tactile qui marche n'a pas besoin d'être marqué. Ces deux réglages servent aux bornes dont les joueurs ignorent que la zone existe.
-- **Retour auto (ms)** — revenir à la fiche de départ après un délai.
+- **Au toucher** — fiche suivante, fiche précédente, revenir à la carte au repos, rôle suivant, rôle précédent, ou suivre / ne plus suivre le jeu. Chaque action marche sur **n'importe quel jeu** : viser une fiche ou un rôle précis a existé et a été retiré, parce que « la page 2 » désigne les armes ici et les points bonus ailleurs, et qu'un personnage n'existe que dans son jeu.
+- **Fond** et **Encadrer la zone** — rien n'est dessiné par défaut : un écran tactile qui marche n'a pas besoin d'être marqué. Le fond (noir, blanc, rouge, jaune, bleu, avec son opacité) sert aux bornes dont les joueurs ignorent que la zone existe.
+- **Retour auto** — jamais, 3, 5, 8, 15 ou 30 secondes avant de revenir à la carte au repos.
 
 !!! note "Le canal, pour relier les deux"
     Une zone pilote la carte qui porte le **même canal**. Le canal se déduit de ce que le calque dit déjà — son joueur, sinon son rôle — donc une borne ordinaire n'a rien à nommer : une carte réglée sur *Joueur 2* et une zone réglée sur *Joueur 2* se répondent. Le champ **Canal** ne sert qu'aux montages libres : un bandeau tactile sur le marquee qui fait défiler des astuces sur le topper, par exemple.

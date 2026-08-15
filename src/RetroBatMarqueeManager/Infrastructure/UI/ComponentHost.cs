@@ -362,12 +362,12 @@ public sealed class ComponentHost : Canvas
     /// which owns the touch events; this only draws what the player must SEE of it.
     ///
     /// Nothing by default: a working touchscreen needs no marking, and a card covered in
-    /// boxes is a worse card. `label` writes a word in the zone, `hint` outlines it —
-    /// both for a cabinet whose players do not know the zone is there.
+    /// boxes is a worse card. A tint and an outline are there for a cabinet whose players
+    /// do not know the zone exists — a written label was too, and was dropped: three ways
+    /// of saying the same thing, and the only one that ages badly when the action changes.
     /// </summary>
     private static FrameworkElement BuildTouchZone(ComponentDefinition component)
     {
-        var label = component.Option("label");
         var hint = component.Option("hint", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
         var opacity = double.TryParse(component.Option("opacity", "0.35"),
             System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture,
@@ -400,21 +400,6 @@ public sealed class ComponentHost : Canvas
             BorderThickness = new Thickness(hint ? 2 : 0),
             CornerRadius = new CornerRadius(8)
         };
-
-        if (label.Length > 0)
-        {
-            border.Child = new TextBlock
-            {
-                Text = label,
-                Foreground = new SolidColorBrush(Color.FromArgb((byte)(opacity * 255), 255, 255, 255)),
-                FontWeight = FontWeights.Bold,
-                TextWrapping = TextWrapping.Wrap,
-                TextAlignment = TextAlignment.Center,
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                VerticalAlignment = System.Windows.VerticalAlignment.Center,
-                Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 6, ShadowDepth = 0 }
-            };
-        }
 
         return border;
     }

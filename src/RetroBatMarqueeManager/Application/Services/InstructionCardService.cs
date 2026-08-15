@@ -322,8 +322,6 @@ public sealed class InstructionCardService : IDisposable
                 fx, fy, surface.Id, action, channel);
             _ = ExecuteAsync(channel, new Tap(
                 action,
-                zone.Option("card"),
-                zone.Option("role"),
                 int.TryParse(zone.Option("player"), out var player) && player >= 1 ? player : null,
                 int.TryParse(zone.Option("durationMs"), out var ms) && ms > 0 ? ms : null),
                 CancellationToken.None);
@@ -373,28 +371,6 @@ public sealed class InstructionCardService : IDisposable
                 case "previous-card":
                     channel.Index = (channel.Index - 1 + groups.Count) % groups.Count;
                     break;
-
-                case "show-card":
-                    if (tap.Card is not { Length: > 0 } card || ResolveGroupIndex(groups, card) is not { } found)
-                    {
-                        _logger.LogDebug("show-card resolved no card for id {Card} ({Count} groups)", tap.Card, groups.Count);
-                        return;
-                    }
-
-                    channel.Index = found;
-                    break;
-
-                case "show-role":
-                {
-                    // an explicit role stops following the game: the user asked for THIS
-                    // card, and an announcement must not take it away under his finger
-                    var role = tap.Role?.Trim() ?? string.Empty;
-                    channel.EventRole = role.Length > 0 ? role : null;
-                    channel.Role = role;
-                    channel.Index = 0;
-                    channel.Side = null;
-                    break;
-                }
 
                 case "next-role":
                 case "previous-role":
@@ -464,7 +440,7 @@ public sealed class InstructionCardService : IDisposable
     }
 
     private static bool IsRoleAction(string action) => action.ToLowerInvariant()
-        is "show-role" or "next-role" or "previous-role" or "auto" or "toggle-auto";
+        is "next-role" or "previous-role" or "auto" or "toggle-auto";
 
     private void RevertToDefault(string channelName)
     {
@@ -565,6 +541,12 @@ public sealed class InstructionCardService : IDisposable
     }
 
     /// <summary>What a touch zone asks for. Built from the layer's own options — the
-    /// zone IS the configuration, there is no file behind it.</summary>
-    private sealed record Tap(string Action, string? Card, string? Role, int? Player, int? DurationMs);
+    /// zone IS the configuration, there is no file behind it.
+    ///
+    /// Every action a zone can carry works on ANY game:walk through the pages, through the
+    /// roles, back to the resting card. Naming a page or a role was possible and has been
+    /// dropped — "page 2" holds the weapons in one game and the bonus points in the next,
+    /// and a character role only exists in the game that has that character. The finger
+    /// navigates; what is game-specific is announced by the game itself.</summary>
+    private sealed record Tap(string Action, int? Player, int? DurationMs);
 }

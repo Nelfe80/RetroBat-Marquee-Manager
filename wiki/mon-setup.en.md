@@ -90,9 +90,9 @@ Many cabinets show the game's **instruction card**: special moves, items, bonus 
 
 **Touch zone** is the layer you press. Its rectangle **is** the zone: what you draw is what a finger can touch. Its options:
 
-- **On tap** — next page, previous page, back to the first, show one page or one role, next/previous role, or follow / stop following the game.
-- **Displayed text** and **Outline the zone** — nothing is drawn by default: a touchscreen that works needs no marking. Both settings are for cabinets whose players do not know the zone is there.
-- **Auto return (ms)** — come back to the starting page after a delay.
+- **On tap** — next page, previous page, back to the resting card, next role, previous role, or follow / stop following the game. Every action works on **any game**: naming a page or a role was possible and was dropped, because "page 2" holds the weapons here and the bonus points there, and a character only exists in its own game.
+- **Background** and **Outline the zone** — nothing is drawn by default: a touchscreen that works needs no marking. The background (black, white, red, yellow, blue, with its opacity) is for cabinets whose players do not know the zone is there.
+- **Auto return** — never, 3, 5, 8, 15 or 30 seconds before going back to the resting card.
 
 !!! note "The channel, to bind the two"
     A zone drives the card carrying the **same channel**. The channel follows what the layer already says — its player, otherwise its role — so an ordinary cabinet has nothing to name: a card set to *Player 2* and a zone set to *Player 2* answer each other. The **Channel** field only matters for free-form setups: a touch strip on the marquee scrolling tips shown on the topper, for instance.
