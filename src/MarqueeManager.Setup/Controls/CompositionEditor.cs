@@ -235,6 +235,23 @@ public sealed class CompositionEditor : Window
                     C("iccard.touch", 0.5, 0.85, 0.5, 0.15, ("channel", "p2"), ("action", "next-card"),
                         ("label", L.T("Joueur 2 ▸", "Player 2 ▸")), ("hint", "true"))
                 }),
+            // Recovered from the old touch profile, which offered them as "modes". They
+            // were good ideas trapped in a screen of their own: here they are compositions
+            // like any other, so they can be moved, resized and mixed.
+            new("🃏 Cartes d'instructions", L.T("Carte + zone centrale (règles communes)", "Card + centre zone (shared rules)"),
+                () => new()
+                {
+                    C("iccard.viewer", 0, 0, 1, 1, ("auto", "true")),
+                    C("iccard.touch", 0.35, 0, 0.3, 1, ("action", "show-card"), ("card", "ic2"),
+                        ("durationMs", "8000"), ("label", L.T("RÈGLES", "RULES")), ("hint", "true"))
+                }),
+            new("🃏 Cartes d'instructions", L.T("Fixe + variable (moitié/moitié)", "Static + cycling (half/half)"),
+                () => new()
+                {
+                    C("iccard.static", 0, 0, 0.5, 1, ("card", "1")),
+                    C("iccard.viewer", 0.5, 0, 0.5, 1, ("auto", "false")),
+                    C("iccard.touch", 0.5, 0, 0.5, 1, ("action", "next-card"))
+                }),
             new("🃏 Cartes d'instructions", L.T("Zone tactile — fiche suivante", "Touch zone — next page"),
                 () => new() { C("iccard.touch", 0.6, 0.8, 0.4, 0.2, ("action", "next-card")) }),
             new("🃏 Cartes d'instructions", L.T("Zone tactile — fiche précédente", "Touch zone — previous page"),
@@ -721,6 +738,17 @@ public sealed class CompositionEditor : Window
                 + "Vide = toutes les fiches du jeu, ce qui est la bonne réponse tant qu'on ne sait pas qui joue.",
                 "The role is the card's folder in the game media (a character, \"items-and-weaponry\", a stage). "
                 + "Empty = every page of the game, which is the right answer as long as nobody knows who is playing.")));
+
+            // Where this viewer sits when nobody has touched anything — and what it comes
+            // back to. Both were settings of the old touch profile; they belong to the
+            // viewer, which is the thing that shows a card.
+            Text("card", "Carte au repos", "Resting card", 100);
+            Text("returnMs", "Retour auto (ms)", "Auto return (ms)", 100);
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "« Carte au repos » : le numéro de la fiche affichée au départ (2, ic2…), vide = la première. "
+                + "« Retour auto » : après combien de temps y revenir quand une zone en a montré une autre — vide ou 0 = elle reste.",
+                "\"Resting card\": the page shown at start (2, ic2…), empty = the first one. "
+                + "\"Auto return\": how long before coming back when a zone showed another one — empty or 0 = it stays.")));
 
             var auto = Ui.CheckBox(L.T(
                     "Suivre le personnage annoncé par le jeu",

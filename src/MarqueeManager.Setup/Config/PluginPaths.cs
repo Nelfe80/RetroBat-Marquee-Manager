@@ -34,5 +34,5 @@ public static class PluginPaths
 
     public static string ConfigPath(string root) => Path.Combine(root, "config.ini");
 
-    public static string TouchProfilePath(string root) => Path.Combine(root, "state", "surfaces.profile.json");
+
 }

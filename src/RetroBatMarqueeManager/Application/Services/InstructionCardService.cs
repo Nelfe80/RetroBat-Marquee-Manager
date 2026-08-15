@@ -1,5 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using RetroBatMarqueeManager.Core.Interfaces;
 using RetroBatMarqueeManager.Core.Surfaces;
@@ -36,7 +34,6 @@ public sealed class InstructionCardService : IDisposable
     private readonly MarqueeController _surfaces;
     private readonly ILogger<InstructionCardService> _logger;
     private readonly object _lock = new();
-    private readonly TouchSettings? _touch;
     private readonly Dictionary<string, Channel> _channels = new(StringComparer.OrdinalIgnoreCase);
     private List<InstructionCardCatalog.CardGroup> _groups = new();
     private bool _channelsResolved;
@@ -46,13 +43,7 @@ public sealed class InstructionCardService : IDisposable
         _config = config;
         _surfaces = surfaces;
         _logger = logger;
-        _touch = LoadTouchProfile();
         _surfaces.SurfaceTapped += OnTap;
-        if (_touch is { Enabled: true })
-        {
-            _logger.LogInformation("Instruction card touch enabled: mode={Mode}, {ZoneCount} zone(s)",
-                _touch.Mode, _touch.Zones.Count);
-        }
     }
 
     /// <summary>One reading position in the catalog. Named by the viewer that shows it
@@ -72,6 +63,14 @@ public sealed class InstructionCardService : IDisposable
 
         /// <summary>Follows what the game announces. Off = the zones drive it alone.</summary>
         public bool Auto { get; set; }
+
+        /// <summary>The card this channel shows at rest, and comes back to. Empty = the
+        /// first one of its role.</summary>
+        public string Card { get; set; } = string.Empty;
+
+        /// <summary>How long a card reached by a tap stays before the channel returns to
+        /// its resting card. 0 = it stays.</summary>
+        public int ReturnMs { get; set; }
 
         public int Index { get; set; }
         public string? Side { get; set; }
@@ -244,6 +243,8 @@ public sealed class InstructionCardService : IDisposable
             channel.Role = viewer.Option("role").Trim();
             channel.Player = player;
             channel.Auto = !viewer.Option("auto", "true").Equals("false", StringComparison.OrdinalIgnoreCase);
+            channel.Card = viewer.Option("card").Trim();
+            channel.ReturnMs = int.TryParse(viewer.Option("returnMs"), out var returnMs) && returnMs > 0 ? returnMs : 0;
         }
 
         // the historical channel always exists: iccard.cycle, the iccard surface and any
@@ -291,29 +292,24 @@ public sealed class InstructionCardService : IDisposable
         _ => null
     };
 
+    /// <summary>Where this channel sits at rest: the card the viewer pinned, else the
+    /// first of its role. A pinned card that this game does not have simply falls back —
+    /// "ic3" means nothing to a game with two pages.</summary>
     private int DefaultIndex(Channel channel)
     {
         var groups = GroupsOf(channel);
         if (groups.Count == 0) return 0;
-        // the profile's pinned card only applies to the historical channel: it was
-        // written when there was a single reading position
-        if (channel.Name.Equals(MainChannel, StringComparison.OrdinalIgnoreCase)
-            && _touch?.DefaultCard is { Length: > 0 } id
-            && ResolveGroupIndex(groups, id) is { } index)
-        {
-            return index;
-        }
-
-        return 0;
+        return channel.Card is { Length: > 0 } id && ResolveGroupIndex(groups, id) is { } index
+            ? index
+            : 0;
     }
 
     // ================= touch =================
 
     /// <summary>
-    /// A tap on a surface. The zones the user drew in the composition win — they are
-    /// visible, they carry their own action, and they can sit on ANY surface. The
-    /// historical profile (state\surfaces.profile.json) still answers on the iccard
-    /// surface when the composition has no zone under the finger.
+    /// A tap on a surface. What answers is the zone the user drew in the composition:
+    /// it is visible, it carries its own action, and it can sit on ANY surface — the
+    /// finger and the card no longer have to share a screen.
     /// </summary>
     private void OnTap(SurfaceDefinition surface, string scene, double fx, double fy)
     {
@@ -324,39 +320,14 @@ public sealed class InstructionCardService : IDisposable
             var channel = InstructionCardCatalog.ChannelOf(zone.Option("channel"), zone.Option("role"), zone.Option("player"));
             _logger.LogDebug("Tap ({Fx:0.##},{Fy:0.##}) on {Surface} -> {Action} on channel {Channel}",
                 fx, fy, surface.Id, action, channel);
-            _ = ExecuteAsync(channel, new TouchAction
-            {
-                Action = action,
-                Card = zone.Option("card"),
-                Role = zone.Option("role"),
-                Player = int.TryParse(zone.Option("player"), out var player) && player >= 1 ? player : null,
-                DurationMs = int.TryParse(zone.Option("durationMs"), out var ms) && ms > 0 ? ms : null
-            }, CancellationToken.None);
-            return;
+            _ = ExecuteAsync(channel, new Tap(
+                action,
+                zone.Option("card"),
+                zone.Option("role"),
+                int.TryParse(zone.Option("player"), out var player) && player >= 1 ? player : null,
+                int.TryParse(zone.Option("durationMs"), out var ms) && ms > 0 ? ms : null),
+                CancellationToken.None);
         }
-
-        if (!surface.Category.Equals("iccard", StringComparison.OrdinalIgnoreCase)) return;
-
-        TouchZone? hit = null;
-        lock (_lock)
-        {
-            if (_touch is not { Enabled: true } || _groups.Count == 0) return;
-            // first matching zone wins: generated profiles list the specific zone
-            // (e.g. center) before the catch-all
-            foreach (var legacy in _touch.Zones)
-            {
-                if (legacy.Contains(fx, fy))
-                {
-                    hit = legacy;
-                    break;
-                }
-            }
-        }
-
-        if (hit?.Tap == null) return;
-        _logger.LogDebug("Instruction card tap ({Fx:0.##},{Fy:0.##}) -> zone {Zone}, action {Action}",
-            fx, fy, hit.Id, hit.Tap.Action);
-        _ = ExecuteAsync(MainChannel, hit.Tap, CancellationToken.None);
     }
 
     /// <summary>The front-most touch layer under the finger, among those the current
@@ -379,7 +350,7 @@ public sealed class InstructionCardService : IDisposable
         return null;
     }
 
-    private async Task ExecuteAsync(string channelName, TouchAction tap, CancellationToken cancellationToken)
+    private async Task ExecuteAsync(string channelName, Tap tap, CancellationToken cancellationToken)
     {
         Shown shown;
         lock (_lock)
@@ -480,7 +451,7 @@ public sealed class InstructionCardService : IDisposable
 
             // temporary card: come back to the default one after the delay
             var isDefault = channel.Index == DefaultIndex(channel) && channel.Side is null && channel.EventRole is null;
-            var revertMs = !isDefault ? tap.DurationMs ?? _touch?.ReturnToDefaultMs ?? 0 : 0;
+            var revertMs = !isDefault ? tap.DurationMs ?? channel.ReturnMs : 0;
             CancelRevert(channel);
             if (revertMs > 0)
             {
@@ -585,25 +556,6 @@ public sealed class InstructionCardService : IDisposable
         return null;
     }
 
-    private TouchSettings? LoadTouchProfile()
-    {
-        var path = Path.Combine(_config.BaseDirectory, "state", "surfaces.profile.json");
-        try
-        {
-            if (!File.Exists(path)) return null;
-            var document = JsonSerializer.Deserialize<ProfileDocument>(File.ReadAllText(path),
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            var touch = document?.Surfaces?
-                .FirstOrDefault(s => string.Equals(s.Kind, "iccard", StringComparison.OrdinalIgnoreCase))?.Touch;
-            return touch;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning("Could not read touch profile {Path}: {Message}", path, ex.Message);
-            return null;
-        }
-    }
-
     public void Dispose()
     {
         lock (_lock)
@@ -612,89 +564,7 @@ public sealed class InstructionCardService : IDisposable
         }
     }
 
-    // --- profile model (subset written by MarqueeManagerSetup) ---
-
-    private sealed class ProfileDocument
-    {
-        [JsonPropertyName("surfaces")]
-        public List<SurfaceProfile>? Surfaces { get; set; }
-    }
-
-    private sealed class SurfaceProfile
-    {
-        [JsonPropertyName("kind")]
-        public string? Kind { get; set; }
-
-        [JsonPropertyName("touch")]
-        public TouchSettings? Touch { get; set; }
-    }
-
-    public sealed class TouchSettings
-    {
-        [JsonPropertyName("enabled")]
-        public bool Enabled { get; set; }
-
-        [JsonPropertyName("mode")]
-        public string Mode { get; set; } = "simple";
-
-        [JsonPropertyName("defaultCard")]
-        public string? DefaultCard { get; set; }
-
-        [JsonPropertyName("returnToDefaultMs")]
-        public int ReturnToDefaultMs { get; set; }
-
-        [JsonPropertyName("zones")]
-        public List<TouchZone> Zones { get; set; } = new();
-    }
-
-    public sealed class TouchZone
-    {
-        [JsonPropertyName("id")]
-        public string Id { get; set; } = "";
-
-        /// <summary>"x,y,w,h" in percent of the surface, e.g. "0,0,50%,100%".</summary>
-        [JsonPropertyName("rect")]
-        public string Rect { get; set; } = "0,0,100%,100%";
-
-        [JsonPropertyName("tap")]
-        public TouchAction? Tap { get; set; }
-
-        public bool Contains(double fx, double fy)
-        {
-            var parts = Rect.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length != 4) return false;
-            var values = new double[4];
-            for (var i = 0; i < 4; i++)
-            {
-                if (!double.TryParse(parts[i].TrimEnd('%').Trim(), System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out values[i]))
-                {
-                    return false;
-                }
-            }
-
-            double x = values[0] / 100.0, y = values[1] / 100.0, w = values[2] / 100.0, h = values[3] / 100.0;
-            return fx >= x && fx <= x + w && fy >= y && fy <= y + h;
-        }
-    }
-
-    public sealed class TouchAction
-    {
-        /// <summary>next-card | previous-card | show-card | show-role | next-role |
-        /// previous-role | show-player-card | toggle-auto | default-card</summary>
-        [JsonPropertyName("action")]
-        public string Action { get; set; } = "next-card";
-
-        [JsonPropertyName("card")]
-        public string? Card { get; set; }
-
-        [JsonPropertyName("role")]
-        public string? Role { get; set; }
-
-        [JsonPropertyName("player")]
-        public int? Player { get; set; }
-
-        [JsonPropertyName("durationMs")]
-        public int? DurationMs { get; set; }
-    }
+    /// <summary>What a touch zone asks for. Built from the layer's own options — the
+    /// zone IS the configuration, there is no file behind it.</summary>
+    private sealed record Tap(string Action, string? Card, string? Role, int? Player, int? DurationMs);
 }

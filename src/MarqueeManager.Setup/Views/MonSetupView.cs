@@ -499,11 +499,6 @@ public sealed class MonSetupView : UserControl
             var info = _detected[screen.WindowsIndex];
             tools.Children.Add(Ui.Button(L.T("Afficher la mire", "Show test pattern"), (_, _) =>
                 new TestPatternWindow($"{screen.Name}", info.Bounds.X, info.Bounds.Y, info.Bounds.Width, info.Bounds.Height).Show()));
-            if (info.Touch == TouchSupport.Touch)
-            {
-                tools.Children.Add(Ui.Button(L.T("Tactile (IC card)…", "Touch (IC card)…"), (_, _) =>
-                    OpenToolWindow(L.T("IC card tactile", "Touch IC card"), new TouchView(_pluginRoot))));
-            }
         }
         card.Children.Add(tools);
 
