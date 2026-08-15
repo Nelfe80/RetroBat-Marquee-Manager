@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
-    <Version>2.8.0</Version>
-    <FileVersion>2.8.0.0</FileVersion>
-    <AssemblyVersion>2.8.0.0</AssemblyVersion>
-    <InformationalVersion>2.8.0+20260814.103303</InformationalVersion>
+    <Version>2.9.0</Version>
+    <FileVersion>2.9.0.0</FileVersion>
+    <AssemblyVersion>2.9.0.0</AssemblyVersion>
+    <InformationalVersion>2.9.0+20260815.153024</InformationalVersion>
     <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**;.versioning\**</DefaultItemExcludes>
   </PropertyGroup>
 </Project>
