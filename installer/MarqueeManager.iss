@@ -9,7 +9,7 @@
 ; ─────────────────────────────────────────────────────────────────────────────
 
 #define AppName "RetroBat Marquee Manager"
-#define AppVersion "2.8.0"
+#define AppVersion "2.9.0"
 #define AppExe "MarqueeManager.exe"
 
 [Setup]
