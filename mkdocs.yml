@@ -6,8 +6,13 @@ repo_name: Nelfe80/RetroBat-Marquee-Manager
 docs_dir: wiki
 edit_uri: ""
 
+extra_css:
+  - assets/brand.css
+
 theme:
   name: material
+  logo: assets/brand/nelfetech-white.svg
+  favicon: assets/brand/favicon.svg
   language: fr
   features:
     - navigation.sections
