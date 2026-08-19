@@ -119,10 +119,34 @@ public sealed class WebSocketListenerService : BackgroundService
         return string.Join('/', parts.Skip(Math.Max(0, parts.Length - 3)));
     }
 
+    /// <summary>
+    /// Is this background render still for the selection on screen? Fast system browsing
+    /// fires one render per system passed through, and — for a SYSTEM (rom=null) — the media
+    /// tables carry no rom to tell them apart, so a late render would bake the CURRENT
+    /// system's media into the OLD system's cache and paint a stale surface on completion.
+    /// A game is matched on its rom, a system on the frontend the user is on.
+    /// </summary>
+    private bool StillOnSelection(string system, string? rom)
+    {
+        if (string.IsNullOrEmpty(rom))
+        {
+            return string.IsNullOrEmpty(_selectedSystem)
+                || string.Equals(system, _selectedSystem, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var currentRom = _lastMarqueeMeta?.Rom ?? _selectedRom;
+        return string.IsNullOrEmpty(currentRom)
+            || string.Equals(rom, currentRom, StringComparison.OrdinalIgnoreCase);
+    }
+
     private void OnGabaritMissing(string surfaceId, string category, string system, string? rom)
     {
         var (width, height) = _surfaces.SurfacePixelSize(surfaceId);
         if (width <= 0 || height <= 0) return;
+
+        // Render only for the selection still on screen — otherwise a fast browse bakes the
+        // wrong system's media into this cache and flashes it when the render lands.
+        if (!StillOnSelection(system, rom)) return;
 
         // ES calls a MAME set "mame" while the gabarit may have been saved under
         // "arcade" (or the reverse): both spellings name the same template.
@@ -152,7 +176,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // the user has browsed to since — that is how every system's template ended up
         // wearing the Mega Drive fanart. The snapshot is also the ONLY media source:
         // APIExpose serves it, MarqueeManager never goes looking in its folders.
-        var kinds = KindsFor(category);
+        var kinds = KindsFor(category, system, rom);
 
         // Names the file each layer actually took. Without it, "I see the same fanart on
         // every game" can only be argued about; with it, the log answers in one line.
@@ -187,7 +211,8 @@ public sealed class WebSocketListenerService : BackgroundService
             {
                 _logger.LogInformation("Gabarit layers for {Label}: {Trace}", rom ?? system, string.Join(" · ", trace));
                 var current = _lastMarqueeMeta;
-                if (!systemScope && !string.Equals(current?.Rom, rom, StringComparison.OrdinalIgnoreCase)) return;
+                // A stale render must not paint over the entry now on screen (systems included).
+                if (!StillOnSelection(system, rom)) return;
                 // a per-surface creation still outranks the template: never stomp it
                 if (_compositionChains.SurfaceCreation(category, surfaceId, current, systemScope) != null) return;
                 _ = _surfaces.DisplayMediaAsync(path, surfaceId, CancellationToken.None, current, resolved: true);
@@ -470,7 +495,7 @@ public sealed class WebSocketListenerService : BackgroundService
     /// describes. Each stream fills its own table at its own pace: merging them blind
     /// served the previous game's screenshot to the next one, because the topper
     /// snapshot for the new entry had simply not arrived yet.</summary>
-    private readonly Dictionary<string, (string? Rom, Dictionary<string, string?> Kinds)> _lastKindsByCategory =
+    private readonly Dictionary<string, (string? System, string? Rom, Dictionary<string, string?> Kinds)> _lastKindsByCategory =
         new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
@@ -564,9 +589,9 @@ public sealed class WebSocketListenerService : BackgroundService
             : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     }
 
-    private void RememberKinds(string category, string? rom, Dictionary<string, string?> kinds)
+    private void RememberKinds(string category, string? system, string? rom, Dictionary<string, string?> kinds)
     {
-        lock (_lastKindsByCategory) _lastKindsByCategory[category] = (rom, kinds);
+        lock (_lastKindsByCategory) _lastKindsByCategory[category] = (system, rom, kinds);
     }
 
     /// <summary>
@@ -576,33 +601,40 @@ public sealed class WebSocketListenerService : BackgroundService
     /// nothing at all. The leak to avoid was never cross-stream — it was cross-ENTRY,
     /// and that is closed by clearing everything when the selection changes.
     /// </summary>
-    private Dictionary<string, string?> KindsFor(string category)
+    private Dictionary<string, string?> KindsFor(string category, string? system, string? rom)
     {
         var merged = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         lock (_lastKindsByCategory)
         {
-            // Only tables that describe the entry on screen. A stream that has not
-            // caught up yet still holds the previous game, and merging it blind is how
-            // 19xx ended up wearing the screenshot of 1945kiii.
-            var current = _lastMarqueeMeta?.Rom;
-            bool Describes(string? rom)
-                => current is null || rom is null || rom.Equals(current, StringComparison.OrdinalIgnoreCase);
+            // Only tables that describe THIS entry. Each stream (frontend/marquee/topper)
+            // has its own concurrent receive loop, so while the topper is on light-gun the
+            // marquee table may still hold last-played — merging it blind is how a system
+            // wore another system's logo. A game is identified by its rom; a system or
+            // collection, which has no rom, by the frontend it is. An entry naming neither
+            // is allowed through (nothing to contradict).
+            bool Describes(string? entrySystem, string? entryRom)
+            {
+                if (!string.IsNullOrEmpty(rom))
+                    return entryRom is null || entryRom.Equals(rom, StringComparison.OrdinalIgnoreCase);
+                if (!string.IsNullOrEmpty(system))
+                    return entrySystem is null || entrySystem.Equals(system, StringComparison.OrdinalIgnoreCase);
+                return true;
+            }
 
             foreach (var (name, entry) in _lastKindsByCategory)
             {
-                if (name.Equals(category, StringComparison.OrdinalIgnoreCase) || !Describes(entry.Rom)) continue;
+                if (name.Equals(category, StringComparison.OrdinalIgnoreCase) || !Describes(entry.System, entry.Rom)) continue;
                 foreach (var (kind, path) in entry.Kinds)
                     if (path is { Length: > 0 }) merged[kind] = path;
             }
-            if (_lastKindsByCategory.TryGetValue(category, out var own) && Describes(own.Rom))
+            if (_lastKindsByCategory.TryGetValue(category, out var own) && Describes(own.System, own.Rom))
                 foreach (var (kind, path) in own.Kinds)
                     if (path is { Length: > 0 }) merged[kind] = path;
         }
-        lock (_lastMarqueeKinds)
-        {
-            foreach (var (kind, path) in _lastMarqueeKinds)
-                if (path is { Length: > 0 } && !merged.ContainsKey(kind)) merged[kind] = path;
-        }
+        // The blind _lastMarqueeKinds fallback used to sit here; it is exactly the
+        // cross-stream leak above (it borrows the latest marquee whatever system it names),
+        // and the system-filtered cross-category merge already covers the legitimate case
+        // (a topper borrowing its own system's fanart).
         return merged;
     }
     private Application.Lighting.LightingSceneMeta? _lastMarqueeMeta;
@@ -868,7 +900,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // be here BEFORE the gabarit renders, not on a stream that arrives afterwards
         ReadTextBlock(payload, snapshotMeta?.Rom);
         _lastMarqueeMeta = snapshotMeta;
-        lock (_lastMarqueeKinds) RememberKinds("marquee", snapshotMeta?.Rom, new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase));
+        lock (_lastMarqueeKinds) RememberKinds("marquee", _selectedSystem ?? snapshotMeta?.System, snapshotMeta?.Rom, new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase));
 
         // On-disk sources (creation / gabarit / drop) and the card overrides are keyed
         // by the FRONTEND system the user sees in ES and the Setup keys by (mame). The
@@ -1262,6 +1294,17 @@ public sealed class WebSocketListenerService : BackgroundService
         var payload = Payload(root);
         var media = Child(payload, "Media", "media");
         var meta = ExtractLightingMeta(payload) ?? _lastMarqueeMeta;
+        // Same frontend override the marquee applies (see HandleMarqueeAsync): the payload's
+        // System is the CANONICAL media folder (arcade), so without this a per-frontend
+        // gabarit/creation caches under the collapsed id and fbneo, mame and the aggregate
+        // all share ONE topper — the arcade logo. Resolve with the frontend the user sees.
+        if (!string.IsNullOrEmpty(_selectedSystem)
+            && (meta == null || !string.Equals(meta.System, _selectedSystem, StringComparison.OrdinalIgnoreCase)))
+        {
+            meta = meta is null
+                ? new Application.Lighting.LightingSceneMeta(null, null, null, null, _selectedSystem, _selectedRom)
+                : meta with { System = _selectedSystem };
+        }
         var systemScope = Text(Child(payload, "Selection", "selection"), "Scope", "scope")
             .Equals("system", StringComparison.OrdinalIgnoreCase);
         var topperKinds = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
@@ -1275,7 +1318,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // composition on this surface no longer has to borrow the marquee's media
         ReadAssetTables(payload, topperKinds);
         ReadTextBlock(payload, meta?.Rom);
-        RememberKinds("topper", meta?.Rom, topperKinds);
+        RememberKinds("topper", meta?.System, meta?.Rom, topperKinds);
         var chained = _compositionChains.Resolve("topper", meta, systemScope, source =>
             source.Equals("topper", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Topper")
             : source.Equals("fanart", StringComparison.OrdinalIgnoreCase) ? MediaPath(media, "Fanart")
@@ -1323,7 +1366,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // game that ships no ready-made card
         var icKinds = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         ReadAssetTables(payload, icKinds);
-        if (icKinds.Count > 0) RememberKinds("iccard", _lastMarqueeMeta?.Rom, icKinds);
+        if (icKinds.Count > 0) RememberKinds("iccard", _lastMarqueeMeta?.System, _lastMarqueeMeta?.Rom, icKinds);
         ReadTextBlock(payload, _lastMarqueeMeta?.Rom);
         ReadControlsBlock(payload, _lastMarqueeMeta?.Rom);
 
