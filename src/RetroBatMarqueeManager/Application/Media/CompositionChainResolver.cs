@@ -141,23 +141,24 @@ public sealed class CompositionChainResolver
         if (string.IsNullOrEmpty(system) || string.IsNullOrEmpty(surfaceId)) return null;
         var cacheBase = Path.Combine(GabaritCategoryRoot(category), ".cache", "surfaces", SafeName(surfaceId));
         var gameScope = !systemScope && !string.IsNullOrEmpty(rom);
+        string? found = null;
         foreach (var sys in SystemSpellings(system!))
         {
             var path = gameScope
                 ? Path.Combine(cacheBase, "games", SafeName(sys), SafeName(rom!) + ".png")
                 : Path.Combine(cacheBase, "systems", SafeName(sys) + ".png");
-            if (File.Exists(path)) return path;
+            if (File.Exists(path)) { found = path; break; }
         }
 
-        // Nothing baked yet: ask the host to render it. The runtime bakes its own
-        // gabarits now — it used to depend on the Setup having displayed that game's
-        // (or that system's) sheet, which on a real library meant "never".
-        //
-        // And it returns null rather than standing in with the SYSTEM render: showing
-        // one entry's artwork in place of another's is worse than showing nothing. The
-        // chain simply continues, and the real render lands a moment later.
+        // ALWAYS ask the host to (re)bake — not only when nothing is baked. The renderer now
+        // stamps each PNG with a freshness key (the layout + every source by path+mtime+size)
+        // and re-renders ONLY when the recipe changed, so a media that was re-scraped or
+        // removed repairs its sheet on its own, with no manual purge — uniformly for every
+        // surface. The existing PNG is returned meanwhile for an instant display; a fresh
+        // one, if the recipe moved, lands a moment later. When nothing is baked yet we still
+        // return null rather than standing in with another entry's artwork.
         GabaritMissing?.Invoke(surfaceId, category, system!, gameScope ? rom! : null);
-        return null;
+        return found;
     }
 
     /// <summary>Fired when a gabarit is not baked yet: (surfaceId, category, system,

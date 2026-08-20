@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MarqueeManager.Compositions.Core.Composition;
 using System.Text;
+using System.Security.Cryptography;
 using SkiaSharp;
 
 namespace RetroBatMarqueeManager.Application.Media;
@@ -78,16 +79,32 @@ public sealed class GabaritSkiaRenderer
         {
             try
             {
-                var project = LoadProject(ProjectPath(category, surfaceId, scope));
+                var projectPath = ProjectPath(category, surfaceId, scope);
+                var project = LoadProject(projectPath);
                 // A system without its own game template falls back to the one composed
                 // for ALL games — the level of last resort, never another system's.
                 if (project == null && scope.StartsWith("game-", StringComparison.OrdinalIgnoreCase))
                 {
-                    project = LoadProject(ProjectPath(category, surfaceId, "game"));
+                    projectPath = ProjectPath(category, surfaceId, "game");
+                    project = LoadProject(projectPath);
                 }
                 if (project == null || !project.Layers.Any(l => !l.Hidden)) return;
+
+                // Freshness key: the cached PNG is stamped with the recipe it was baked from
+                // — the layout file, plus every source each visible layer resolves to (path +
+                // mtime + size). A media that CHANGED (re-scraped) or was REMOVED shifts the
+                // key, so a stale sheet re-bakes itself; unchanged, we skip the render. This
+                // is the same self-invalidation DynamicSurfaceRenderer already has, extended
+                // here so EVERY surface's gabarit (topper, marquee, dmd, card) refreshes alike.
+                var recipeKey = ComputeRecipeKey(project, projectPath, resolveMedia, width, height);
+                if (File.Exists(outputPath) && ReadKey(outputPath) == recipeKey)
+                {
+                    return; // already current — SurfaceGabarit returned this same PNG
+                }
+
                 if (Render(project, resolveMedia, tokens, width, height, outputPath))
                 {
+                    WriteKey(outputPath, recipeKey);
                     _logger.LogInformation("Gabarit rendered ({Scope}) for {Label} on {Surface} → {Path}",
                         scope, label, surfaceId, outputPath);
                     onDone(outputPath);
@@ -108,6 +125,55 @@ public sealed class GabaritSkiaRenderer
                 lock (_sync) { _inFlight.Remove(outputPath); }
             }
         });
+    }
+
+    private static string KeyPath(string outputPath) => outputPath + ".key";
+
+    private static string? ReadKey(string outputPath)
+    {
+        try
+        {
+            var p = KeyPath(outputPath);
+            return File.Exists(p) ? File.ReadAllText(p).Trim() : null;
+        }
+        catch { return null; }
+    }
+
+    private static void WriteKey(string outputPath, string key)
+    {
+        try { File.WriteAllText(KeyPath(outputPath), key); }
+        catch { /* cache marker is best effort; the PNG stays usable */ }
+    }
+
+    /// <summary>Everything a bake depends on, hashed: the layout file itself, and for every
+    /// VISIBLE layer the source it resolves to (path + mtime + size — "none" when a layer
+    /// resolves to nothing, so removing a media is a change too). Text/token layers are
+    /// keyed by the cache PATH already (one file per game/system), so they need not enter
+    /// the key.</summary>
+    private static string ComputeRecipeKey(MarqueeProject project, string projectPath,
+        Func<MarqueeLayer, string?> resolveMedia, int width, int height)
+    {
+        var sb = new StringBuilder();
+        sb.Append(width).Append('x').Append(height).Append('|').Append(Stamp(projectPath));
+        foreach (var layer in project.Layers)
+        {
+            if (layer.Hidden) continue;
+            sb.Append('|').Append(layer.Source).Append(';').Append(layer.AssetKey).Append(';');
+            var media = resolveMedia(layer);
+            sb.Append(media is { Length: > 0 } ? Stamp(media) : "none");
+        }
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(sb.ToString())))[..32];
+    }
+
+    private static string Stamp(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return "none";
+        try
+        {
+            var fi = new FileInfo(path);
+            return fi.Exists ? $"{path},{fi.LastWriteTimeUtc.Ticks},{fi.Length}" : "absent:" + path;
+        }
+        catch { return "err:" + path; }
     }
 
     private MarqueeProject? LoadProject(string path)
