@@ -401,6 +401,16 @@ public sealed class GameMediaCatalog
         Add("screenshot", "Capture de jeu", "In-game screenshot", @"artwork\screenshot.png");
         Add("box3d", "Boîte 3D", "3D box", @"artwork\box\3d.png");
         Add("boxfront", "Boîte (face)", "Box (front)", @"artwork\box\front.png");
+        Add("boxback", "Dos de boîte", "Box back", @"artwork\box\back.png");
+        Add("boxside", "Tranche de boîte", "Box side", @"artwork\box\side.png");
+        Add("boxtexture", "Texture de boîte", "Box texture", @"artwork\box\texture.png");
+        Add("cartridge", "Cartouche", "Cartridge", @"artwork\cartridge.png", @"artwork\cartridge.jpg");
+        Add("label", "Étiquette", "Label", @"artwork\label.png", @"artwork\label.jpg");
+        Add("figurine", "Figurine", "Figurine", @"artwork\figurine.png", @"artwork\figurine.jpg");
+        Add("map", "Carte", "Map", @"documents\maps\map.png", @"documents\maps\map.jpg");
+        Add("wheelcarbon", "Logo carbone", "Carbon logo", @"ui\wheels\wheel-carbon.png");
+        Add("wheelsteel", "Logo acier", "Steel logo", @"ui\wheels\wheel-steel.png");
+        Add("steamgrid", "SteamGrid", "SteamGrid", @"ui\steamgrid.png");
         Add("bezel", "Bezel", "Bezel", @"artwork\bezels\bezel.png");
 
         // the SYSTEM's own art, usable inside a game composition (a Neo Geo logo over a
