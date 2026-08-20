@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="img" aria-label="NELFE STATION">
+  <title>NELFE STATION</title>
+  <defs>
+    <clipPath id="fav-l"><rect x="0" y="0" width="500" height="1000"/></clipPath>
+    <clipPath id="fav-r"><rect x="500" y="0" width="500" height="1000"/></clipPath>
+  </defs>
+  <rect x="20.0" y="20.0" width="960.0" height="960.0" fill="none" stroke="#FF3344" stroke-width="40.0" clip-path="url(#fav-l)"/>
+  <rect x="20.0" y="20.0" width="960.0" height="960.0" fill="none" stroke="#18C8FF" stroke-width="40.0" clip-path="url(#fav-r)"/>
+  <g transform="translate(140.0 140.0) scale(0.72)" fill="#FF3344">
+    <path d="M 62.5 6.9 L 81.3 6.9 L 937.5 820.9 L 937.5 993.1 L 723.2 993.1 L 62.5 358 Z"/>
+    <path d="M 923.5 0 L 937.5 0 L 937.5 700.2 L 565.3 343.3 Z"/>
+    <path d="M 63.6 475.1 L 347.2 747.3 L 87.5 1000 L 61.8 1000 Z"/>
+  </g>
+</svg>
