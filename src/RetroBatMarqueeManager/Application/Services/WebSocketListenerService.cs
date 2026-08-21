@@ -1388,7 +1388,7 @@ public sealed class WebSocketListenerService : BackgroundService
         var sources = new List<InstructionCardCatalog.CardSource>();
         foreach (var card in cards.EnumerateArray())
         {
-            var path = ResolveLocal(Text(card, "Path", "path"));
+            var path = ResolveLocal(Text(card, "Path", "path"), Text(card, "PathRoot", "pathRoot"));
             if (path == null) continue;
             sources.Add(new InstructionCardCatalog.CardSource(path, Text(card, "Role", "role"), ReadCardPanels(card)));
         }
@@ -1583,7 +1583,7 @@ public sealed class WebSocketListenerService : BackgroundService
     private Core.Surfaces.PanelBoardArt? ReadArt(JsonElement view)
     {
         if (view.ValueKind != JsonValueKind.Object) return null;
-        var path = ResolveLocal(Text(view, "Path", "path"));
+        var path = ResolveLocal(Text(view, "Path", "path"), Text(view, "PathRoot", "pathRoot"));
         if (path is null) return null;
 
         var width = Number(view, "Width", "width");
@@ -2210,7 +2210,7 @@ public sealed class WebSocketListenerService : BackgroundService
             if (table.ValueKind != JsonValueKind.Object) return;
             foreach (var asset in table.EnumerateObject())
             {
-                var path = ResolveLocal(Text(asset.Value, "Path", "path"));
+                var path = ResolveLocal(Text(asset.Value, "Path", "path"), Text(asset.Value, "PathRoot", "pathRoot"));
                 if (path != null) kinds[prefix + asset.Name] = path;
             }
         }
@@ -2219,7 +2219,9 @@ public sealed class WebSocketListenerService : BackgroundService
     private string? MediaPath(JsonElement source, string name)
     {
         var node = Child(source, name, name.ToLowerInvariant());
-        return ResolveLocal(node.ValueKind == JsonValueKind.String ? node.GetString() ?? string.Empty : Text(node, "Path", "path"));
+        return ResolveLocal(
+            node.ValueKind == JsonValueKind.String ? node.GetString() ?? string.Empty : Text(node, "Path", "path"),
+            node.ValueKind == JsonValueKind.String ? null : Text(node, "PathRoot", "pathRoot"));
     }
 
     private string? FirstAnimation(JsonElement dmd)
@@ -2228,7 +2230,9 @@ public sealed class WebSocketListenerService : BackgroundService
         if (animations.ValueKind != JsonValueKind.Array) return null;
         foreach (var item in animations.EnumerateArray())
         {
-            var path = ResolveLocal(item.ValueKind == JsonValueKind.String ? item.GetString() ?? string.Empty : Text(item, "Path", "path"));
+            var path = ResolveLocal(
+                item.ValueKind == JsonValueKind.String ? item.GetString() ?? string.Empty : Text(item, "Path", "path"),
+                item.ValueKind == JsonValueKind.String ? null : Text(item, "PathRoot", "pathRoot"));
             if (path != null) return path;
         }
         return null;
@@ -2246,10 +2250,17 @@ public sealed class WebSocketListenerService : BackgroundService
     /// was dropped with no trace: the media was published, and simply never appeared.
     /// The Carbon theme's system art fell exactly there.
     /// </summary>
-    private string? ResolveLocal(string value)
+    private string? ResolveLocal(string value, string? pathRoot = null)
     {
         if (string.IsNullOrWhiteSpace(value) || Uri.TryCreate(value, UriKind.Absolute, out var uri) && !uri.IsFile) return null;
         if (Path.IsPathRooted(value)) return File.Exists(value) ? value : null;
+
+        // HP5: when the stream names the root the path is relative to (PathRoot), go straight to
+        // it — deterministic, and it disambiguates a name that exists under both roots. The
+        // two-root guess below stays as the fallback for an older APIExpose (PathRoot absent, the
+        // default) or if the named root somehow misses.
+        var named = ResolveAgainstNamedRoot(value, pathRoot);
+        if (named != null) return named;
 
         var apiExpose = Path.GetFullPath(Path.Combine(_config.BaseDirectory, "..", "APIExpose", value));
         if (File.Exists(apiExpose)) return apiExpose;
@@ -2265,6 +2276,25 @@ public sealed class WebSocketListenerService : BackgroundService
         }
 
         return retroBat;
+    }
+
+    /// <summary>HP5 — resolve a relative path against the root APIExpose named in PathRoot:
+    /// "apiexpose" = the plugin folder, "retrobat" = the RetroBat root. Null when no usable root
+    /// is named (absent, or "external-local" which lives outside both) or the file is not there,
+    /// so the caller falls back to trying both roots. The two roots match those the fallback
+    /// tries, so a present PathRoot only removes the guess — it never changes where a file is
+    /// found.</summary>
+    private string? ResolveAgainstNamedRoot(string value, string? pathRoot)
+    {
+        var root = (pathRoot ?? string.Empty).Trim().ToLowerInvariant() switch
+        {
+            "apiexpose" => Path.Combine(_config.BaseDirectory, "..", "APIExpose", value),
+            "retrobat" => Path.Combine(_config.BaseDirectory, "..", "..", value),
+            _ => null
+        };
+        if (root == null) return null;
+        var full = Path.GetFullPath(root);
+        return File.Exists(full) ? full : null;
     }
 
     /// <summary>Said once: proof that the second root is used, without a line per media.</summary>
