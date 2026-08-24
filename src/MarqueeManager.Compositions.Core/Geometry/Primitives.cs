@@ -18,7 +18,7 @@ public readonly record struct RectD(double X, double Y, double Width, double Hei
     public override string ToString() => $"({X:0.##},{Y:0.##} {Width:0.##}x{Height:0.##})";
 }
 
-/// <summary>A rectangle expressed as fractions (0..1) of some reference frame —
+/// <summary>A rectangle expressed as fractions (0..1) of some reference frame -
 /// used for protected regions, which travel with the source content.</summary>
 public readonly record struct RelativeRect(double X, double Y, double Width, double Height)
 {

@@ -10,12 +10,12 @@ using Path = System.IO.Path;
 namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
-/// "Mes effets" — the effect composer. An effect is a NAMED, reusable stack of
+/// "Mes effets" - the effect composer. An effect is a NAMED, reusable stack of
 /// sequenced actions: each action has its kind (tint / flash / shake / strobe /
 /// sprites / my webm-gif media), its parameters and its start delay. Two actions
 /// at delay 0 play together ("red veil + shake + explosions"); staggered delays
 /// make a sequence ("red flash THEN a swarm of sprites"). Saved to
-/// media\effects\library.json — games then allocate a signal to an effect name.
+/// media\effects\library.json - games then allocate a signal to an effect name.
 /// </summary>
 public sealed class EffectComposerWindow : Window
 {
@@ -193,8 +193,8 @@ public sealed class EffectComposerWindow : Window
         if (_current == null) return;
         if (_store.IsOfficial(_current))
         {
-            _status.Text = L.T("Les effets fournis (★) ne se suppriment pas — dupliquez-les pour les personnaliser.",
-                "Shipped effects (★) cannot be deleted — duplicate them to customize.");
+            _status.Text = L.T("Les effets fournis (★) ne se suppriment pas - dupliquez-les pour les personnaliser.",
+                "Shipped effects (★) cannot be deleted - duplicate them to customize.");
             _status.Foreground = Ui.Error;
             return;
         }
@@ -221,7 +221,7 @@ public sealed class EffectComposerWindow : Window
         _actionsPanel.Children.Clear();
         if (_current == null || !_effects.TryGetValue(_current, out var actions)) return;
 
-        // rename (shipped effects keep their name — duplicate to customize)
+        // rename (shipped effects keep their name - duplicate to customize)
         var isOfficial = _store.IsOfficial(_current);
         var nameRow = new WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
         var nameLabel = Ui.MutedLabel(L.T("Nom :", "Name:"));
@@ -232,8 +232,8 @@ public sealed class EffectComposerWindow : Window
         nameRow.Children.Add(nameBox);
         if (isOfficial)
         {
-            nameRow.Children.Add(Ui.MutedLabel(L.T("★ effet fourni — dupliquez-le pour le personnaliser librement",
-                "★ shipped effect — duplicate it to customize freely")));
+            nameRow.Children.Add(Ui.MutedLabel(L.T("★ effet fourni - dupliquez-le pour le personnaliser librement",
+                "★ shipped effect - duplicate it to customize freely")));
         }
         else
         {
@@ -468,7 +468,7 @@ public sealed class EffectComposerWindow : Window
             if (action.Media is { Length: > 0 })
             {
                 mediaCount++;
-                continue; // the preview band cannot decode webm — noted below
+                continue; // the preview band cannot decode webm - noted below
             }
             var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(Math.Max(1, action.DelayMs)) };
             var frozen = action;
@@ -497,8 +497,8 @@ public sealed class EffectComposerWindow : Window
     private void SaveLibrary()
     {
         _store.Save(_effects);
-        _status.Text = L.T($"Bibliothèque enregistrée ({_effects.Count} effet(s)) — {_store.LibraryPath}",
-            $"Library saved ({_effects.Count} effect(s)) — {_store.LibraryPath}");
+        _status.Text = L.T($"Bibliothèque enregistrée ({_effects.Count} effet(s)) - {_store.LibraryPath}",
+            $"Library saved ({_effects.Count} effect(s)) - {_store.LibraryPath}");
         _status.Foreground = Ui.Ok;
     }
 

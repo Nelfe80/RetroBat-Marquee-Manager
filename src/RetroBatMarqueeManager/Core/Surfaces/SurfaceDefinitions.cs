@@ -5,7 +5,7 @@ namespace RetroBatMarqueeManager.Core.Surfaces;
 
 /// <summary>One component placed on a surface. Coordinates are FRACTIONS of the
 /// surface (0..1) so a layout survives a resolution change. `When` scopes the
-/// component to a display state — "navigation" (ES browsing), "ingame" (a game
+/// component to a display state - "navigation" (ES browsing), "ingame" (a game
 /// runs) or "both" (default, always shown). `Visible` is the editor's eye toggle
 /// (a hidden layer is kept but never rendered).</summary>
 public sealed record ComponentDefinition(
@@ -39,7 +39,7 @@ public sealed record SurfaceDefinition(
     IReadOnlyList<ComponentDefinition> Components,
     string When = "both")
 {
-    /// <summary>True when the WHOLE surface participates in the display state —
+    /// <summary>True when the WHOLE surface participates in the display state -
     /// its window hides entirely otherwise (e.g. no surface over ES while
     /// browsing, marquee band only ingame…).</summary>
     public bool ActiveIn(string scene)
@@ -52,7 +52,7 @@ public sealed record SurfaceDefinition(
     /// <summary>
     /// True when a component of this type could show at SOME point: it exists and its
     /// eye is on. Building an engine on the mere existence of its component meant a
-    /// lamp scene switched off in both states still ran, and still drove its outputs —
+    /// lamp scene switched off in both states still ran, and still drove its outputs -
     /// hidden is not the same as skipped.
     /// </summary>
     public bool HasVisibleComponent(string type)
@@ -113,7 +113,7 @@ public static class SurfacesDocument
             // unreadable document (the null returns above) triggers the legacy path.
             if (result.Count == 0)
             {
-                logger.LogInformation("Dynamic surfaces document is valid but empty: {Path} — nothing rendered (legacy [Screens] not used)", path);
+                logger.LogInformation("Dynamic surfaces document is valid but empty: {Path} - nothing rendered (legacy [Screens] not used)", path);
                 return result;
             }
             logger.LogInformation("Dynamic surfaces loaded: {Count} surface(s) from {Path}",
@@ -149,7 +149,7 @@ public static class SurfacesDocument
             foreach (var screen in screens.EnumerateArray())
             {
                 if (screen.ValueKind != JsonValueKind.Object) continue;
-                // only an EXPLICIT false excludes — absent/true stays managed
+                // only an EXPLICIT false excludes - absent/true stays managed
                 if (screen.TryGetProperty("managedByMarqueeManager", out var managed)
                     && managed.ValueKind == JsonValueKind.False
                     && screen.TryGetProperty("windowsIndex", out var index)
@@ -258,14 +258,14 @@ public static class SurfacesDocument
 
     /// <summary>
     /// Compatibility bridge (design note §4f). An engine IS scopable like any other
-    /// layer — a surface legitimately carries one lighting engine for ES browsing and
+    /// layer - a surface legitimately carries one lighting engine for ES browsing and
     /// another for play, each placed from its own state in the composition editor.
     ///
     /// But before the split, the ingame events were played by `lighting.engine`, so a
     /// surface written by an earlier Setup expresses "I want the events here" by
     /// carrying the lighting engine alone, whatever scope it gave it. Such a surface
     /// gains an implicit `effects.engine` scoped `both`: the events keep playing where
-    /// they used to. It is a bridge, not a user choice — an explicit `effects.engine`
+    /// they used to. It is a bridge, not a user choice - an explicit `effects.engine`
     /// written by the Setup always wins, with the scope the user gave it.
     /// </summary>
     private static SurfaceDefinition WithImplicitEffectsEngine(SurfaceDefinition surface, ILogger logger)

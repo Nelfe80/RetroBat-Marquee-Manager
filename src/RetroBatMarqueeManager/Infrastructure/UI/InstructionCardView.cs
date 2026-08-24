@@ -10,15 +10,15 @@ namespace RetroBatMarqueeManager.Infrastructure.UI;
 /// <summary>
 /// An instruction card, and the ability to point AT something inside it.
 ///
-/// A card is one drawing holding several entries — the weapons of Ghouls'n Ghosts, the
-/// moves of a character — and APIExpose publishes where each entry sits, as fractions of
+/// A card is one drawing holding several entries - the weapons of Ghouls'n Ghosts, the
+/// moves of a character - and APIExpose publishes where each entry sits, as fractions of
 /// the drawing. When the game announces what the player just picked up, the entry that
 /// names it gets framed: the card stops being a poster and starts answering the question
 /// the player has right now.
 ///
 /// The frame is computed against the DISPLAYED image, not the layer: a card is fitted
 /// inside its zone and letterboxed, so the fractions must be applied to the picture as it
-/// is actually drawn — otherwise the frame drifts off the entry as soon as the zone's
+/// is actually drawn - otherwise the frame drifts off the entry as soon as the zone's
 /// aspect differs from the card's.
 /// </summary>
 public sealed class InstructionCardView : Grid
@@ -48,7 +48,7 @@ public sealed class InstructionCardView : Grid
     /// <summary>The inner picture, which the host feeds like any other image layer.</summary>
     public Image Picture => _image;
 
-    /// <summary>Frames one entry of the card, in fractions of the drawing. Null clears it —
+    /// <summary>Frames one entry of the card, in fractions of the drawing. Null clears it -
     /// which is what browsing must do: a frame left from an earlier announcement would
     /// point at something the player no longer holds.</summary>
     public void SetPanel(double[]? rect)

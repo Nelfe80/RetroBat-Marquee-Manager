@@ -11,11 +11,11 @@ public sealed record GameIdentity(string Rom, string Name);
 /// <summary>
 /// THE identity service rom↔names↔aliases, per system. Three layered sources
 /// (LedManager's cascade), all cached and loaded off the UI thread:
-///  1. APIExpose REST GET /api/v1/gamelists/{system}/games — installed games,
+///  1. APIExpose REST GET /api/v1/gamelists/{system}/games - installed games,
 ///     the names EmulationStation shows;
-///  2. roms\&lt;system&gt;\gamelist.xml — same data read locally;
+///  2. roms\&lt;system&gt;\gamelist.xml - same data read locally;
 ///  3. the APIExpose gamelist pack (resources\gamelist\systems\&lt;sys&gt;_lt.json,
-///     JSONL streamed line by line — NEVER loaded whole, files reach 168 MB) —
+///     JSONL streamed line by line - NEVER loaded whole, files reach 168 MB) -
 ///     adds `fn` (full file name) and `aka` aliases, so a file the user names
 ///     "Metal Slug (World).png" still resolves to mslug.
 /// Serves the game search AND the user-drop-folder resolution.
@@ -61,7 +61,7 @@ public sealed class GameIdentityIndex
         return names;
     }
 
-    /// <summary>alias (id, set, fn, aka, name — normalized) → canonical rom, from the
+    /// <summary>alias (id, set, fn, aka, name - normalized) → canonical rom, from the
     /// gamelist pack JSONL. Heavy (streams the whole file once); cached per system.
     /// Call off the UI thread.</summary>
     public IReadOnlyDictionary<string, string> AliasMap(string system)

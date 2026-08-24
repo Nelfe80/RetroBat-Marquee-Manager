@@ -41,7 +41,7 @@ public sealed class MesSystemesView : UserControl
         var detectedScreens = MarqueeManager.Setup.Detection.ScreenProbe.Detect();
         var engine = new MediaResolutionPreview(pluginRoot, media, assignments);
 
-        // "Mon marquee" — same block as the game sheet: pick the SYSTEM, then
+        // "Mon marquee" - same block as the game sheet: pick the SYSTEM, then
         // the displayed marquee, the surface picker, the creation entry point
         // and the per-surface deletion appear. Each creation is INDEPENDENT
         // per surface.
@@ -59,7 +59,7 @@ public sealed class MesSystemesView : UserControl
         // nothing preselected; only systems with at least one INSTALLED game;
         // mame/fbneo stay listed (they carry their own chains and creations)
         systemPicker.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = L.T("- sélectionner -", "- select -"), Tag = null });
-        // the general template of systems has ALWAYS been one template for all of them —
+        // the general template of systems has ALWAYS been one template for all of them -
         // it was simply edited from inside a system, which read as "this system's". It
         // now has the entry it deserves, above the separator.
         systemPicker.Items.Add(new System.Windows.Controls.ComboBoxItem
@@ -114,7 +114,7 @@ public sealed class MesSystemesView : UserControl
                 var suspended = IsSuspended(surface);
                 if (suspended && showSuspended.IsChecked != true) continue;
                 var dims = MediaResolutionPreview.TargetOf(surface, detectedScreens);
-                var label = $"{surface.Id} ({surface.Category}) — {dims.Width}×{dims.Height}"
+                var label = $"{surface.Id} ({surface.Category}) - {dims.Width}×{dims.Height}"
                             + (suspended ? L.T("  · suspendue", "  · suspended") : "");
                 var item = new System.Windows.Controls.ComboBoxItem { Content = label, Tag = surface.Id };
                 surfacePicker.Items.Add(item);
@@ -164,8 +164,8 @@ public sealed class MesSystemesView : UserControl
             var has = GabaritRenderer.HasGabarit(pluginRoot, cat, surface.Id, GabaritIdentity.SystemScope);
             panel.Children.Add(Ui.MutedLabel(has
                 ? L.T("✓ Un gabarit existe pour tous les systèmes.", "✓ A template exists for all systems.")
-                : L.T("Aucun gabarit — chaque système répond avec ses propres sources.",
-                      "No template — each system answers with its own sources.")));
+                : L.T("Aucun gabarit - chaque système répond avec ses propres sources.",
+                      "No template - each system answers with its own sources.")));
 
             if (has)
             {
@@ -195,7 +195,7 @@ public sealed class MesSystemesView : UserControl
                 : L.T("Créer le gabarit", "Create the template"), (_, _) =>
             {
                 new GameComposerWindow(pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.SystemScope,
-                    L.T($"Gabarit — tous les systèmes (aperçu : {sample})", $"Template — all systems (preview: {sample})"),
+                    L.T($"Gabarit - tous les systèmes (aperçu : {sample})", $"Template - all systems (preview: {sample})"),
                     SystemAssets(pluginRoot, sample), surface.Id, gabaritMode: true,
                     sample: ("systems", sample))
                 {
@@ -257,7 +257,7 @@ public sealed class MesSystemesView : UserControl
                     // saved per surface; it resolves to each system's media at render.
                     // The selected system provides the assets for a concrete preview.
                     new GameComposerWindow(pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.SystemScope,
-                        L.T($"Gabarit — tous les systèmes (aperçu : {system})", $"Template — all systems (preview: {system})"),
+                        L.T($"Gabarit - tous les systèmes (aperçu : {system})", $"Template - all systems (preview: {system})"),
                         SystemAssets(pluginRoot, system), surface.Id, gabaritMode: true,
                         sample: ("systems", system))
                     {
@@ -285,7 +285,7 @@ public sealed class MesSystemesView : UserControl
         Refresh();
 
         // bulk warm-up: render the surface's system gabarit for EVERY listed system
-        // at once (one layout, all systems) — same render as the lazy per-view path.
+        // at once (one layout, all systems) - same render as the lazy per-view path.
         var pregenRow = new WrapPanel { Margin = new System.Windows.Thickness(0, 10, 0, 0) };
         var pregenStatus = Ui.MutedLabel("");
         pregenStatus.VerticalAlignment = System.Windows.VerticalAlignment.Center;
@@ -297,8 +297,8 @@ public sealed class MesSystemesView : UserControl
             var cat = CategoryOf(surface);
             if (!GabaritRenderer.HasGabarit(pluginRoot, cat, surface.Id, GabaritIdentity.SystemScope))
             {
-                pregenStatus.Text = L.T("Aucun gabarit sur cette surface — composez-le d'abord.",
-                    "No gabarit on this surface — compose it first.");
+                pregenStatus.Text = L.T("Aucun gabarit sur cette surface - composez-le d'abord.",
+                    "No gabarit on this surface - compose it first.");
                 return;
             }
             var dims = MediaResolutionPreview.TargetOf(surface, detectedScreens);
@@ -332,8 +332,8 @@ public sealed class MesSystemesView : UserControl
     /// <summary>System-level media: theme logo (wheel), generated marquee/DMD, fanart when present.</summary>
     private static IReadOnlyList<GameAsset> SystemAssets(string pluginRoot, string system)
     {
-        // arcade family (mame, fbneo…): its media — wheel/logo, generated marquee,
-        // fanart — lives under the canonical "arcade" folder, not under the frontend.
+        // arcade family (mame, fbneo…): its media - wheel/logo, generated marquee,
+        // fanart - lives under the canonical "arcade" folder, not under the frontend.
         var mediaSystem = GameMediaCatalog.ArcadeAliases.Contains(system) ? "arcade" : system;
         var root = System.IO.Path.GetFullPath(System.IO.Path.Combine(pluginRoot, "..", "APIExpose", "media", "systems", mediaSystem));
         var assets = new List<GameAsset>();
@@ -355,7 +355,7 @@ public sealed class MesSystemesView : UserControl
         Add("dmd", "DMD généré", "Generated DMD", @"artwork\marquee\generated-system-dmd.png");
 
         // system fanart: the ACTIVE ES THEME carries it (APIExpose's own cascade:
-        // art/background/<system>.* etc. — carbon ships 338 of them). Same lookup
+        // art/background/<system>.* etc. - carbon ships 338 of them). Same lookup
         // here, so the composer offers exactly what the runtime would show.
         if (assets.All(a => a.Key != "fanart") && ThemeSystemFanart(pluginRoot, system) is { } themeFanart)
         {
@@ -397,7 +397,7 @@ public sealed class MesSystemesView : UserControl
 
     /// <summary>Mirror of APIExpose's theme fanart cascade for the ACTIVE theme
     /// (es_settings ThemeSet): &lt;theme&gt;\&lt;sys&gt;\art\background, &lt;theme&gt;\art\background,
-    /// _systemmedia variants — first &lt;system&gt;.* image wins.</summary>
+    /// _systemmedia variants - first &lt;system&gt;.* image wins.</summary>
     private static string? ThemeSystemFanart(string pluginRoot, string system)
     {
         try

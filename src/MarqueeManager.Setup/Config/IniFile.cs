@@ -6,7 +6,7 @@ namespace MarqueeManager.Setup.Config;
 /// <summary>
 /// Line-preserving INI reader/editor: keeps every comment, blank line and ordering,
 /// and only rewrites the keys it is told to. The runtime's config.ini is heavily
-/// commented in French — those comments are user documentation and must survive
+/// commented in French - those comments are user documentation and must survive
 /// every save. Backs up to .bak before writing.
 /// </summary>
 public sealed class IniFile
@@ -115,7 +115,7 @@ public sealed class IniFile
     }
 
     /// <summary>
-    /// Comments a key out instead of deleting it — the value stays visible as
+    /// Comments a key out instead of deleting it - the value stays visible as
     /// documentation (used for *Bounds when the user goes back to fullscreen).
     /// </summary>
     public void CommentOut(string section, string key)

@@ -11,14 +11,14 @@ using Path = System.IO.Path;
 namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
-/// "Gestion des effets pendant la partie" — the game's ingame effects. The .MEM
+/// "Gestion des effets pendant la partie" - the game's ingame effects. The .MEM
 /// signals show as readable "Quand X alors Y" rows on two columns with
 /// provenance badges; clicking one (or "Lier un effet à un signal") opens the
 /// dedicated <see cref="EffectBindingDialog"/>. The card also carries the
 /// per-game policy, the "Mes effets" library access, the link to the .MEM file,
 /// the full default table (unfiltered by genre) and the live ws/ingame monitor.
 /// Overrides are written sparse to overrides\effects\ through
-/// <see cref="EffectsOverrideStore"/> — the runtime reloads them per game.
+/// <see cref="EffectsOverrideStore"/> - the runtime reloads them per game.
 /// </summary>
 public sealed class EffectsCard : UserControl, IDisposable
 {
@@ -106,8 +106,8 @@ public sealed class EffectsCard : UserControl, IDisposable
         if (_genreSlugs.Count > 0)
         {
             card.Children.Add(Ui.MutedLabel(L.T(
-                $"Genre détecté : {string.Join(", ", _genreSlugs)} — les défauts genrés s'appliquent déjà.",
-                $"Detected genre: {string.Join(", ", _genreSlugs)} — genre defaults already apply.")));
+                $"Genre détecté : {string.Join(", ", _genreSlugs)} - les défauts genrés s'appliquent déjà.",
+                $"Detected genre: {string.Join(", ", _genreSlugs)} - genre defaults already apply.")));
         }
 
         // write scope
@@ -153,11 +153,11 @@ public sealed class EffectsCard : UserControl, IDisposable
         else
         {
             card.Children.Add(Ui.MutedLabel(L.T(
-                $"{signals.Count} signaux — cliquez une ligne pour lier/modifier son effet.",
-                $"{signals.Count} signals — click a row to link/edit its effect.")));
+                $"{signals.Count} signaux - cliquez une ligne pour lier/modifier son effet.",
+                $"{signals.Count} signals - click a row to link/edit its effect.")));
         }
 
-        // the .MEM file behind all this — a compact badge, full path on hover
+        // the .MEM file behind all this - a compact badge, full path on hover
         if (memPath is { Length: > 0 })
         {
             var badge = new Border
@@ -292,7 +292,7 @@ public sealed class EffectsCard : UserControl, IDisposable
         { Foreground = Ui.Foreground, FontWeight = FontWeights.Bold });
         if (signal.Description.Length > 0)
         {
-            sentence.Inlines.Add(new System.Windows.Documents.Run($" — {signal.Description}") { Foreground = Ui.Muted, FontSize = 11 });
+            sentence.Inlines.Add(new System.Windows.Documents.Run($" - {signal.Description}") { Foreground = Ui.Muted, FontSize = 11 });
         }
         sentence.Inlines.Add(new System.Windows.Documents.Run(L.T("  alors  ", "  then  ")) { Foreground = Ui.Muted });
         if (rule == null)
@@ -430,7 +430,7 @@ public sealed class EffectsCard : UserControl, IDisposable
             {
                 _monitorStatus.Text = connected
                     ? L.T("à l'écoute de ws/ingame", "listening on ws/ingame")
-                    : L.T("déconnecté — nouvelle tentative…", "disconnected — retrying…");
+                    : L.T("déconnecté - nouvelle tentative…", "disconnected - retrying…");
             }
         });
         _monitor.EventReceived += evt => Dispatcher.BeginInvoke(() =>

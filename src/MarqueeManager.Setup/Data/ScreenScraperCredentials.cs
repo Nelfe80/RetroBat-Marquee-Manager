@@ -6,13 +6,13 @@ using System.Xml.Linq;
 namespace MarqueeManager.Setup.Data;
 
 /// <summary>
-/// ScreenScraper credential split — same doctrine as APIExpose:
+/// ScreenScraper credential split - same doctrine as APIExpose:
 ///
 /// DEV credentials (the developer's, never in the repo, never in the UI):
 ///  1) environment variables APIEXPOSE_SCREENSCRAPER_DEV_ID / _DEV_PASSWORD,
-///  2) ..\APIExpose\.env (untracked, format KEY = 'value') — the dev machine,
+///  2) ..\APIExpose\.env (untracked, format KEY = 'value') - the dev machine,
 ///  3) EmbeddedSecretDefaults.g.cs, GENERATED at build into obj\ from that same
-///     .env (empty constants otherwise) — distributed binaries, nothing committed.
+///     .env (empty constants otherwise) - distributed binaries, nothing committed.
 /// No dev credentials → the ScreenScraper source simply doesn't show up.
 ///
 /// USER credentials (ssid/sspassword, the only ones visible in Options):

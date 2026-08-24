@@ -4,7 +4,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Rendering
 {
     public enum LayScaleMode
     {
-        /// <summary>refW==deviceW && refH==deviceH — no scaling.</summary>
+        /// <summary>refW==deviceW && refH==deviceH - no scaling.</summary>
         Direct,
         /// <summary>Proportional scale with letterbox (black bars).</summary>
         Fit,

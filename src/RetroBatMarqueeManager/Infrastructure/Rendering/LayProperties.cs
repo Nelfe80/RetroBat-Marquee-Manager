@@ -1,7 +1,7 @@
 namespace RetroBatMarqueeManager.Infrastructure.Rendering
 {
     /// <summary>
-    /// ISO ra.lua properties bag — covers image, shape, text and gif objects.
+    /// ISO ra.lua properties bag - covers image, shape, text and gif objects.
     /// </summary>
     public class LayProperties
     {
@@ -16,7 +16,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Rendering
         /// <summary>0.0 transparent → 1.0 opaque. ISO opacity_decimal in Lua.</summary>
         public float Opacity   { get; set; } = 1f;
 
-        // ── Anchor (semantic placement — resolver calculates X/Y) ─────────────
+        // ── Anchor (semantic placement - resolver calculates X/Y) ─────────────
         /// <summary>
         /// Optional semantic anchor. When set, X/Y are treated as offsets from anchor.
         /// Values: top-left | top-center | top-right |

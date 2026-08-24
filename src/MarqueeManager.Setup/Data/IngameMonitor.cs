@@ -19,7 +19,7 @@ public sealed class IngameMonitor : IDisposable
     private readonly Uri _uri;
     private readonly CancellationTokenSource _cts = new();
 
-    /// <summary>Raised on a worker thread — marshal to the dispatcher.</summary>
+    /// <summary>Raised on a worker thread - marshal to the dispatcher.</summary>
     public event Action<IngameEvent>? EventReceived;
 
     /// <summary>Connection state changes (true = listening).</summary>

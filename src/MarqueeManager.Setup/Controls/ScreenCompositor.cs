@@ -11,13 +11,13 @@ namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
 /// "Edit this screen's surfaces": every surface hosted by the screen is a
-/// draggable/resizable rectangle at scale — this is where x,y live. Surfaces can
+/// draggable/resizable rectangle at scale - this is where x,y live. Surfaces can
 /// be ADDED (typed, with the category's default components) and REMOVED here;
 /// marquee surfaces offer the standard APIExpose dimensions as presets
 /// (1920×360, 1280×400, 920×360). Drag to move, bottom-right handle to resize,
 /// wheel to zoom; magnetic guides snap to the screen and neighbor edges. On the
 /// screen RetroBat lives on, adding a surface shows a masking warning (ES draws
-/// fullscreen — unless the ES theme is designed for it, the surface covers it).
+/// fullscreen - unless the ES theme is designed for it, the surface covers it).
 /// </summary>
 public sealed class ScreenCompositor : Window
 {
@@ -65,8 +65,8 @@ public sealed class ScreenCompositor : Window
         _hostsGame = hostsGame;
         _selected = focused ?? Hosted().FirstOrDefault();
 
-        Title = L.T($"Éditer les surfaces de l'écran {screenIndex} — {screen.Bounds.Width}×{screen.Bounds.Height}",
-            $"Edit the surfaces of screen {screenIndex} — {screen.Bounds.Width}×{screen.Bounds.Height}");
+        Title = L.T($"Éditer les surfaces de l'écran {screenIndex} - {screen.Bounds.Width}×{screen.Bounds.Height}",
+            $"Edit the surfaces of screen {screenIndex} - {screen.Bounds.Width}×{screen.Bounds.Height}");
         Width = 1020;
         Height = 740;
         WindowState = WindowState.Maximized;

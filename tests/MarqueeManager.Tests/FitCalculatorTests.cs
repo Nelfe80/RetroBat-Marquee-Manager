@@ -16,7 +16,7 @@ public sealed class FitCalculatorTests
     private FitDecision Calc(PixelSize source, PixelSize target, FitPolicy policy, ProtectedRegions? protectedRegions = null)
         => _fit.Calculate(source, target, policy, protectedRegions ?? ProtectedRegions.None);
 
-    // FIT-01 — contain, different ratios: whole image, no crop, letterbox.
+    // FIT-01 - contain, different ratios: whole image, no crop, letterbox.
     [Fact]
     public void Contain_DifferentRatios_ShowsWholeImageWithLetterbox()
     {
@@ -32,7 +32,7 @@ public sealed class FitCalculatorTests
         Assert.False(d.FellBack);
     }
 
-    // FIT-02 — cover, different ratios: surface covered, crop announced.
+    // FIT-02 - cover, different ratios: surface covered, crop announced.
     [Fact]
     public void Cover_DifferentRatios_CoversSurfaceAndAnnouncesCrop()
     {
@@ -46,7 +46,7 @@ public sealed class FitCalculatorTests
         Assert.Equal(360, d.SourceVisible.Height, 3);
     }
 
-    // FIT-03 — fill-height: exact target height, single factor.
+    // FIT-03 - fill-height: exact target height, single factor.
     [Fact]
     public void FillHeight_MakesHeightExact()
     {
@@ -56,7 +56,7 @@ public sealed class FitCalculatorTests
         Assert.Equal(1.0 / 3, d.Scale, 4);
     }
 
-    // FIT-04 — fill-width: exact target width, single factor.
+    // FIT-04 - fill-width: exact target width, single factor.
     [Fact]
     public void FillWidth_MakesWidthExact()
     {
@@ -66,7 +66,7 @@ public sealed class FitCalculatorTests
         Assert.Equal(1920.0 / 800, d.Scale, 4);
     }
 
-    // FIT-05 — dynamic under threshold: covering framing accepted.
+    // FIT-05 - dynamic under threshold: covering framing accepted.
     [Fact]
     public void Dynamic_UnderThreshold_AcceptsCover()
     {
@@ -78,7 +78,7 @@ public sealed class FitCalculatorTests
         Assert.Equal(0.10, d.CropY, 4);
     }
 
-    // FIT-06 — dynamic above threshold: falls back to contain.
+    // FIT-06 - dynamic above threshold: falls back to contain.
     [Fact]
     public void Dynamic_AboveThreshold_FallsBackToContain()
     {
@@ -91,7 +91,7 @@ public sealed class FitCalculatorTests
         Assert.Equal(0, d.CropY, 4);             // contain: nothing cropped
     }
 
-    // FIT-07 — crop exactly at the threshold is accepted.
+    // FIT-07 - crop exactly at the threshold is accepted.
     [Fact]
     public void Dynamic_CropEqualToThreshold_IsAccepted()
     {
@@ -103,7 +103,7 @@ public sealed class FitCalculatorTests
         Assert.Equal(0.30, d.CropY, 4);
     }
 
-    // FIT-08 — same ratio: no crop in any covering mode.
+    // FIT-08 - same ratio: no crop in any covering mode.
     [Fact]
     public void SameRatio_NoCrop()
     {
@@ -113,7 +113,7 @@ public sealed class FitCalculatorTests
         Assert.Equal(0, d.CropPercent, 4);
     }
 
-    // FIT-09 — low definition: upscaling is reflected in the factor.
+    // FIT-09 - low definition: upscaling is reflected in the factor.
     [Fact]
     public void LowResolution_ReportsUpscaleFactor()
     {
@@ -123,7 +123,7 @@ public sealed class FitCalculatorTests
         Assert.True(d.Scale > 1);
     }
 
-    // FIT-10 — a square (circle/grid) stays square in every mode.
+    // FIT-10 - a square (circle/grid) stays square in every mode.
     [Theory]
     [InlineData(FitMode.Contain)]
     [InlineData(FitMode.Cover)]
@@ -136,7 +136,7 @@ public sealed class FitCalculatorTests
         Assert.Equal(1.0, d.TargetRect.Width / d.TargetRect.Height, 4);
     }
 
-    // FIT-11 — vertical surface: symmetric behavior (mirror of FIT-02).
+    // FIT-11 - vertical surface: symmetric behavior (mirror of FIT-02).
     [Fact]
     public void VerticalSurface_SymmetricCrop()
     {
@@ -147,7 +147,7 @@ public sealed class FitCalculatorTests
         Assert.Equal(0, d.CropY, 4);
     }
 
-    // FIT-12 — no stretch: the target rect always keeps the source aspect ratio.
+    // FIT-12 - no stretch: the target rect always keeps the source aspect ratio.
     [Theory]
     [InlineData(FitMode.Contain)]
     [InlineData(FitMode.Cover)]

@@ -5,7 +5,7 @@ namespace RetroBatMarqueeManager.Application.Lighting;
 /// <summary>
 /// Normalizes the scraped genre metadata into stable slugs (shmup, beatemup,
 /// racing…) used by the genre-scoped ingame effect rules. The table lives in
-/// resources/lighting/genres.map.xml — per project doctrine no family truth is
+/// resources/lighting/genres.map.xml - per project doctrine no family truth is
 /// hard-coded: ScreenScraper numeric ids (language independent, preferred) and
 /// label substrings (FR/EN fallback) both live in the data file.
 /// </summary>

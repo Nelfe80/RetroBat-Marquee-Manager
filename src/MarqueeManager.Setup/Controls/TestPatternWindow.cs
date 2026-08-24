@@ -6,7 +6,7 @@ namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
 /// Test pattern ("mire") window: grid, border, center cross and a label, either
-/// fullscreen on a display or restricted to a surface zone — this is how the user
+/// fullscreen on a display or restricted to a surface zone - this is how the user
 /// verifies a *Bounds rectangle really lands where he expects, before saving it.
 /// Click or Escape closes it.
 /// </summary>
@@ -88,7 +88,7 @@ public sealed class TestPatternWindow : Window
 
             var dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
             var title = new FormattedText(
-                $"{_text} — {_pixelWidth}x{_pixelHeight}",
+                $"{_text} - {_pixelWidth}x{_pixelHeight}",
                 System.Globalization.CultureInfo.CurrentUICulture,
                 FlowDirection.LeftToRight,
                 new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal),

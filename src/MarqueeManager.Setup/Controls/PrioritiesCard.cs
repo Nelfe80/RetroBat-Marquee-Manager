@@ -56,9 +56,9 @@ public sealed class PrioritiesCard : UserControl
         card.Children.Add(Ui.SectionHeader(L.T("Priorités par système", "Per-system priorities")));
         card.Children.Add(Ui.MutedLabel(L.T(
             "Pour chaque catégorie puis chaque système, l'ordre des sources : la première disponible s'affiche. "
-            + "Déposez des fichiers (glisser-déposer ici) dans « Mon dossier » — noms résolus par alias.",
+            + "Déposez des fichiers (glisser-déposer ici) dans « Mon dossier » - noms résolus par alias.",
             "For each category then each system, the source order: the first available one is displayed. "
-            + "Drop files here (drag & drop) into “My folder” — names resolve through aliases.")));
+            + "Drop files here (drag & drop) into “My folder” - names resolve through aliases.")));
 
         var pickers = new WrapPanel { Margin = new Thickness(0, 4, 0, 4) };
         foreach (var (key, fr, en) in new[]
@@ -120,8 +120,8 @@ public sealed class PrioritiesCard : UserControl
         {
             _assignments.SetChain(Category(), ScopeSystem(), _chain);
             _assignments.Save();
-            _status.Text = L.T("Priorités enregistrées — appliquées à la prochaine sélection.",
-                "Priorities saved — applied at the next selection.");
+            _status.Text = L.T("Priorités enregistrées - appliquées à la prochaine sélection.",
+                "Priorities saved - applied at the next selection.");
             _status.Foreground = Ui.Ok;
             RefreshCoverage();
         }, primary: true));
@@ -136,10 +136,10 @@ public sealed class PrioritiesCard : UserControl
         var folderGroup = Group(card, L.T("MON DOSSIER", "MY FOLDER"));
         var notice = Ui.MutedLabel(L.T(
             "Déposez ici vos médias (images PNG/JPG ou vidéos MP4) : un fichier par jeu, nommé comme la rom "
-            + "(« mslug.png »), comme le titre du jeu (« Metal Slug (World).png ») ou n'importe quel alias — "
+            + "(« mslug.png »), comme le titre du jeu (« Metal Slug (World).png ») ou n'importe quel alias - "
             + "le nom est résolu automatiquement. Ils passent devant les autres sources dès que « Mon dossier » est dans la chaîne.",
             "Drop your media here (PNG/JPG images or MP4 videos): one file per game, named after the rom "
-            + "(“mslug.png”), the game title (“Metal Slug (World).png”) or any alias — "
+            + "(“mslug.png”), the game title (“Metal Slug (World).png”) or any alias - "
             + "the name resolves automatically. They outrank other sources as soon as “My folder” is in the chain."));
         notice.TextWrapping = TextWrapping.Wrap;
         folderGroup.Children.Add(notice);
@@ -367,7 +367,7 @@ public sealed class PrioritiesCard : UserControl
 
     private async Task TestChainAsync()
     {
-        // "Global" tests the default chain on a cross-system sample — no more
+        // "Global" tests the default chain on a cross-system sample - no more
         // "pick a system" dead end; results (and errors) land right under the button
         var system = ScopeSystem();
         var category = Category();
@@ -401,7 +401,7 @@ public sealed class PrioritiesCard : UserControl
     }
 
     /// <summary>Setup-side mirror of the runtime chain walk, on the media library
-    /// files — enough to show WHICH source would win, without launching ES.</summary>
+    /// files - enough to show WHICH source would win, without launching ES.</summary>
     private string ResolveBadge(string category, List<string> chain, string system, string rom)
     {
         foreach (var source in chain)

@@ -6,19 +6,19 @@
 
 ## What MarqueeManager does
 
-- **Five display surfaces**: marquee, topper, instruction card, DMD and LCD — each on the Windows screen of your choice.
-- **Virtual or physical DMD, your choice**: a DMD window on any screen, or a real ZeDMD panel (and compatibles) with automatic firmware optimization and crisp 128×32 rendering — both display exactly the same content.
+- **Five display surfaces**: marquee, topper, instruction card, DMD and LCD - each on the Windows screen of your choice.
+- **Virtual or physical DMD, your choice**: a DMD window on any screen, or a real ZeDMD panel (and compatibles) with automatic firmware optimization and crisp 128×32 rendering - both display exactly the same content.
 - **Real time**: live scores, timers, RetroAchievements notifications and challenges, MAME `.lay` layout lamps.
-- **Zero scraping**: all media and data come from APIExpose — MarqueeManager contacts no external API and generates no media.
+- **Zero scraping**: all media and data come from APIExpose - MarqueeManager contacts no external API and generates no media.
 
 ## Where to start?
 
 <div class="grid cards" markdown>
 
-- **[Getting started](premiers-pas.md)** — install MarqueeManager in 5 minutes.
-- **[My setup](mon-setup.md)** — the map of your screens: one type per screen and everything works.
-- **[DMD and ZeDMD](dmd.md)** — tune your DMD, virtual or physical.
-- **[Troubleshooting](depannage.md)** — solutions to common issues.
+- **[Getting started](premiers-pas.md)** - install MarqueeManager in 5 minutes.
+- **[My setup](mon-setup.md)** - the map of your screens: one type per screen and everything works.
+- **[DMD and ZeDMD](dmd.md)** - tune your DMD, virtual or physical.
+- **[Troubleshooting](depannage.md)** - solutions to common issues.
 
 </div>
 
@@ -26,7 +26,7 @@
 
 ![The game lives, so do your screens](assets/flow-game-to-screens.svg)
 
-??? note "Under the hood — the full pipeline"
+??? note "Under the hood - the full pipeline"
 
     ```text
     APIExpose (media + data, real time)

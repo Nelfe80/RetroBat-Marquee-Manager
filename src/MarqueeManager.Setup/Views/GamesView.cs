@@ -33,7 +33,7 @@ public sealed class GamesView : UserControl, IDisposable
     private Dictionary<string, HashSet<string>> _present = new(StringComparer.OrdinalIgnoreCase);
     private int _openSequence;
 
-    /// <summary>Surface picked in the "Mon marquee" card — the graphic creation
+    /// <summary>Surface picked in the "Mon marquee" card - the graphic creation
     /// targets THIS surface (each creation is independent per surface).</summary>
     private string? _selectedSurfaceId;
 
@@ -140,7 +140,7 @@ public sealed class GamesView : UserControl, IDisposable
                 _present = present;
 
                 // fill the system picker with EVERY system that has installed
-                // roms (media presence not required; arcade family grouped) —
+                // roms (media presence not required; arcade family grouped) -
                 // nothing preselected: the user picks explicitly
                 _systems.Items.Clear();
                 _systems.Items.Add(new ComboBoxItem { Content = L.T("- sélectionner -", "- select -"), Tag = "" });
@@ -209,7 +209,7 @@ public sealed class GamesView : UserControl, IDisposable
     private string SelectedSystem() => (_systems.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
 
     /// <summary>Display names (ES gamelist / pack) loaded once per system, off the
-    /// UI thread — the search matches rom AND name as soon as they arrive.</summary>
+    /// UI thread - the search matches rom AND name as soon as they arrive.</summary>
     private async Task EnsureNamesAsync(string system)
     {
         if (system.Length == 0 || _identity == null || _namesCache.ContainsKey(system)) return;
@@ -221,13 +221,13 @@ public sealed class GamesView : UserControl, IDisposable
                 var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 foreach (var identity in await _identity.NamesAsync(system)) result.TryAdd(identity.Rom, identity.Name);
 
-                // the gamelist pack fills the rest — comprehensive for arcade families
+                // the gamelist pack fills the rest - comprehensive for arcade families
                 // whose members split across roms folders (llander → "Lunar Lander"),
                 // so a search by name finds games the per-folder gamelist never listed
                 foreach (var (rom, name) in _identity.PackNames(system)) result.TryAdd(rom, name);
 
                 // last resort: the media library metadata fills any rom still missing
-                // (bounded — one small json per missing rom)
+                // (bounded - one small json per missing rom)
                 var mediaRoms = _allGames.Where(g => g.System.Equals(system, StringComparison.OrdinalIgnoreCase))
                     .Select(g => g.Rom);
                 var budget = 800;
@@ -268,7 +268,7 @@ public sealed class GamesView : UserControl, IDisposable
     /// <summary>
     /// The "system, no game" level of My games: the general template that serves EVERY
     /// game of this system. It used to be reachable only from inside a game's sheet,
-    /// where it sat among cards about that one game — the scope mix that made "who does
+    /// where it sat among cards about that one game - the scope mix that made "who does
     /// what" unreadable.
     /// </summary>
     /// <summary>Decoded fully on load: the file must not stay locked, the renderer
@@ -351,8 +351,8 @@ public sealed class GamesView : UserControl, IDisposable
         if (surfaces.Count == 0)
         {
             panel.Children.Add(Ui.MutedLabel(L.T(
-                "Aucune surface active — activez un écran dans « Mon setup ».",
-                "No active surface — enable a screen in “My setup”.")));
+                "Aucune surface active - activez un écran dans « Mon setup ».",
+                "No active surface - enable a screen in “My setup”.")));
             _gameHost.Children.Add(Ui.Card(panel));
             return;
         }
@@ -393,10 +393,10 @@ public sealed class GamesView : UserControl, IDisposable
             {
                 (true, true) => L.T("✓ Un gabarit existe pour tous les jeux.", "✓ A template exists for all games."),
                 (true, false) => L.T("✓ Un gabarit général existe pour ce système.", "✓ A general template exists for this system."),
-                (false, true) => L.T("Aucun gabarit pour tous les jeux — chaque système, puis chaque jeu, répond pour lui-même.",
-                                     "No template for all games — each system, then each game, answers for itself."),
-                (false, false) => L.T("Aucun gabarit général pour ce système — chaque jeu utilise ses propres sources.",
-                                      "No general template for this system — each game uses its own sources.")
+                (false, true) => L.T("Aucun gabarit pour tous les jeux - chaque système, puis chaque jeu, répond pour lui-même.",
+                                     "No template for all games - each system, then each game, answers for itself."),
+                (false, false) => L.T("Aucun gabarit général pour ce système - chaque jeu utilise ses propres sources.",
+                                      "No general template for this system - each game uses its own sources.")
             }));
             if (!allGames)
             {
@@ -444,8 +444,8 @@ public sealed class GamesView : UserControl, IDisposable
                 var assets = sample != null ? _media.ListAssets(sample.System, sample.Rom) : new List<GameAsset>();
                 new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, scope,
                     allGames
-                        ? L.T("Gabarit — tous les jeux", "Template — all games")
-                        : L.T($"Gabarit général — jeux {system}", $"General template — {system} games"),
+                        ? L.T("Gabarit - tous les jeux", "Template - all games")
+                        : L.T($"Gabarit général - jeux {system}", $"General template - {system} games"),
                     assets, surfaceId, gabaritMode: true,
                     sample: sample is null ? null : (sample.System, sample.Rom))
                 {
@@ -462,7 +462,7 @@ public sealed class GamesView : UserControl, IDisposable
         _gameHost.Children.Add(Ui.Card(panel));
 
         // What every game of this system shows by DEFAULT. The cards need a game to have
-        // anything to draw, so they resolve on the sample — but the click is written for
+        // anything to draw, so they resolve on the sample - but the click is written for
         // the whole system, and the banner says so rather than leaving it to be guessed.
         if (surfaceId == null || allGames) return;
         var surfaceModel = surfaces.FirstOrDefault(x => x.Id.Equals(surfaceId, StringComparison.OrdinalIgnoreCase));
@@ -474,8 +474,8 @@ public sealed class GamesView : UserControl, IDisposable
         chainPanel.Children.Add(Ui.SectionHeader(L.T($"Par défaut pour tous les jeux de « {system} »",
             $"Default for all games of “{system}”")));
         chainPanel.Children.Add(Ui.MutedLabel(L.T(
-            $"Cliquez la source à privilégier : elle s'applique à CHAQUE jeu du système. Aperçu résolu sur {sampleForChain.Rom}, dont ce réglage ne décide pas seul — sa propre fiche le remplace.",
-            $"Click the source to prefer: it applies to EVERY game of the system. Previewed on {sampleForChain.Rom}, which this setting does not decide alone — its own card overrides it.")));
+            $"Cliquez la source à privilégier : elle s'applique à CHAQUE jeu du système. Aperçu résolu sur {sampleForChain.Rom}, dont ce réglage ne décide pas seul - sa propre fiche le remplace.",
+            $"Click the source to prefer: it applies to EVERY game of the system. Previewed on {sampleForChain.Rom}, which this setting does not decide alone - its own card overrides it.")));
         var chainCard = new ResolutionCard(engine);
         var wholeSystem = engine.GameContext(surfaceModel, ScreenProbe.Detect(), system, sampleForChain.Rom)
             with { WholeSystem = true };
@@ -505,7 +505,7 @@ public sealed class GamesView : UserControl, IDisposable
         _ = EnsureNamesAsync(system);
 
         // LedManager engine: the candidates are the INSTALLED ROMS of the system
-        // (media presence is NOT required — llander has no media folder and must
+        // (media presence is NOT required - llander has no media folder and must
         // still be findable), matched on rom OR display name once names load
         var candidates = _present.TryGetValue(system, out var installed)
             ? (IEnumerable<string>)installed
@@ -552,7 +552,7 @@ public sealed class GamesView : UserControl, IDisposable
 
     // ================= per-game cards =================
 
-    /// <summary>Everything the game sheet needs, read OFF the UI thread — the
+    /// <summary>Everything the game sheet needs, read OFF the UI thread - the
     /// click shows a spinner instantly instead of freezing on I/O.</summary>
     private sealed record GamePreload(
         string Name, string? Genre, string? GenreIds,
@@ -619,14 +619,14 @@ public sealed class GamesView : UserControl, IDisposable
         _gameHost.Children.Add(Ui.Card(header));
 
         // card order: fetch media online FIRST (it feeds the composer), then the
-        // compositions, lamps, lighting — and the ingame effects LAST
+        // compositions, lamps, lighting - and the ingame effects LAST
         var ini = IniFile.Load(PluginPaths.ConfigPath(_pluginRoot));
         var scraper = new MediaScraperService(_pluginRoot, key => ini.Get("Scraper", key, ""));
         _gameHost.Children.Add(Ui.Card(new ScrapeCard(scraper, entry.System, entry.Rom, data.Name,
             (path, _) =>
             {
-                _status.Text = L.T($"Téléchargé : {Path.GetFileName(path)} — proposé dans le compositeur (médias téléchargés).",
-                    $"Downloaded: {Path.GetFileName(path)} — offered in the composer (downloaded media).");
+                _status.Text = L.T($"Téléchargé : {Path.GetFileName(path)} - proposé dans le compositeur (médias téléchargés).",
+                    $"Downloaded: {Path.GetFileName(path)} - offered in the composer (downloaded media).");
                 _status.Foreground = Ui.Ok;
             })));
 
@@ -640,7 +640,7 @@ public sealed class GamesView : UserControl, IDisposable
             // FIRST and default when it exists: the artwork the lamp regions were
             // measured on. The runtime lights THAT image whatever the resolution chain
             // produced, so it is the only background on which placing lamps means
-            // anything — offering anything else first would let the user aim at an
+            // anything - offering anything else first would let the user aim at an
             // image that is never displayed.
             var calibrated = SceneLampsCard.CalibratedBackground(_pluginRoot, entry.Rom);
             if (calibrated != null)
@@ -702,7 +702,7 @@ public sealed class GamesView : UserControl, IDisposable
         _ => "marquees"
     };
 
-    /// <summary>The flattened composition of the SELECTED surface for this game — the
+    /// <summary>The flattened composition of the SELECTED surface for this game - the
     /// image the lighting engine lights when the surface stacks bakeable layers under
     /// it. Rendered lazily by the runtime, so it exists once the game has been browsed.
     /// Both system spellings are tried (the runtime names the folder after what the
@@ -731,7 +731,7 @@ public sealed class GamesView : UserControl, IDisposable
 
         var assignments = new CompositionAssignments(_pluginRoot);
 
-        // surface picker only — the preview and the compose/delete actions live on
+        // surface picker only - the preview and the compose/delete actions live on
         // the resolution cards below (like Mes systèmes)
         var surfacesStore = new SurfacesStore(_pluginRoot);
         var surfaces = surfacesStore.Load();
@@ -778,7 +778,7 @@ public sealed class GamesView : UserControl, IDisposable
         card.Children.Add(surfaceRow);
 
         // shared block card: what displays for THIS game on the picked surface, and
-        // the per-source "Use" overrides — persisted PER GAME in media-presentation.json
+        // the per-source "Use" overrides - persisted PER GAME in media-presentation.json
         var engine = new MediaResolutionPreview(_pluginRoot, _media, assignments);
         var screens = ScreenProbe.Detect();
         var resolutionCard = new ResolutionCard(engine);
@@ -808,7 +808,7 @@ public sealed class GamesView : UserControl, IDisposable
                     // general template composed with the current game's assets as a
                     // concrete preview; it applies to every game of THIS system (per-system)
                     new GameComposerWindow(_pluginRoot, GabaritIdentity.SystemId, GabaritIdentity.GameScopeFor(entry.System),
-                        L.T($"Gabarit général — jeux {entry.System} (aperçu : {entry.Rom})", $"General template — {entry.System} games (preview: {entry.Rom})"),
+                        L.T($"Gabarit général - jeux {entry.System} (aperçu : {entry.Rom})", $"General template - {entry.System} games (preview: {entry.Rom})"),
                         data.Assets, s.Id, gabaritMode: true,
                         sample: (entry.System, entry.Rom))
                     {
@@ -838,7 +838,7 @@ public sealed class GamesView : UserControl, IDisposable
         card.Children.Add(resolutionCard);
 
         // no separate list below: the "Ma création" card shows this surface's creation
-        // in its own preview with Édite/Supprimer — switch the surface to see each one
+        // in its own preview with Édite/Supprimer - switch the surface to see each one
 
         _gameHost.Children.Add(Ui.Card(card));
     }
@@ -878,15 +878,15 @@ public sealed class GamesView : UserControl, IDisposable
                     $"Locked to marquee screen {screenIndex} ({screen.Bounds.Width}×{screen.Bounds.Height})."));
         }
 
-        return (1920, 360, L.T("Aucun écran marquee configuré — format bandeau 1920×360 par défaut.",
-            "No marquee screen configured — defaulting to a 1920×360 banner."));
+        return (1920, 360, L.T("Aucun écran marquee configuré - format bandeau 1920×360 par défaut.",
+            "No marquee screen configured - defaulting to a 1920×360 banner."));
     }
 
     private void DeleteComposition(GameEntry entry)
     {
         _projects.Delete(entry.System, entry.Rom);
-        _status.Text = L.T("Création graphique supprimée — le marquee scrapé/généré reprend la main.",
-            "Composition deleted — the scraped/generated marquee takes over again.");
+        _status.Text = L.T("Création graphique supprimée - le marquee scrapé/généré reprend la main.",
+            "Composition deleted - the scraped/generated marquee takes over again.");
         _status.Foreground = Ui.Muted;
         if (_current != null)
         {

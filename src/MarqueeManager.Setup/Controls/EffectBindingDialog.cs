@@ -9,10 +9,10 @@ using Path = System.IO.Path;
 namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
-/// "Link an effect to a game signal" — the dedicated binding editor (RetroCreator
-/// flows-mode logic): pick the MEM signal, then what it triggers — a simple
+/// "Link an effect to a game signal" - the dedicated binding editor (RetroCreator
+/// flows-mode logic): pick the MEM signal, then what it triggers - a simple
 /// effect (flash, veil, sprite swarm with size/growth/placement…) or one of the
-/// named effects of "Mes effets" — preview it, save. One binding per dialog.
+/// named effects of "Mes effets" - preview it, save. One binding per dialog.
 /// </summary>
 public sealed class EffectBindingDialog : Window
 {
@@ -58,7 +58,7 @@ public sealed class EffectBindingDialog : Window
     private MemSignal? _signal;
     private EffectRule _draft = new();
 
-    /// <summary>True when a binding was saved or removed — the caller refreshes.</summary>
+    /// <summary>True when a binding was saved or removed - the caller refreshes.</summary>
     public bool Changed { get; private set; }
 
     public EffectBindingDialog(string pluginRoot, string spritesDir, IReadOnlyList<MemSignal> signals,
@@ -91,7 +91,7 @@ public sealed class EffectBindingDialog : Window
         {
             var item = new ComboBoxItem
             {
-                Content = signal.Action + (signal.Description.Length > 0 ? $" — {signal.Description}" : ""),
+                Content = signal.Action + (signal.Description.Length > 0 ? $" - {signal.Description}" : ""),
                 Tag = signal
             };
             signalPicker.Items.Add(item);
@@ -245,7 +245,7 @@ public sealed class EffectBindingDialog : Window
             PickerFor(line2, "Motion", Motions, draft.Motion, v => draft.Motion = v);
             simple.Children.Add(line2);
 
-            // size / growth / placement — the pixel-art knobs
+            // size / growth / placement - the pixel-art knobs
             var line2b = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
             var scalePicker = Ui.ComboBox(110);
             foreach (var percent in new[] { 100, 150, 200, 300, 400, 500, 750, 1000 })
@@ -329,8 +329,8 @@ public sealed class EffectBindingDialog : Window
             Changed = true;
         }
         SetSignal(_signal);
-        _status.Text = L.T($"{_signal.Action} : réglage {_scopeLabel} retiré — le défaut reprend.",
-            $"{_signal.Action}: {_scopeLabel} tweak removed — the default takes over.");
+        _status.Text = L.T($"{_signal.Action} : réglage {_scopeLabel} retiré - le défaut reprend.",
+            $"{_signal.Action}: {_scopeLabel} tweak removed - the default takes over.");
         _status.Foreground = Ui.Muted;
     }
 

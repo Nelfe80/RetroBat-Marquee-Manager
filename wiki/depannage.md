@@ -8,7 +8,7 @@
 
 ## Le DMD est flou
 
-Vos médias DMD sont probablement générés en 256×64 pour un panneau 128×32. Réglez le profil de génération côté APIExpose et purgez les anciens fichiers — voir [DMD — un rendu net](dmd.md#un-rendu-net-en-12832).
+Vos médias DMD sont probablement générés en 256×64 pour un panneau 128×32. Réglez le profil de génération côté APIExpose et purgez les anciens fichiers - voir [DMD - un rendu net](dmd.md#un-rendu-net-en-12832).
 
 ## Le ZeDMD n'est pas détecté
 
@@ -17,7 +17,7 @@ Vos médias DMD sont probablement générés en 256×64 pour un panneau 128×32.
 
 ## Le DMD ne revient pas après un flipper
 
-Le mode « contrôle externe » se termine au `ui.game.ended`. Si un pinball s'est terminé brutalement, revenez à la sélection de jeu dans EmulationStation — MarqueeManager y reprend la main. Vérifiez aussi que le système figure bien dans `ActiveSystemsDMD`.
+Le mode « contrôle externe » se termine au `ui.game.ended`. Si un pinball s'est terminé brutalement, revenez à la sélection de jeu dans EmulationStation - MarqueeManager y reprend la main. Vérifiez aussi que le système figure bien dans `ActiveSystemsDMD`.
 
 ## Ma configuration a changé après une mise à jour
 

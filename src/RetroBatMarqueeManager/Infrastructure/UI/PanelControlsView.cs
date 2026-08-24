@@ -18,7 +18,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI;
 ///
 /// That last part is the whole point. Press the bottom-left button, see the
 /// bottom-left button light up: the wiring is right. See another one light up, or
-/// none at all, and the wiring is wrong — in one second, with no config file to read
+/// none at all, and the wiring is wrong - in one second, with no config file to read
 /// and no LedManager to install.
 ///
 /// It is laid out at a fixed design size inside a Viewbox rather than against the
@@ -49,7 +49,7 @@ public sealed class PanelControlsView : Viewbox
 
     /// <summary>A press whose release never arrives would leave the panel lit for good.
     /// A reconnection already darkens everything, so this only catches what survives a
-    /// live connection — and it has to stay well clear of real play: holding fire or a
+    /// live connection - and it has to stay well clear of real play: holding fire or a
     /// charge shot for several seconds is ordinary, and cutting the light there would
     /// tell the player their button had stopped answering.</summary>
     private static readonly TimeSpan StuckPressTimeout = TimeSpan.FromSeconds(30);
@@ -115,15 +115,15 @@ public sealed class PanelControlsView : Viewbox
     }
 
     /// <summary>True when this component wants the drawn artwork rather than the plain
-    /// shapes — "top" (seen from above) or "3d" (seen from the front).</summary>
+    /// shapes - "top" (seen from above) or "3d" (seen from the front).</summary>
     public bool WantsArtwork => _style is "top" or "3d";
 
     /// <summary>Which of the two drawn views this component asked for.</summary>
     public bool WantsFrontView => _style == "3d";
 
     /// <summary>
-    /// The panel as APIExpose drew it, for the view this component asked for. Null —
-    /// no file yet for this game — falls back to the plain shapes rather than to an
+    /// The panel as APIExpose drew it, for the view this component asked for. Null -
+    /// no file yet for this game - falls back to the plain shapes rather than to an
     /// empty rectangle: the wiring check has to work on a cabinet whose theme artwork
     /// was never generated.
     /// </summary>
@@ -131,7 +131,7 @@ public sealed class PanelControlsView : Viewbox
     {
         // The path alone does not identify the drawing: every system that is not arcade
         // shares a single "default.svg", rewritten with each game's own colours and
-        // functions. Same name, different panel — so the file's own timestamp is what
+        // functions. Same name, different panel - so the file's own timestamp is what
         // says whether this is still the same picture.
         var stamp = Stamp(art);
         if (stamp == _artStamp) return;
@@ -162,7 +162,7 @@ public sealed class PanelControlsView : Viewbox
         Build();
     }
 
-    /// <summary>What the selected game does with each place. Nothing is rebuilt — only
+    /// <summary>What the selected game does with each place. Nothing is rebuilt - only
     /// the colours and the labels change, so a press held across a selection keeps its
     /// light.</summary>
     public void ApplyButtons(IReadOnlyDictionary<int, PanelBoardButton> buttons)
@@ -189,7 +189,7 @@ public sealed class PanelControlsView : Viewbox
     }
 
     /// <summary>Everything goes dark. Called when the panel state no longer describes
-    /// what is on screen — a press is about the here and now.</summary>
+    /// what is on screen - a press is about the here and now.</summary>
     public void ReleaseAll()
     {
         foreach (var lamp in _slots.Values) lamp.SetPressed(false);
@@ -247,7 +247,7 @@ public sealed class PanelControlsView : Viewbox
         if (_showSystemButtons)
         {
             // SELECT then START, top-left: the convention drives them on their own pins,
-            // so they belong outside the rows — showing them among the game buttons would
+            // so they belong outside the rows - showing them among the game buttons would
             // read as a mis-wired panel when nothing is wrong.
             var x = Margin + 22;
             foreach (var name in new[] { "SELECT", "START" })
@@ -262,7 +262,7 @@ public sealed class PanelControlsView : Viewbox
     /// The drawn panel: APIExpose's own artwork, rasterised, with a light placed over
     /// each button at the coordinates that artwork reported.
     ///
-    /// Nothing is drawn on top of it besides the lights — the picture already carries
+    /// Nothing is drawn on top of it besides the lights - the picture already carries
     /// the buttons, their colours and what they do in this game, and drawing our own
     /// over it would show two panels at once.
     ///
@@ -277,7 +277,7 @@ public sealed class PanelControlsView : Viewbox
         var bitmap = PanelArtworkCache.Render(_art.Path, _art.Width, _art.Height);
         if (bitmap is null)
         {
-            // The file can be unreadable for a moment — it is rewritten the instant a
+            // The file can be unreadable for a moment - it is rewritten the instant a
             // game starts, and an antivirus can hold it just as briefly. Falling back to
             // the plain shapes for good on a moment like that is how the panel "lost its
             // artwork the second you launched a game". Try again shortly; the plain
@@ -334,7 +334,7 @@ public sealed class PanelControlsView : Viewbox
     }
 
     /// <summary>A light with NO body of its own: the artwork underneath is the button,
-    /// and this only adds what a press adds — a ring and a glow.</summary>
+    /// and this only adds what a press adds - a ring and a glow.</summary>
     private Lamp AddArtworkLamp(double cx, double cy, double radius)
     {
         var lit = Glow(cx, cy, radius);
@@ -350,7 +350,7 @@ public sealed class PanelControlsView : Viewbox
     /// <summary>
     /// A lamp, built like the lighting engine builds its own: a wide soft halo with a
     /// hotter core, in the button's colour, and nothing else. A ring drawn around the
-    /// button was an ANNOTATION — a marker pointing at a button — where a cabinet's
+    /// button was an ANNOTATION - a marker pointing at a button - where a cabinet's
     /// answer to a press is light. The engine's lamps read as light because they have
     /// no edge; this follows them, so both belong to the same picture.
     ///
@@ -373,7 +373,7 @@ public sealed class PanelControlsView : Viewbox
     }
 
     /// <summary>The lamp's own light, in one colour. Stops follow the engine's two
-    /// passes — a bright core inside a much wider, much fainter halo — and the core
+    /// passes - a bright core inside a much wider, much fainter halo - and the core
     /// is pulled towards white the way a filament is hotter than the glass.</summary>
     private static System.Windows.Media.Brush GlowBrush(Color color)
     {
@@ -388,7 +388,7 @@ public sealed class PanelControlsView : Viewbox
             Center = new System.Windows.Point(0.5, 0.5),
             RadiusX = 0.5,
             RadiusY = 0.5,
-            // Alphas stay in the engine's range — its own lamps top out around 200 — so
+            // Alphas stay in the engine's range - its own lamps top out around 200 - so
             // the light SITS ON the button instead of erasing it. At full opacity the cap
             // disappeared under a white disc, which reads as a hole in the panel rather
             // than as a button answering.
@@ -516,7 +516,7 @@ public sealed class PanelControlsView : Viewbox
     }
 
     /// <summary>Named dynpanel colours ("Red", "Blue") and hex alike; anything unknown
-    /// stays the neutral plastic — a wrong colour would claim a function the game never
+    /// stays the neutral plastic - a wrong colour would claim a function the game never
     /// declared.</summary>
     private static Color ParseColor(string color, Color fallback)
     {
@@ -582,14 +582,14 @@ public sealed class PanelControlsView : Viewbox
         }
 
         /// <summary>What the selected game makes of this place. A place the game ignores
-        /// keeps the neutral plastic and fades — it exists, it just does nothing here.</summary>
+        /// keeps the neutral plastic and fades - it exists, it just does nothing here.</summary>
         public void Describe(PanelBoardButton? button)
         {
             var used = button?.Used == true;
             var color = used ? ParseColor(button!.Color, Neutral) : Neutral;
             if (PaintsBody) _body.Fill = new SolidColorBrush(color);
 
-            // A button the game does not use still answers when pressed — it just has no
+            // A button the game does not use still answers when pressed - it just has no
             // colour of its own to answer WITH, so it lights white. Lighting it in the
             // neutral plastic grey would have shown almost nothing, and "I pressed and
             // nothing happened" is the one answer this panel must never give wrongly.

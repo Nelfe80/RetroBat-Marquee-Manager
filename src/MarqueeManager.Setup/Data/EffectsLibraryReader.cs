@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace MarqueeManager.Setup.Data;
 
-/// <summary>Where a resolved effect comes from — drives the provenance badge.</summary>
+/// <summary>Where a resolved effect comes from - drives the provenance badge.</summary>
 public enum EffectOrigin { None, Game, System, GenreOverride, GenreDefault, Default }
 
 /// <summary>
@@ -91,7 +91,7 @@ public sealed class EffectsLibraryReader
         return slugs;
     }
 
-    /// <summary>Every default rule of the library, unfiltered — lets the user see
+    /// <summary>Every default rule of the library, unfiltered - lets the user see
     /// the rules other genres get ("voir tous les effets").</summary>
     public IReadOnlyList<(string Match, string? Genres, EffectRule Effect)> ListDefaults()
         => _rules.Select(rule => (

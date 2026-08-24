@@ -4,7 +4,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Rendering.Skia;
 
 /// <summary>
 /// Produces one frame of the lighting surface. Called from the dedicated render
-/// thread, never from the UI thread — implementations must not touch WPF objects.
+/// thread, never from the UI thread - implementations must not touch WPF objects.
 /// </summary>
 public interface ISkiaFrameRenderer : IDisposable
 {
@@ -18,7 +18,7 @@ public interface ISkiaFrameRenderer : IDisposable
 
     /// <summary>The cadence the current content actually needs (§6): a still or
     /// tube-only scene wants 24, dynamic sprites want 30. The host caps at
-    /// min(configuredFps, DesiredFps), so a 24 Hz scene is judged against 24 — not
+    /// min(configuredFps, DesiredFps), so a 24 Hz scene is judged against 24 - not
     /// against a 30 target it can never reach.</summary>
     int DesiredFps => 24;
 

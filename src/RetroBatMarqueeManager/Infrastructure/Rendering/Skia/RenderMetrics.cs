@@ -4,7 +4,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Rendering.Skia;
 
 /// <summary>
 /// Lot 0 instrumentation (docs\Update.txt §4): measures the render/present pipeline
-/// WITHOUT changing its behaviour. Cheap on the hot path — counters are lock-free,
+/// WITHOUT changing its behaviour. Cheap on the hot path - counters are lock-free,
 /// timing samples land in small single-writer ring buffers, percentiles are computed
 /// only when a snapshot is taken (every few seconds). Two writer threads are involved
 /// (render thread for render times, UI thread for present times); each buffer has a

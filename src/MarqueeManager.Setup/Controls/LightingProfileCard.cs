@@ -11,7 +11,7 @@ namespace MarqueeManager.Setup.Controls;
 /// <summary>
 /// Pins the game's light profile: which bulb (technology/era from bulbs.xml) and
 /// which cabinet profile (cabinets.xml) instead of the automatic grammar. Stored
-/// in the game's overrides\effects file, section "lighting" — the runtime's
+/// in the game's overrides\effects file, section "lighting" - the runtime's
 /// LightingLibraries.Resolve consults it before the grammar.
 /// </summary>
 public sealed class LightingProfileCard : UserControl
@@ -94,8 +94,8 @@ public sealed class LightingProfileCard : UserControl
             string.IsNullOrEmpty(cabinet) ? null : cabinet);
         _status.Text = string.IsNullOrEmpty(bulb) && string.IsNullOrEmpty(cabinet)
             ? L.T("Profil remis en automatique.", "Profile back to automatic.")
-            : L.T("Profil épinglé pour ce jeu — appliqué à la prochaine scène.",
-                "Profile pinned for this game — applied at the next scene.");
+            : L.T("Profil épinglé pour ce jeu - appliqué à la prochaine scène.",
+                "Profile pinned for this game - applied at the next scene.");
         _status.Foreground = Ui.Ok;
     }
 

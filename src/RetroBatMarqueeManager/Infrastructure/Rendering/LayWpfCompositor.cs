@@ -13,7 +13,7 @@ using WpfRect      = System.Windows.Rect;
 namespace RetroBatMarqueeManager.Infrastructure.Rendering
 {
     /// <summary>
-    /// Offscreen WPF compositor — ISO gfx_refresh() from ra.lua.
+    /// Offscreen WPF compositor - ISO gfx_refresh() from ra.lua.
     /// Maintains a Canvas matching the .lay view reference dimensions,
     /// renders it to a RenderTargetBitmap on demand (no window required).
     /// Must be used on an STA thread.
@@ -207,7 +207,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Rendering
 
         private (float w, float h) ResolveDimensionsFromProps(LayProperties p)
         {
-            // -1 means "auto / preserve ratio" — WPF handles this via Stretch.Uniform + NaN
+            // -1 means "auto / preserve ratio" - WPF handles this via Stretch.Uniform + NaN
             return (p.W, p.H);
         }
 

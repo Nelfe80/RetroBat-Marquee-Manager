@@ -1,7 +1,7 @@
 namespace RetroBatMarqueeManager.Infrastructure.Rendering
 {
     /// <summary>
-    /// Single scene object — ISO entry in Lua's gfx_objects{}.
+    /// Single scene object - ISO entry in Lua's gfx_objects{}.
     /// </summary>
     public class LayObject
     {

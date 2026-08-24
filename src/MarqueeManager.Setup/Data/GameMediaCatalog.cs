@@ -39,7 +39,7 @@ public sealed class GameMediaCatalog
     public bool IsAvailable => Directory.Exists(_systemsRoot);
 
     /// <summary>The arcade family folders. "Mes jeux" folds them into "arcade"
-    /// (one grouped search); "Mes systèmes" keeps them apart — mame/fbneo carry
+    /// (one grouped search); "Mes systèmes" keeps them apart - mame/fbneo carry
     /// their own chains and original compositions.</summary>
     public static readonly HashSet<string> ArcadeAliases = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -151,7 +151,7 @@ public sealed class GameMediaCatalog
 
     /// <summary>
     /// Media folder of a game, across the arcade family. APIExpose files arcade art
-    /// under "arcade" while the library calls the system "mame" or "fbneo" — and it
+    /// under "arcade" while the library calls the system "mame" or "fbneo" - and it
     /// leaves an EMPTY mame\games\&lt;rom&gt; folder behind, so merely testing that the
     /// directory exists picked the empty one and the game looked media-less. The
     /// alias folders are the same game, not a substitute for it: whichever actually
@@ -162,7 +162,7 @@ public sealed class GameMediaCatalog
     /// <summary>
     /// The game of a system whose media folder holds the most: the entry a generic
     /// template is best judged against. Scanning the first N games instead landed on
-    /// media-less ones — 240 of the 245 Mega Drive folders hold nothing but a DMD gif,
+    /// media-less ones - 240 of the 245 Mega Drive folders hold nothing but a DMD gif,
     /// so an alphabetical slice never reached the five that carry real art. Folders are
     /// walked once per system and the answer cached.
     /// </summary>
@@ -202,7 +202,7 @@ public sealed class GameMediaCatalog
         return Remember(system, ToRom(system, best));
     }
 
-    /// <summary>How many media types a folder carries — one stat per type, no recursive
+    /// <summary>How many media types a folder carries - one stat per type, no recursive
     /// walk: scoring by file count meant enumerating every file of every game.</summary>
     private static int SampleScore(string gameRoot)
     {
@@ -362,7 +362,7 @@ public sealed class GameMediaCatalog
     public string? ReadGenre(string system, string rom)
         => ReadMetadataField(system, rom, "genre");
 
-    /// <summary>ScreenScraper numeric genre ids ("10, 2844") — stable across languages,
+    /// <summary>ScreenScraper numeric genre ids ("10, 2844") - stable across languages,
     /// preferred input of the runtime's genre normalization map.</summary>
     public string? ReadGenreIds(string system, string rom)
         => ReadMetadataField(system, rom, "genres");

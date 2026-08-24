@@ -2,7 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-// The project model itself lives in the domain (Compositions.Core) — the
+// The project model itself lives in the domain (Compositions.Core) - the
 // runtime renders these projects too, so the contract cannot live here.
 using MarqueeManager.Compositions.Core.Composition;
 
@@ -24,7 +24,7 @@ public sealed class MarqueeProjectStore
 
     private readonly string _root;
 
-    /// <summary>category: "marquees" (default), "toppers" or "dmd" — the media
+    /// <summary>category: "marquees" (default), "toppers" or "dmd" - the media
     /// folder the runtime's chains read for that surface family. surfaceId set =
     /// the creation belongs to THAT surface only
     /// (media\&lt;cat&gt;\surfaces\&lt;surfaceId&gt;\…) : creation A on surface 1 and

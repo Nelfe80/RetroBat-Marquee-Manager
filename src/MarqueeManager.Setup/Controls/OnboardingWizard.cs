@@ -11,9 +11,9 @@ using Path = System.IO.Path;
 namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
-/// First-launch wizard — three steps, under three minutes to a working marquee:
+/// First-launch wizard - three steps, under three minutes to a working marquee:
 /// 1) "we detected N screens" (identification), 2) one pre-checked type proposal
-/// per secondary screen (ScreenProbe suggestion), 3) done — zero-config surfaces
+/// per secondary screen (ScreenProbe suggestion), 3) done - zero-config surfaces
 /// written, runtime started. Skippable ("Configure later") and relaunchable from
 /// the Home view. Never shows again once completed or skipped (state\setup.ini).
 /// </summary>
@@ -102,7 +102,7 @@ public sealed class OnboardingWizard : Window
         _stepLabel.Text = L.T($"Étape {_step + 1} sur 3", $"Step {_step + 1} of 3");
         _backButton.Visibility = _step == 0 ? Visibility.Collapsed : Visibility.Visible;
         _nextButton.Content = _step == 2
-            ? L.T("Terminer — tout configurer", "Finish — configure everything")
+            ? L.T("Terminer - tout configurer", "Finish - configure everything")
             : L.T("Continuer →", "Continue →");
         _stage.Content = _step switch
         {
@@ -145,9 +145,9 @@ public sealed class OnboardingWizard : Window
         panel.Children.Add(Ui.Title(L.T("À quoi sert chaque écran ?", "What is each screen for?")));
         panel.Children.Add(Ui.Subtitle(L.T(
             "Nous avons pré-choisi d'après la forme de chaque écran (un bandeau 5:1 est probablement un marquee). "
-            + "Corrigez si besoin — tout reste modifiable ensuite dans « Mon setup ».",
+            + "Corrigez si besoin - tout reste modifiable ensuite dans « Mon setup ».",
             "We pre-picked from each screen's shape (a 5:1 strip is probably a marquee). "
-            + "Fix anything — everything stays editable later in “My setup”.")));
+            + "Fix anything - everything stays editable later in “My setup”.")));
 
         foreach (var screen in _screens)
         {
@@ -155,15 +155,15 @@ public sealed class OnboardingWizard : Window
             {
                 _choices[screen.Index] = "game";
                 panel.Children.Add(Ui.Card(Ui.MutedLabel(L.T(
-                    $"Écran {screen.Index} (principal) : RetroBat / EmulationStation — rien à faire.",
-                    $"Screen {screen.Index} (primary): RetroBat / EmulationStation — nothing to do.")), padding: 10));
+                    $"Écran {screen.Index} (principal) : RetroBat / EmulationStation - rien à faire.",
+                    $"Screen {screen.Index} (primary): RetroBat / EmulationStation - nothing to do.")), padding: 10));
                 continue;
             }
 
             var row = new WrapPanel();
             var label = Ui.Label(L.T(
-                $"Écran {screen.Index} — {screen.Bounds.Width}×{screen.Bounds.Height} ({screen.Orientation})",
-                $"Screen {screen.Index} — {screen.Bounds.Width}×{screen.Bounds.Height} ({screen.Orientation})"), 12);
+                $"Écran {screen.Index} - {screen.Bounds.Width}×{screen.Bounds.Height} ({screen.Orientation})",
+                $"Screen {screen.Index} - {screen.Bounds.Width}×{screen.Bounds.Height} ({screen.Orientation})"), 12);
             label.Width = 300;
             label.VerticalAlignment = VerticalAlignment.Center;
             row.Children.Add(label);
@@ -205,9 +205,9 @@ public sealed class OnboardingWizard : Window
         panel.Children.Add(Ui.Title(L.T("Votre setup est prêt", "Your setup is ready")));
         panel.Children.Add(Ui.Subtitle(L.T(
             "En terminant : les surfaces et composants par défaut sont posés, une mire d'identification confirme chaque écran, "
-            + "et le runtime démarre. Naviguez dans EmulationStation — vos marquees s'affichent.",
+            + "et le runtime démarre. Naviguez dans EmulationStation - vos marquees s'affichent.",
             "On finish: default surfaces and components are laid out, an identification pattern confirms every screen, "
-            + "and the runtime starts. Browse EmulationStation — your marquees show up.")));
+            + "and the runtime starts. Browse EmulationStation - your marquees show up.")));
 
         foreach (var screen in _screens)
         {

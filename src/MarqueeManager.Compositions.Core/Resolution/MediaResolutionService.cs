@@ -22,7 +22,7 @@ public sealed class MediaResolutionService : IMediaResolutionService
     /// <summary>
     /// THE canonical source order, exposed so nobody has to keep a second copy of it.
     /// A hand-kept duplicate in the Setup is what once made a whole card vanish from
-    /// the view without a single error — the order lives here and only here.
+    /// the view without a single error - the order lives here and only here.
     /// </summary>
     public static IReadOnlyList<SourceKind> ChainFor(MediaScope scope)
         => scope == MediaScope.System
@@ -76,7 +76,7 @@ public sealed class MediaResolutionService : IMediaResolutionService
                 return resolved;
 
         // System fallback: run the FULL system chain, already framed for this same
-        // surface — the game never applies a second adaptation on top (§6.3).
+        // surface - the game never applies a second adaptation on top (§6.3).
         if (policy.IsEnabled(SourceKind.SystemFallback))
         {
             var systemContext = context with { Scope = MediaScope.System, StableGameId = null, Rom = null };

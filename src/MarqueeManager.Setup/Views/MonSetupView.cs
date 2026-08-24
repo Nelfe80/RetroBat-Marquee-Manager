@@ -13,7 +13,7 @@ using MarqueeManager.Setup.Processes;
 namespace MarqueeManager.Setup.Views;
 
 /// <summary>
-/// "Mon setup" — the drill-down entry point: the physical plan of the
+/// "Mon setup" - the drill-down entry point: the physical plan of the
 /// installation (screens laid out where they really are, draggable, absent ones
 /// grayed), a display-state selector previewing what each screen shows, and a
 /// screen panel opening on click: type-based ZERO-CONFIG ("this is a Marquee" →
@@ -90,9 +90,9 @@ public sealed class MonSetupView : UserControl
         page.Children.Add(Ui.Title(L.T("Mon setup", "My setup")));
         page.Children.Add(Ui.Subtitle(L.T(
             "Votre installation vue d'en haut : disposez les écrans comme ils le sont physiquement, "
-            + "puis cliquez sur un écran pour le configurer. Choisir son type suffit — tout devient fonctionnel.",
+            + "puis cliquez sur un écran pour le configurer. Choisir son type suffit - tout devient fonctionnel.",
             "Your installation from above: lay the screens out as they physically are, "
-            + "then click one to configure it. Picking its type is enough — everything turns functional.")));
+            + "then click one to configure it. Picking its type is enough - everything turns functional.")));
 
         var bar = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
         bar.Children.Add(Ui.Button(L.T("Identifier les écrans", "Identify screens"), (_, _) => IdentifyWindow.ShowAll(_detected)));
@@ -159,8 +159,8 @@ public sealed class MonSetupView : UserControl
             var resolution = $"{info.Bounds.Width}x{info.Bounds.Height}";
             var known = plan.FirstOrDefault(s => s.Id.Equals(info.DeviceName, StringComparison.OrdinalIgnoreCase));
 
-            // The name did not match. Windows device names are POSITIONAL — unplug a
-            // monitor and plug it back and the same panel returns as another DISPLAYn —
+            // The name did not match. Windows device names are POSITIONAL - unplug a
+            // monitor and plug it back and the same panel returns as another DISPLAYn -
             // so before inventing a screen, look for a saved one that is currently
             // disconnected and has this exact resolution. Only when there is EXACTLY one
             // such candidate: two identical panels would otherwise swap their settings
@@ -231,7 +231,7 @@ public sealed class MonSetupView : UserControl
     {
         if (IsPhysicalDmd(screen))
         {
-            // rendered at 4× its real pixels — a 128×32 panel would be invisible
+            // rendered at 4× its real pixels - a 128×32 panel would be invisible
             return (_physicalDmd.W * 4, _physicalDmd.H * 4);
         }
         if (screen.Connected && screen.WindowsIndex >= 0 && screen.WindowsIndex < _detected.Count)
@@ -286,7 +286,7 @@ public sealed class MonSetupView : UserControl
                 Cursor = Cursors.Hand
             };
 
-            // thumbnail: the screen's surfaces in the previewed display state —
+            // thumbnail: the screen's surfaces in the previewed display state -
             // a surface scoped to the other state vanishes, exactly like at runtime
             var thumb = new Canvas { ClipToBounds = true };
             foreach (var surface in SurfacesOf(screen))
@@ -384,7 +384,7 @@ public sealed class MonSetupView : UserControl
         if (_dragging == null || e.LeftButton != MouseButtonState.Pressed) return;
         var position = e.GetPosition(_map);
         if (Math.Abs(position.X - _dragStart.X) + Math.Abs(position.Y - _dragStart.Y) > 4) _dragMoved = true;
-        // snap the physical plan to a 40 px grid — tidy layouts by default
+        // snap the physical plan to a 40 px grid - tidy layouts by default
         _dragging.PhysicalX = Math.Round((_dragOrigin.X + (position.X - _dragStart.X) / _scale) / 40) * 40;
         _dragging.PhysicalY = Math.Round((_dragOrigin.Y + (position.Y - _dragStart.Y) / _scale) / 40) * 40;
         RenderMap();
@@ -397,7 +397,7 @@ public sealed class MonSetupView : UserControl
         _dragging = null;
         _map.ReleaseMouseCapture();
 
-        // second plain CLICK on the selected screen (no drag) opens its editor —
+        // second plain CLICK on the selected screen (no drag) opens its editor -
         // the physical DMD opens its settings, the others the surfaces editor
         if (clicked is { Connected: true } && _clickOnSelected)
         {
@@ -424,7 +424,7 @@ public sealed class MonSetupView : UserControl
         if (IsPhysicalDmd(screen))
         {
             var dmdCard = new StackPanel();
-            var dmdTitle = Ui.Label($"{screen.Name} — {_physicalDmd.W}×{_physicalDmd.H} px", 15);
+            var dmdTitle = Ui.Label($"{screen.Name} - {_physicalDmd.W}×{_physicalDmd.H} px", 15);
             dmdTitle.FontWeight = FontWeights.Bold;
             dmdCard.Children.Add(dmdTitle);
             dmdCard.Children.Add(Ui.MutedLabel(L.T(
@@ -442,21 +442,21 @@ public sealed class MonSetupView : UserControl
         var active = screen.ManagedByMarqueeManager;
 
         var card = new StackPanel();
-        var title = Ui.Label($"{screen.Name} — {w}×{h}"
+        var title = Ui.Label($"{screen.Name} - {w}×{h}"
                              + (screen.Connected ? $"  ·  {L.T("écran Windows", "Windows screen")} {screen.WindowsIndex}" : L.T("  ·  absent", "  ·  absent"))
                              + (active ? "" : L.T("  ·  IGNORÉ", "  ·  IGNORED")), 15);
         title.FontWeight = FontWeights.Bold;
         if (!active) title.Foreground = Ui.Muted;
         card.Children.Add(title);
 
-        // "managed" switch — INDEPENDENT of the screen type below. Unchecked: the
+        // "managed" switch - INDEPENDENT of the screen type below. Unchecked: the
         // runtime creates no window for this screen (surfaces kept but suspended),
         // and it is offered to no composer. Distinct from usage "game".
         var managed = Ui.CheckBox(L.T("Utiliser cet écran avec MarqueeManager", "Use this screen with MarqueeManager"), active);
         managed.Margin = new Thickness(0, 4, 0, 0);
         var managedHint = Ui.MutedLabel(L.T(
-            "Ignoré — aucune fenêtre de rendu ne sera créée. Les surfaces sont conservées mais suspendues.",
-            "Ignored — no render window will be created. Surfaces are kept but suspended."));
+            "Ignoré - aucune fenêtre de rendu ne sera créée. Les surfaces sont conservées mais suspendues.",
+            "Ignored - no render window will be created. Surfaces are kept but suspended."));
         managedHint.Margin = new Thickness(22, 0, 0, 4);
         managedHint.Visibility = active ? Visibility.Collapsed : Visibility.Visible;
         managed.Checked += (_, _) => { screen.ManagedByMarqueeManager = true; RenderMap(); RenderScreenPanel(); };
@@ -465,7 +465,7 @@ public sealed class MonSetupView : UserControl
         card.Children.Add(managedHint);
 
         // An absent screen can be dropped from the plan. Matching by resolution catches
-        // the ordinary unplug/replug, but nothing catches every case — a panel replaced
+        // the ordinary unplug/replug, but nothing catches every case - a panel replaced
         // by a different model leaves an entry no rule can recognise, and it must not be
         // permanent furniture.
         if (!screen.Connected && !screen.Id.Equals(PhysicalDmdId, StringComparison.OrdinalIgnoreCase))
@@ -527,17 +527,17 @@ public sealed class MonSetupView : UserControl
         typeRow.Children.Add(applyType);
         card.Children.Add(typeRow);
         card.Children.Add(Ui.MutedLabel(L.T(
-            "Choisir un type pose surface(s), composants et flux par défaut — fonctionnel immédiatement, retouchable ensuite.",
-            "Picking a type lays default surface(s), components and streams — functional at once, tweakable after.")));
+            "Choisir un type pose surface(s), composants et flux par défaut - fonctionnel immédiatement, retouchable ensuite.",
+            "Picking a type lays default surface(s), components and streams - functional at once, tweakable after.")));
 
         // surfaces of this screen
         card.Children.Add(Ui.SectionHeader(active
             ? L.T("Surfaces de cet écran", "This screen's surfaces")
-            : L.T("Surfaces de cet écran (suspendues — écran ignoré)", "This screen's surfaces (suspended — screen ignored)")));
+            : L.T("Surfaces de cet écran (suspendues - écran ignoré)", "This screen's surfaces (suspended - screen ignored)")));
         var hosted = SurfacesOf(screen).ToList();
         if (hosted.Count == 0)
         {
-            card.Children.Add(Ui.MutedLabel(L.T("Aucune surface — appliquez un type ci-dessus.", "No surface — apply a type above.")));
+            card.Children.Add(Ui.MutedLabel(L.T("Aucune surface - appliquez un type ci-dessus.", "No surface - apply a type above.")));
         }
         foreach (var surface in hosted)
         {
@@ -614,7 +614,7 @@ public sealed class MonSetupView : UserControl
     {
         if (screen.WindowsIndex < 0)
         {
-            _status.Text = L.T("Cet écran est absent — rebranchez-le d'abord.", "This screen is absent — reconnect it first.");
+            _status.Text = L.T("Cet écran est absent - rebranchez-le d'abord.", "This screen is absent - reconnect it first.");
             _status.Foreground = Ui.Error;
             return;
         }
@@ -624,8 +624,8 @@ public sealed class MonSetupView : UserControl
         SurfacesStore.ProvisionScreenType(_surfaces, screen.WindowsIndex, w, h, type);
 
         SaveAll();
-        _status.Text = L.T($"Type « {type} » appliqué — l'écran est fonctionnel. Retouchez les surfaces si besoin.",
-            $"Type “{type}” applied — the screen is functional. Tweak the surfaces if needed.");
+        _status.Text = L.T($"Type « {type} » appliqué - l'écran est fonctionnel. Retouchez les surfaces si besoin.",
+            $"Type “{type}” applied - the screen is functional. Tweak the surfaces if needed.");
         _status.Foreground = Ui.Ok;
         RenderMap();
         RenderScreenPanel();
@@ -634,7 +634,7 @@ public sealed class MonSetupView : UserControl
     private void OpenDivision(ScreenModel screen)
     {
         if (screen.WindowsIndex < 0 || screen.WindowsIndex >= _detected.Count) return;
-        // the editor adds/removes surfaces itself — an empty screen is fine,
+        // the editor adds/removes surfaces itself - an empty screen is fine,
         // and the RetroBat screen opens with the ES masking warning
         var hostsGame = screen.Usage.Equals("game", StringComparison.OrdinalIgnoreCase)
                         || _detected[screen.WindowsIndex].Primary;

@@ -9,7 +9,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI;
 ///
 /// Rendered well above its natural size: the panel is drawn at around 420 units wide
 /// and stretched across a marquee, so rasterising at 1:1 would show every edge. It is
-/// vector artwork — enlarging it costs nothing but pixels.
+/// vector artwork - enlarging it costs nothing but pixels.
 ///
 /// Cached by file AND timestamp, because the file name does not identify the picture:
 /// every system that is not arcade shares one "default.svg" that is rewritten with each
@@ -25,7 +25,7 @@ public static class PanelArtworkCache
     private static readonly Dictionary<string, BitmapSource> Cache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly object Lock = new();
 
-    /// <summary>The drawing as a frozen bitmap, or null when it cannot be read — the
+    /// <summary>The drawing as a frozen bitmap, or null when it cannot be read - the
     /// caller then draws the plain panel rather than an empty rectangle.</summary>
     public static BitmapSource? Render(string path, double width, double height)
     {

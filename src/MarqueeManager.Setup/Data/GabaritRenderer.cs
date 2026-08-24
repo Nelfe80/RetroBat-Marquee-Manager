@@ -27,13 +27,13 @@ public static class GabaritRenderer
         return project != null && project.Layers.Any(l => !l.Hidden);
     }
 
-    /// <summary>Whether a game of this system is dressed by a template at all — its
+    /// <summary>Whether a game of this system is dressed by a template at all - its
     /// system's, or the one composed for all games.</summary>
     public static bool HasGameGabarit(string pluginRoot, string categoryRoot, string surfaceId, string system)
         => HasGabarit(pluginRoot, categoryRoot, surfaceId, GabaritIdentity.GameScopeFor(system))
            || HasGabarit(pluginRoot, categoryRoot, surfaceId, GabaritIdentity.GameScope);
 
-    /// <summary>Deletes every cached gabarit render of a surface — both the per-system
+    /// <summary>Deletes every cached gabarit render of a surface - both the per-system
     /// and per-game renders (call after an edit so the next view regenerates).</summary>
     public static void InvalidateSurface(string pluginRoot, string categoryRoot, string surfaceId)
     {
@@ -73,7 +73,7 @@ public static class GabaritRenderer
     /// is no game gabarit. The game's media is provided by the caller (composer palette).
     /// <paramref name="scope"/> pins WHICH template to render: the "All games" level must
     /// show what IT composes, not what the sample game's system happens to override it
-    /// with — that is how its preview showed a layout nobody was editing.</summary>
+    /// with - that is how its preview showed a layout nobody was editing.</summary>
     public static string? RenderGame(string pluginRoot, string categoryRoot, string surfaceId, string system, string rom,
         int targetWidth, int targetHeight, IReadOnlyList<GameAsset> gameAssets, string? scope = null)
     {
@@ -134,7 +134,7 @@ public static class GabaritRenderer
             {
                 // NO FALLBACK: a resolvable type that this entry lacks draws nothing.
                 // Keeping the stored path made the template wear the media of whatever
-                // entry it was composed on — one game's fanart on the whole system.
+                // entry it was composed on - one game's fanart on the whole system.
                 clone.Source = asset is not null && File.Exists(asset.Path) ? asset.Path : "";
             }
             else if (asset is not null && File.Exists(asset.Path))

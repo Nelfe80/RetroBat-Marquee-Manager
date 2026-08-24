@@ -6,13 +6,13 @@
 
 ## Système & surface
 
-Choisissez le **système** (seuls ceux avec des jeux installés apparaissent ; mame, fbneo… gardent leurs créations propres) et la **surface** sur la même ligne. Les surfaces **suspendues** (dont l'écran est exclu de MarqueeManager) sont masquées par défaut — une case « Afficher les surfaces suspendues » les réaffiche.
+Choisissez le **système** (seuls ceux avec des jeux installés apparaissent ; mame, fbneo… gardent leurs créations propres) et la **surface** sur la même ligne. Les surfaces **suspendues** (dont l'écran est exclu de MarqueeManager) sont masquées par défaut - une case « Afficher les surfaces suspendues » les réaffiche.
 
 ## Les cartes de résolution
 
 Sous les sélecteurs, une carte par source, **du plus général au plus précis** :
 
-- **Gabarit général — tous les systèmes** : la mise en page générique (voir plus bas), rendue avec les médias du système courant.
+- **Gabarit général - tous les systèmes** : la mise en page générique (voir plus bas), rendue avec les médias du système courant.
 - **Ma création pour ce système** : votre composition dédiée, avec **Composer / Modifier** et **Supprimer**.
 - **Mon dossier médias** : un fichier brut que vous déposez (voir plus bas).
 - **Marquee scrapé** puis **Logo mis en page** : les sources automatiques.
@@ -29,4 +29,4 @@ Le **gabarit** est une mise en page générique (fanart + gradient + logo, par e
 
 ## Mon dossier médias
 
-Déposez un fichier (PNG/JPG) pour un système : le bouton **Ouvrir le dossier** de la carte crée et ouvre l'emplacement exact, même si rien n'est encore sélectionné. Au niveau **système**, le fichier prend le **nom du système tel qu'affiché dans ES** — par exemple `media\marquees\user\systems\mame.png` (et non `arcade.png`). Dès qu'un fichier est présent, la carte « Mon dossier médias » devient sélectionnable et passe devant le gabarit et le scrapé.
+Déposez un fichier (PNG/JPG) pour un système : le bouton **Ouvrir le dossier** de la carte crée et ouvre l'emplacement exact, même si rien n'est encore sélectionné. Au niveau **système**, le fichier prend le **nom du système tel qu'affiché dans ES** - par exemple `media\marquees\user\systems\mame.png` (et non `arcade.png`). Dès qu'un fichier est présent, la carte « Mon dossier médias » devient sélectionnable et passe devant le gabarit et le scrapé.

@@ -18,7 +18,7 @@ public sealed class WebSocketListenerService : BackgroundService
     };
 
     // Streams whose messages describe the CURRENT state (snapshots): during fast
-    // ES navigation only the most recent one matters — replaying the backlog one
+    // ES navigation only the most recent one matters - replaying the backlog one
     // by one is what made the marquee lag tens of seconds behind the frontend.
     // Event-like streams (hiscore, retroachievements, ingame…) keep strict FIFO.
     private static readonly HashSet<string> StateStreams = new(StringComparer.OrdinalIgnoreCase)
@@ -97,7 +97,7 @@ public sealed class WebSocketListenerService : BackgroundService
     /// Changing entry drops EVERYTHING remembered from the previous one. A cached
     /// media path that outlives its game is how one fanart, or one instruction card,
     /// ends up following the whole library: a render fired by another stream picks up
-    /// whatever was left behind. No stale value, no fallback — nothing rather than the
+    /// whatever was left behind. No stale value, no fallback - nothing rather than the
     /// neighbour's.
     /// </summary>
     private void ForgetPreviousEntry()
@@ -111,7 +111,7 @@ public sealed class WebSocketListenerService : BackgroundService
         _ = _instructionCards.SetCardsAsync(Array.Empty<string>(), CancellationToken.None);
     }
 
-    /// <summary>Last three path segments — enough to name the GAME, which the file name
+    /// <summary>Last three path segments - enough to name the GAME, which the file name
     /// alone never does (every game has an artwork/fanart.jpg).</summary>
     private static string TailOf(string path)
     {
@@ -121,7 +121,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
     /// <summary>
     /// Is this background render still for the selection on screen? Fast system browsing
-    /// fires one render per system passed through, and — for a SYSTEM (rom=null) — the media
+    /// fires one render per system passed through, and - for a SYSTEM (rom=null) - the media
     /// tables carry no rom to tell them apart, so a late render would bake the CURRENT
     /// system's media into the OLD system's cache and paint a stale surface on completion.
     /// A game is matched on its rom, a system on the frontend the user is on.
@@ -144,7 +144,7 @@ public sealed class WebSocketListenerService : BackgroundService
         var (width, height) = _surfaces.SurfacePixelSize(surfaceId);
         if (width <= 0 || height <= 0) return;
 
-        // Render only for the selection still on screen — otherwise a fast browse bakes the
+        // Render only for the selection still on screen - otherwise a fast browse bakes the
         // wrong system's media into this cache and flashes it when the render lands.
         if (!StillOnSelection(system, rom)) return;
 
@@ -173,7 +173,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
         // Capture the media of the CURRENT snapshot right now. The render runs in the
         // background, and reading _lastMarqueeKinds when it completes would use whatever
-        // the user has browsed to since — that is how every system's template ended up
+        // the user has browsed to since - that is how every system's template ended up
         // wearing the Mega Drive fanart. The snapshot is also the ONLY media source:
         // APIExpose serves it, MarqueeManager never goes looking in its folders.
         var kinds = KindsFor(category, system, rom);
@@ -185,7 +185,7 @@ public sealed class WebSocketListenerService : BackgroundService
         {
             var resolved = ResolveGabaritLayerMedia(layer, kinds, system);
             var key = string.IsNullOrWhiteSpace(layer.AssetKey) ? "(no key)" : layer.AssetKey;
-            trace.Add($"{key}={(resolved == null ? "—" : TailOf(resolved))}");
+            trace.Add($"{key}={(resolved == null ? "-" : TailOf(resolved))}");
             return resolved;
         }
 
@@ -201,7 +201,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
         // Everything the entry's text block carries becomes a token: {desc}, {genre},
         // {players}, {rating}… The fields already known from the lighting meta stay
-        // authoritative — they come from the selection itself, not from a scrape.
+        // authoritative - they come from the selection itself, not from a scrape.
         foreach (var (field, value) in CurrentText())
             if (!tokens.TryGetValue(field, out var existing) || string.IsNullOrEmpty(existing))
                 tokens[field] = value;
@@ -235,8 +235,8 @@ public sealed class WebSocketListenerService : BackgroundService
             : layer.AssetKey;
 
         // SYSTEM-scoped layers, and ONLY those, follow the system by swapping the
-        // \systems\<sys>\ segment. Applying that to any path also matched a GAME asset —
-        // whose game folder never changes — so a template composed on Sonic served
+        // \systems\<sys>\ segment. Applying that to any path also matched a GAME asset -
+        // whose game folder never changes - so a template composed on Sonic served
         // Sonic's art to every game of the system.
         if (key is "systemfanart" or "systemwheel" or "systemmarquee")
         {
@@ -268,7 +268,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // Palette key -> the kinds the snapshot may carry it under. Canonical MediaKinds
         // first (what APIExpose publishes in its asset tables), then the legacy field
         // name for a snapshot that predates them. The old mapping guessed names the
-        // stream never used — "box", "screenshot", "mix" — so those layers resolved to
+        // stream never used - "box", "screenshot", "mix" - so those layers resolved to
         // nothing however well the file existed on disk.
         var candidates = key.ToLowerInvariant() switch
         {
@@ -298,8 +298,8 @@ public sealed class WebSocketListenerService : BackgroundService
             "video" => new[] { "video" },
             _ => null
         };
-        // A key that is not a GAME media kind — "gradient", or anything the composer
-        // labelled itself — names a fixed decoration, identical for every entry: it
+        // A key that is not a GAME media kind - "gradient", or anything the composer
+        // labelled itself - names a fixed decoration, identical for every entry: it
         // keeps its own file. Returning null here silently dropped the readability
         // gradient of every template that had one.
         if (candidates == null)
@@ -323,15 +323,15 @@ public sealed class WebSocketListenerService : BackgroundService
     /// A SYSTEM asset lives under …\systems\&lt;sys&gt;\… : swapping that one segment makes it
     /// follow the system being rendered, so a Neo Geo logo placed in a template becomes
     /// the Mega Drive logo on a Mega Drive game. Existence-checked, and reserved to the
-    /// system-scoped keys — a game asset's folder never changes, so swapping there
+    /// system-scoped keys - a game asset's folder never changes, so swapping there
     /// served the sample game's art to the whole system.
     /// </summary>
     /// <summary>
-    /// The system's own art, for a layer that carries no composed path — a template
+    /// The system's own art, for a layer that carries no composed path - a template
     /// authored on TYPES has none, which is why a system logo placed that way drew
     /// nothing. It is derived from a path the SNAPSHOT already gave us (the entry's own
     /// media, which lives under …\systems\&lt;sys&gt;\…): the system segment is swapped and
-    /// the known tail appended, then checked. Nothing is hunted for on disk — APIExpose
+    /// the known tail appended, then checked. Nothing is hunted for on disk - APIExpose
     /// does not publish system art inside a game payload, so this is the only thing the
     /// stream leaves to work with.
     /// </summary>
@@ -390,7 +390,7 @@ public sealed class WebSocketListenerService : BackgroundService
     /// <summary>
     /// A stored path whose FILE NAME is a system name (the ES theme's
     /// art\background\arcade.jpg) re-points to the current system. Returns null unless
-    /// the swapped file really exists — a template never borrows another system's image.
+    /// the swapped file really exists - a template never borrows another system's image.
     /// </summary>
     private static string? ResolveBySystemName(string? source, string system)
     {
@@ -419,7 +419,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
     /// <summary>
     /// The surface's own layer stack, flattened and cached (docs\RENDU-DYNAMIQUE.md).
-    /// Null while it renders or when the surface has nothing to flatten — the caller
+    /// Null while it renders or when the surface has nothing to flatten - the caller
     /// then keeps the media it already had, so nothing ever blinks.
     /// </summary>
     private string? ResolveDynamicSurface(string category, string target,
@@ -429,7 +429,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
         // Warm-up: while browsing, also render the INGAME variant of the selected game.
         // Ingame the dynamic render is the only law, so it must be ready the instant the
-        // game starts — and the user always looks at a game's card before launching it.
+        // game starts - and the user always looks at a game's card before launching it.
         // One extra composite, off-thread, deduplicated, on exactly the right game (the
         // reason a "pre-generate everything" batch is the wrong tool here).
         if (_displayScene.Equals("navigation", StringComparison.OrdinalIgnoreCase))
@@ -456,7 +456,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
         // Snapshot the media NOW. The render runs in the background and the cache key is
         // computed here: reading _lastMarqueeKinds later would mix the key of one entry
-        // with the pixels of whatever has been browsed since — a wrong image, cached,
+        // with the pixels of whatever has been browsed since - a wrong image, cached,
         // and served as if it were right.
         Dictionary<string, string?> kinds;
         lock (_lastMarqueeKinds) kinds = new Dictionary<string, string?>(_lastMarqueeKinds, StringComparer.OrdinalIgnoreCase);
@@ -498,7 +498,7 @@ public sealed class WebSocketListenerService : BackgroundService
     /// Media of the last snapshot OF EACH CATEGORY. A gabarit must be rendered with the
     /// media of the stream that asked for it: the topper carries its own Topper/Fanart/
     /// Logo, and reading the marquee's instead rendered a topper with whatever game the
-    /// marquee stream had last described — one game's fanart spreading over all the
+    /// marquee stream had last described - one game's fanart spreading over all the
     /// others, exactly as observed.
     /// </summary>
     /// <summary>Media of the last snapshot of each stream, STAMPED with the entry it
@@ -564,7 +564,7 @@ public sealed class WebSocketListenerService : BackgroundService
             devices));
     }
 
-    /// <summary>Controls of the CURRENT entry — null when what we hold describes another.</summary>
+    /// <summary>Controls of the CURRENT entry - null when what we hold describes another.</summary>
     public ControlsSnapshot? CurrentControls()
     {
         var (rom, controls) = _lastControls;
@@ -589,7 +589,7 @@ public sealed class WebSocketListenerService : BackgroundService
         if (read.Count > 0) _lastText = (rom, read);
     }
 
-    /// <summary>Text of the CURRENT entry — empty when what we hold describes another.</summary>
+    /// <summary>Text of the CURRENT entry - empty when what we hold describes another.</summary>
     private IReadOnlyDictionary<string, string> CurrentText()
     {
         var (rom, fields) = _lastText;
@@ -608,7 +608,7 @@ public sealed class WebSocketListenerService : BackgroundService
     /// Every medium known about the CURRENT entry, the asking category winning where
     /// both describe the same kind. Partitioning strictly by category starved the topper
     /// gabarit: its stream carries no fanart, so a template built on one rendered
-    /// nothing at all. The leak to avoid was never cross-stream — it was cross-ENTRY,
+    /// nothing at all. The leak to avoid was never cross-stream - it was cross-ENTRY,
     /// and that is closed by clearing everything when the selection changes.
     /// </summary>
     private Dictionary<string, string?> KindsFor(string category, string? system, string? rom)
@@ -618,7 +618,7 @@ public sealed class WebSocketListenerService : BackgroundService
         {
             // Only tables that describe THIS entry. Each stream (frontend/marquee/topper)
             // has its own concurrent receive loop, so while the topper is on light-gun the
-            // marquee table may still hold last-played — merging it blind is how a system
+            // marquee table may still hold last-played - merging it blind is how a system
             // wore another system's logo. A game is identified by its rom; a system or
             // collection, which has no rom, by the frontend it is. An entry naming neither
             // is allowed through (nothing to contradict).
@@ -755,7 +755,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
     /// <summary>
     /// Worker for a state stream: drains everything already received and only
-    /// processes the most recent snapshot — older ones describe selections the
+    /// processes the most recent snapshot - older ones describe selections the
     /// user has already scrolled past. On the frontend stream, lifecycle events
     /// (game started/ended) are never skipped; only `*.selected*` messages
     /// coalesce between themselves, in arrival order.
@@ -773,7 +773,7 @@ public sealed class WebSocketListenerService : BackgroundService
                 // Coalescing is per SUBJECT, not per stream: two messages only supersede
                 // each other when they describe the same thing. Dropping everything but
                 // the last message of a stream lost the cabinet's panel description
-                // whenever the game's panel state followed it in the same batch — two
+                // whenever the game's panel state followed it in the same batch - two
                 // different subjects, one of them silently gone.
                 var newest = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 var keys = new string?[batch.Count];
@@ -822,13 +822,13 @@ public sealed class WebSocketListenerService : BackgroundService
 
     /// <summary>
     /// What this message would supersede: two messages sharing a key describe the same
-    /// subject, so only the newest is worth processing. A null key means "never skip" —
+    /// subject, so only the newest is worth processing. A null key means "never skip" -
     /// the message is an EVENT, not a state, and skipping it loses something that
     /// happened.
     ///
     /// frontend: every `*.selected*` shares one key (they are one subject, the current
     /// selection); its lifecycle events (game started/ended) are never skipped.
-    /// panel: the presses are events — a press and its release arrive milliseconds
+    /// panel: the presses are events - a press and its release arrive milliseconds
     /// apart, and coalescing them dropped the press and kept the release, so the button
     /// never lit and nothing looked broken.
     /// </summary>
@@ -893,8 +893,8 @@ public sealed class WebSocketListenerService : BackgroundService
         // remember the snapshot kinds: template renders and component feeds use them
         lock (_lastMarqueeKinds)
         {
-            // rebuilt, never accumulated: the legacy fields below are always assigned —
-            // null included — but the asset table only ADDS what the entry owns, so a
+            // rebuilt, never accumulated: the legacy fields below are always assigned -
+            // null included - but the asset table only ADDS what the entry owns, so a
             // medium the next game lacks would have survived into it
             _lastMarqueeKinds.Clear();
             _lastMarqueeKinds["logo"] = MediaPath(media, "Logo");
@@ -915,7 +915,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // On-disk sources (creation / gabarit / drop) and the card overrides are keyed
         // by the FRONTEND system the user sees in ES and the Setup keys by (mame). The
         // marquee payload's own System is the CANONICAL media folder (arcade) or empty
-        // on a system browse, so resolve those with _selectedSystem instead — otherwise
+        // on a system browse, so resolve those with _selectedSystem instead - otherwise
         // the runtime shows a different source than the Setup preview. SystemSpellings
         // still bridges mame ↔ arcade for the game files kept under the canonical folder.
         var resolveMeta = snapshotMeta;
@@ -1071,8 +1071,8 @@ public sealed class WebSocketListenerService : BackgroundService
                                        ?? _compositionChains.CategoryCreation("marquee", meta, systemScope),
             OverrideSource.UserDrop => _compositionChains.UserDropFile("marquee", meta, systemScope),
             // NO media fallback, ever: a source resolves to ITS media or to nothing.
-            // Substituting a neighbour silently — the autogen for the template, the
-            // screenmarquee for the marquee — is how a laid-out logo ends up stamped on
+            // Substituting a neighbour silently - the autogen for the template, the
+            // screenmarquee for the marquee - is how a laid-out logo ends up stamped on
             // a screenmarquee that already carries one.
             OverrideSource.Generated => _compositionChains.SurfaceGabarit("marquee", target, meta, systemScope),
             OverrideSource.Scraped => MediaPath(media, "Marquee"),
@@ -1122,7 +1122,7 @@ public sealed class WebSocketListenerService : BackgroundService
             ["system"] = meta?.System ?? ""
         };
 
-        // The entry's whole text block becomes tokens too — {desc}, {genre}, {players},
+        // The entry's whole text block becomes tokens too - {desc}, {genre}, {players},
         // {rating}. The gabarit already resolved them; a text LAYER could not, so a
         // layer written as {desc} showed the tag itself. Fields known from the selection
         // stay authoritative: they come from the entry, not from a scrape.
@@ -1266,7 +1266,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
     /// <summary>
     /// Metadata carried by the enriched marquee stream (Selection.Releasedate /
-    /// Developer / Publisher / System) — input of the §15 lighting profile resolver.
+    /// Developer / Publisher / System) - input of the §15 lighting profile resolver.
     /// </summary>
     private static Application.Lighting.LightingSceneMeta? ExtractLightingMeta(JsonElement payload)
     {
@@ -1307,7 +1307,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // Same frontend override the marquee applies (see HandleMarqueeAsync): the payload's
         // System is the CANONICAL media folder (arcade), so without this a per-frontend
         // gabarit/creation caches under the collapsed id and fbneo, mame and the aggregate
-        // all share ONE topper — the arcade logo. Resolve with the frontend the user sees.
+        // all share ONE topper - the arcade logo. Resolve with the frontend the user sees.
         if (!string.IsNullOrEmpty(_selectedSystem)
             && (meta == null || !string.Equals(meta.System, _selectedSystem, StringComparison.OrdinalIgnoreCase)))
         {
@@ -1324,7 +1324,7 @@ public sealed class WebSocketListenerService : BackgroundService
             ["logo"] = MediaPath(media, "Logo"),
             ["marquee"] = MediaPath(media, "Marquee"),
         };
-        // the topper stream now carries its own table: flyer, box art, capture — a
+        // the topper stream now carries its own table: flyer, box art, capture - a
         // composition on this surface no longer has to borrow the marquee's media
         ReadAssetTables(payload, topperKinds);
         ReadTextBlock(payload, meta?.Rom);
@@ -1371,8 +1371,8 @@ public sealed class WebSocketListenerService : BackgroundService
     {
         var payload = Payload(root);
 
-        // this stream now carries the ingredients of a COMPOSED card — its media, the
-        // entry's text and what the buttons do — and they are worth keeping even for a
+        // this stream now carries the ingredients of a COMPOSED card - its media, the
+        // entry's text and what the buttons do - and they are worth keeping even for a
         // game that ships no ready-made card
         var icKinds = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         ReadAssetTables(payload, icKinds);
@@ -1394,7 +1394,7 @@ public sealed class WebSocketListenerService : BackgroundService
         }
 
         // A game without an instruction card CLEARS the previous one. Returning early
-        // left the last game's card on screen — one card following you across the whole
+        // left the last game's card on screen - one card following you across the whole
         // library. Nothing of an entry may survive into the next.
         await _instructionCards.SetCardsAsync(sources, cancellationToken);
     }
@@ -1464,7 +1464,7 @@ public sealed class WebSocketListenerService : BackgroundService
     }
 
     /// <summary>The cabinet's own description: how many panels, how many buttons each,
-    /// where they sit. Read from the stream and NOT from APIExpose's settings file —
+    /// where they sit. Read from the stream and NOT from APIExpose's settings file -
     /// the panel drawn has to be the panel the API is publishing.</summary>
     private void HandlePanelConfig(JsonElement root)
     {
@@ -1507,7 +1507,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
     /// <summary>
     /// What the selected game does with each place. Being on the game's card in ES is
-    /// enough — nothing has to be launched — which is exactly how a player uses it:
+    /// enough - nothing has to be launched - which is exactly how a player uses it:
     /// browse the library, read what each button does, game after game.
     /// </summary>
     private void HandlePanelState(JsonElement root)
@@ -1553,7 +1553,7 @@ public sealed class WebSocketListenerService : BackgroundService
                 used);
         }
 
-        // the two drawn views of this same panel, written by APIExpose for the themes —
+        // the two drawn views of this same panel, written by APIExpose for the themes -
         // read from the path the stream gives, never from a folder we went looking for
         var svg = Child(payload, "Svg", "svg");
         _surfaces.UpdatePanelArt(ReadArt(Child(svg, "Top", "top")), ReadArt(Child(svg, "Front", "front")));
@@ -1566,7 +1566,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
         // Every panel the cabinet has, even those this game says nothing about: a player
         // 2 panel left describing the PREVIOUS game would be a lie, and the rule is the
-        // same as for media — nothing of an entry survives into the next.
+        // same as for media - nothing of an entry survives into the next.
         var panels = Math.Max(_panelConfig?.PlayerCount ?? 1, byPlayer.Keys.DefaultIfEmpty(1).Max());
         for (var player = 1; player <= panels; player++)
         {
@@ -1578,7 +1578,7 @@ public sealed class WebSocketListenerService : BackgroundService
     }
 
     /// <summary>One drawn view: where the file is, how big the drawing is, and where
-    /// each button landed in it. Null when APIExpose drew nothing for this game — the
+    /// each button landed in it. Null when APIExpose drew nothing for this game - the
     /// panel then falls back to its own plain shapes.</summary>
     private Core.Surfaces.PanelBoardArt? ReadArt(JsonElement view)
     {
@@ -1614,7 +1614,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
     /// <summary>A physical press, already resolved to a slot by APIExpose: the panel
     /// lights the place that was pressed. If another place lights, the wiring is not
-    /// what the cabinet's map claims — which is the whole reason this exists.</summary>
+    /// what the cabinet's map claims - which is the whole reason this exists.</summary>
     private void HandlePanelInput(JsonElement root, bool pressed)
     {
         var payload = Payload(root);
@@ -1624,7 +1624,7 @@ public sealed class WebSocketListenerService : BackgroundService
         _surfaces.SetPanelInput(player, slot, system.Length > 0 ? system : null, pressed);
 
         // The first press of a session is worth a line: it is the proof the whole chain
-        // is alive — cabinet, API, stream, surface — and the one thing a support log
+        // is alive - cabinet, API, stream, surface - and the one thing a support log
         // needs when someone reports "my panel does not light up". After that it would
         // be one line per press, so it says nothing more.
         if (pressed && !_panelInputSeen)
@@ -1673,14 +1673,14 @@ public sealed class WebSocketListenerService : BackgroundService
             }
         }
 
-        // Fallback: a single value (legacy single-line overlay — zero regression).
+        // Fallback: a single value (legacy single-line overlay - zero regression).
         var score = Text(payload, "Score", "score", "Value", "value");
         var player = Text(payload, "Player", "player", "Name", "name");
         if (score.Length == 0) return;
         _surfaces.SetInformation("hiscore", "HIGH SCORE", $"{player} {score}".Trim(), null, true, 0);
     }
 
-    /// <summary>Display label for the leaderboard title ("&lt;GAME&gt; — LOCAL LEADERBOARD").
+    /// <summary>Display label for the leaderboard title ("&lt;GAME&gt; - LOCAL LEADERBOARD").
     /// Prefers a real game name from the payload, else the rom id. Never translated.</summary>
     private string HiscoreGameLabel(JsonElement payload, string rom)
     {
@@ -1717,7 +1717,7 @@ public sealed class WebSocketListenerService : BackgroundService
     }
 
     /// <summary>Lot 3: debounced (latest-wins) fetch of GET /api/v1/hiscores for the
-    /// just-selected game, so the leaderboard appears while browsing ES — not only on
+    /// just-selected game, so the leaderboard appears while browsing ES - not only on
     /// hiscore.updated. A fast scroll cancels pending fetches and only the last runs.</summary>
     private void ScheduleHiscoreFetch(string rom)
     {
@@ -1899,7 +1899,7 @@ public sealed class WebSocketListenerService : BackgroundService
         {
             _logger.LogInformation("Frontend game ended event received: {Type}", type);
             // scene FIRST: ingame-only surfaces must leave the game screen even
-            // if a later step throws — ES does not always re-select afterwards
+            // if a later step throws - ES does not always re-select afterwards
             _displayScene = "navigation";
             _surfaces.SetDisplayScene("navigation");
             _lay.Clear();
@@ -1920,7 +1920,7 @@ public sealed class WebSocketListenerService : BackgroundService
         _displayScene = "ingame";
         _surfaces.SetDisplayScene("ingame");
         _presentation.MarkGameStarted();
-        // game launch drama: silent power cycle — the play session stays clean
+        // game launch drama: silent power cycle - the play session stays clean
         _surfaces.SetLightingIngame(true);
         _surfaces.PowerCycleLighting();
         // yield the CPU to the emulator during play (input latency); restored on game end
@@ -1984,7 +1984,7 @@ public sealed class WebSocketListenerService : BackgroundService
     }
 
     /// <summary>
-    /// ws/ingame: semantic .mem actions (CDC §9). The action is already semantic —
+    /// ws/ingame: semantic .mem actions (CDC §9). The action is already semantic -
     /// resolve it through the ingame effects library and fire the light effect.
     /// </summary>
     private void HandleIngame(JsonElement root)
@@ -2010,7 +2010,7 @@ public sealed class WebSocketListenerService : BackgroundService
         // flow lifecycle changes gate the speedrun leaderboard (no timer during demos)
         _presentation.OnGameplayFlow(action);
 
-        // Two actions do not describe a change, they NAME what a player has in hand —
+        // Two actions do not describe a change, they NAME what a player has in hand -
         // their description is "Cody", "Fire Water". That name is a card's role, so the
         // viewers following that player switch to it. Handled before the effect lookup:
         // a game announcing a character has something to show even when no light effect
@@ -2242,11 +2242,11 @@ public sealed class WebSocketListenerService : BackgroundService
     /// A media path from the stream, turned into a file we can open.
     ///
     /// APIExpose sends RELATIVE paths, against one of two roots: the APIExpose plugin
-    /// when the file lives there, RetroBat itself otherwise — an EmulationStation theme,
+    /// when the file lives there, RetroBat itself otherwise - an EmulationStation theme,
     /// for instance. Nothing in the payload says which, so the reader has to try.
     ///
     /// It only ever tried the first. A theme's media therefore resolved to
-    /// plugins\APIExpose\emulationstation\… — a path that does not exist — and the file
+    /// plugins\APIExpose\emulationstation\… - a path that does not exist - and the file
     /// was dropped with no trace: the media was published, and simply never appeared.
     /// The Carbon theme's system art fell exactly there.
     /// </summary>
@@ -2256,7 +2256,7 @@ public sealed class WebSocketListenerService : BackgroundService
         if (Path.IsPathRooted(value)) return File.Exists(value) ? value : null;
 
         // HP5: when the stream names the root the path is relative to (PathRoot), go straight to
-        // it — deterministic, and it disambiguates a name that exists under both roots. The
+        // it - deterministic, and it disambiguates a name that exists under both roots. The
         // two-root guess below stays as the fallback for an older APIExpose (PathRoot absent, the
         // default) or if the named root somehow misses.
         var named = ResolveAgainstNamedRoot(value, pathRoot);
@@ -2278,11 +2278,11 @@ public sealed class WebSocketListenerService : BackgroundService
         return retroBat;
     }
 
-    /// <summary>HP5 — resolve a relative path against the root APIExpose named in PathRoot:
+    /// <summary>HP5 - resolve a relative path against the root APIExpose named in PathRoot:
     /// "apiexpose" = the plugin folder, "retrobat" = the RetroBat root. Null when no usable root
     /// is named (absent, or "external-local" which lives outside both) or the file is not there,
     /// so the caller falls back to trying both roots. The two roots match those the fallback
-    /// tries, so a present PathRoot only removes the guess — it never changes where a file is
+    /// tries, so a present PathRoot only removes the guess - it never changes where a file is
     /// found.</summary>
     private string? ResolveAgainstNamedRoot(string value, string? pathRoot)
     {

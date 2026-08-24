@@ -4,7 +4,7 @@ namespace MarqueeManager.Setup.Config;
 
 /// <summary>
 /// Locates the MarqueeManager plugin root (the folder holding config.ini) by walking
-/// up from the executable — works both published at the plugin root and from bin\Debug.
+/// up from the executable - works both published at the plugin root and from bin\Debug.
 /// </summary>
 public static class PluginPaths
 {

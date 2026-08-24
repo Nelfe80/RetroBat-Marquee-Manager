@@ -16,7 +16,7 @@ namespace MarqueeManager.Setup.Controls;
 public sealed class ScrapeCard : UserControl
 {
     // ScreenScraper appears only when DEV credentials resolve (env / APIExpose
-    // .env / build-embedded); unchecked by default — APIExpose mirrors it locally.
+    // .env / build-embedded); unchecked by default - APIExpose mirrors it locally.
     private static readonly (string Key, string Label, bool DefaultChecked)[] Sources =
     {
         ("adb", "Arcade Database", true),

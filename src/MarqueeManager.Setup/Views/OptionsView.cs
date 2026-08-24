@@ -82,9 +82,9 @@ public sealed class OptionsView : UserControl
         page.Children.Add(Ui.Title("Options"));
         page.Children.Add(Ui.Subtitle(L.T(
             "Connexion APIExpose, rendu lumineux du marquee, layouts MAME, RetroAchievements et données live. "
-            + "Les réglages fins restent éditables dans config.ini — les commentaires y sont préservés.",
+            + "Les réglages fins restent éditables dans config.ini - les commentaires y sont préservés.",
             "APIExpose connection, marquee lighting, MAME layouts, RetroAchievements and live data. "
-            + "Fine-grained settings remain editable in config.ini — its comments are preserved.")));
+            + "Fine-grained settings remain editable in config.ini - its comments are preserved.")));
 
         // --- connexion ---
         page.Children.Add(Ui.SectionHeader(L.T("Connexion", "Connection")));
@@ -124,9 +124,9 @@ public sealed class OptionsView : UserControl
             ini.GetBool("Lighting", "Enabled", false));
         lighting.Children.Add(_lightingEnabled);
         lighting.Children.Add(Ui.MutedLabel(L.T(
-            "Interrupteur général — le rendu vit sur les surfaces qui portent le composant « Rendu lumineux », "
+            "Interrupteur général - le rendu vit sur les surfaces qui portent le composant « Rendu lumineux », "
             + "réglable par surface et par état d'affichage dans Mon setup.",
-            "Master switch — the render lives on the surfaces carrying the “Lighting” component, "
+            "Master switch - the render lives on the surfaces carrying the “Lighting” component, "
             + "set per surface and per display state in My setup.")));
 
         _lightingGpuRaster = Ui.CheckBox(L.T("Rasteriser le moteur lumière sur le GPU (backend Skia OpenGL)",
@@ -142,7 +142,7 @@ public sealed class OptionsView : UserControl
             + "Falls back to CPU automatically if GL init fails. Requires a restart.")));
 
         (_renderScale, var renderLine) = PercentSlider(ini.GetDouble("Lighting", "RenderScale", 0.75), 0.25, 1.0,
-            _renderScaleLabel, v => $"{(int)(v * 100)} % — " + L.T("qualité/performance", "quality/performance"));
+            _renderScaleLabel, v => $"{(int)(v * 100)} % - " + L.T("qualité/performance", "quality/performance"));
         lighting.Children.Add(Ui.Row(L.T("Résolution interne", "Internal resolution"), renderLine,
             L.T("baisser si le CPU ne tient pas 60 FPS", "lower it if the CPU can't hold 60 FPS")));
 
@@ -347,24 +347,24 @@ public sealed class OptionsView : UserControl
             + "Arcade Database needs no key.")));
         foreach (var (key, label) in new[]
                  {
-                     ("SteamGridDbApiKey", "SteamGridDB — API key"),
-                     ("TheGamesDbApiKey", "TheGamesDB — API key"),
-                     ("TwitchClientId", "Twitch — Client ID"),
-                     ("TwitchClientSecret", "Twitch — Client Secret"),
-                     ("YouTubeApiKey", "YouTube — Data API key")
+                     ("SteamGridDbApiKey", "SteamGridDB - API key"),
+                     ("TheGamesDbApiKey", "TheGamesDB - API key"),
+                     ("TwitchClientId", "Twitch - Client ID"),
+                     ("TwitchClientSecret", "Twitch - Client Secret"),
+                     ("YouTubeApiKey", "YouTube - Data API key")
                  })
         {
             online.Children.Add(TestableKeyRow(ini, key, label));
         }
 
         // ScreenScraper: the account resolves from config.ini or EmulationStation
-        // and is displayed masked, never editable here — the developer credentials
+        // and is displayed masked, never editable here - the developer credentials
         // resolve silently (env / APIExpose .env / build-embedded).
         var (esUser, esPassword) = Data.ScreenScraperCredentials.ResolveUser(pluginRoot, key => ini.Get("Scraper", key, ""));
         var fromEs = ini.Get("Scraper", "ScreenScraperUser", "").Length == 0 && esUser.Length > 0;
         var ssUserBox = Ui.TextBox(esUser.Length > 0 ? esUser : L.T("(aucun compte détecté)", "(no account detected)"), 280);
         ssUserBox.IsReadOnly = true;
-        online.Children.Add(Ui.Row(L.T("ScreenScraper — utilisateur", "ScreenScraper — username"), ssUserBox,
+        online.Children.Add(Ui.Row(L.T("ScreenScraper - utilisateur", "ScreenScraper - username"), ssUserBox,
             hint: fromEs ? L.T("(repris d'EmulationStation)", "(picked up from EmulationStation)") : null));
         var ssPassBox = Ui.TextBox(esPassword.Length > 0 ? "********" : "", 280);
         ssPassBox.IsReadOnly = true;
@@ -381,7 +381,7 @@ public sealed class OptionsView : UserControl
             ssResult.Foreground = ok ? Ui.Ok : Ui.Error;
         }));
         ssLine.Children.Add(ssResult);
-        online.Children.Add(Ui.Row(L.T("ScreenScraper — mot de passe", "ScreenScraper — password"), ssLine));
+        online.Children.Add(Ui.Row(L.T("ScreenScraper - mot de passe", "ScreenScraper - password"), ssLine));
         page.Children.Add(Ui.Card(online));
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 6) };
@@ -667,7 +667,7 @@ public sealed class OptionsView : UserControl
         return false;
     }
 
-    /// <summary>Writes the key only when the field holds a valid positive number —
+    /// <summary>Writes the key only when the field holds a valid positive number -
     /// a typo must not corrupt a working config.ini value.</summary>
     private static void SetIfNumeric(IniFile ini, string section, string key, TextBox box)
     {
@@ -738,7 +738,7 @@ public sealed class OptionsView : UserControl
         ini.Set("Lighting", "RenderScale", D(_renderScale));
         ini.Set("Lighting", "FillHeightMaxCrop", D(_fillHeight));
         ini.Set("Lighting", "GlassReflection", D(_glass));
-        // PreferGeneratedMarquee : plus exposé ici — l'ordre de la chaîne de
+        // PreferGeneratedMarquee : plus exposé ici - l'ordre de la chaîne de
         // sources (Mes systèmes) porte cette intention ; la clé ini reste honorée
         ini.Set("Lighting", "DmdMirror", B(_dmdMirror));
         ini.Set("Lighting", "SoundEnabled", B(_sound));

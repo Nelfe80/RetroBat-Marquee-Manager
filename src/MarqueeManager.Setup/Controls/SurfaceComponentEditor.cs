@@ -53,7 +53,7 @@ public sealed class SurfaceComponentEditor : Window
             : fallbackAspect;
 
         Title = L.T($"Composants de « {surface.Id} »", $"Components of “{surface.Id}”")
-                + (surface is { Width: > 0, Height: > 0 } ? $" — {surface.Width}×{surface.Height}" : "");
+                + (surface is { Width: > 0, Height: > 0 } ? $" - {surface.Width}×{surface.Height}" : "");
         Width = 980;
         Height = 680;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;

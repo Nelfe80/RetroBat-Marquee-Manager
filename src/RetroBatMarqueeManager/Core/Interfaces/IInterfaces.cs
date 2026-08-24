@@ -5,7 +5,7 @@ namespace RetroBatMarqueeManager.Core.Interfaces;
 /// <summary>
 /// Window placement relative to the target screen's top-left corner, in pixels.
 /// Lets several target windows (marquee, iccard, topper…) share one physical
-/// screen — typically a vertical display — instead of each going fullscreen.
+/// screen - typically a vertical display - instead of each going fullscreen.
 /// </summary>
 public sealed record TargetBounds(int X, int Y, int Width, int Height);
 
@@ -26,7 +26,7 @@ public interface IConfigService
     string GetValue(string section, string key, string fallback = "");
 
     /// <summary>The dynamic surfaces (state\surfaces.json) or their legacy
-    /// [Screens] equivalent — the runtime always consumes this shape.</summary>
+    /// [Screens] equivalent - the runtime always consumes this shape.</summary>
     IReadOnlyList<Core.Surfaces.SurfaceDefinition> GetSurfaces();
 
     /// <summary>Screen indices (Screen.AllScreens order) the user excluded from

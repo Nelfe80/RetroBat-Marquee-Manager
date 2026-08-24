@@ -78,7 +78,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Rendering
                     var frame = Compositor.Render();
                     Adapter.Push(frame, Compositor.RefW, Compositor.RefH);
                 }
-                // LCD: UIElements are already live in the canvas — no push needed
+                // LCD: UIElements are already live in the canvas - no push needed
             }
             catch (Exception ex)
             {

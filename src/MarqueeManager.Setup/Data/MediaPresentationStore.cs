@@ -96,7 +96,7 @@ public static class MediaPresentationEdits
 
     /// <summary>
     /// FORCE a source for the target: enable the selected link and every link BELOW
-    /// it in the chain, disable every link ABOVE — so the selected one wins when
+    /// it in the chain, disable every link ABOVE - so the selected one wins when
     /// present (spec §7, no reordering; equivalent to the user clicking that card).
     /// </summary>
     public static MediaPresentationDocument SelectSource(

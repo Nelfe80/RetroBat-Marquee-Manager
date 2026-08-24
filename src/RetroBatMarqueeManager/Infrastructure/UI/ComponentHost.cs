@@ -45,7 +45,7 @@ public sealed class ComponentHost : Canvas
     }
 
     /// <summary>Layers already baked into the dynamic render: drawing them live too
-    /// would show an UNLIT copy on top of the lit one. Reference identity is enough —
+    /// would show an UNLIT copy on top of the lit one. Reference identity is enough -
     /// the suppressed set comes from the very component list this host was built
     /// from.</summary>
     private readonly HashSet<ComponentDefinition> _suppressed =
@@ -147,7 +147,7 @@ public sealed class ComponentHost : Canvas
 
     /// <summary>
     /// Feeds the instruction card viewers tuned to ONE channel. A viewer says which
-    /// channel it reads through its options — explicitly, or through its player or its
+    /// channel it reads through its options - explicitly, or through its player or its
     /// role, so the usual setups need no naming at all.
     ///
     /// The historical `iccard.cycle` has no options to say it: it answers on the main
@@ -205,7 +205,7 @@ public sealed class ComponentHost : Canvas
     }
 
     /// <summary>What the SELECTED game does with each place, per player. Being on a
-    /// game's card in ES is enough — nothing has to be launched for the panel to tell
+    /// game's card in ES is enough - nothing has to be launched for the panel to tell
     /// what its buttons do.</summary>
     public void ApplyPanelButtons(int player, IReadOnlyDictionary<int, Core.Surfaces.PanelBoardButton> buttons)
     {
@@ -216,7 +216,7 @@ public sealed class ComponentHost : Canvas
     }
 
     /// <summary>The two drawn views of the panel. Each component takes the one its
-    /// style asked for — seen from above, or from the front.</summary>
+    /// style asked for - seen from above, or from the front.</summary>
     public void ApplyPanelArt(Core.Surfaces.PanelBoardArt? top, Core.Surfaces.PanelBoardArt? front)
     {
         foreach (var (_, element) in _visuals)
@@ -227,7 +227,7 @@ public sealed class ComponentHost : Canvas
     }
 
     /// <summary>A physical press, already resolved to a slot by APIExpose. Only the
-    /// panel of the player who pressed lights up — that a press on panel 2 lights
+    /// panel of the player who pressed lights up - that a press on panel 2 lights
     /// panel 2 is itself part of what the check verifies.</summary>
     public void SetPanelInput(int player, int? slot, string? system, bool pressed)
     {
@@ -239,7 +239,7 @@ public sealed class ComponentHost : Canvas
         }
     }
 
-    /// <summary>Everything goes dark — the panel state on screen no longer describes
+    /// <summary>Everything goes dark - the panel state on screen no longer describes
     /// what is being pressed.</summary>
     public void ReleasePanelInputs()
     {
@@ -259,7 +259,7 @@ public sealed class ComponentHost : Canvas
             case "media.fanart":
             case "media.image":
             case "iccard.viewer":
-                // a card can be pointed AT — the entry the game just announced gets framed —
+                // a card can be pointed AT - the entry the game just announced gets framed -
                 // so it is a picture plus an overlay, not a bare picture
                 return new InstructionCardView(
                     component.Option("stretch") == "fill" ? Stretch.UniformToFill : Stretch.Uniform,
@@ -357,13 +357,13 @@ public sealed class ComponentHost : Canvas
     }
 
     /// <summary>
-    /// A zone that answers to the finger. The rectangle IS the zone — what the user drew
-    /// in the editor is what he can press — and the tap itself is handled by the window,
+    /// A zone that answers to the finger. The rectangle IS the zone - what the user drew
+    /// in the editor is what he can press - and the tap itself is handled by the window,
     /// which owns the touch events; this only draws what the player must SEE of it.
     ///
     /// Nothing by default: a working touchscreen needs no marking, and a card covered in
     /// boxes is a worse card. A tint and an outline are there for a cabinet whose players
-    /// do not know the zone exists — a written label was too, and was dropped: three ways
+    /// do not know the zone exists - a written label was too, and was dropped: three ways
     /// of saying the same thing, and the only one that ages badly when the action changes.
     /// </summary>
     private static FrameworkElement BuildTouchZone(ComponentDefinition component)
@@ -376,7 +376,7 @@ public sealed class ComponentHost : Canvas
             : 0.35;
 
         // A tint says "press here" better than an outline does. Transparency stays the
-        // default — a working touchscreen needs no marking — and the alpha lives in the
+        // default - a working touchscreen needs no marking - and the alpha lives in the
         // BRUSH rather than on the element, so a faint backdrop never fades the label
         // written on it.
         var fill = Brushes.Transparent;
@@ -406,7 +406,7 @@ public sealed class ComponentHost : Canvas
 
     /// <summary>Embedded web player (Twitch/YouTube embeds, any page). WebView2's
     /// Edge runtime ships with Windows 11; when missing the component degrades to
-    /// a muted notice — never fatal.</summary>
+    /// a muted notice - never fatal.</summary>
     private FrameworkElement BuildWebView(ComponentDefinition component)
     {
         var url = component.Option("url");
@@ -466,7 +466,7 @@ public sealed class ComponentHost : Canvas
     ///
     /// The size used to be half the zone's height, which only ever worked for a title:
     /// a game description is 500 to 1500 characters, and in a zone 300 px tall that rule
-    /// asked for a 150 px font — one word on screen. The text is FITTED instead: it
+    /// asked for a 150 px font - one word on screen. The text is FITTED instead: it
     /// starts from what a single line would take and shrinks until the whole paragraph
     /// fits, so the same layer holds a name or a paragraph without being told which.
     ///
@@ -533,7 +533,7 @@ public sealed class ComponentHost : Canvas
     private static readonly ConditionalWeakTable<Image, ImageLoadState> _imageState = new();
 
     /// <summary>Assigns an image source WITHOUT blocking the UI thread. The decode
-    /// (BitmapImage EndInit reads and decodes the whole file — 100-234 ms for a
+    /// (BitmapImage EndInit reads and decodes the whole file - 100-234 ms for a
     /// large fanart/logo) runs on a thread-pool thread; the frozen bitmap is
     /// handed back on the Dispatcher. Two guards keep it correct and cheap:
     /// a DEDUP short-circuit (same path already shown/loading = no work) and a
@@ -650,7 +650,7 @@ public sealed class ComponentHost : Canvas
     }
 
     /// <summary>A 0..1 option written by a slider, invariant-culture. An unreadable value
-    /// keeps the default rather than collapsing to zero — a background that vanished
+    /// keeps the default rather than collapsing to zero - a background that vanished
     /// because a comma slipped into a decimal point would be a puzzle, not a setting.</summary>
     private static double Fraction(string value, double fallback)
         => double.TryParse(value, System.Globalization.NumberStyles.Float,

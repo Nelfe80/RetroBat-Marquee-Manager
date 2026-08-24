@@ -3,7 +3,7 @@ namespace MarqueeManager.Compositions.Core.Policy;
 public static class PolicyLimits
 {
     // §20.1: maxCrop is a decimal in [0.0, 0.60]. Out of range invalidates the
-    // field — it is NEVER silently clamped.
+    // field - it is NEVER silently clamped.
     public const double MaxCropMin = 0.0;
     public const double MaxCropMax = 0.60;
 }

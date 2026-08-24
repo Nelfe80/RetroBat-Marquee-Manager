@@ -4,7 +4,7 @@ namespace MarqueeManager.Setup.Detection;
 
 /// <summary>
 /// Checks whether APIExpose answers on its WebSocket base URL. Used by the welcome
-/// checks and the "Tester la connexion" button — a failure here explains why the
+/// checks and the "Tester la connexion" button - a failure here explains why the
 /// surfaces show no content, before the user blames his screen setup.
 /// </summary>
 public static class ApiExposeProbe

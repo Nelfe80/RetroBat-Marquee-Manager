@@ -2,8 +2,8 @@ namespace RetroBatMarqueeManager.Application.Lighting;
 
 /// <summary>
 /// Life of a single tube: a randomized ignition scenario, then continuous life
-/// events — dips, blinks, brown-outs, restrikes and the occasional definitive
-/// death — so no two power-ons or minutes of operation ever look the same
+/// events - dips, blinks, brown-outs, restrikes and the occasional definitive
+/// death - so no two power-ons or minutes of operation ever look the same
 /// (CDC §12.3 lamp states: rampingOn, on, flickering, unstable, afterglow, off).
 /// LED tubes ramp fast and then live a perfectly clean life (modern repro, §2.3).
 /// All state is driven from the render thread via <see cref="Update"/>.

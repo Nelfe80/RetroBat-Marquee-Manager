@@ -11,10 +11,10 @@ namespace MarqueeManager.Setup.Controls;
 /// language as LedManagerSetup, amber accent). The XAML shell consumes the token
 /// brushes through DynamicResource, so <see cref="Apply"/> retints it live; the
 /// code-built views route their colors through <see cref="Brush"/>/<see cref="Text"/>,
-/// whose remap table translates the dark palette into the light one — views are
+/// whose remap table translates the dark palette into the light one - views are
 /// rebuilt on theme change. Preview/composer canvases deliberately stay dark in
 /// both themes (<see cref="Viewport"/>). Choice persisted in state\setup.ini
-/// [Setup] Theme — NOT in config.ini, which the runtime regenerates.
+/// [Setup] Theme - NOT in config.ini, which the runtime regenerates.
 /// </summary>
 public static class Ui
 {
@@ -202,7 +202,7 @@ public static class Ui
         };
         if (primary)
         {
-            // Application.Current is null under test harnesses — plain accent fallback
+            // Application.Current is null under test harnesses - plain accent fallback
             if (System.Windows.Application.Current?.TryFindResource("AccentButton") is Style accent)
             {
                 button.Style = accent;

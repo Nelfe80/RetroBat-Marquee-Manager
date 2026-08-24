@@ -5,7 +5,7 @@ namespace MarqueeManager.Setup.Data;
 
 /// <summary>
 /// Setup-side mirror of the runtime chain walk for ONE game: returns the media
-/// file the marquee currently displays and where it comes from — powers the
+/// file the marquee currently displays and where it comes from - powers the
 /// "marquee affiché" preview of the game sheet. Same file rules as the runtime's
 /// CompositionChainResolver, without launching ES.
 /// </summary>

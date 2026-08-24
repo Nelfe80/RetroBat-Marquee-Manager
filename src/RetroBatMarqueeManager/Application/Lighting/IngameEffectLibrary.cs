@@ -85,7 +85,7 @@ public sealed class IngameEffectLibrary
     /// <summary>
     /// Follows the displayed game: loads its sparse override layers and remembers
     /// its genre slugs for the genre-scoped library rules. Cheap when the game
-    /// did not change. MAME sets are exposed as "arcade" by ES — both spellings
+    /// did not change. MAME sets are exposed as "arcade" by ES - both spellings
     /// locate the same override files.
     /// </summary>
     public void SetContext(string? system, string? rom, IReadOnlyList<string> genreSlugs, string overridesRoot, ILogger logger)
@@ -309,7 +309,7 @@ public sealed class IngameEffectLibrary
         return (rules, policy);
     }
 
-    /// <summary>Single object, "actions" array, or "effect" library reference —
+    /// <summary>Single object, "actions" array, or "effect" library reference -
     /// all normalize to a sequence of actions sharing the rule's label/throttle.</summary>
     private List<IngameEffectRule> ParseRuleEffects(JsonElement value, string label, ILogger logger)
     {
@@ -385,7 +385,7 @@ public sealed class IngameEffectLibrary
 
     private (string Path, DateTime Stamp, Dictionary<string, List<IngameEffectRule>> Effects) _libraryCache;
 
-    /// <summary>media\effects\library.json — the user's named, reusable effect
+    /// <summary>media\effects\library.json - the user's named, reusable effect
     /// compositions: { "effects": { "<name>": { "actions": [ {…}, {…} ] } } }.</summary>
     private List<IngameEffectRule> LookupLibraryEffect(string name, ILogger logger)
     {

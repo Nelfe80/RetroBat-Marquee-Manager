@@ -32,7 +32,7 @@ public sealed record FitPolicy(
     double MaxCrop = 0.30,
     FitMode Fallback = FitMode.Contain);
 
-/// <summary>Regions of the SOURCE (in fractions) that must not be cropped away —
+/// <summary>Regions of the SOURCE (in fractions) that must not be cropped away -
 /// logo, declared ROI, lamp/output extent, detected salient content. Consulted
 /// only by <see cref="FitMode.Dynamic"/>.</summary>
 public sealed record ProtectedRegions(IReadOnlyList<RelativeRect> Regions)

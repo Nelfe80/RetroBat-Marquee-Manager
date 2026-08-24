@@ -1,6 +1,6 @@
 # Hardware
 
-MarqueeManager drives the **secondary displays** of a cabinet — everything that is not the game screen. This page presents the **screen types** you can hand to it, then details how to **build a real DMD** from LED panels.
+MarqueeManager drives the **secondary displays** of a cabinet - everything that is not the game screen. This page presents the **screen types** you can hand to it, then details how to **build a real DMD** from LED panels.
 
 ## Screen types
 
@@ -8,7 +8,7 @@ You connect these screens like extra monitors; MarqueeManager assigns each a **s
 
 | Screen | Role | Common hardware |
 |---|---|---|
-| **Marquee** | The header sign at the top of the cabinet (animated art, logo, current game) | Wide LCD monitor — often an **ultra-wide** format (e.g. 19"×6", 1920×540) slotted where the original backlit marquee sat |
+| **Marquee** | The header sign at the top of the cabinet (animated art, logo, current game) | Wide LCD monitor - often an **ultra-wide** format (e.g. 19"×6", 1920×540) slotted where the original backlit marquee sat |
 | **Topper** | A screen at the **top** of the cabinet, above the marquee | Small 16:9 LCD |
 | **DMD** | The **dot-matrix** display (scores, pinball/arcade-style animations) | A **real LED DMD** (HUB75 panels + ZeDMD, below) **or** a small LCD that simulates it |
 | **Control / LCD screen** | Instruction cards, secondary art, second player… | LCD in whatever format you like |
@@ -22,8 +22,8 @@ A real DMD is made from **two 64 × 32 HUB75 LED panels**, placed side by side t
 
 Two controllers are possible:
 
-- **classic ESP32** — best if you already have a working build;
-- **ESP32-S3 DevKitC-1 N16R8** — recommended for a new build.
+- **classic ESP32** - best if you already have a working build;
+- **ESP32-S3 DevKitC-1 N16R8** - recommended for a new build.
 
 ### What you need
 
@@ -31,7 +31,7 @@ Two controllers are possible:
 - 1 **classic ESP32** **or** 1 **ESP32-S3** N16R8;
 - 1 **controller board** (the carrier that receives the ESP32);
 - 1 **HUB75 ribbon cable** between the two panels;
-- **jumper wires** (Dupont) between the board and the left panel — wired signal by signal (see the HUB75 table); if your board has a HUB75 output connector, a **HUB75 ribbon cable** is enough;
+- **jumper wires** (Dupont) between the board and the left panel - wired signal by signal (see the HUB75 table); if your board has a HUB75 output connector, a **HUB75 ribbon cable** is enough;
 - **power leads** (+5 V and ground) to both panels;
 - 1 **USB cable** (data, not a charge-only one);
 - a frame, screws, standoffs and cable ties;
@@ -94,7 +94,7 @@ Connect the board to the `HUB75 IN` connector of the **left** panel. On the boar
 
 ### 4. Power the panels
 
-Both panels are powered **in parallel** from the board: the 5 V it supplies is right for them — no over-voltage, no smearing.
+Both panels are powered **in parallel** from the board: the 5 V it supplies is right for them - no over-voltage, no smearing.
 
 ![Powering both panels in parallel](assets/dmd/power.svg){ width="560" }
 
@@ -140,7 +140,7 @@ Re-select the controller in the Updater, then:
 - **Resolution**: `128 × 32`.
 - **RGB order**: the test logo must show **red top-left, green bottom-left, blue top-right**. Change `RGB Order` until it's right.
 - **Brightness**: start low, raise it gradually.
-- **USB packet size**: aim for `512` (classic ESP32) or `1024` (S3) — start lower and raise it while the image stays stable.
+- **USB packet size**: aim for `512` (classic ESP32) or `1024` (S3) - start lower and raise it while the image stays stable.
 - **Refresh**: around `90 Hz` for a 128 × 32; lower it if unstable.
 
 Finish with `Set new parameters` and wait for the write to complete before unplugging. Flashing alone does **not** apply these settings: configure them afterwards.

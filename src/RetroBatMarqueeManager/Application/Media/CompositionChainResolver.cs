@@ -6,12 +6,12 @@ namespace RetroBatMarqueeManager.Application.Media;
 /// <summary>
 /// Walks the per-system source chains of media\assignments.json (schema
 /// marqueemanager.compositions.v1, written by the Setup) for the three media
-/// categories — marquee, topper, dmd. First existing source wins:
+/// categories - marquee, topper, dmd. First existing source wins:
 ///   composition   media\&lt;cat&gt;s\&lt;sys&gt;\&lt;rom&gt;.png (game) / systems\&lt;sys&gt;.png (system scope)
-///   user          media\&lt;cat&gt;s\user\&lt;sys&gt;\&lt;rom&gt;.* — the drop folder; file names
+///   user          media\&lt;cat&gt;s\user\&lt;sys&gt;\&lt;rom&gt;.* - the drop folder; file names
 ///                 resolve through the Setup-built sidecar .index.json (aliases),
 ///                 falling back to the exact rom name
-///   template:&lt;id&gt; media\&lt;cat&gt;s\.cache\&lt;sys&gt;\&lt;rom&gt;-&lt;id&gt;.png (lazy Skia render —
+///   template:&lt;id&gt; media\&lt;cat&gt;s\.cache\&lt;sys&gt;\&lt;rom&gt;-&lt;id&gt;.png (lazy Skia render -
 ///                 a miss fires the renderer callback and the chain continues)
 ///   anything else = the matching ws snapshot asset (marquee, screenmarquee,
 ///                 generated, logo, fanart, topper, animations, still…)
@@ -115,7 +115,7 @@ public sealed class CompositionChainResolver
         if (string.IsNullOrEmpty(system) || string.IsNullOrEmpty(surfaceId)) return null;
         var root = Path.Combine(CategoryRoot(category), "surfaces", SafeName(surfaceId));
         // arcade family: the user may have saved under the frontend name (mame) while
-        // the runtime is fed the canonical one (arcade), or vice versa — try both.
+        // the runtime is fed the canonical one (arcade), or vice versa - try both.
         foreach (var sys in SystemSpellings(system!))
         {
             var path = systemScope || string.IsNullOrEmpty(rom)
@@ -131,7 +131,7 @@ public sealed class CompositionChainResolver
     /// media\&lt;cat&gt;root\.cache\surfaces\&lt;surfaceId&gt;\{systems\&lt;sys&gt; | games\&lt;sys&gt;\&lt;rom&gt;}.png.
     /// A deliberate, user-composed layout: it sits just below a per-surface graphic
     /// creation and above the scanned/scraped fallbacks. Null when nothing has been
-    /// rendered yet (the runtime never renders it — it consumes what Setup baked, via
+    /// rendered yet (the runtime never renders it - it consumes what Setup baked, via
     /// the lazy per-view render or the "Pre-generate" button), so an absent gabarit is
     /// a clean no-op that never regresses the existing chain.</summary>
     public string? SurfaceGabarit(string category, string surfaceId, LightingSceneMeta? meta, bool systemScope)
@@ -150,10 +150,10 @@ public sealed class CompositionChainResolver
             if (File.Exists(path)) { found = path; break; }
         }
 
-        // ALWAYS ask the host to (re)bake — not only when nothing is baked. The renderer now
+        // ALWAYS ask the host to (re)bake - not only when nothing is baked. The renderer now
         // stamps each PNG with a freshness key (the layout + every source by path+mtime+size)
         // and re-renders ONLY when the recipe changed, so a media that was re-scraped or
-        // removed repairs its sheet on its own, with no manual purge — uniformly for every
+        // removed repairs its sheet on its own, with no manual purge - uniformly for every
         // surface. The existing PNG is returned meanwhile for an instant display; a fresh
         // one, if the recipe moved, lands a moment later. When nothing is baked yet we still
         // return null rather than standing in with another entry's artwork.
@@ -162,11 +162,11 @@ public sealed class CompositionChainResolver
     }
 
     /// <summary>Fired when a gabarit is not baked yet: (surfaceId, category, system,
-    /// rom) — rom null for the SYSTEM scope. The host renders it in the background then
+    /// rom) - rom null for the SYSTEM scope. The host renders it in the background then
     /// re-displays.</summary>
     public Action<string, string, string, string?>? GabaritMissing;
 
-    /// <summary>Cache path of a surface's gabarit — the renderer writes here and
+    /// <summary>Cache path of a surface's gabarit - the renderer writes here and
     /// <see cref="SurfaceGabarit"/> reads it back. Null rom = system scope.</summary>
     public string GabaritCachePath(string category, string surfaceId, string system, string? rom)
     {
@@ -213,7 +213,7 @@ public sealed class CompositionChainResolver
         return ResolveUserFile(category, system!, rom!);
     }
 
-    /// <summary>Setup writes the gabarit cache under "marquees"/"toppers"/"dmd" — the
+    /// <summary>Setup writes the gabarit cache under "marquees"/"toppers"/"dmd" - the
     /// dmd folder is "dmd", NOT the "s"-suffixed <see cref="CategoryRoot"/> spelling.</summary>
     private string GabaritCategoryRoot(string category)
         => Path.Combine(_baseDirectory, "media", category.ToLowerInvariant() switch
@@ -362,7 +362,7 @@ public sealed class CompositionChainResolver
     private string CategoryRoot(string category)
         => Path.Combine(_baseDirectory, "media", category.ToLowerInvariant() + "s");
 
-    /// <summary>media\marquees\a\b.(png|jpg|…) — first existing extension.</summary>
+    /// <summary>media\marquees\a\b.(png|jpg|…) - first existing extension.</summary>
     private static string? FirstExisting(params string[] segments)
     {
         var stem = Path.Combine(segments);
@@ -374,8 +374,8 @@ public sealed class CompositionChainResolver
         return null;
     }
 
-    /// <summary>ES exposes a MAME set as "mame" while the library — and the Setup's
-    /// saved files — may use "arcade", or the reverse. Anything that keys on the system
+    /// <summary>ES exposes a MAME set as "mame" while the library - and the Setup's
+    /// saved files - may use "arcade", or the reverse. Anything that keys on the system
     /// name must try both, or it silently finds nothing.</summary>
     public static IEnumerable<string> SystemNames(string system)
     {

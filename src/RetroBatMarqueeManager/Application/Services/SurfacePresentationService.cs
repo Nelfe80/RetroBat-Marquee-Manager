@@ -181,7 +181,7 @@ public sealed class SurfacePresentationService
             // so the rank/timer/result stays visible; badge tray still updates.
             if (_activeLeaderboardIsSpeedrun || DateTime.UtcNow < _suppressUnlocksUntilUtc)
             {
-                _logger.LogDebug("Unlock {Id} during speedrun leaderboard/result — display suppressed, badge tray updated.", achievementId);
+                _logger.LogDebug("Unlock {Id} during speedrun leaderboard/result - display suppressed, badge tray updated.", achievementId);
                 return;
             }
 
@@ -269,7 +269,7 @@ public sealed class SurfacePresentationService
                 "BestFormattedScore", "bestFormattedScore");
             var user = Text(payload, "User", "user", "Username", "username");
             if (user.Length == 0) user = _raUsername;
-            // Leaderboards don't have their own badge — no fallback to _gameIconPath to avoid polluting status badges
+            // Leaderboards don't have their own badge - no fallback to _gameIconPath to avoid polluting status badges
             var leaderboardBadge = LocalMedia(Text(payload, "BadgePath", "badgePath", "BadgeUrl", "badgeUrl", "LeaderboardBadgeUrl", "leaderboardBadgeUrl"))
                 ?? catalogEntry?.BadgePath;
             var references = ReadLeaderboardReferences(payload);
@@ -504,7 +504,7 @@ public sealed class SurfacePresentationService
         if (kind.Equals("retroachievements", StringComparison.OrdinalIgnoreCase) ||
             kind.Equals("leaderboard", StringComparison.OrdinalIgnoreCase)) return Task.CompletedTask;
         var owner = $"live-score-p{player}";
-        // a score that never exceeds 0 is a dead/misread watcher — do not display it
+        // a score that never exceeds 0 is a dead/misread watcher - do not display it
         if (score <= 0)
         {
             _surfaces.ClearInformation(owner);
@@ -610,7 +610,7 @@ public sealed class SurfacePresentationService
                               role.Equals("powerup", StringComparison.OrdinalIgnoreCase) ||
                               role.Equals("combo", StringComparison.OrdinalIgnoreCase);
 
-        // A timer that never exceeds 0 is a dead/misread watcher — do not display it.
+        // A timer that never exceeds 0 is a dead/misread watcher - do not display it.
         if (value <= 0)
         {
             ClearTimer(owner, dmdOwner);
@@ -801,7 +801,7 @@ public sealed class SurfacePresentationService
         }
 
         // Build label (title) + value (detail) so the label always describes what's shown below.
-        // Nothing is displayed if we have no meaningful data yet — avoids the empty startup overlay.
+        // Nothing is displayed if we have no meaningful data yet - avoids the empty startup overlay.
         string label, detail;
         if (score != null)
         {
@@ -829,7 +829,7 @@ public sealed class SurfacePresentationService
         }
         else
         {
-            // Nothing meaningful yet — don't show a useless overlay, wait for real data
+            // Nothing meaningful yet - don't show a useless overlay, wait for real data
             _surfaces.ClearInformation("ra-score");
             _dmd.ClearOwner("RA SCORE");
             return;
@@ -869,7 +869,7 @@ public sealed class SurfacePresentationService
             .Take(2)
             .ToArray());
 
-    // flow.lifecycle states that mean "not in active timed play" — the speedrun
+    // flow.lifecycle states that mean "not in active timed play" - the speedrun
     // leaderboard must not keep ticking during demos, title screens, level ends…
     private static readonly HashSet<string> IdleFlowActions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -977,7 +977,7 @@ public sealed class SurfacePresentationService
             RefreshStatusBadges();
             // A newly started (or switched) level leaderboard is a fresh attempt: hold the
             // chrono at 00:00 and let the first real game-clock sample drive it. Never seed
-            // from the previous level's residual time — that made Act 2 keep counting from
+            // from the previous level's residual time - that made Act 2 keep counting from
             // Act 1's finish time instead of restarting at 00:00.
             StartLeaderboardScroll(leaderboardId, _activeLeaderboardTitle, user, badgePath, cancellationToken, newAttempt: true, currentSeconds: null);
             return;
@@ -1226,7 +1226,7 @@ public sealed class SurfacePresentationService
                 _surfaceOwners.Add("ra-leaderboard");
                 _dmdOwners.Add("RA LEADERBOARD");
 
-                // Surface: persistent overlay — only Text properties updated, no WPF object creation.
+                // Surface: persistent overlay - only Text properties updated, no WPF object creation.
                 if (_config.RetroAchievementsMarqueeEnabled)
                     _surfaces.UpdateSpeedrunDisplay(displayIsSpeedrun ? "SPEEDRUN" : displayTitle, detail, displayBadge, elapsed, recordSeconds, userRecordSeconds, comparison.PlayerRank, displayLeaderboardId, displayTitle);
 
@@ -1388,7 +1388,7 @@ public sealed class SurfacePresentationService
             ? $"{FormatRank(reference.Rank.Value)} {reference.User}" + (reference.FormattedScore.Length > 0 ? $" {NormalizeSpeedrunTime(reference.FormattedScore)}" : string.Empty)
             : string.Empty;
 
-    // D4 = minimum 4 digits, no upper clamp — supports leaderboards with tens of thousands of entries.
+    // D4 = minimum 4 digits, no upper clamp - supports leaderboards with tens of thousands of entries.
     private static string FormatRank(int rank) => "#" + Math.Max(0, rank).ToString("D4", CultureInfo.InvariantCulture);
 
     private static SpeedrunComparison SelectSpeedrunComparison(double elapsedSeconds, IReadOnlyList<LeaderboardReference> references, string user)
@@ -1408,7 +1408,7 @@ public sealed class SurfacePresentationService
             return new SpeedrunComparison($"{FormatRank(1)} {player}", FormatRank(1));
 
         // Continuously cycle through the whole scoreboard (airport split-flap): one
-        // entry every 1/rate second of the running clock, looping — the users always
+        // entry every 1/rate second of the running clock, looping - the users always
         // scroll, independent of how far the player is from the record time.
         var elapsed = Math.Max(0, elapsedSeconds);
         const double ToleranceSeconds = 0.12d;
@@ -1478,7 +1478,7 @@ public sealed class SurfacePresentationService
 
     private static string ResolveLeaderboardType(string title, string fallbackTitle, string value, string format)
     {
-        // RetroAchievements marks time-based leaderboards with format="TIME" — the
+        // RetroAchievements marks time-based leaderboards with format="TIME" - the
         // authoritative speedrun signal. Fall back to title/value heuristics.
         if (format.Equals("TIME", StringComparison.OrdinalIgnoreCase)) return "SPEEDRUN";
         var text = $"{title} {fallbackTitle}";
@@ -1543,7 +1543,7 @@ public sealed class SurfacePresentationService
             return span.TotalHours >= 1 ? span.ToString(@"h\:mm\:ss") : span.ToString(@"m\:ss");
         }
         // "bcd" is an encoding (binary-coded decimal), not a display unit: never show
-        // it as a suffix ("0 bcd"). Treat it — and unknown — as a plain number.
+        // it as a suffix ("0 bcd"). Treat it - and unknown - as a plain number.
         if (unit.Length == 0 || unit.Equals("unknown", StringComparison.OrdinalIgnoreCase) || unit.Equals("bcd", StringComparison.OrdinalIgnoreCase))
             return value.ToString("N0", CultureInfo.CurrentCulture);
         return value.ToString("N0", CultureInfo.CurrentCulture) + " " + unit;

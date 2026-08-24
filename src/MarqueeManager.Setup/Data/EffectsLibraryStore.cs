@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace MarqueeManager.Setup.Data;
 
 /// <summary>
-/// "Mes effets" — the user's named, reusable effect compositions, stored in
+/// "Mes effets" - the user's named, reusable effect compositions, stored in
 /// media\effects\library.json (the exact file the runtime's IngameEffectLibrary
 /// reads): { "effects": { "&lt;name&gt;": { "actions": [ {…}, {…} ] } } }.
 /// An action is an <see cref="EffectRule"/> with delayMs (0 = simultaneous with
@@ -118,7 +118,7 @@ public sealed class EffectsLibraryStore
     }
 
     /// <summary>Loads the library and (re)injects the official presets when absent
-    /// — a fresh install gets a full shelf, an upgrade gains the new ones, and
+    /// - a fresh install gets a full shelf, an upgrade gains the new ones, and
     /// the user's own effects are never touched.</summary>
     public Dictionary<string, List<EffectRule>> LoadOrSeed()
     {

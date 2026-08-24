@@ -6,14 +6,14 @@ namespace RetroBatMarqueeManager.Application.Lighting;
 
 /// <summary>
 /// Lighting renderer: drive-lerp composition (final = unlit×(1−drive) + lit×drive,
-/// faithful to the source at full drive) with per-tube life simulation — randomized
+/// faithful to the source at full drive) with per-tube life simulation - randomized
 /// ignition, flicker, dips, brown-outs, restrikes, occasional death. The physical
 /// profile (bulb, aging) is resolved from the game metadata via the XML libraries
 /// (§15); framing is content-aware (never cut the title). The vertical tube glow is
 /// a 1×H lookup rebuilt each rendered frame. The layer renders fully transparent
 /// until maps exist, so the static image below stays the fallback (§4.5).
 ///
-/// Scope: this renderer LIGHTS AN IMAGE — tubes, glass, rbmarquee lamps and MAME
+/// Scope: this renderer LIGHTS AN IMAGE - tubes, glass, rbmarquee lamps and MAME
 /// outputs. Animated ingame events (sprites, veils) belong to
 /// <see cref="IngameEffectsRenderer"/>, which draws them above the media stack;
 /// only the tube-level kinds (`blackout`, `powerCycle`) still reach us, through
@@ -100,7 +100,7 @@ half4 main(float2 p) {
 
     // background generation handoff. Rom lets the adoption tell "same game, new
     // resolution/framing" (preserve lamps, outputs, effects, tubes) from "new game"
-    // (full reset) — a mere adaptive-scale change must never drop live state (§5).
+    // (full reset) - a mere adaptive-scale change must never drop live state (§5).
     private readonly object _resultLock = new();
     private (string Path, LightingMaps Maps, SKPoint Offset, int W, int H, ResolvedLightProfile Profile, BacklightProfile Backlight, RbMarqueeScene? LampScene, string? Rom)? _pendingResult;
     private volatile bool _generating;
@@ -216,7 +216,7 @@ half4 main(float2 p) {
 
     /// <summary>
     /// The surface's `lamps.scene` eye. The rbmarquee lamps are painted INSIDE this
-    /// renderer's pass — over the lit artwork, under the glass — so they cannot be a
+    /// renderer's pass - over the lit artwork, under the glass - so they cannot be a
     /// layer of their own; this is the switch that makes their pinned row mean
     /// something. Until now the component existed in the Setup and the runtime never
     /// looked at it.
@@ -264,7 +264,7 @@ half4 main(float2 p) {
     /// <summary>True when a lighting scene is mounted (used by the DMD mirror gate).</summary>
     public bool HasScene => _maps != null;
 
-    /// <summary>Artwork rectangle in surface pixels — the DMD mirror crops to it
+    /// <summary>Artwork rectangle in surface pixels - the DMD mirror crops to it
     /// so a small centered logo still fills the panel.</summary>
     public SKRectI ArtRect
     {
@@ -293,7 +293,7 @@ half4 main(float2 p) {
         if (_dirty || _generating) return true;
         lock (_resultLock) { if (_pendingResult != null) return true; }
         // sceneless (video marquee, console game): nothing to light, and the ingame
-        // events are no longer ours — IngameEffectsRenderer owns that layer
+        // events are no longer ours - IngameEffectsRenderer owns that layer
         if (_maps == null) return false;
         // anything alive keeps the flicker cadence: lamps (attract/outputs),
         // blackout, audio-driven sequence
@@ -330,7 +330,7 @@ half4 main(float2 p) {
         _dirty = false;
 
         // Lot B: a different game is now selected but its lighting scene isn't generated
-        // yet — do NOT let the previous opaque scene mask the new game's fallback. Show
+        // yet - do NOT let the previous opaque scene mask the new game's fallback. Show
         // the new fallback (transparent) until the new scene is adopted.
         if (_latestWinsGeneration && requested != null && _currentPath != null
             && !string.Equals(requested.Path, _currentPath, StringComparison.OrdinalIgnoreCase))
@@ -344,7 +344,7 @@ half4 main(float2 p) {
         {
             // no scene: transparent so the media below stays visible. A video marquee
             // (console games) unmounts the lighting scene; the ingame events keep
-            // playing regardless — they live on their own layer now.
+            // playing regardless - they live on their own layer now.
             canvas.Clear(SKColors.Transparent);
             _sound?.SetLevels(0f, 0f);
             return;
@@ -493,7 +493,7 @@ half4 main(float2 p) {
         else if (!_ingame && t > 2.5)
         {
             // attract mode: show off the lamps without launching the game. The scene's
-            // `mode` was parsed and carried but never read — the pattern was decided by
+            // `mode` was parsed and carried but never read - the pattern was decided by
             // the lamp count alone, so the Setup's dropdown did nothing.
             var mode = _lampScene.AttractMode;
             // alternate needs a pair; with a single lamp it would index past the end
@@ -570,7 +570,7 @@ half4 main(float2 p) {
     /// <summary>
     /// Same tube state drives light and audio (§24). No permanent loops: hum/buzz
     /// only open during real instability (ignition, events); steady is silent.
-    /// Ingame, everything is muted for a clean play session — cues are drained.
+    /// Ingame, everything is muted for a clean play session - cues are drained.
     /// </summary>
     private void SyncSound(float i1, float i2)
     {
@@ -634,7 +634,7 @@ half4 main(float2 p) {
 
     /// <summary>
     /// Additive glow at a tube's ends while it struggles to ignite: not a plain
-    /// circle — an elongated halo along the tube axis plus a hot filament core,
+    /// circle - an elongated halo along the tube axis plus a hot filament core,
     /// like a real electrode heating behind the glass.
     /// </summary>
     private void DrawElectrodeGlow(SKCanvas canvas, float electrode, float tubeY)
@@ -646,7 +646,7 @@ half4 main(float2 p) {
         {
             var center = new SKPoint(_offset.X + tubeX * w, _offset.Y + tubeY * h);
 
-            // compact soft halo, slightly elongated along the tube — discreet
+            // compact soft halo, slightly elongated along the tube - discreet
             DrawStretchedGlow(canvas, center, 0.09f * h, 1.6f, 0.9f,
                 new SKColor(255, 118, 66, (byte)(level * 100)));
             // small hot filament core
@@ -669,7 +669,7 @@ half4 main(float2 p) {
     }
 
     /// <summary>
-    /// The physical tube, faintly visible through the art when it emits — its
+    /// The physical tube, faintly visible through the art when it emits - its
     /// brightness follows the live intensity, so ignition flashes reveal the tube.
     /// </summary>
     private void DrawTubeVisual(SKCanvas canvas)
@@ -681,7 +681,7 @@ half4 main(float2 p) {
         // halo, a thick glowing gas column with SOFT edges (nothing is ever a
         // sharp line on a lit tube), and an overexposed white core filling
         // almost half the diameter. The glass body itself only shows through
-        // when the tube dims — glimpsed behind the print during flicker.
+        // when the tube dims - glimpsed behind the print during flicker.
         var left = _offset.X + 0.045f * w;
         var right = _offset.X + 0.955f * w;
         var thickness = (_backlightProfile.TwoTubes ? 0.13f : 0.16f) * h * _tubeThickness;
@@ -692,7 +692,7 @@ half4 main(float2 p) {
             (byte)(warm.Green + (255 - warm.Green) * 0.78f),
             (byte)(warm.Blue + (255 - warm.Blue) * 0.78f));
 
-        // aging tube: the extremities no longer light up cleanly — the layer
+        // aging tube: the extremities no longer light up cleanly - the layer
         // alphas ramp down toward both rounded ends
         SKShader? EndFade(SKColor color, byte alpha)
             => _tubeEndFade > 0.01f
@@ -789,7 +789,7 @@ half4 main(float2 p) {
     /// <summary>
     /// Glass thickness in front of the print (§14 surfaceReflection): a diagonal
     /// sheen band plus a top curvature highlight, present even when the marquee is
-    /// dark — the glass always reflects the room.
+    /// dark - the glass always reflects the room.
     /// </summary>
     private void DrawGlass(SKCanvas canvas)
     {
@@ -832,7 +832,7 @@ half4 main(float2 p) {
 
     private bool IsRequestCurrent(MarqueeRequest request) => IsCurrentPath(request.Path);
 
-    // Lot C: everything that determines the generated scene — source image + its mtime,
+    // Lot C: everything that determines the generated scene - source image + its mtime,
     // the surface size (framing/offset), the rom (lamp scene → framing span) and the
     // resolved bulb + aging (map tint). The derived crop is a deterministic function of
     // these, so it need not be in the key.
@@ -883,7 +883,7 @@ half4 main(float2 p) {
                 var profile = _libraries.Resolve(request.Meta, composited);
 
                 // Lot C: cache lookup BEFORE the decode. A hit reuses the whole baked
-                // scene (offset/framing/lamps) and only clones the maps — no decode, no
+                // scene (offset/framing/lamps) and only clones the maps - no decode, no
                 // framing, no per-pixel generation.
                 var cacheKey = _mapCache
                     ? BuildCacheKey(sourcePath, surfaceWidth, surfaceHeight, request.Meta?.Rom, profile)
@@ -951,7 +951,7 @@ half4 main(float2 p) {
 
                 var started = System.Diagnostics.Stopwatch.StartNew();
                 var maps = AutoMapGenerator.Generate(source, framing.Width, framing.Height, profile, framing.SourceCrop);
-                _logger.LogInformation("Lighting maps for {Path}{Calibrated} at {W}x{H} in {Ms} ms compute / {WallMs} ms wall — bulb {Bulb} (via {Source}), aging {Aging:F2}, {Tubes} tube(s), {Framing}{Lamps}",
+                _logger.LogInformation("Lighting maps for {Path}{Calibrated} at {W}x{H} in {Ms} ms compute / {WallMs} ms wall - bulb {Bulb} (via {Source}), aging {Aging:F2}, {Tubes} tube(s), {Framing}{Lamps}",
                     fileName, sourcePath != request.Path ? " [image DOF calibrée]" : "",
                     framing.Width, framing.Height, started.ElapsedMilliseconds, generationClock.ElapsedMilliseconds,
                     profile.Bulb.Id, profile.Source, profile.Aging, backlight.TwoTubes ? 2 : 1, framing.Label,
@@ -1020,7 +1020,7 @@ half4 main(float2 p) {
         var (path, maps, offset, w, h, profile, backlight, lampScene, rom) = result.Value;
 
         // Lot B: a newer (different-path) selection superseded this scene before it
-        // could be adopted — dispose it, never show the wrong game.
+        // could be adopted - dispose it, never show the wrong game.
         if (_latestWinsGeneration && !IsCurrentPath(path))
         {
             maps.Dispose();
@@ -1028,8 +1028,8 @@ half4 main(float2 p) {
         }
 
         // Same game, only a new LightingMap (resize / adaptive scale / reframe):
-        // the dynamic state — arcade outputs, lamp intensities, running effects,
-        // sprites, tube life — must survive. Only a genuine game change resets it (§5).
+        // the dynamic state - arcade outputs, lamp intensities, running effects,
+        // sprites, tube life - must survive. Only a genuine game change resets it (§5).
         var sameGame = _maps != null
                        && rom is { Length: > 0 }
                        && string.Equals(rom, _currentSceneRom, StringComparison.OrdinalIgnoreCase);
@@ -1117,7 +1117,7 @@ half4 main(float2 p) {
 
     /// <summary>Disposes the per-scene GRAPHICS only (shaders, shape row, maps).
     /// Leaves the dynamic session state (outputs, lamps, effects, sprites, tubes)
-    /// untouched — see <see cref="ResetGameSession"/> (§5 resource split).</summary>
+    /// untouched - see <see cref="ResetGameSession"/> (§5 resource split).</summary>
     private void DisposeSceneGraphics()
     {
         _unlitShader?.Dispose();
@@ -1132,7 +1132,7 @@ half4 main(float2 p) {
 
     /// <summary>Resets the RUNTIME state of a play session: arcade outputs, running/
     /// pending effects, sprites, audio sequence. Does NOT touch the lamp scene/states
-    /// — those belong to the adopted scene (a new-game adoption sets them just before
+    /// - those belong to the adopted scene (a new-game adoption sets them just before
     /// calling this; wiping them here left every new game with zero lamps → no attract,
     /// no ingame lamps). Lamps are cleared only by <see cref="ClearScene"/>.</summary>
     private void ResetGameSession()

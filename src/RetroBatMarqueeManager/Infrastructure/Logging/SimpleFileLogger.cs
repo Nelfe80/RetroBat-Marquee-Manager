@@ -7,7 +7,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Logging
 {
     /// <summary>
     /// Asynchronous file logger (docs\Update.txt §3/§9). The former implementation
-    /// did File.AppendAllText under a global lock for EVERY message — an open/write/
+    /// did File.AppendAllText under a global lock for EVERY message - an open/write/
     /// close syscall per line, serialized across all threads, on the hot navigation
     /// path. This version hands formatted lines to a bounded channel (never blocks the
     /// caller) drained by a single background writer that keeps one StreamWriter open,

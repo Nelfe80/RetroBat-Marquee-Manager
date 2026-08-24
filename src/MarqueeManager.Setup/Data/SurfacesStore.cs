@@ -14,19 +14,19 @@ public sealed class ComponentModel
     public double H { get; set; } = 1;
     /// <summary>Display state: "navigation" (ES browsing) | "ingame" | "both".</summary>
     public string When { get; set; } = "both";
-    /// <summary>Editor eye toggle — a hidden layer is kept but never rendered.</summary>
+    /// <summary>Editor eye toggle - a hidden layer is kept but never rendered.</summary>
     public bool Visible { get; set; } = true;
-    /// <summary>Editor lock — selectable but not movable (editor-only).</summary>
+    /// <summary>Editor lock - selectable but not movable (editor-only).</summary>
     public bool Locked { get; set; }
     /// <summary>Layer display name (editor-only, defaults to the type).</summary>
     public string Name { get; set; } = "";
-    /// <summary>Free options (url, kind, card, template…) — serialized FLAT into
+    /// <summary>Free options (url, kind, card, template…) - serialized FLAT into
     /// the component object, the shape the runtime parser expects.</summary>
     public Dictionary<string, string> Options { get; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>A physical display of the setup: its Windows identity plus its
-/// PHYSICAL position on the cabinet plan (distinct from the Windows layout —
+/// PHYSICAL position on the cabinet plan (distinct from the Windows layout -
 /// the base of the "Mon setup" map and of future cross-screen animations).
 /// A disconnected screen is kept (grayed in the plan), never dropped.</summary>
 public sealed class ScreenModel
@@ -51,7 +51,7 @@ public sealed class ScreenModel
     /// <summary>Independent of <see cref="Usage"/>: when false, MarqueeManager
     /// creates NO window for this screen (its surfaces are kept but suspended, and
     /// it is offered to no composer). Defaults to true so every existing document
-    /// — which has no such field — keeps every screen managed.</summary>
+    /// - which has no such field - keeps every screen managed.</summary>
     public bool ManagedByMarqueeManager { get; set; } = true;
 }
 
@@ -91,7 +91,7 @@ public sealed class SurfacesStore
     public const string Schema = "marqueemanager.surfaces.v1";
     public const string Generator = "MarqueeManagerSetup";
 
-    /// <summary>Set when this session created surfaces.json from [Screens] — the
+    /// <summary>Set when this session created surfaces.json from [Screens] - the
     /// surfaces view shows a one-time conversion banner.</summary>
     public static bool MigratedThisSession { get; private set; }
 
@@ -145,7 +145,7 @@ public sealed class SurfacesStore
     /// A surface whose LAYER STACK changed invalidates its flattened renders: the cache
     /// key covers the media, not the recipe's edits, so a stale composition would keep
     /// being served and lit. Compares against the document on disk and only wipes the
-    /// surfaces that actually moved — editing one surface must not cost a full re-render
+    /// surfaces that actually moved - editing one surface must not cost a full re-render
     /// of the others.
     /// </summary>
     private void InvalidateChangedLayouts(IReadOnlyList<SurfaceModel> surfaces)

@@ -10,7 +10,7 @@ namespace MarqueeManager.Setup.Views;
 
 /// <summary>
 /// Dynamic surfaces editor (state\surfaces.json): create as many categorized
-/// surfaces as needed, pick their screen, size them (width × height only — the
+/// surfaces as needed, pick their screen, size them (width × height only - the
 /// x,y position is set visually in the screen compositor), bind streams and
 /// stack components. Replaces the fixed five-target view.
 /// </summary>
@@ -95,15 +95,15 @@ public sealed class SurfacesView : UserControl
         if (SurfacesStore.MigratedThisSession)
         {
             page.Children.Add(Ui.Card(Ui.Label(L.T(
-                "✓ Votre configuration [Screens] a été convertie automatiquement en surfaces dynamiques (state\\surfaces.json). Le comportement est identique — vous pouvez maintenant l'enrichir.",
-                "✓ Your [Screens] configuration was automatically converted to dynamic surfaces (state\\surfaces.json). Behavior is identical — you can now build on it."))));
+                "✓ Votre configuration [Screens] a été convertie automatiquement en surfaces dynamiques (state\\surfaces.json). Le comportement est identique - vous pouvez maintenant l'enrichir.",
+                "✓ Your [Screens] configuration was automatically converted to dynamic surfaces (state\\surfaces.json). Behavior is identical - you can now build on it."))));
         }
 
         if (!_store.IsOwnedBySetup())
         {
             page.Children.Add(Ui.Card(Ui.Label(L.T(
-                "surfaces.json n'a pas été créé par MarqueeManagerSetup — les modifications l'écraseront.",
-                "surfaces.json was not created by MarqueeManagerSetup — saving will overwrite it."))));
+                "surfaces.json n'a pas été créé par MarqueeManagerSetup - les modifications l'écraseront.",
+                "surfaces.json was not created by MarqueeManagerSetup - saving will overwrite it."))));
         }
 
         page.Children.Add(_list);
@@ -129,7 +129,7 @@ public sealed class SurfacesView : UserControl
         RebuildList();
     }
 
-    /// <summary>Ready-made component stacks — the surface templates the user
+    /// <summary>Ready-made component stacks - the surface templates the user
     /// picks at creation (fanart+gradient+logo marquee, split cards, video…).</summary>
     private SurfaceModel NewSurfaceFromTemplate(string template)
     {
@@ -181,7 +181,7 @@ public sealed class SurfacesView : UserControl
             case "video-showcase":
                 surface.Streams.Add("marquee");
                 surface.Components.Add(C("media.video", 0, 0, 1, 0.85, ("sources", "twitch-live|youtube|local")));
-                surface.Components.Add(C("text.meta", 0, 0.85, 1, 0.15, ("template", "{name} — {year}")));
+                surface.Components.Add(C("text.meta", 0, 0.85, 1, 0.15, ("template", "{name} - {year}")));
                 break;
 
             case "web-stream":
@@ -212,8 +212,8 @@ public sealed class SurfacesView : UserControl
         if (_surfaces.Count == 0)
         {
             _list.Children.Add(Ui.Card(Ui.Label(L.T(
-                "Aucune surface pour l'instant — ajoutez-en une.",
-                "No surface yet — add one."))));
+                "Aucune surface pour l'instant - ajoutez-en une.",
+                "No surface yet - add one."))));
             return;
         }
 
@@ -271,7 +271,7 @@ public sealed class SurfacesView : UserControl
         for (var i = 0; i < _screens.Count; i++)
         {
             var info = _screens[i];
-            var item = new ComboBoxItem { Content = $"{L.T("ÉCRAN", "SCREEN")} {i} — {info.Bounds.Width}×{info.Bounds.Height}", Tag = i };
+            var item = new ComboBoxItem { Content = $"{L.T("ÉCRAN", "SCREEN")} {i} - {info.Bounds.Width}×{info.Bounds.Height}", Tag = i };
             screen.Items.Add(item);
             if (surface.Screens.Contains(i)) screen.SelectedItem = item;
         }
@@ -399,7 +399,7 @@ public sealed class SurfacesView : UserControl
                 "text.meta" => "template",
                 "iccard.static" => "card",
                 // the viewer's role and the zone's action are set in the composition
-                // editor, where the zone is drawn — here the essential is enough
+                // editor, where the zone is drawn - here the essential is enough
                 "iccard.viewer" => "role",
                 "iccard.touch" => "action",
                 "shape.gradient" => "color",
@@ -482,7 +482,7 @@ public sealed class SurfacesView : UserControl
         if (editor.ShowDialog() == true)
         {
             RebuildList();
-            _status.Text = L.T("Positions mises à jour — pensez à enregistrer.", "Positions updated — remember to save.");
+            _status.Text = L.T("Positions mises à jour - pensez à enregistrer.", "Positions updated - remember to save.");
             _status.Foreground = Ui.Muted;
         }
     }

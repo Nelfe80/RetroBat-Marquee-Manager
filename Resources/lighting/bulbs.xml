@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  RBMarquee Lighting Engine — Bulb Library / Arcade Cabinet Lighting Profiles
-  Version 1.1 — generated 2026-07-03
+  RBMarquee Lighting Engine - Bulb Library / Arcade Cabinet Lighting Profiles
+  Version 1.1 - generated 2026-07-03
 
   Objectif
-  ————
+  ====
   Décrire les sources lumineuses utilisées ou imitées dans les bornes d'arcade,
   flippers, candy cabs, bornes modernes et restaurations MAME/RetroBat.
 
   Note importante vocabulaire FR
-  ———————————————
+  ===============
   Dans le langage courant français, on dit souvent "néon" pour un tube fluorescent.
   Dans cette bibliothèque, technology="fluorescent" désigne les tubes de marquee
   classiques. technology="neon" est réservé au vrai néon décoratif / enseigne gaz.
 
   Champs principaux
-  ————————-
+  ========-
   technology        : incandescent | fluorescent | neon | led | el | lcd
   subtype           : wedge | bayonet | tube | strip | panel | sign | ccfl | screen
   color             : couleur dominante émise, hex sRGB
@@ -36,7 +36,7 @@
   ballastBehavior   : none | magnetic | electronic | bypass | inverter | driver | n/a
 
   Interprétation conseillée côté moteur
-  ——————————————————-
+  ==================-
   - incandescent : attaque rapide mais organique, léger souffle chaud, extinction douce.
   - fluorescent magnétique : starter, clignotements au démarrage, hum, vieillissement.
   - LED : attaque très rapide, pas ou très peu de vie sauf driver PWM / défaut volontaire.

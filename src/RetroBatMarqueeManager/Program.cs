@@ -33,7 +33,7 @@ public static class Program
 
         // GPU support toggle (config [Settings] GpuAcceleration, default true). WPF
         // normally composites on the GPU; forcing SoftwareOnly makes the whole process
-        // present in software — a safety valve for cabinets whose GPU driver glitches
+        // present in software - a safety valve for cabinets whose GPU driver glitches
         // or stutters. Process-wide, so it must be set before the first window renders.
         // (This governs WPF presentation only; the Skia lighting raster stays on CPU.)
         if (!config.GpuAcceleration)

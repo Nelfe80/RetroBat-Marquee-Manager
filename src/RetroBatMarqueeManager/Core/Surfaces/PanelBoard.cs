@@ -6,7 +6,7 @@ namespace RetroBatMarqueeManager.Core.Surfaces;
 ///
 ///   • <see cref="PanelBoardConfig"/> comes from `panel.config.changed`: how many
 ///     panels the cabinet has, how many buttons each carries and where they sit.
-///     Static — it only moves when the user reconfigures the cabinet.
+///     Static - it only moves when the user reconfigures the cabinet.
 ///   • <see cref="PanelBoardButton"/> comes from `panel.state`: what each button DOES
 ///     in the game currently selected. It changes with every selection.
 ///
@@ -22,7 +22,7 @@ public sealed record PanelBoardConfig(
     string StickColor)
 {
     /// <summary>The arrangement to fall back on when the cabinet has not been described
-    /// yet: one player, six buttons, a stick. Drawing SOMETHING beats drawing nothing —
+    /// yet: one player, six buttons, a stick. Drawing SOMETHING beats drawing nothing -
     /// a panel that never appears reads as a broken component, and the first
     /// `panel.config.changed` (retained, so it arrives on connection) corrects it.</summary>
     public static readonly PanelBoardConfig Unknown = new(
@@ -32,7 +32,7 @@ public sealed record PanelBoardConfig(
 }
 
 /// <summary>
-/// The panel as APIExpose DREW it — the same SVG it writes for EmulationStation themes,
+/// The panel as APIExpose DREW it - the same SVG it writes for EmulationStation themes,
 /// plus where each button landed inside that drawing.
 ///
 /// The coordinates travel with the file on purpose: the light of a press has to sit
@@ -51,6 +51,6 @@ public sealed record PanelArtButton(int Slot, double Cx, double Cy, double R);
 
 /// <summary>One physical place on the panel: what the selected game makes of it.
 /// <paramref name="Used"/> false means the cabinet has this button but the game does
-/// not speak to it — it is still drawn, faded, because the panel must tell the truth
+/// not speak to it - it is still drawn, faded, because the panel must tell the truth
 /// about the CABINET.</summary>
 public sealed record PanelBoardButton(int Slot, string Label, string Function, string Color, bool Used);

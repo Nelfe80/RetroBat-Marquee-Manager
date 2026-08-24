@@ -16,7 +16,7 @@ public sealed record CompositionTemplate(
 /// (media\&lt;cat&gt;s\.cache\&lt;sys&gt;\&lt;rom&gt;-&lt;template&gt;.png). Recipe mirrors APIExpose's
 /// marquee autogen: fanart cover-cropped as background, black/white gradient
 /// under the logo picked by luminance (threshold 145), logo aspect-fit within
-/// its budget. Static part only — dynamic elements stay live overlay components.
+/// its budget. Static part only - dynamic elements stay live overlay components.
 /// Jobs are deduplicated; completion invokes the callback so the surface swaps
 /// from the stream media to the cached PNG (pending → updated pattern).
 /// </summary>
@@ -136,7 +136,7 @@ public sealed class CompositionTemplateRenderer
 
         if (template.Gradient)
         {
-            // gradient sits under the logo zone so the title stays readable —
+            // gradient sits under the logo zone so the title stays readable -
             // black over bright art, white sheen over dark art (APIExpose rule)
             var color = brightBackground ? SKColors.Black : SKColors.White;
             using var paint = new SKPaint();

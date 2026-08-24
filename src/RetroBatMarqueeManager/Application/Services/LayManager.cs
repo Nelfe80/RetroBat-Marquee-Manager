@@ -7,7 +7,7 @@ using RetroBatMarqueeManager.Infrastructure.Rendering;
 namespace RetroBatMarqueeManager.Application.Services
 {
     /// <summary>
-    /// Orchestrator — ISO of ra.lua's mame_action() + process_*() control flow.
+    /// Orchestrator - ISO of ra.lua's mame_action() + process_*() control flow.
     /// Manages one LayPipeline per .lay view (lcd, dmd, topper, iccard).
     /// </summary>
     public class LayManager : IDisposable
@@ -48,7 +48,7 @@ namespace RetroBatMarqueeManager.Application.Services
         // ── MAME .lay ─────────────────────────────────────────────────────────
 
         /// <summary>
-        /// ISO mame_action("mame_start=romName") — loads .lay and creates pipelines.
+        /// ISO mame_action("mame_start=romName") - loads .lay and creates pipelines.
         /// <paramref name="dmdOnly"/>: the rbmarquee lighting scene owns the marquee
         /// (CDC §26.3) but the .lay keeps its purpose-built DMD view.
         /// </summary>
@@ -104,7 +104,7 @@ namespace RetroBatMarqueeManager.Application.Services
         }
 
         /// <summary>
-        /// ISO mame_action("SIGNAL_NAME=0/1") — toggles lamp visibility on all active targets.
+        /// ISO mame_action("SIGNAL_NAME=0/1") - toggles lamp visibility on all active targets.
         /// </summary>
         public void SetLampState(string lampName, int state)
         {
@@ -118,7 +118,7 @@ namespace RetroBatMarqueeManager.Application.Services
         }
 
         /// <summary>
-        /// ISO mame_action("mame_stop") — clears all active .lay pipelines.
+        /// ISO mame_action("mame_stop") - clears all active .lay pipelines.
         /// </summary>
         public void Clear()
         {
@@ -137,31 +137,31 @@ namespace RetroBatMarqueeManager.Application.Services
             _lastLoadedRom = null;
         }
 
-        // ── RA display helpers (high-level API — ISO ra.lua process_*) ─────────
+        // ── RA display helpers (high-level API - ISO ra.lua process_*) ─────────
         // These will be implemented progressively as RA events arrive from APIExpose WS.
 
         public async Task PushUserInfo(string username, string picPath, bool isHardcore)
         {
-            // ISO process_user_info() — to be implemented
+            // ISO process_user_info() - to be implemented
             await Task.CompletedTask;
         }
 
         public async Task PushAchievement(string id, string badgePath,
                                            string title, string desc, int points)
         {
-            // ISO process_achievement() — to be implemented
+            // ISO process_achievement() - to be implemented
             await Task.CompletedTask;
         }
 
         public async Task ShowAchievements()
         {
-            // ISO show_achievements() — to be implemented
+            // ISO show_achievements() - to be implemented
             await Task.CompletedTask;
         }
 
         public async Task ShowScore(int current, int total, bool isHardcore)
         {
-            // ISO show_score() — to be implemented
+            // ISO show_score() - to be implemented
             await Task.CompletedTask;
         }
 

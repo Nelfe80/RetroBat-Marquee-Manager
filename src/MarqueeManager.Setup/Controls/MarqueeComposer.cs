@@ -22,7 +22,7 @@ namespace MarqueeManager.Setup.Controls;
 /// </summary>
 public sealed class MarqueeComposer : UserControl
 {
-    /// <summary>Canvas display width — the host passes the available width so the
+    /// <summary>Canvas display width - the host passes the available width so the
     /// center column fills the window (default keeps the historical inline size).</summary>
     private readonly double DisplayWidth;
 
@@ -39,7 +39,7 @@ public sealed class MarqueeComposer : UserControl
     private (double X, double Y) _dragOrigin;
 
     // direct-manipulation gesture on the selected layer (move / corner resize /
-    // rotation arm) — visible handles are drawn in Render, hit-tested here.
+    // rotation arm) - visible handles are drawn in Render, hit-tested here.
     private enum Handle { None, Move, Resize, Rotate }
     private Handle _mode = Handle.None;
     private Point _gestureCenter;
@@ -66,7 +66,7 @@ public sealed class MarqueeComposer : UserControl
 
     public event Action? Changed;
 
-    /// <summary>Raised when the selection or the layer stack changed — lets a
+    /// <summary>Raised when the selection or the layer stack changed - lets a
     /// host window drive an external layers panel + inspector (RetroCreator
     /// Designer layout) instead of the inline inspector row.</summary>
     public event Action? StackChanged;
@@ -197,8 +197,8 @@ public sealed class MarqueeComposer : UserControl
 
         var host = new StackPanel();
         host.Children.Add(Ui.MutedLabel(L.T(
-            $"Surface réelle : {_targetWidth}×{_targetHeight} px — cliquer pour sélectionner, glisser pour déplacer, molette = taille, Maj+molette = rotation.",
-            $"Real surface: {_targetWidth}×{_targetHeight} px — click to select, drag to move, wheel = size, Shift+wheel = rotate.")));
+            $"Surface réelle : {_targetWidth}×{_targetHeight} px - cliquer pour sélectionner, glisser pour déplacer, molette = taille, Maj+molette = rotation.",
+            $"Real surface: {_targetWidth}×{_targetHeight} px - click to select, drag to move, wheel = size, Shift+wheel = rotate.")));
         host.Children.Add(plate);
         host.Children.Add(_inspector);
         Content = host;
@@ -338,7 +338,7 @@ public sealed class MarqueeComposer : UserControl
 
     /// <summary>
     /// Sample values for the {name} {year} {developer} {publisher} {system} tokens. The
-    /// STORED text keeps its tokens — a template must follow the entry — but showing
+    /// STORED text keeps its tokens - a template must follow the entry - but showing
     /// them raw on the canvas made the editor unusable: you compose against "{name}",
     /// not against a title whose length and shape you can judge.
     /// </summary>
@@ -454,7 +454,7 @@ public sealed class MarqueeComposer : UserControl
             case Handle.Resize when _selected.Model.IsTextBox:
                 // a box is dragged like a rectangle: the grabbed corner follows the
                 // pointer in BOTH directions, the opposite one stays put, and the type
-                // size does not move — it belongs to the inspector
+                // size does not move - it belongs to the inspector
                 var ax = _gestureAnchor.X;
                 var ay = _gestureAnchor.Y;
                 var w = Math.Clamp(Math.Abs(position.X - ax) / DisplayWidth, 0.05, 1.5);
@@ -474,8 +474,8 @@ public sealed class MarqueeComposer : UserControl
                 _selected.Model.Scale = Math.Clamp(_gestureStartScale * ratio, 0.05, 3.0);
                 // Put the anchored corner back where it was, measured on the REAL bounds
                 // rather than assumed from the scale ratio. A wrapped text box does not
-                // grow uniformly — its width is fixed by WrapWidth and only its height
-                // follows the font — so scaling the centre by the ratio let the anchor
+                // grow uniformly - its width is fixed by WrapWidth and only its height
+                // follows the font - so scaling the centre by the ratio let the anchor
                 // drift sideways. This holds for any layer, rotated or not.
                 var after = HandleGeometry(_selected).corners[_gestureAnchorIndex];
                 _selected.Model.X = Math.Clamp(
@@ -755,7 +755,7 @@ public sealed class MarqueeComposer : UserControl
         }
         // A very wide logo (gamegear…) overflowed the composition: scale is a share of
         // the HEIGHT, so nothing capped the width. Keep it inside the frame, aspect
-        // preserved — the height follows.
+        // preserved - the height follows.
         if (layer.Model.Source != "text" && width > DisplayWidth)
         {
             height *= DisplayWidth / width;

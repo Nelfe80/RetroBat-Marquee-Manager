@@ -19,7 +19,7 @@ namespace MarqueeManager.Setup.Controls;
 /// </summary>
 public sealed class EffectPreview : UserControl
 {
-    /// <summary>Preview band size — the effect composer asks for a bigger one.</summary>
+    /// <summary>Preview band size - the effect composer asks for a bigger one.</summary>
     private readonly double BandWidth;
     private readonly double BandHeight;
 
@@ -221,7 +221,7 @@ public sealed class EffectPreview : UserControl
             Canvas.SetTop(image, startY);
             _spriteLayer.Children.Add(image);
 
-            // GIF frames on a plain timer — cheap and disposable
+            // GIF frames on a plain timer - cheap and disposable
             var frameIndex = 0;
             var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(70) };
             timer.Tick += (_, _) =>

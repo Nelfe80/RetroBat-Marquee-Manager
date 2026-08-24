@@ -40,7 +40,7 @@ public sealed class PresentationOverrides
         _logger = logger;
     }
 
-    /// <summary>The policy the user set for this exact target, or null when none —
+    /// <summary>The policy the user set for this exact target, or null when none -
     /// then the caller keeps its default resolution.</summary>
     public TargetPolicy? For(string surfaceId, bool systemScope, string? system, string? rom)
     {
@@ -81,7 +81,7 @@ public sealed class PresentationOverrides
     }
 
     /// <summary>"Sonic The Hedgehog (USA, Europe)" and the slug "sonic_the_hedgehog"
-    /// both reduce to "sonicthehedgehog" — dump tags stripped, then letters/digits only —
+    /// both reduce to "sonicthehedgehog" - dump tags stripped, then letters/digits only -
     /// so the Setup's physical rom name matches the runtime's slug.</summary>
     private static string Normalize(string s)
     {

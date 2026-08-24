@@ -5,7 +5,7 @@ namespace MarqueeManager.Tests;
 
 /// <summary>
 /// The catalog of instruction cards: how the published files become logical cards, and
-/// how a role — the folder a card sits in — decides what a viewer walks through.
+/// how a role - the folder a card sits in - decides what a viewer walks through.
 /// </summary>
 public sealed class InstructionCardCatalogTests
 {
@@ -105,7 +105,7 @@ public sealed class InstructionCardCatalogTests
     public void An_announced_name_can_be_an_entry_inside_a_card()
     {
         // Ghouls'n Ghosts: one drawing holds every weapon, so the name does not point at a
-        // folder — it points INSIDE the card, and only a frame can answer.
+        // folder - it points INSIDE the card, and only a frame can answer.
         var panels = new[]
         {
             new InstructionCardCatalog.CardPanel("controls", "panel", true, null, 0, 0.30, 1, 0.19),

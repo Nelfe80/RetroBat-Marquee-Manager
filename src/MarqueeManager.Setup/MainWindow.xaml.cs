@@ -11,7 +11,7 @@ namespace MarqueeManager.Setup;
 
 /// <summary>
 /// Shell: sidebar navigation between the configuration views. Views are
-/// rebuilt on each navigation so they always reflect the current config.ini —
+/// rebuilt on each navigation so they always reflect the current config.ini -
 /// the file stays the single source of truth, there is no in-memory model.
 /// Views owning live resources (WebSocket monitor…) implement IDisposable and
 /// are disposed before the host swaps content.
@@ -240,7 +240,7 @@ public partial class MainWindow : Window
                 ? L.T("MarqueeManager : en cours", "MarqueeManager: running")
                 : L.T("MarqueeManager : arrêté", "MarqueeManager: stopped"))
             + $"\n{_pluginRoot}"
-            // "am I even testing the build I just deployed?" — the question costs an
+            // "am I even testing the build I just deployed?" - the question costs an
             // hour every time it is asked, so the answer is on screen.
             + $"\n{BuildStamp()}";
     }
@@ -252,11 +252,11 @@ public partial class MainWindow : Window
         {
             try
             {
-                if (!File.Exists(path)) return "—";
+                if (!File.Exists(path)) return "-";
                 var version = System.Diagnostics.FileVersionInfo.GetVersionInfo(path).FileVersion;
                 return $"{version} · {File.GetLastWriteTime(path):dd/MM HH:mm}";
             }
-            catch { return "—"; }
+            catch { return "-"; }
         }
 
         var self = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName

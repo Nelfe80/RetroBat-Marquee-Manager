@@ -31,18 +31,18 @@ public sealed record ResolutionContext(
 
     /// <summary>The choice applies to EVERY game of the system, not to the entry being
     /// previewed. A game still has to supply the media for the cards to show anything,
-    /// so the level is carried here rather than by blanking the rom — the preview stays
+    /// so the level is carried here rather than by blanking the rom - the preview stays
     /// concrete while what is written stays system-wide.</summary>
     public bool WholeSystem { get; init; }
 
     /// <summary>When set, the target is lighting-pinned: the resolver frames EVERY
     /// link with this policy instead of the per-source fit, so lamp/tube/map
-    /// coordinates stay aligned to the original framing (user decision — keep the
+    /// coordinates stay aligned to the original framing (user decision - keep the
     /// framing of lighting-enabled games). Null on ordinary targets.</summary>
     public FitPolicy? PinnedFit { get; init; }
 
     /// <summary>The system key used for system settings and compositions: the
-    /// frontend system, never silently the canonical one — MAME and FBNeo must
+    /// frontend system, never silently the canonical one - MAME and FBNeo must
     /// not share a system policy. Falls back to canonical only when the payload
     /// omits the frontend (a trace <c>identity.frontend_missing</c> is expected).</summary>
     public string? SystemKey => FrontendSystem ?? CanonicalSystem;
@@ -52,8 +52,8 @@ public sealed record ResolutionContext(
 
 /// <summary>
 /// Builds the fallback <c>StableGameId</c> when APIExpose publishes none.
-/// It is a fingerprint of the normalized relative ROM path, EXTENSION INCLUDED —
-/// never the displayed title, never the bare file stem — so <c>sonic.zip</c> and
+/// It is a fingerprint of the normalized relative ROM path, EXTENSION INCLUDED -
+/// never the displayed title, never the bare file stem - so <c>sonic.zip</c> and
 /// <c>sonic.7z</c> never collide (spec §19).
 /// </summary>
 public static class StableGameIds

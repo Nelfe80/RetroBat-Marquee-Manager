@@ -8,7 +8,7 @@ namespace RetroBatMarqueeManager.Application.Media;
 
 /// <summary>
 /// Renders a surface gabarit (the user's general template), IN THE RUNTIME, in Skia,
-/// off the UI thread — for a game or for a system.
+/// off the UI thread - for a game or for a system.
 ///
 /// Why this exists: the gabarit used to be baked only by the Setup, lazily, when the
 /// user opened that game's (or that system's) sheet. On a real library the template
@@ -17,8 +17,8 @@ namespace RetroBatMarqueeManager.Application.Media;
 /// like the composition templates and the dynamic surface render.
 ///
 /// It NEVER resolves media by guessing folder names: the APIExpose media folders are
-/// slugs ("3-ninjas-kick-back"), not rom names ("Streets of Rage"), so the caller —
-/// which already holds the resolved snapshot paths — supplies a resolver. Guessing is
+/// slugs ("3-ninjas-kick-back"), not rom names ("Streets of Rage"), so the caller -
+/// which already holds the resolved snapshot paths - supplies a resolver. Guessing is
 /// what once produced a black render for every megadrive game.
 ///
 /// Fidelity: geometry is expressed in FRACTIONS of the surface (centre x/y, scale as
@@ -54,7 +54,7 @@ public sealed class GabaritSkiaRenderer
         => Path.Combine(_baseDirectory, "media", CategoryRoot(category), "surfaces", Safe(surfaceId),
             Safe(GabaritSystemId), Safe(scope) + ".project.json");
 
-    /// <summary>True when the surface actually has a template for this scope — lets the
+    /// <summary>True when the surface actually has a template for this scope - lets the
     /// caller skip the whole round trip.</summary>
     public bool HasGabarit(string category, string surfaceId, string scope)
         => File.Exists(ProjectPath(category, surfaceId, scope));
@@ -82,7 +82,7 @@ public sealed class GabaritSkiaRenderer
                 var projectPath = ProjectPath(category, surfaceId, scope);
                 var project = LoadProject(projectPath);
                 // A system without its own game template falls back to the one composed
-                // for ALL games — the level of last resort, never another system's.
+                // for ALL games - the level of last resort, never another system's.
                 if (project == null && scope.StartsWith("game-", StringComparison.OrdinalIgnoreCase))
                 {
                     projectPath = ProjectPath(category, surfaceId, "game");
@@ -91,7 +91,7 @@ public sealed class GabaritSkiaRenderer
                 if (project == null || !project.Layers.Any(l => !l.Hidden)) return;
 
                 // Freshness key: the cached PNG is stamped with the recipe it was baked from
-                // — the layout file, plus every source each visible layer resolves to (path +
+                // - the layout file, plus every source each visible layer resolves to (path +
                 // mtime + size). A media that CHANGED (re-scraped) or was REMOVED shifts the
                 // key, so a stale sheet re-bakes itself; unchanged, we skip the render. This
                 // is the same self-invalidation DynamicSurfaceRenderer already has, extended
@@ -99,7 +99,7 @@ public sealed class GabaritSkiaRenderer
                 var recipeKey = ComputeRecipeKey(project, projectPath, resolveMedia, width, height);
                 if (File.Exists(outputPath) && ReadKey(outputPath) == recipeKey)
                 {
-                    return; // already current — SurfaceGabarit returned this same PNG
+                    return; // already current - SurfaceGabarit returned this same PNG
                 }
 
                 if (Render(project, resolveMedia, tokens, width, height, outputPath))
@@ -112,7 +112,7 @@ public sealed class GabaritSkiaRenderer
                 else
                 {
                     _logger.LogInformation(
-                        "Gabarit ({Scope}) for {Label} resolved no media — nothing written, the chain continues",
+                        "Gabarit ({Scope}) for {Label} resolved no media - nothing written, the chain continues",
                         scope, label);
                 }
             }
@@ -146,7 +146,7 @@ public sealed class GabaritSkiaRenderer
     }
 
     /// <summary>Everything a bake depends on, hashed: the layout file itself, and for every
-    /// VISIBLE layer the source it resolves to (path + mtime + size — "none" when a layer
+    /// VISIBLE layer the source it resolves to (path + mtime + size - "none" when a layer
     /// resolves to nothing, so removing a media is a change too). Text/token layers are
     /// keyed by the cache PATH already (one file per game/system), so they need not enter
     /// the key.</summary>
@@ -209,7 +209,7 @@ public sealed class GabaritSkiaRenderer
 
         // NEVER write a blank. An empty render becomes the source the chain serves, and
         // a black marquee on every game of a system is exactly what that cost. No
-        // pixels, no file — the chain then falls through to the next source, as before.
+        // pixels, no file - the chain then falls through to the next source, as before.
         if (!drew) return false;
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
@@ -221,7 +221,7 @@ public sealed class GabaritSkiaRenderer
     }
 
     /// <summary>solid | gradient | media (cover, blurred). A media background overflows
-    /// the frame by blur×2 so the blur never samples past the edges — the same trick the
+    /// the frame by blur×2 so the blur never samples past the edges - the same trick the
     /// composer uses to avoid a dark border. A plain black background counts as "nothing
     /// drawn": it must not, on its own, make a blank render look legitimate.</summary>
     private static bool DrawBackground(SKCanvas canvas, MarqueeBackground background, int width, int height,
@@ -276,7 +276,7 @@ public sealed class GabaritSkiaRenderer
         var h = (float)(layer.Scale * height);
         var w = h * bitmap.Width / bitmap.Height;
         // scale is a share of the HEIGHT, so a very wide logo overflowed the frame with
-        // nothing to cap it. Keep it inside, aspect preserved — same rule as the editor.
+        // nothing to cap it. Keep it inside, aspect preserved - same rule as the editor.
         if (w > width)
         {
             h *= width / w;
@@ -300,7 +300,7 @@ public sealed class GabaritSkiaRenderer
     /// <summary>
     /// A template's text is a TEMPLATE: {name} {year} {developer} {publisher} {system},
     /// resolved for the entry being rendered. Storing the literal string baked the
-    /// preview entry's name into every game of the system — the window title, even.
+    /// preview entry's name into every game of the system - the window title, even.
     /// </summary>
     private static bool DrawTextLayer(SKCanvas canvas, MarqueeLayer layer,
         IReadOnlyDictionary<string, string> tokens, int width, int height)

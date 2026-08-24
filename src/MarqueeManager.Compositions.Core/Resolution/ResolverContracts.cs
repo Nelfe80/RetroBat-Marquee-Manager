@@ -59,7 +59,7 @@ public interface IPresentationPolicyProvider
 }
 
 /// <summary>The single shared resolver. Deterministic, generates nothing, writes
-/// nothing, does no heavy decode — it decides which link wins and returns a full
+/// nothing, does no heavy decode - it decides which link wins and returns a full
 /// trace. Called INSIDE the surface/screen loop, never once globally (§18.1).</summary>
 public interface IMediaResolutionService
 {

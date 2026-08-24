@@ -14,7 +14,7 @@ namespace MarqueeManager.Setup.Controls;
 /// <summary>
 /// Editor for the game's rbmarquee scene lamps (resources\rbmarquee\&lt;rom&gt;.xml):
 /// drag a lamp on the marquee image, resize it with the wheel, recolor it, and
-/// rewire it to a MAME output. Handles both lamp shapes of the format — circles
+/// rewire it to a MAME output. Handles both lamp shapes of the format - circles
 /// (x/y/radius) and rectangles (region="x y w h"), fractional coordinates.
 /// Saving stamps generated="false": the scene is user-edited, the generator
 /// will never overwrite it again (.bak kept).
@@ -153,8 +153,8 @@ public sealed class SceneLampsCard : UserControl
     /// <summary>
     /// The artwork the lamp regions were MEASURED on, when the scene declares one
     /// (`&lt;scene image="…"&gt;` → resources\images\…). The runtime prefers it over any
-    /// resolved media — MarqueeLightingRenderer: `lampScene?.CalibratedImagePath ??
-    /// request.Path` — so it is the only background on which placing lamps means
+    /// resolved media - MarqueeLightingRenderer: `lampScene?.CalibratedImagePath ??
+    /// request.Path` - so it is the only background on which placing lamps means
     /// anything for these games. Null when the game has no scene, or none declared.
     /// </summary>
     public static string? CalibratedBackground(string pluginRoot, string rom)
@@ -816,7 +816,7 @@ public sealed class SceneLampsCard : UserControl
         outputLabel.Margin = new Thickness(0, 0, 6, 0);
         line.Children.Add(outputLabel);
         // STRICT picker: only the outputs the game actually exposes
-        // (APIExpose resources\outputs\mame\<rom>.json) are selectable — no
+        // (APIExpose resources\outputs\mame\<rom>.json) are selectable - no
         // free text, a wrong name would never light up anyway
         var output = Ui.ComboBox(170);
         output.Items.Add(new ComboBoxItem { Content = L.T("(non câblée)", "(not wired)"), Tag = "" });
@@ -965,7 +965,7 @@ public sealed class SceneLampsCard : UserControl
 
     // ================= data =================
 
-    /// <summary>MAME output names of the game — APIExpose ships them in
+    /// <summary>MAME output names of the game - APIExpose ships them in
     /// resources\outputs\mame\&lt;rom&gt;.json as an "outputs" ARRAY of
     /// { name, label, physical_type… } objects (the dynpanel files carry none).</summary>
     private void LoadKnownOutputs(string system, string rom)

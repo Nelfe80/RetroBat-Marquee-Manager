@@ -8,7 +8,7 @@
 
 ## The DMD is blurry
 
-Your DMD media are probably generated at 256×64 for a 128×32 panel. Set the generation profile on the APIExpose side and purge the old files — see [DMD — crisp rendering](dmd.md#crisp-rendering-at-12832).
+Your DMD media are probably generated at 256×64 for a 128×32 panel. Set the generation profile on the APIExpose side and purge the old files - see [DMD - crisp rendering](dmd.md#crisp-rendering-at-12832).
 
 ## The ZeDMD is not detected
 
@@ -17,7 +17,7 @@ Your DMD media are probably generated at 256×64 for a 128×32 panel. Set the ge
 
 ## The DMD does not come back after a pinball game
 
-External-control mode ends at `ui.game.ended`. If a pinball crashed, go back to game selection in EmulationStation — MarqueeManager takes over there. Also check that the system is listed in `ActiveSystemsDMD`.
+External-control mode ends at `ui.game.ended`. If a pinball crashed, go back to game selection in EmulationStation - MarqueeManager takes over there. Also check that the system is listed in `ActiveSystemsDMD`.
 
 ## My configuration changed after an update
 

@@ -61,7 +61,7 @@ public sealed class MediaResolutionServiceTests
     private static bool Traced(ResolvedMedia r, ResolutionSource link, string code)
         => r.Trace.Any(t => t.Link == link && t.Code == code);
 
-    // SYS-01..05 — the system chain in order.
+    // SYS-01..05 - the system chain in order.
     [Fact]
     public void System_AllPresent_PersonalWins()
     {
@@ -140,7 +140,7 @@ public sealed class MediaResolutionServiceTests
         Assert.Null(r.Fit);
     }
 
-    // SYS-06 — a disabled link is skipped even though its media exists.
+    // SYS-06 - a disabled link is skipped even though its media exists.
     [Fact]
     public void System_GeneratedDisabled_SkippedDespiteMedia()
     {
@@ -184,7 +184,7 @@ public sealed class MediaResolutionServiceTests
         Assert.Equal("cache/gen.png", r.EffectivePath);
     }
 
-    // GAME-01 — the game's own personal wins first.
+    // GAME-01 - the game's own personal wins first.
     [Fact]
     public void Game_PersonalPresent_Wins()
     {
@@ -194,7 +194,7 @@ public sealed class MediaResolutionServiceTests
         Assert.Equal(ResolutionSource.Personal, svc.Resolve(GameCtx()).Source);
     }
 
-    // GAME-05 — no game media: the FULL system chain runs as fallback.
+    // GAME-05 - no game media: the FULL system chain runs as fallback.
     [Fact]
     public void Game_NoGameMedia_RunsSystemChain()
     {
@@ -208,7 +208,7 @@ public sealed class MediaResolutionServiceTests
         Assert.True(Traced(r, ResolutionSource.Generated, TraceCodes.SourceSelected));
     }
 
-    // GAME-06 — fallback disabled: straight to neutral.
+    // GAME-06 - fallback disabled: straight to neutral.
     [Fact]
     public void Game_FallbackDisabled_Neutral()
     {
@@ -223,7 +223,7 @@ public sealed class MediaResolutionServiceTests
         Assert.True(Traced(r, ResolutionSource.Neutral, TraceCodes.FallbackNeutral));
     }
 
-    // §19 — a payload with no frontend system is traced (but still resolves).
+    // §19 - a payload with no frontend system is traced (but still resolves).
     [Fact]
     public void MissingFrontendSystem_IsTraced()
     {

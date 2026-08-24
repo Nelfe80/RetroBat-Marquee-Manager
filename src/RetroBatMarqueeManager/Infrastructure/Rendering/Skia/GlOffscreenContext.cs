@@ -5,13 +5,13 @@ namespace RetroBatMarqueeManager.Infrastructure.Rendering.Skia;
 /// <summary>
 /// Minimal offscreen desktop-OpenGL (WGL) context, created purely to host a
 /// SkiaSharp GPU <c>GRContext</c>. A hidden 1×1 window supplies a device context
-/// with a valid OpenGL pixel format; we never present to it — Skia renders into its
+/// with a valid OpenGL pixel format; we never present to it - Skia renders into its
 /// own offscreen GPU surface and the frame is read back to CPU for WPF.
 ///
 /// The context is THREAD-AFFINE: <see cref="Create"/> makes the context current on
 /// the calling thread and it stays current there until <see cref="Dispose"/>. Both
 /// MUST run on the render thread. All failures throw, so the caller can cleanly fall
-/// back to CPU rasterization. Pure P/Invoke on the system opengl32.dll — no extra
+/// back to CPU rasterization. Pure P/Invoke on the system opengl32.dll - no extra
 /// NuGet dependency and nothing new to bundle in the single-file publish.
 /// </summary>
 internal sealed class GlOffscreenContext : IDisposable

@@ -33,7 +33,7 @@ public static class MarqueeFramer
         // A source AUTHORED at the surface's aspect (a flattened composition, a
         // creation, a gabarit) is already framed: it must fill the surface exactly.
         // Letterboxing it would leave black bands where the layers below keep showing
-        // through — the "two logos" symptom.
+        // through - the "two logos" symptom.
         var sourceAspect = (double)source.Width / source.Height;
         var surfaceAspect = (double)surfaceWidth / surfaceHeight;
         if (Math.Abs(sourceAspect - surfaceAspect) <= surfaceAspect * 0.02)
@@ -47,7 +47,7 @@ public static class MarqueeFramer
         if (cropFraction > fillHeightMaxCrop)
             return Contain(source, surfaceWidth, surfaceHeight, "contain (crop too large)");
 
-        // DOF lamps present: the crop window must contain ALL lamps — centered on
+        // DOF lamps present: the crop window must contain ALL lamps - centered on
         // their span, never sliding one beacon out of frame
         if (mustInclude is { } span)
         {
@@ -109,7 +109,7 @@ public static class MarqueeFramer
     }
 
     /// <summary>
-    /// Horizontal edge energy per column on a small grayscale copy — text and art
+    /// Horizontal edge energy per column on a small grayscale copy - text and art
     /// score high, flat background scores ~0. Outlier columns (thin decorative
     /// borders) are clamped so they cannot veto the crop on their own.
     /// </summary>

@@ -36,7 +36,7 @@ public sealed record ScreenInfo(
         {
             if (Primary)
             {
-                return L.T("écran principal RetroBat — à laisser libre", "RetroBat main screen — leave it free");
+                return L.T("écran principal RetroBat - à laisser libre", "RetroBat main screen - leave it free");
             }
 
             if (Ratio >= 3)

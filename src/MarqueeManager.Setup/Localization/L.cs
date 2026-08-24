@@ -16,7 +16,7 @@ public static class L
     public static string T(string fr, string en) => French ? fr : en;
 
     /// <summary>Applies the persisted language once the plugin root is known
-    /// (the CLI argument still wins — it drives the wiki screenshot runs).</summary>
+    /// (the CLI argument still wins - it drives the wiki screenshot runs).</summary>
     public static void Initialize(string? pluginRoot)
     {
         if (HasLangArgument())

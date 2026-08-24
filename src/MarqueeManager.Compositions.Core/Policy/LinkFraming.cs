@@ -4,7 +4,7 @@ using MarqueeManager.Compositions.Core.Geometry;
 namespace MarqueeManager.Compositions.Core.Policy;
 
 /// <summary>
-/// Frames one chain link's media for a target — the SINGLE place the runtime and
+/// Frames one chain link's media for a target - the SINGLE place the runtime and
 /// the Setup preview both use. A lighting-pinned target frames every link with the
 /// pinned policy; the LOGO link always uses its safe-zone layout (§11, padding +
 /// centered, never edge-to-edge); everything else uses the link's fit policy.

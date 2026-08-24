@@ -4,7 +4,7 @@ namespace RetroBatMarqueeManager.Application.Media;
 
 /// <summary>
 /// Headless pre-generation of the template cache (`MarqueeManager.exe
-/// --render-templates arcade,nes` — "all" = every system with a template in its
+/// --render-templates arcade,nes` - "all" = every system with a template in its
 /// chain). For each game of the APIExpose media library whose marquee chain
 /// contains a template source, renders the missing cache PNGs so the runtime
 /// never composes during ES navigation. Progress goes to stdout

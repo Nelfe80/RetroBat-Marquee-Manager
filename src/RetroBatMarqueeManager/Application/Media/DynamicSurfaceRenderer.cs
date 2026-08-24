@@ -8,8 +8,8 @@ namespace RetroBatMarqueeManager.Application.Media;
 /// <summary>
 /// Flattens the surface's own layer stack into ONE cached image, so the compositing
 /// that sits under the lighting engine becomes a media source like any other
-/// (docs\RENDU-DYNAMIQUE.md). The lighting engine keeps its one-line contract — a
-/// path in, a lit image out — and never learns to read a layer stack.
+/// (docs\RENDU-DYNAMIQUE.md). The lighting engine keeps its one-line contract - a
+/// path in, a lit image out - and never learns to read a layer stack.
 ///
 /// Generalizes <see cref="CompositionTemplateRenderer"/>: same Skia-off-thread,
 /// deduplicated, "pending → updated" mechanics, but the frozen recipe
@@ -18,7 +18,7 @@ namespace RetroBatMarqueeManager.Application.Media;
 public sealed class DynamicSurfaceRenderer
 {
     /// <summary>Layer kinds a still image can faithfully stand in for. Anything else
-    /// (video, cycling card, text, web embed) stays live and BREAKS the run — see
+    /// (video, cycling card, text, web embed) stays live and BREAKS the run - see
     /// <see cref="FlattenableRun"/>.</summary>
     private static readonly HashSet<string> Flattenable = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -43,7 +43,7 @@ public sealed class DynamicSurfaceRenderer
     /// first layer a still image cannot stand in for.
     ///
     /// A layer that is not active in this state is invisible, so it neither joins the
-    /// run nor interrupts it — it is simply skipped.
+    /// run nor interrupts it - it is simply skipped.
     ///
     /// Returned back-to-front, ready to draw.
     /// </summary>
@@ -86,7 +86,7 @@ public sealed class DynamicSurfaceRenderer
 
     /// <summary>
     /// Everything the render depends on, hashed. Miss one input and we light a stale
-    /// composition — the failure mode is silent and unpleasant to spot, so the key
+    /// composition - the failure mode is silent and unpleasant to spot, so the key
     /// deliberately covers the WHOLE recipe: which layers were included, their
     /// geometry and options, and the identity (path + mtime + length) of every media
     /// they resolved to, plus the surface size and the display state.
@@ -216,7 +216,7 @@ public sealed class DynamicSurfaceRenderer
     }
 
     /// <summary>"fill" = cover the zone keeping aspect (overflow cropped); otherwise
-    /// fit inside it. Never Stretch.Fill — a media is never distorted.</summary>
+    /// fit inside it. Never Stretch.Fill - a media is never distorted.</summary>
     private static void DrawMedia(SKCanvas canvas, SKBitmap bitmap, SKRect zone, bool fill)
     {
         var scale = fill

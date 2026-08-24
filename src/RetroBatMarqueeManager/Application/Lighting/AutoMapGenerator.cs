@@ -6,7 +6,7 @@ namespace RetroBatMarqueeManager.Application.Lighting;
 /// <summary>
 /// The generated per-marquee lighting maps (CDC §16), at render resolution.
 /// Composition is a drive-lerp: final = unlit×(1−drive) + lit×drive, so at full
-/// drive the render is exactly the (light-tinted) source — no saturation loss.
+/// drive the render is exactly the (light-tinted) source - no saturation loss.
 /// Transmission/tint stay implicit in (lit − unlit); explicit maps return with
 /// the local colored lamps of Phase 5, where colored light must cross the ink.
 /// </summary>
@@ -56,8 +56,8 @@ public sealed record BacklightProfile(float TubeY1, float TubeY2, bool TwoTubes,
 
 /// <summary>
 /// Generates the unlit / lit map pair from the received marquee image (CDC §16).
-/// Everything static per scene is baked here — lamp light color, aging, horizontal
-/// end falloff — so the per-frame shader stays minimal on the CPU raster backend.
+/// Everything static per scene is baked here - lamp light color, aging, horizontal
+/// end falloff - so the per-frame shader stays minimal on the CPU raster backend.
 /// Maps are generated at the target render size (§27.3), never at source size.
 /// </summary>
 public static class AutoMapGenerator
@@ -105,7 +105,7 @@ public static class AutoMapGenerator
                 for (var x = 0; x < targetWidth; x++)
                 {
                     var i = rowBase + x * 4;
-                    // dark corners: light never fully reaches the box angles — the corner
+                    // dark corners: light never fully reaches the box angles - the corner
                     // term only bites where BOTH edge proximities are high
                     var corner = 1f - CornerDarkness * (1f - cornerX[x]) * (1f - cornerYRow);
                     var falloff = endFalloff[x] * corner;

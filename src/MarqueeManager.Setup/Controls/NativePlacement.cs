@@ -6,7 +6,7 @@ namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
 /// Places a borderless WPF window at exact pixel coordinates, exactly like the
-/// runtime's MarqueeWindow does — bypassing WPF's DIP scaling so a zone tested here
+/// runtime's MarqueeWindow does - bypassing WPF's DIP scaling so a zone tested here
 /// is the zone the runtime will use.
 /// </summary>
 public static class NativePlacement

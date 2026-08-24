@@ -30,7 +30,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     private SKBitmap? _back;
     // Lot D: third buffer for the triple-buffer present path. Roles: _back = render
     // target, _front = latest ready frame, _spare = the UI thread's present buffer.
-    // The swap lock is then held only for pointer swaps — never during WritePixels.
+    // The swap lock is then held only for pointer swaps - never during WritePixels.
     private SKBitmap? _spare;
     private bool _hasReady;
     private readonly bool _presentPipeline;
@@ -41,7 +41,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     // rasterized by Skia on the GPU (offscreen GL surface) then read back into the
     // CPU _back buffer, so the whole present pipeline below stays unchanged. All three
     // GPU objects are thread-affine to the render thread. Any init/render failure nulls
-    // _grContext and the code silently falls back to the CPU raster — never a regression.
+    // _grContext and the code silently falls back to the CPU raster - never a regression.
     private readonly bool _gpuRaster;
     private GlOffscreenContext? _glContext;
     private GRContext? _grContext;
@@ -64,7 +64,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
 
     /// <summary>Adaptive resolution: when the CPU raster cannot hold the frame
     /// budget (sprite bursts force full-frame renders), the surface renders at a
-    /// reduced internal scale (down to 0.5) and WPF stretches it back — smooth
+    /// reduced internal scale (down to 0.5) and WPF stretches it back - smooth
     /// effects beat crisp-but-stuttering ones. Recovers when the load drops.</summary>
     private double _adaptiveScale = 1.0;
 
@@ -72,7 +72,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
 
     /// <summary>
     /// Called on the render thread with the freshly rendered frame (front buffer,
-    /// under the swap lock — copy what you need, do not keep the reference).
+    /// under the swap lock - copy what you need, do not keep the reference).
     /// Used by the DMD mirror.
     /// </summary>
     public Action<SKBitmap>? FrameRendered;
@@ -102,13 +102,13 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     [DllImport("winmm.dll")]
     private static extern uint timeEndPeriod(uint period);
 
-    /// <summary>True once the render loop runs — the surface owner uses it to avoid
+    /// <summary>True once the render loop runs - the surface owner uses it to avoid
     /// showing a layer that has not started yet.</summary>
     public bool IsRunning => _renderThread != null;
 
     /// <summary>
     /// Out of scope: the loop stops rasterising instead of merely being hidden. A
-    /// hidden host kept painting frames nobody could see — CPU spent on a layer the
+    /// hidden host kept painting frames nobody could see - CPU spent on a layer the
     /// user had switched off, which is exactly what "hide the lighting" was meant to
     /// stop.
     /// </summary>
@@ -127,7 +127,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
             // AboveNormal WITHIN the BelowNormal process: this keeps the render thread
             // fed among the process's own threads (dropping it to Normal starved the
             // render to ~3 FPS on a loaded machine) while the whole process still
-            // yields to ES — its priority stays below ES's Normal-class threads.
+            // yields to ES - its priority stays below ES's Normal-class threads.
             Priority = ThreadPriority.AboveNormal
         };
         _renderThread.Start();
@@ -160,7 +160,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     }
 
     /// <summary>Best-effort GPU init on the render thread. On ANY failure it logs and
-    /// leaves _grContext null, so RenderFrame keeps using the CPU raster — the GPU path
+    /// leaves _grContext null, so RenderFrame keeps using the CPU raster - the GPU path
     /// is purely additive and can never break the existing rendering.</summary>
     private void TryInitGpu()
     {
@@ -177,7 +177,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Skia lighting raster: GPU init failed — falling back to CPU rasterization.");
+            _logger.LogWarning(ex, "Skia lighting raster: GPU init failed - falling back to CPU rasterization.");
             DisposeGpu();
         }
     }
@@ -269,7 +269,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 CurrentFps = fpsFrames * (double)Stopwatch.Frequency / (now - fpsWindowStart);
                 // §6: adaptive resolution judged against the CONTENT cadence, so a
                 // 24 Hz scene can recover; only windows with continuous rendering count.
-                // A window with ANY skip is not overloaded — the renderer chose not to
+                // A window with ANY skip is not overloaded - the renderer chose not to
                 // draw. Without this, a SPARSE renderer (the ingame events layer only
                 // draws while an effect plays) is permanently read as "can't keep up"
                 // and gets pinned at half resolution for no reason.
@@ -357,7 +357,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     }
 
     /// <summary>Draws the scene into the given surface. Identical for the CPU and GPU
-    /// paths — only the surface differs (CPU bitmap-backed vs GPU offscreen).</summary>
+    /// paths - only the surface differs (CPU bitmap-backed vs GPU offscreen).</summary>
     private void DrawScene(SKSurface surface, int logicalWidth, int logicalHeight, int physicalWidth, int physicalHeight, TimeSpan elapsed)
     {
         var canvas = surface.Canvas;
@@ -370,8 +370,8 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     }
 
     /// <summary>Rasterizes the frame on the GPU, then reads the pixels back into the
-    /// CPU _back buffer so the whole present pipeline stays unchanged. Returns false —
-    /// and disables the GPU for the rest of the session — on any failure, so the caller
+    /// CPU _back buffer so the whole present pipeline stays unchanged. Returns false -
+    /// and disables the GPU for the rest of the session - on any failure, so the caller
     /// re-draws this frame on the CPU. GPU objects are only ever touched here and in
     /// TryInitGpu/DisposeGpu, all on the render thread.</summary>
     private bool RenderFrameGpu(SKImageInfo info, int logicalWidth, int logicalHeight, int physicalWidth, int physicalHeight, TimeSpan elapsed)
@@ -396,7 +396,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Skia lighting raster: GPU frame failed — disabling GPU, reverting to CPU rasterization.");
+            _logger.LogWarning(ex, "Skia lighting raster: GPU frame failed - disabling GPU, reverting to CPU rasterization.");
             DisposeGpu(); // _grContext becomes null → CPU path from now on
             return false;
         }
@@ -414,7 +414,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         _fpsFont ??= new SKFont(SKTypeface.Default, 18);
         _fpsPaint ??= new SKPaint { Color = SKColors.Lime, IsAntialias = true };
         // §4: show frames actually PRESENTED by WPF, or IDLE when the renderer is
-        // deliberately skipping visually identical frames — not the computed count
+        // deliberately skipping visually identical frames - not the computed count
         var text = _idle ? "IDLE" : $"{_presentedFps:F0} FPS";
         canvas.DrawText(text, 10, 24, _fpsFont, _fpsPaint);
     }
@@ -424,7 +424,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     private void SchedulePresent()
     {
         // a present was already queued but not yet run: the frame it would have
-        // shown is now superseded — count it as a dropped present (§4)
+        // shown is now superseded - count it as a dropped present (§4)
         if (Interlocked.Exchange(ref _presentQueued, 1) == 1)
         {
             _metrics.RecordDroppedPresent();

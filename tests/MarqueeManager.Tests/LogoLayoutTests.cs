@@ -10,7 +10,7 @@ public sealed class LogoLayoutTests
     private static LogoLayout Layout(double px = 0.06, double py = 0.08, double min = 0.03)
         => new(px, py, min, new BackgroundSpec(BackgroundKinds.ScopeNeutral));
 
-    // LOGO-01 — horizontal logo, padding respected, never cropped.
+    // LOGO-01 - horizontal logo, padding respected, never cropped.
     [Fact]
     public void HorizontalLogo_FitsInsideSafeZone_NoCrop()
     {
@@ -24,7 +24,7 @@ public sealed class LogoLayoutTests
         Assert.True(p.Fit.TargetRect.Right <= 1920 - (0.06 * 1920) + 0.01); // never touches the edge
     }
 
-    // LOGO-04 — a padding below the 3% floor is raised to the floor.
+    // LOGO-04 - a padding below the 3% floor is raised to the floor.
     [Fact]
     public void PaddingBelowFloor_IsRaisedToThreePercent()
     {
@@ -34,7 +34,7 @@ public sealed class LogoLayoutTests
         Assert.Equal(0.03 * 1920, p.Fit!.Padding.Left, 2); // 57.6, the 3% floor, not 1%
     }
 
-    // LOGO-09 — a tiny DMD-like surface still yields a positive usable box.
+    // LOGO-09 - a tiny DMD-like surface still yields a positive usable box.
     [Fact]
     public void SmallSurface_StillPlacesLogo()
     {
@@ -44,7 +44,7 @@ public sealed class LogoLayoutTests
         Assert.True(p.Fit!.Scale > 0);
     }
 
-    // LOGO-10 — a surface too small for any safe zone returns the diagnostic.
+    // LOGO-10 - a surface too small for any safe zone returns the diagnostic.
     [Fact]
     public void SurfaceTooSmall_ReturnsDiagnostic()
     {

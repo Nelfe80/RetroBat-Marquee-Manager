@@ -141,7 +141,7 @@ public sealed class FitCalculator : IFitCalculator
     }
 
     // Window start (source px). Begins at the centered default (matching the
-    // Center/Auto alignment) and shifts MINIMALLY — only as far as needed — so the
+    // Center/Auto alignment) and shifts MINIMALLY - only as far as needed - so the
     // protected span [pMin, pMax] falls fully inside [start, start+window].
     private static double WindowStart(double pMin, double pMax, double window, double sourceLen)
     {

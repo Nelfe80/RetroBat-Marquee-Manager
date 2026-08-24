@@ -12,7 +12,7 @@ namespace MarqueeManager.Setup.Views;
 
 /// <summary>
 /// Physical DMD configuration ([DMD] section): model, resolution, port, brightness,
-/// USB tuning — plus the static inventory of the private DMD stack and an on-demand
+/// USB tuning - plus the static inventory of the private DMD stack and an on-demand
 /// test pattern through dmdext. The test is never automatic: a powered-off panel
 /// must not block the setup.
 /// </summary>
@@ -227,8 +227,8 @@ public sealed class DmdView : UserControl
         var dmdext = Path.Combine(_pluginRoot, "tools", "dmd", "dmdext.exe");
         if (!File.Exists(dmdext))
         {
-            _status.Text = L.T("dmdext.exe introuvable dans tools\\dmd — impossible d'envoyer la mire.",
-                "dmdext.exe not found in tools\\dmd — cannot send the pattern.");
+            _status.Text = L.T("dmdext.exe introuvable dans tools\\dmd - impossible d'envoyer la mire.",
+                "dmdext.exe not found in tools\\dmd - cannot send the pattern.");
             return;
         }
 

@@ -6,7 +6,7 @@ namespace MarqueeManager.Setup.Data;
 
 /// <summary>
 /// Tells APIExpose which physical monitor is the RetroBat/game screen so it keeps
-/// <c>&lt;system&gt;.MonitorIndex</c> in es_settings.cfg pointing there — the value
+/// <c>&lt;system&gt;.MonitorIndex</c> in es_settings.cfg pointing there - the value
 /// standalone emulators (MAME/FBNeo…) use to pick their display. APIExpose owns the
 /// es_settings write (and only applies the value when it differs); this is a
 /// best-effort, fire-and-forget push on the loopback API, so failures (APIExpose not

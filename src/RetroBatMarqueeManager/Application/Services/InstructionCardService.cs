@@ -11,14 +11,14 @@ namespace RetroBatMarqueeManager.Application.Services;
 /// the whole list and shows it through CHANNELS.
 ///
 /// A channel is one reading position: a viewer displays it, a touch zone drives it.
-/// They are two different layers on purpose — a cabinet can have its buttons on a
+/// They are two different layers on purpose - a cabinet can have its buttons on a
 /// touchscreen and its card on the topper, so the finger and the card are not on the
 /// same surface. The channel is what ties them together, and it is derived from what
 /// the viewer already says (its player, its role) so the common cases need no naming.
 ///
 /// Each channel holds its own place in the catalog: which role it is on, which card of
 /// that role, and whether it follows the character the game announces. Cycling stays
-/// INSIDE the current role — Cody 01 → 02 → 03 → 01 — which is what makes a card usable
+/// INSIDE the current role - Cody 01 → 02 → 03 → 01 - which is what makes a card usable
 /// mid-game. With no role, it walks the whole catalog: when nothing says who is being
 /// played, showing everything is the honest answer.
 ///
@@ -113,7 +113,7 @@ public sealed class InstructionCardService : IDisposable
         foreach (var shown in updates)
         {
             // A game without an instruction card CLEARS the previous one. Returning early
-            // left the last game's card on screen — one card following you across the whole
+            // left the last game's card on screen - one card following you across the whole
             // library. Nothing of an entry may survive into the next.
             await DisplayAsync(shown, cancellationToken);
         }
@@ -137,7 +137,7 @@ public sealed class InstructionCardService : IDisposable
     /// <summary>
     /// The game announced what a player has in hand (CHARACTER_SELECTED / WEAPON_SELECTED
     /// carry a NAME in their description). Channels in auto mode for that player jump to
-    /// the matching role — and stay there, cycling inside it.
+    /// the matching role - and stay there, cycling inside it.
     /// </summary>
     public async Task OnNameAnnouncedAsync(int player, string name, CancellationToken cancellationToken)
     {
@@ -146,8 +146,8 @@ public sealed class InstructionCardService : IDisposable
         {
             if (_groups.Count == 0) return;
 
-            // Two ways a name can be carried by the cards: it is a ROLE — a folder of its
-            // own, a character with his own pages — or it is one ENTRY inside a shared
+            // Two ways a name can be carried by the cards: it is a ROLE - a folder of its
+            // own, a character with his own pages - or it is one ENTRY inside a shared
             // card, like the weapons of Ghouls'n Ghosts drawn side by side. The folder
             // wins: it is the richer answer, several pages instead of one frame.
             var role = InstructionCardCatalog.MatchRole(_groups, name);
@@ -157,7 +157,7 @@ public sealed class InstructionCardService : IDisposable
                 // Blanking it would punish the player for a card the pack does not carry.
                 //
                 // Said out loud, not whispered in Debug: when a player wonders why his card
-                // did not follow him, the answer has to be readable — the game DID announce
+                // did not follow him, the answer has to be readable - the game DID announce
                 // something, and these are the names its cards do carry.
                 _logger.LogInformation("Player {Player} announced \"{Name}\", which no card names. Known roles: {Roles}",
                     player, name, string.Join(", ", InstructionCardCatalog.Roles(_groups)));
@@ -194,12 +194,12 @@ public sealed class InstructionCardService : IDisposable
     }
 
     /// <summary>
-    /// Points this channel at the entry that names what was announced — the weapon just
+    /// Points this channel at the entry that names what was announced - the weapon just
     /// picked up, drawn among the others on a shared card.
     ///
     /// Looked up in the channel's OWN cards first: an index is only meaningful inside the
     /// list the channel walks, and a viewer pinned to a role walks a shorter one. Found
-    /// elsewhere, the channel moves to the card's role — otherwise it would carry the
+    /// elsewhere, the channel moves to the card's role - otherwise it would carry the
     /// index of a card it cannot show.
     /// </summary>
     private bool PointAtEntry(Channel channel, string name)
@@ -267,7 +267,7 @@ public sealed class InstructionCardService : IDisposable
         => InstructionCardCatalog.ForRole(_groups, channel.EffectiveRole);
 
     /// <summary>What this channel shows: its card, and the entry to frame inside it. The
-    /// frame travels WITH the card — sent apart, it would land on the previous drawing
+    /// frame travels WITH the card - sent apart, it would land on the previous drawing
     /// for one frame, pointing at nothing.</summary>
     private Shown Snapshot(Channel channel)
     {
@@ -293,7 +293,7 @@ public sealed class InstructionCardService : IDisposable
     };
 
     /// <summary>Where this channel sits at rest: the card the viewer pinned, else the
-    /// first of its role. A pinned card that this game does not have simply falls back —
+    /// first of its role. A pinned card that this game does not have simply falls back -
     /// "ic3" means nothing to a game with two pages.</summary>
     private int DefaultIndex(Channel channel)
     {
@@ -308,7 +308,7 @@ public sealed class InstructionCardService : IDisposable
 
     /// <summary>
     /// A tap on a surface. What answers is the zone the user drew in the composition:
-    /// it is visible, it carries its own action, and it can sit on ANY surface — the
+    /// it is visible, it carries its own action, and it can sit on ANY surface - the
     /// finger and the card no longer have to share a screen.
     /// </summary>
     private void OnTap(SurfaceDefinition surface, string scene, double fx, double fy)
@@ -357,7 +357,7 @@ public sealed class InstructionCardService : IDisposable
             ResolveChannels();
             var channel = ChannelFor(channelName);
             var groups = GroupsOf(channel);
-            // a role action is allowed to leave an empty role — that is how you get out
+            // a role action is allowed to leave an empty role - that is how you get out
             // of one; everything else needs a card to move to
             if (groups.Count == 0 && !IsRoleAction(tap.Action)) return;
 
@@ -540,12 +540,12 @@ public sealed class InstructionCardService : IDisposable
         }
     }
 
-    /// <summary>What a touch zone asks for. Built from the layer's own options — the
+    /// <summary>What a touch zone asks for. Built from the layer's own options - the
     /// zone IS the configuration, there is no file behind it.
     ///
     /// Every action a zone can carry works on ANY game:walk through the pages, through the
     /// roles, back to the resting card. Naming a page or a role was possible and has been
-    /// dropped — "page 2" holds the weapons in one game and the bonus points in the next,
+    /// dropped - "page 2" holds the weapons in one game and the bonus points in the next,
     /// and a character role only exists in the game that has that character. The finger
     /// navigates; what is game-specific is announced by the game itself.</summary>
     private sealed record Tap(string Action, int? Player, int? DurationMs);

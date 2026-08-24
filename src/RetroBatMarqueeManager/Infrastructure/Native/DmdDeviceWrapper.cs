@@ -12,7 +12,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
     {
         private readonly ILogger<DmdDeviceWrapper> _logger;
 
-        // ── DmdDevice64.dll (dmdext) — primary rendering interface ──────────
+        // ── DmdDevice64.dll (dmdext) - primary rendering interface ──────────
         private IntPtr _dmdHandle = IntPtr.Zero;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -26,7 +26,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
         private CloseDelegate?  _close;
         private RenderDelegate? _render;
 
-        // ── zedmd64.dll — pre-boot hardware calibration only ────────────────
+        // ── zedmd64.dll - pre-boot hardware calibration only ────────────────
         private IntPtr _zedmdHandle   = IntPtr.Zero;
         private IntPtr _zedmdInstance = IntPtr.Zero;
 
@@ -91,7 +91,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
         public DmdDeviceWrapper(ILogger<DmdDeviceWrapper> logger) => _logger = logger;
 
         // ─────────────────────────────────────────────────────────────────────
-        // Load — DmdDevice64.dll first, then zedmd64.dll for calibration
+        // Load - DmdDevice64.dll first, then zedmd64.dll for calibration
         // ─────────────────────────────────────────────────────────────────────
         public bool Load(string folderPath)
         {
@@ -146,7 +146,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
                 var sibling = Path.Combine(Path.GetDirectoryName(folderPath) ?? folderPath, "zedmd");
                 path = Path.Combine(sibling, dll);
             }
-            if (!File.Exists(path)) { _logger.LogInformation("[ZeDMD] zedmd64.dll not found — calibration unavailable."); return; }
+            if (!File.Exists(path)) { _logger.LogInformation("[ZeDMD] zedmd64.dll not found - calibration unavailable."); return; }
 
             try
             {
@@ -167,7 +167,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
                 _zGetUsbPkg      = Fn<ZeDMD_GetUsbPackageSizeDelegate>(_zedmdHandle, "ZeDMD_GetUsbPackageSize");
                 _zGetFw          = Fn<ZeDMD_GetFirmwareVersionDelegate>(_zedmdHandle, "ZeDMD_GetFirmwareVersion");
                 _zGetDevice      = Fn<ZeDMD_GetDeviceDelegate>(_zedmdHandle, "ZeDMD_GetDevice");
-                _logger.LogInformation($"[ZeDMD] zedmd64.dll loaded — hardware calibration available.");
+                _logger.LogInformation($"[ZeDMD] zedmd64.dll loaded - hardware calibration available.");
             }
             catch (Exception ex)
             {
@@ -200,7 +200,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
                     _logger.LogInformation($"[ZeDMD] Trying cached port {cachedPort}...");
                     _zSetDevice(_zedmdInstance, cachedPort);
                     ok = _zOpen(_zedmdInstance);
-                    if (!ok) _logger.LogWarning($"[ZeDMD] Cached port {cachedPort} failed — auto-detecting...");
+                    if (!ok) _logger.LogWarning($"[ZeDMD] Cached port {cachedPort} failed - auto-detecting...");
                 }
 
                 if (!ok)
@@ -231,7 +231,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
 
         /// <summary>
         /// Pushes hardware calibration to ZeDMD firmware and saves permanently.
-        /// Calls SaveSettings + Reset — firmware restarts with new settings.
+        /// Calls SaveSettings + Reset - firmware restarts with new settings.
         /// Caller must wait ~2s after this before DmdDevice.Open().
         /// </summary>
         public bool PushHardwareCalibration(bool isHd, int brightness = -1, int usbPackageSizeOverride = -1, int refreshRateOverride = -1)
@@ -309,7 +309,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
 
                 // RESET firmware to apply new settings
                 _zReset?.Invoke(_zedmdInstance);
-                _logger.LogInformation("[ZeDMD] Reset sent — firmware restarting with new settings...");
+                _logger.LogInformation("[ZeDMD] Reset sent - firmware restarting with new settings...");
                 return true;
             }
             catch (Exception ex) { _logger.LogError($"[ZeDMD] PushHardwareCalibration error: {ex.Message}"); return false; }
@@ -327,7 +327,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
 
         /// <summary>
         /// Recovers a blocked ZeDMD:
-        ///   1. ZeDMD_Reset via zedmd64.dll (preferred — firmware-level reset)
+        ///   1. ZeDMD_Reset via zedmd64.dll (preferred - firmware-level reset)
         ///   2. DTR toggle on the serial port as fallback (low-level MCU reboot)
         /// Caller must await ~3s after this returns before calling Open() again.
         /// </summary>
@@ -361,11 +361,11 @@ namespace RetroBatMarqueeManager.Infrastructure.Native
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"[ZeDMD] HwReset via ZeDMD_Reset failed: {ex.Message} — falling back to DTR.");
+                    _logger.LogWarning($"[ZeDMD] HwReset via ZeDMD_Reset failed: {ex.Message} - falling back to DTR.");
                 }
             }
 
-            // 2. DTR toggle — forces MCU reboot regardless of firmware state
+            // 2. DTR toggle - forces MCU reboot regardless of firmware state
             var port = cachedPort ?? DiscoveredPort;
             if (!string.IsNullOrEmpty(port))
             {

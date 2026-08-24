@@ -13,7 +13,7 @@ public sealed record LogoPlacement(FitDecision? Fit, string? Diagnostic)
 
 /// <summary>
 /// Lays a logo out on a canvas exactly the size of the surface, inside a safe zone
-/// (spec §11). The only allowed mode is Contain within the safe box — a logo is
+/// (spec §11). The only allowed mode is Contain within the safe box - a logo is
 /// never cropped or stretched, and never touches an edge. Percentages apply PER
 /// EDGE; each edge's effective padding is at least the configured value, the
 /// configured minimum, 3% of the dimension and 2 px.
@@ -36,7 +36,7 @@ public static class LogoLayoutCalculator
         if (usableW < 1 || usableH < 1)
             return new LogoPlacement(null, LogoPlacement.TooSmall);
 
-        // Contain inside the safe box, centered — the logo's apparent size may
+        // Contain inside the safe box, centered - the logo's apparent size may
         // shrink but never exceeds the safe zone.
         double k = Math.Min(usableW / logo.Width, usableH / logo.Height);
         double scaledW = logo.Width * k, scaledH = logo.Height * k;

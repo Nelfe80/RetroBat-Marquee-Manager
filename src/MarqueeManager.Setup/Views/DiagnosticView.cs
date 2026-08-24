@@ -10,7 +10,7 @@ using MarqueeManager.Setup.Processes;
 namespace MarqueeManager.Setup.Views;
 
 /// <summary>
-/// Why is my screen black? — human-readable health: detection report (screens,
+/// Why is my screen black? - human-readable health: detection report (screens,
 /// DMD stack, serial ports with LED-panel labels), source status (APIExpose,
 /// online keys) and the tail of the runtime log.
 /// </summary>
@@ -92,8 +92,8 @@ public sealed class DiagnosticView : UserControl
         sourceLines.Clear();
         sourceLines.Add(alive
             ? L.T($"APIExpose : connecté ({apiUrl}).", $"APIExpose: connected ({apiUrl}).")
-            : L.T($"APIExpose : injoignable ({apiUrl}) — les surfaces resteront vides.",
-                $"APIExpose: unreachable ({apiUrl}) — surfaces will stay empty."));
+            : L.T($"APIExpose : injoignable ({apiUrl}) - les surfaces resteront vides.",
+                $"APIExpose: unreachable ({apiUrl}) - surfaces will stay empty."));
         foreach (var (key, label) in new[]
                  {
                      ("SteamGridDbApiKey", "SteamGridDB"), ("TheGamesDbApiKey", "TheGamesDB"),

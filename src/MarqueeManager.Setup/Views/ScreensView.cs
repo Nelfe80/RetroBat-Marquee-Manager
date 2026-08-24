@@ -100,7 +100,7 @@ public sealed class ScreensView : UserControl
     }
 
     /// <summary>Opens the visual compositor on every surface hosted by this
-    /// screen — the place where surface x,y positions are edited.</summary>
+    /// screen - the place where surface x,y positions are edited.</summary>
     private void ComposeScreen(ScreenInfo screen)
     {
         var store = new Data.SurfacesStore(_pluginRoot);

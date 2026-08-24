@@ -6,7 +6,7 @@ namespace MarqueeManager.Compositions.Core.Composition;
 /// <see cref="MarqueeLayer.AssetKey"/>; rendering it for a given game or system means
 /// resolving that key against THAT entry's media.
 ///
-/// This table describes stored paths so they can be INTERPRETED — it is never used to
+/// This table describes stored paths so they can be INTERPRETED - it is never used to
 /// go looking through APIExpose's folders. APIExpose is the single source of media and
 /// serves it over its streams; MarqueeManager resolves nothing on its own.
 /// </summary>
@@ -52,7 +52,7 @@ public static class GabaritAssets
 
     /// <summary>
     /// Every media type a composition can bind to, in palette order. This is the
-    /// AUTHORITY on what is composable — the palette is built from it, never from what
+    /// AUTHORITY on what is composable - the palette is built from it, never from what
     /// one sample game happens to own, because a template is generic: opening it on a
     /// media-poor game (005, first of the arcade list) used to offer four buttons for a
     /// whole system. A type with no file behind it is placed as a coloured placeholder.
@@ -97,7 +97,7 @@ public static class GabaritAssets
     /// <param name="Served">
     /// Whether the RUNTIME can put this type on a surface. MarqueeManager reads the
     /// APIExpose streams, never the folders, so a type the streams do not carry can be
-    /// composed and previewed in the Setup — where the disk is right there — and then
+    /// composed and previewed in the Setup - where the disk is right there - and then
     /// draw NOTHING in front of the cabinet. Saying so in the palette is the whole
     /// point: a layer that will never appear must not look like one that will.
     ///
@@ -108,7 +108,7 @@ public static class GabaritAssets
     public sealed record PaletteEntry(string Key, string Scope, string Fr, string En, string Color, double Aspect,
         bool Served = true);
 
-    /// <summary>True when the key is a resolvable media type — as opposed to a one-off
+    /// <summary>True when the key is a resolvable media type - as opposed to a one-off
     /// (an import, a download, a gradient) that carries its own file and must never be
     /// swapped out for another entry's media.</summary>
     public static bool IsResolvable(string? key) =>
@@ -116,8 +116,8 @@ public static class GabaritAssets
 
     /// <summary>
     /// Infers the asset key a stored path stands for, by matching its tail against the
-    /// tables. A gabarit BACKGROUND carries no AssetKey — only the concrete path picked
-    /// while composing — so without this a general template stays soldered to the media
+    /// tables. A gabarit BACKGROUND carries no AssetKey - only the concrete path picked
+    /// while composing - so without this a general template stays soldered to the media
     /// of the entry it was previewed on (the Jaguar template wearing the Mega Drive
     /// fanart). Null when the path is a genuine one-off, e.g. a downloaded image.
     /// </summary>

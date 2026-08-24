@@ -84,7 +84,7 @@ public sealed class LightingSoundService : IDisposable
 
     /// <summary>
     /// Called from the render thread each rendered frame, right after the tube
-    /// simulators are updated — the loops track the visuals sample-accurately at
+    /// simulators are updated - the loops track the visuals sample-accurately at
     /// the flicker cadence. Values 0..1, scaled by the capped master volume.
     /// </summary>
     public void SetLevels(float hum, float buzz)

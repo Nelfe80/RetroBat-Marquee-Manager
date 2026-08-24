@@ -23,7 +23,7 @@ public sealed class RbMarqueeScene
     public required IReadOnlyList<KeyValuePair<string, string>> OutputMap { get; init; }
     public string AttractMode { get; init; } = "chase";
     /// <summary>
-    /// Calibrated artwork (resources/images) the lamp regions were measured on —
+    /// Calibrated artwork (resources/images) the lamp regions were measured on -
     /// preferred over the scraped marquee so lamps stay glued to their letters.
     /// </summary>
     public string? CalibratedImagePath { get; init; }

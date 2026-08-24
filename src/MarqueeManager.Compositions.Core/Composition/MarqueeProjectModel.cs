@@ -27,7 +27,7 @@ public sealed class MarqueeLayer
 
     /// <summary>
     /// Wrapping width, as a fraction of the surface width. 0 = one line, whatever its
-    /// length — the behaviour every existing template was authored against, so it stays
+    /// length - the behaviour every existing template was authored against, so it stays
     /// the default. A description runs 500 to 1500 characters and needs a box: set this
     /// and the text wraps inside it, ellipsised when it still overflows.
     /// </summary>
@@ -50,12 +50,12 @@ public sealed class MarqueeLayer
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double BoxHeight { get; set; }
 
-    /// <summary>left | center | right — where the lines sit across the box.</summary>
+    /// <summary>left | center | right - where the lines sit across the box.</summary>
     [JsonPropertyName("hAlign")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string HAlign { get; set; } = "center";
 
-    /// <summary>top | middle | bottom — where the block of lines sits down the box.</summary>
+    /// <summary>top | middle | bottom - where the block of lines sits down the box.</summary>
     [JsonPropertyName("vAlign")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string VAlign { get; set; } = "middle";

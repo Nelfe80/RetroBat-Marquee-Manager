@@ -6,9 +6,9 @@ namespace RetroBatMarqueeManager.Application.Services;
 ///
 /// A role is the folder the card sits in (`artwork\ic\cody\ic-1.png`), and it IS what
 /// the card is about: a character, a topic (`items-and-weaponry`), a stage. Cards at
-/// the root of `artwork\ic` carry the empty role — the game's general card.
+/// the root of `artwork\ic` carry the empty role - the game's general card.
 ///
-/// Naming inside a role: `ic.png` or `ic-N[-variant].png` — e.g. mercs ships
+/// Naming inside a role: `ic.png` or `ic-N[-variant].png` - e.g. mercs ships
 /// ic-1-left … ic-5-right. Files sharing the same N are ONE logical card in two panel
 /// positions: left (player 1 side) and right (player 2 side).
 ///
@@ -17,8 +17,8 @@ namespace RetroBatMarqueeManager.Application.Services;
 public static class InstructionCardCatalog
 {
     /// <summary>Where one entry sits INSIDE a card, as fractions of the drawing. Named
-    /// entries are the ones a companion file could put a name on — a character, a
-    /// weapon — and they are what an event can point at.</summary>
+    /// entries are the ones a companion file could put a name on - a character, a
+    /// weapon - and they are what an event can point at.</summary>
     public sealed record CardPanel(string Role, string Kind, bool Named, string? Label,
         double X, double Y, double W, double H);
 
@@ -52,7 +52,7 @@ public static class InstructionCardCatalog
     /// <summary>
     /// Groups the published cards into logical cards. Two cards belong to the same
     /// group when they share a role AND a number: `cody\ic-1` and `haggar\ic-1` are two
-    /// different cards, and the role is what tells them apart — before roles existed,
+    /// different cards, and the role is what tells them apart - before roles existed,
     /// the number alone merged them into one.
     /// </summary>
     public static List<CardGroup> BuildGroups(IReadOnlyList<CardSource> cards)
@@ -76,7 +76,7 @@ public static class InstructionCardCatalog
     }
 
     /// <summary>The roles present in the catalog, in the order the stream sent them.
-    /// The empty role — the cards at the root — is not one: it has no name.</summary>
+    /// The empty role - the cards at the root - is not one: it has no name.</summary>
     public static List<string> Roles(IReadOnlyList<CardGroup> groups)
     {
         var roles = new List<string>();
@@ -98,7 +98,7 @@ public static class InstructionCardCatalog
     {
         if (string.IsNullOrWhiteSpace(role)) return groups.ToList();
         var wanted = groups.Where(g => g.Role.Equals(role, StringComparison.OrdinalIgnoreCase)).ToList();
-        // A role nobody has cards for shows nothing — never someone else's card.
+        // A role nobody has cards for shows nothing - never someone else's card.
         return wanted;
     }
 
@@ -121,8 +121,8 @@ public static class InstructionCardCatalog
     public sealed record PanelHit(int GroupIndex, CardPanel Panel);
 
     /// <summary>
-    /// The entry that NAMES what the game just announced — the armor picked up, the
-    /// weapon in hand — among these cards. This is what lets a card point at itself:
+    /// The entry that NAMES what the game just announced - the armor picked up, the
+    /// weapon in hand - among these cards. This is what lets a card point at itself:
     /// Ghouls'n Ghosts has one drawing holding every weapon, and only the frame says
     /// which one you are carrying.
     ///
@@ -217,7 +217,7 @@ public static class InstructionCardCatalog
     /// The name that binds a touch zone to a viewer. Explicit when the user named it,
     /// otherwise derived so that the common cases need no naming at all: a viewer set to
     /// player 2 answers on `p2`, a viewer set to a role answers on that role, and a lone
-    /// viewer answers on `main` — which is also what an unconfigured zone targets.
+    /// viewer answers on `main` - which is also what an unconfigured zone targets.
     /// </summary>
     public static string ChannelOf(string? channel, string? role, string? player)
     {

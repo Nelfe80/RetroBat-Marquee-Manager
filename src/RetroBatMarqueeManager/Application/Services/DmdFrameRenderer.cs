@@ -115,7 +115,7 @@ public sealed class DmdFrameRenderer
         var topHeight = height / 2f;
         var bottomHeight = height - topHeight;
 
-        // Equal 50/50 column split — both rows share the same left/right boundaries.
+        // Equal 50/50 column split - both rows share the same left/right boundaries.
         var leftWidth = Math.Max(1, (int)Math.Round(width * 0.50f));
         var rightWidth = Math.Max(1, width - leftWidth);
 

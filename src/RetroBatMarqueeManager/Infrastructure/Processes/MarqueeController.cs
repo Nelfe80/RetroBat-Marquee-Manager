@@ -15,8 +15,8 @@ public sealed class MarqueeController : IDisposable
     private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private Thread? _uiThread;
 
-    /// <summary>Tap on a surface that has something to answer — an instruction card
-    /// surface, or any surface carrying touch zones — as fractions (0..1), with the
+    /// <summary>Tap on a surface that has something to answer - an instruction card
+    /// surface, or any surface carrying touch zones - as fractions (0..1), with the
     /// surface itself and the state it is displaying. Consumed by InstructionCardService.
     ///
     /// The surface travels with the tap because the zones live IN the composition now: a
@@ -53,7 +53,7 @@ public sealed class MarqueeController : IDisposable
                 ? new LightingSurfaceOptions(_config.LightingTestPattern, _config.LightingFpsLimit, _config.LightingShowFps, _config.LightingRenderScale, _config.LightingFillHeightMaxCrop, _config.LightingSoundEnabled, _config.LightingSoundVolume, _config.LightingGlassReflection, _config.LightingTubeVisualOpacity, _config.LightingTubeThickness, _config.LightingTubeBlur, _config.LightingTubeEndFade, _config.LightingTubeColor, _config.LightingLatestWinsGeneration, _config.LightingMapCache, _config.LightingPresentPipeline, _config.LightingGpuRaster)
                 : null;
 
-            // The events layer is NOT gated by [Lighting] Enabled — that switch is
+            // The events layer is NOT gated by [Lighting] Enabled - that switch is
             // about lighting an image, and the two engines are independent now. It
             // only borrows the rendering knobs (cadence, scale, present, GPU); it has
             // no scene, no tubes, no sound.
@@ -64,7 +64,7 @@ public sealed class MarqueeController : IDisposable
                 // Half resolution, deliberately. Sprite GIFs are pre-downscaled to 96 px
                 // tall at load (320 px for full_* backdrops) and drawn at ~30 % of the
                 // surface height, so a full-resolution overlay upscales a small bitmap
-                // and buys nothing visible — while costing 4x the raster, the 5.5 MB/frame
+                // and buys nothing visible - while costing 4x the raster, the 5.5 MB/frame
                 // WritePixels on the UI thread and the WPF blend of a second full-screen
                 // layer. That second present is what made everything crawl as soon as a
                 // sprite appeared.
@@ -180,7 +180,7 @@ public sealed class MarqueeController : IDisposable
             return Task.CompletedTask;
         }
         var video = new[] { ".mp4", ".webm", ".avi", ".mkv", ".mov" }.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
-        // the chain resolver already decided? never second-guess it — otherwise
+        // the chain resolver already decided? never second-guess it - otherwise
         // the historical preferences stay the safety net
         if (!resolved && !video && SurfaceOf(target)?.Category.Equals("marquee", StringComparison.OrdinalIgnoreCase) == true)
             path = PreferUserComposition(path, lightingMeta) ?? PreferRealMarquee(path);
@@ -256,7 +256,7 @@ public sealed class MarqueeController : IDisposable
     }
 
     // The panel description is RETAINED on the stream: it arrives once, on connection,
-    // and the surfaces open two seconds later — so a window born afterwards would never
+    // and the surfaces open two seconds later - so a window born afterwards would never
     // learn what the cabinet looks like and would keep drawing the fallback panel. Kept
     // here and replayed to each window as it opens.
     private readonly object _panelLock = new();
@@ -281,7 +281,7 @@ public sealed class MarqueeController : IDisposable
     }
 
     /// <summary>Hands a freshly opened window what the stream already said. Without it
-    /// the panel would wait for the next reconfiguration — which may never come.</summary>
+    /// the panel would wait for the next reconfiguration - which may never come.</summary>
     private void ReplayPanelState(MarqueeWindow window)
     {
         Core.Surfaces.PanelBoardConfig? config;
@@ -334,7 +334,7 @@ public sealed class MarqueeController : IDisposable
         foreach (var window in AllWindows()) window.SetCardSource(channel, path, highlight);
     }
 
-    /// <summary>Every declared component of this type, across all surfaces — with its
+    /// <summary>Every declared component of this type, across all surfaces - with its
     /// options, which is what tells a service how each one is set up.</summary>
     public IReadOnlyList<Core.Surfaces.ComponentDefinition> ComponentsOfType(string type)
         => _surfaces.Values
@@ -410,7 +410,7 @@ public sealed class MarqueeController : IDisposable
 
     /// <summary>
     /// A marquee the user composed himself (MarqueeManagerSetup, "Mes jeux") wins
-    /// over everything the stream offers — scraped scan and generated composite
+    /// over everything the stream offers - scraped scan and generated composite
     /// alike. Stored in media\marquees\&lt;system&gt;\&lt;rom&gt;.png next to the runtime.
     /// The game identity comes from the enriched stream meta; the media path
     /// layout (…\systems\&lt;system&gt;\games\&lt;rom&gt;\…) is the fallback.
@@ -454,7 +454,7 @@ public sealed class MarqueeController : IDisposable
     /// <summary>
     /// Real scan beats upstream-generated composite: if the stream hands us a
     /// "generated-*" file while a real scraped marquee sits next to it on disk,
-    /// use the real one — unless the user opted for generated (bad quality scan).
+    /// use the real one - unless the user opted for generated (bad quality scan).
     /// Central chokepoint: every marquee display path goes through here.
     /// </summary>
     private string PreferRealMarquee(string path)
@@ -558,7 +558,7 @@ public sealed class MarqueeController : IDisposable
     /// component stack on the marquee surface, so behavior is unchanged there).
     /// A component scoped by `when` only routes in its display state.
     ///
-    /// VISUAL TRIGGERS ONLY — see <see cref="WindowsCarrying"/> for state signals.</summary>
+    /// VISUAL TRIGGERS ONLY - see <see cref="WindowsCarrying"/> for state signals.</summary>
     private IEnumerable<MarqueeWindow> WindowsWithComponent(string componentType)
         => _surfaces.Values
             .Where(surface => surface.HasComponent(componentType))
@@ -568,7 +568,7 @@ public sealed class MarqueeController : IDisposable
     /// <summary>
     /// STATE signals (design note §4d): routed on declaration alone, never on the
     /// display state. A renderer must keep coherent state while its layer is hidden
-    /// — so that it is right when the layer comes back, and so `SetLightingIngame`
+    /// - so that it is right when the layer comes back, and so `SetLightingIngame`
     /// still mutes the tube sounds. Routing these through the scope filter is what
     /// silently killed the MAME outputs during play on a `when:navigation` surface.
     /// </summary>
@@ -592,7 +592,7 @@ public sealed class MarqueeController : IDisposable
         foreach (var window in GetWindows(target)) window.ClearMedia();
     }
 
-    /// <summary>Pixel size of a surface's window — the dynamic renderer flattens the
+    /// <summary>Pixel size of a surface's window - the dynamic renderer flattens the
     /// layer stack at exactly the size it will be shown at. (0,0) when the surface has
     /// no window (excluded screen, suspended).</summary>
     public (int Width, int Height) SurfacePixelSize(string surfaceId)
@@ -611,7 +611,7 @@ public sealed class MarqueeController : IDisposable
     /// component type, which decides which surfaces show it.</summary>
     private static string ComponentForOwner(string owner)
     {
-        // Owners carry suffixes (live-score-p1, live-timer:default) — match by prefix.
+        // Owners carry suffixes (live-score-p1, live-timer:default) - match by prefix.
         if (owner.StartsWith("hiscore", StringComparison.OrdinalIgnoreCase)) return "overlay.hiscore";
         if (owner.StartsWith("live-score", StringComparison.OrdinalIgnoreCase)) return "overlay.live.score";
         if (owner.StartsWith("live-timer", StringComparison.OrdinalIgnoreCase)) return "overlay.live.timer";

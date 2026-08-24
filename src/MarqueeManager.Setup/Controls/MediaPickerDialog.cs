@@ -12,7 +12,7 @@ namespace MarqueeManager.Setup.Controls;
 public sealed record MediaCandidate(string SourceLabel, string Path);
 
 /// <summary>
-/// "Which fanart?" — a modal grid of every available candidate of a media kind,
+/// "Which fanart?" - a modal grid of every available candidate of a media kind,
 /// grouped by source (APIExpose library, downloaded files…), thumbnails decoded
 /// off the UI thread. Click one to pick it.
 /// </summary>
@@ -34,8 +34,8 @@ public sealed class MediaPickerDialog : Window
         if (candidates.Count == 0)
         {
             panel.Children.Add(Ui.Label(L.T(
-                "Aucun média de ce type — récupérez-en via « Récupérer des médias en ligne ».",
-                "No media of this kind — fetch some via “Fetch media online”.")));
+                "Aucun média de ce type - récupérez-en via « Récupérer des médias en ligne ».",
+                "No media of this kind - fetch some via “Fetch media online”.")));
         }
 
         foreach (var group in candidates.GroupBy(c => c.SourceLabel))

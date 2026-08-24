@@ -5,7 +5,7 @@ public static class RaLeaderboardPresentationRules
     public static bool IsResultEvent(string type, string state)
         => type.EndsWith("submit.confirmed", StringComparison.OrdinalIgnoreCase) ||
            state.Equals("submitted", StringComparison.OrdinalIgnoreCase) ||
-           // "submitting" carries the exact final time from the RetroArch log — it is
+           // "submitting" carries the exact final time from the RetroArch log - it is
            // the record-sent moment, so show the result there (the proxy round-trip
            // submit.confirmed may never arrive when RA talks to the server directly)
            state.Equals("submitting", StringComparison.OrdinalIgnoreCase) ||

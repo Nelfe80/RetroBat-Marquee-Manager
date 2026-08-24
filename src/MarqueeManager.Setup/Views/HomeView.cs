@@ -75,7 +75,7 @@ public sealed class HomeView : UserControl
         var links = new StackPanel();
         links.Children.Add(Ui.SectionHeader(L.T("Documentation", "Documentation")));
         // mkdocs i18n: FR is the default language and lives at the site ROOT,
-        // EN under /en/ (there is no /fr/ path — it 404s)
+        // EN under /en/ (there is no /fr/ path - it 404s)
         var wiki = Ui.Button(L.T("Ouvrir le wiki en ligne", "Open the online wiki"), (_, _) => OpenUrl(
             L.French
                 ? "https://nelfe80.github.io/RetroBat-Marquee-Manager/"
@@ -151,7 +151,7 @@ public sealed class HomeView : UserControl
     {
         var running = MarqueeManagerProcess.IsRunning();
         SetState(_runtime, running, running
-            ? L.T("En cours d'exécution — vos écrans suivent RetroBat.", "Running — your screens follow RetroBat.")
+            ? L.T("En cours d'exécution - vos écrans suivent RetroBat.", "Running - your screens follow RetroBat.")
             : L.T("Arrêté. Il démarre normalement avec RetroBat.", "Stopped. It normally starts with RetroBat."));
         _runtime.Actions.Children.Clear();
         _runtime.Actions.Children.Add(Ui.Button(
@@ -174,8 +174,8 @@ public sealed class HomeView : UserControl
         var alive = await ApiExposeProbe.IsAliveAsync(url);
         if (Dispatcher.HasShutdownStarted) return;
         SetState(_api, alive, alive
-            ? L.T($"Répond ({url}) — médias et données en direct.", $"Up ({url}) — live media and data.")
-            : L.T($"Ne répond pas ({url}) — les surfaces resteront vides.", $"Not responding ({url}) — surfaces will stay empty."));
+            ? L.T($"Répond ({url}) - médias et données en direct.", $"Up ({url}) - live media and data.")
+            : L.T($"Ne répond pas ({url}) - les surfaces resteront vides.", $"Not responding ({url}) - surfaces will stay empty."));
     }
 
     private void RefreshScreens()
@@ -189,8 +189,8 @@ public sealed class HomeView : UserControl
             SetState(_screens, ok, ok
                 ? L.T($"{detected.Count} écran(s) détecté(s) · {surfaces.Count} surface(s) configurée(s) ({string.Join(", ", surfaces.Select(s => s.Id))}).",
                     $"{detected.Count} screen(s) detected · {surfaces.Count} configured surface(s) ({string.Join(", ", surfaces.Select(s => s.Id))}).")
-                : L.T($"{detected.Count} écran(s) détecté(s) — aucune surface configurée pour l'instant.",
-                    $"{detected.Count} screen(s) detected — no surface configured yet."));
+                : L.T($"{detected.Count} écran(s) détecté(s) - aucune surface configurée pour l'instant.",
+                    $"{detected.Count} screen(s) detected - no surface configured yet."));
         }
         catch
         {
@@ -215,7 +215,7 @@ public sealed class HomeView : UserControl
         }
         else
         {
-            // REAL health: the ZeDMD handshake through libzedmd — the lib sends
+            // REAL health: the ZeDMD handshake through libzedmd - the lib sends
             // the "ZeDMD" magic frame, only a real panel answers with its
             // identity (dims + firmware). A free COM port or the LedManager
             // Pico never passes. Runs async (the port scan takes a moment).
@@ -230,21 +230,21 @@ public sealed class HomeView : UserControl
                     if (result.Found)
                     {
                         SetState(_dmd, true, L.T(
-                            $"{model} détecté sur {result.Port} — {result.Width}×{result.Height} px, firmware {result.Firmware}.",
-                            $"{model} detected on {result.Port} — {result.Width}×{result.Height} px, firmware {result.Firmware}."));
+                            $"{model} détecté sur {result.Port} - {result.Width}×{result.Height} px, firmware {result.Firmware}.",
+                            $"{model} detected on {result.Port} - {result.Width}×{result.Height} px, firmware {result.Firmware}."));
                     }
                     else if (runtimeRunning)
                     {
                         // the runtime may hold the port: unreachable ≠ unplugged
                         SetWarning(_dmd, L.T(
-                            $"{model} : panneau non joignable (handshake sans réponse) — port tenu par le runtime en cours, ou panneau débranché. Arrêtez MarqueeManager pour un test fiable.",
-                            $"{model}: panel unreachable (handshake unanswered) — port held by the running runtime, or panel unplugged. Stop MarqueeManager for a reliable test."));
+                            $"{model} : panneau non joignable (handshake sans réponse) - port tenu par le runtime en cours, ou panneau débranché. Arrêtez MarqueeManager pour un test fiable.",
+                            $"{model}: panel unreachable (handshake unanswered) - port held by the running runtime, or panel unplugged. Stop MarqueeManager for a reliable test."));
                     }
                     else
                     {
                         SetWarning(_dmd, L.T(
-                            $"{model} : aucun panneau ne répond au handshake ZeDMD — débranché ?" + (result.Error != null ? $" ({result.Error})" : ""),
-                            $"{model}: no panel answers the ZeDMD handshake — unplugged?" + (result.Error != null ? $" ({result.Error})" : "")));
+                            $"{model} : aucun panneau ne répond au handshake ZeDMD - débranché ?" + (result.Error != null ? $" ({result.Error})" : ""),
+                            $"{model}: no panel answers the ZeDMD handshake - unplugged?" + (result.Error != null ? $" ({result.Error})" : "")));
                     }
                 });
             });

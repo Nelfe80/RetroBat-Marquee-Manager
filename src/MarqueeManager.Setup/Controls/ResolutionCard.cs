@@ -41,10 +41,10 @@ public sealed class ResolutionCard : UserControl
     {
         _engine = engine;
         var panel = new StackPanel();
-        panel.Children.Add(Ui.SectionHeader(L.T("Résolution — clique une carte pour l'utiliser", "Resolution — click a card to use it")));
+        panel.Children.Add(Ui.SectionHeader(L.T("Résolution - clique une carte pour l'utiliser", "Resolution - click a card to use it")));
         panel.Children.Add(Ui.MutedLabel(L.T(
-            "Du plus général (gabarit) au plus précis (ta création). ✓ = ce qui s'affiche. Aperçu seulement — rien n'est généré.",
-            "From the most general (template) to the most precise (your creation). ✓ = what shows. Preview only — nothing is generated.")));
+            "Du plus général (gabarit) au plus précis (ta création). ✓ = ce qui s'affiche. Aperçu seulement - rien n'est généré.",
+            "From the most general (template) to the most precise (your creation). ✓ = what shows. Preview only - nothing is generated.")));
         panel.Children.Add(_body);
         Content = Ui.Card(panel);
     }
@@ -73,7 +73,7 @@ public sealed class ResolutionCard : UserControl
         }
 
         var target = _engine.Resolve(ctx).Target;
-        _body.Children.Add(Ui.MutedLabel($"{L.T("Surface", "Surface")} : {ctx.SurfaceId} — {target.Width}×{target.Height}"));
+        _body.Children.Add(Ui.MutedLabel($"{L.T("Surface", "Surface")} : {ctx.SurfaceId} - {target.Width}×{target.Height}"));
 
         // Two levels. The list used to mix scopes: four cards about THIS entry, plus the
         // general template ("all games of this system") and the system render ("the
@@ -145,15 +145,15 @@ public sealed class ResolutionCard : UserControl
         titleRow.Children.Add(title);
         panel.Children.Add(titleRow);
 
-        // every card shows a box at the surface ratio — greyed when the media is
-        // absent — so the composition stays balanced
+        // every card shows a box at the surface ratio - greyed when the media is
+        // absent - so the composition stays balanced
         var preview = BuildAdaptedPreview(link.Path, link.Fit, target);
         if (!link.Present) preview.Opacity = 0.4;
         panel.Children.Add(preview);
         if (!link.Present)
             panel.Children.Add(Ui.MutedLabel(L.T(
-                "aucun média pour cette source — rien à afficher, non sélectionnable",
-                "no media for this source — nothing to show, not selectable")));
+                "aucun média pour cette source - rien à afficher, non sélectionnable",
+                "no media for this source - nothing to show, not selectable")));
         if (link.Kind == SourceKind.UserDrop)
         {
             // discoverability: tell the user exactly where to drop the file
@@ -167,8 +167,8 @@ public sealed class ResolutionCard : UserControl
             // not a source you pick. Forcing it would disable every game source above
             // it. Say so, or the card just looks broken.
             var hint = Ui.MutedLabel(L.T(
-                "repli automatique : ce que montre le système quand ce jeu n'a rien à lui — non sélectionnable",
-                "automatic fallback: what the system shows when this game has nothing of its own — not selectable"));
+                "repli automatique : ce que montre le système quand ce jeu n'a rien à lui - non sélectionnable",
+                "automatic fallback: what the system shows when this game has nothing of its own - not selectable"));
             hint.TextWrapping = TextWrapping.Wrap;
             panel.Children.Add(hint);
         }
@@ -209,8 +209,8 @@ public sealed class ResolutionCard : UserControl
     private static string CardTitle(ResolutionContext ctx, SourceKind kind) => kind switch
     {
         SourceKind.Generated => ctx.Scope == MediaScope.Game
-            ? L.T("Gabarit général — tous les jeux de ce système", "General template — all games of this system")
-            : L.T("Gabarit général — tous les systèmes", "General template — all systems"),
+            ? L.T("Gabarit général - tous les jeux de ce système", "General template - all games of this system")
+            : L.T("Gabarit général - tous les systèmes", "General template - all systems"),
         SourceKind.Personal => ctx.Scope == MediaScope.Game
             ? L.T("Ma création pour ce jeu", "My creation for this game")
             : L.T("Ma création pour ce système", "My creation for this system"),

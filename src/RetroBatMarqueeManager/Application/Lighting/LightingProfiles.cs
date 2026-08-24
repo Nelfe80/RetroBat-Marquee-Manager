@@ -28,7 +28,7 @@ public sealed record ResolvedLightProfile(BulbProfile Bulb, double Aging, string
 /// <summary>
 /// Community-editable lighting knowledge (CDC §15.4 / §18.2): bulb types and
 /// cabinet-era profiles loaded from resources/lighting/*.xml, with safe built-in
-/// defaults when files are missing or invalid — a bad library never crashes (§20.6).
+/// defaults when files are missing or invalid - a bad library never crashes (§20.6).
 /// Cabinet match grammar (v1.1): year:1980-1992, developer:capcom|capcom co ltd,
 /// publisher:taito, name:vewlix|big blue (substring in the game name), plus legacy
 /// system:/source:/manufacturer:. Most specific wins: name > developer > publisher
@@ -109,7 +109,7 @@ public sealed class LightingLibraries
     /// <summary>
     /// The user pinned a bulb/cabinet for this game in the Setup ("Mes jeux"):
     /// overrides\effects\&lt;system&gt;\&lt;rom&gt;.json section "lighting" {bulb, cabinet}.
-    /// It beats the grammar entirely. Cached on the file timestamp — Resolve runs
+    /// It beats the grammar entirely. Cached on the file timestamp - Resolve runs
     /// at every scene load.
     /// </summary>
     private ResolvedLightProfile? TryUserProfile(LightingSceneMeta? meta)

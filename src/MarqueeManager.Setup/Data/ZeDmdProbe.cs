@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 namespace MarqueeManager.Setup.Data;
 
 /// <summary>
-/// REAL ZeDMD health probe through libzedmd (tools\zedmd\zedmd64.dll) — the
+/// REAL ZeDMD health probe through libzedmd (tools\zedmd\zedmd64.dll) - the
 /// same library the runtime uses. ZeDMD_Open performs the actual serial
 /// handshake: the lib sends the ZeDMD magic control frame ("ZeDMD" header +
 /// handshake command) and only a ZeDMD firmware answers with its identity
-/// (panel width/height, firmware version). No answer = no panel — a free COM
+/// (panel width/height, firmware version). No answer = no panel - a free COM
 /// port or the LedManager Pico never passes this test.
 /// The probe opens the port briefly then closes it; call it only from the
 /// Setup (the runtime owns the panel while it runs).

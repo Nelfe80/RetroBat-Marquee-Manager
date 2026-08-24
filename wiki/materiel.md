@@ -1,6 +1,6 @@
 # Matériel
 
-MarqueeManager pilote les **écrans secondaires** d'une borne — tout ce qui n'est pas l'écran de jeu. Cette page présente les **types d'écrans** que vous pouvez lui confier, puis détaille comment **construire un vrai DMD** à base de panneaux LED.
+MarqueeManager pilote les **écrans secondaires** d'une borne - tout ce qui n'est pas l'écran de jeu. Cette page présente les **types d'écrans** que vous pouvez lui confier, puis détaille comment **construire un vrai DMD** à base de panneaux LED.
 
 ## Les types d'écrans
 
@@ -8,7 +8,7 @@ Vous branchez ces écrans comme des moniteurs supplémentaires ; MarqueeManager 
 
 | Écran | Rôle | Matériel courant |
 |---|---|---|
-| **Marquee** | Le bandeau d'enseigne en haut de la borne (jaquette animée, logo, jeu en cours) | Moniteur LCD large — souvent un format **ultra-large** (ex. 19"×6", 1920×540) glissé dans l'emplacement du marquee rétroéclairé d'origine |
+| **Marquee** | Le bandeau d'enseigne en haut de la borne (jaquette animée, logo, jeu en cours) | Moniteur LCD large - souvent un format **ultra-large** (ex. 19"×6", 1920×540) glissé dans l'emplacement du marquee rétroéclairé d'origine |
 | **Topper** | Un écran au **sommet** de la borne, au-dessus du marquee | Petit LCD 16:9 |
 | **DMD** | L'afficheur à **matrice de points** (scores, animations façon flipper/arcade) | Un **vrai DMD à LED** (panneaux HUB75 + ZeDMD, décrit plus bas) **ou** un petit LCD qui le simule |
 | **Écran de contrôle / LCD** | Cartes d'instructions, jaquette secondaire, second joueur… | LCD au format souhaité |
@@ -22,8 +22,8 @@ Un vrai DMD se fabrique avec **deux panneaux LED HUB75 de 64 × 32**, mis côte 
 
 Deux contrôleurs possibles :
 
-- **ESP32 classique** — idéal si vous avez déjà un montage existant ;
-- **ESP32-S3 DevKitC-1 N16R8** — recommandé pour un nouveau montage.
+- **ESP32 classique** - idéal si vous avez déjà un montage existant ;
+- **ESP32-S3 DevKitC-1 N16R8** - recommandé pour un nouveau montage.
 
 ### Ce qu'il vous faut
 
@@ -31,7 +31,7 @@ Deux contrôleurs possibles :
 - 1 **ESP32** classique **ou** 1 **ESP32-S3** N16R8 ;
 - 1 **carte contrôleur** (la platine qui reçoit l'ESP32) ;
 - 1 **nappe HUB75** entre les deux panneaux ;
-- les **fils de liaison** (Dupont) entre la carte et le panneau gauche — câblés signal par signal (voir le tableau HUB75) ; si votre carte possède un connecteur HUB75 en sortie, une **nappe HUB75** suffit ;
+- les **fils de liaison** (Dupont) entre la carte et le panneau gauche - câblés signal par signal (voir le tableau HUB75) ; si votre carte possède un connecteur HUB75 en sortie, une **nappe HUB75** suffit ;
 - les **câbles d'alimentation** (+5 V et masse) vers les deux panneaux ;
 - 1 **câble USB** (data, pas un câble de charge seul) ;
 - support, vis, entretoises et colliers (serre-câbles) ;
@@ -140,7 +140,7 @@ Resélectionnez le contrôleur dans l'Updater, puis :
 - **Résolution** : `128 × 32`.
 - **Ordre RGB** : le logo de test doit afficher **rouge en haut à gauche, vert en bas à gauche, bleu en haut à droite**. Changez `RGB Order` jusqu'au bon rendu.
 - **Luminosité** : commencez bas, augmentez progressivement.
-- **Taille des paquets USB** : viser `512` (ESP32 classique) ou `1024` (S3) — commencez plus bas et montez tant que l'image reste stable.
+- **Taille des paquets USB** : viser `512` (ESP32 classique) ou `1024` (S3) - commencez plus bas et montez tant que l'image reste stable.
 - **Rafraîchissement** : environ `90 Hz` pour un 128 × 32 ; réduisez en cas d'instabilité.
 
 Terminez par `Set new parameters` et attendez la fin de l'écriture avant de débrancher. Le flashage seul **n'applique pas** ces réglages : configurez-les après.

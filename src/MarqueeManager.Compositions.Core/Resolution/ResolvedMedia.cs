@@ -8,7 +8,7 @@ namespace MarqueeManager.Compositions.Core.Resolution;
 public enum ResolutionSource
 {
     Personal,       // "Création graphique" (user project or imported image)
-    UserDrop,       // "Mon dossier médias" — a raw file dropped in media\<cat>s\user
+    UserDrop,       // "Mon dossier médias" - a raw file dropped in media\<cat>s\user
     Generated,      // composed from the surface template
     Scraped,        // ready-to-show marquee from APIExpose (Marquee/ScreenMarquee)
     Logo,           // logo/wheel laid out on a safe canvas
@@ -53,7 +53,7 @@ public static class TraceCodes
 /// <summary>
 /// The resolver's outcome for one target: which link won, the media, its framing
 /// and whether a derivative is needed, plus the full decision trace. The resolver
-/// never touches the filesystem or generates anything — it only decides.
+/// never touches the filesystem or generates anything - it only decides.
 /// </summary>
 public sealed record ResolvedMedia(
     ResolutionSource Source,

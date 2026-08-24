@@ -7,7 +7,7 @@ namespace RetroBatMarqueeManager.Application.Lighting;
 /// Animated ingame events (docs\DECOUPLAGE-MOTEUR-EVENEMENTS.md): sprites and
 /// color veils fired by the semantic .mem actions of ws/ingame. Split out of
 /// <see cref="MarqueeLightingRenderer"/>, whose job is now only to LIGHT an image
-/// — this one only PLAYS events, over whatever the surface shows (lit scene,
+/// - this one only PLAYS events, over whatever the surface shows (lit scene,
 /// fanart, video, instruction card). It is therefore always transparent and is
 /// mounted ABOVE the media stack, where the historical lighting layer sat below
 /// it and let a fullscreen fanart bury every sprite.
@@ -46,7 +46,7 @@ public sealed class IngameEffectsRenderer : ISkiaFrameRenderer
     public IngameEffectsRenderer(ILogger logger) => _logger = logger;
 
     /// <summary>
-    /// 30 while an event plays — sprites want a smoother cadence than a tube-only
+    /// 30 while an event plays - sprites want a smoother cadence than a tube-only
     /// scene. IDLE, the layer drops to 4: waking 30 times a second to decide there is
     /// nothing to draw costs a spin-wait per wake on a thread that runs at the
     /// process priority, and that competes with EmulationStation for nothing.
@@ -68,7 +68,7 @@ public sealed class IngameEffectsRenderer : ISkiaFrameRenderer
     }
 
     /// <summary>Semantic ingame event resolved by the effects library (ws/ingame).
-    /// A rule can carry both a veil AND sprites — both fire.</summary>
+    /// A rule can carry both a veil AND sprites - both fire.</summary>
     public void TriggerIngameEffect(IngameEffectRule rule)
     {
         lock (_fxLock)
@@ -100,7 +100,7 @@ public sealed class IngameEffectsRenderer : ISkiaFrameRenderer
         lock (_fxLock) { _activeFx = null; _pendingSprites.Clear(); }
     }
 
-    /// <summary>Frame skip: the layer is idle — and costs nothing — as long as no
+    /// <summary>Frame skip: the layer is idle - and costs nothing - as long as no
     /// event is running.</summary>
     public bool WantsFrame(TimeSpan elapsed)
     {
@@ -118,7 +118,7 @@ public sealed class IngameEffectsRenderer : ISkiaFrameRenderer
 
     /// <summary>
     /// FPS guard: how many sprites the current frame budget can afford. Fewer when
-    /// the raster is already slow — but NEVER zero. Cutting sprites to 0 on a heavy
+    /// the raster is already slow - but NEVER zero. Cutting sprites to 0 on a heavy
     /// surface made ingame effects vanish entirely ("one ring then nothing").
     /// </summary>
     private int SpriteBudget => _renderMsAverage switch
@@ -222,7 +222,7 @@ public sealed class IngameEffectsRenderer : ISkiaFrameRenderer
     }
 
     /// <summary>Power cut: a deep veil that fades in and back out over the window.
-    /// Not pure black — the surface must read as "gone dark", not as a hole.</summary>
+    /// Not pure black - the surface must read as "gone dark", not as a hole.</summary>
     private void DrawBlackout(SKCanvas canvas, int width, int height, double t)
     {
         if (_blackoutUntil <= 0) return;
@@ -330,7 +330,7 @@ public sealed class IngameEffectsRenderer : ISkiaFrameRenderer
                         break;
                 }
 
-                // the historic size jitter only applies in random placement — a
+                // the historic size jitter only applies in random placement - a
                 // deliberate scale (200 %…) must render exactly as asked
                 var jitter = !fullWidth && rule.Placement == "random" && Math.Abs(rule.Scale - 1.0) < 0.01
                     ? 0.8f + (float)_fxRandom.NextDouble() * 0.5f
@@ -372,7 +372,7 @@ public sealed class IngameEffectsRenderer : ISkiaFrameRenderer
             var alpha = sprite.Alpha(t);
             var (nx, ny) = sprite.PositionAt(t);
 
-            // optional light trail (2 ghosts max — trails are expensive on CPU raster)
+            // optional light trail (2 ghosts max - trails are expensive on CPU raster)
             if (sprite.TrailColor is { } trail && (sprite.VelocityX != 0 || sprite.VelocityY != 0))
             {
                 for (var k = 2; k >= 1; k--)

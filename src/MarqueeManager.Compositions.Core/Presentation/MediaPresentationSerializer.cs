@@ -6,7 +6,7 @@ using MarqueeManager.Compositions.Core.Resolution;
 namespace MarqueeManager.Compositions.Core.Presentation;
 
 /// <summary>
-/// Parses and writes the media-presentation document as a STRING (no file I/O —
+/// Parses and writes the media-presentation document as a STRING (no file I/O -
 /// the Setup and runtime own the file). Only non-null delta terminals are written,
 /// so reverting a field to inherit means the field simply disappears (§20.1).
 /// </summary>
@@ -16,7 +16,7 @@ public static class MediaPresentationSerializer
 
     // ---------------- parse ----------------
 
-    /// <summary>Null when the text is absent, malformed or a wrong schema — the
+    /// <summary>Null when the text is absent, malformed or a wrong schema - the
     /// caller then falls back to the pure defaults.</summary>
     public static MediaPresentationDocument? TryParse(string? json)
     {

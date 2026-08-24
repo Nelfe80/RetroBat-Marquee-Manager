@@ -4,7 +4,7 @@ using RetroBatMarqueeManager.Infrastructure.Processes;
 namespace RetroBatMarqueeManager.Infrastructure.Rendering
 {
     /// <summary>
-    /// LCD output adapter — pushes composite frames into the MarqueeController WPF window.
+    /// LCD output adapter - pushes composite frames into the MarqueeController WPF window.
     /// For LCD the compositor works directly on the _layCanvas of MarqueeWindow,
     /// so Push() is a no-op here; the compositor already updated the live canvas.
     /// </summary>
@@ -29,7 +29,7 @@ namespace RetroBatMarqueeManager.Infrastructure.Rendering
         public void Push(RenderTargetBitmap frame, double refW, double refH)
         {
             // LCD path: no bitmap capture needed.
-            // UIElements are live in the WPF canvas — WPF renders them natively.
+            // UIElements are live in the WPF canvas - WPF renders them natively.
         }
 
         public string Target => _target;

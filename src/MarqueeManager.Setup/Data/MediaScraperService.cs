@@ -10,11 +10,11 @@ public sealed record ScrapeResult(string Source, string Kind, string ThumbUrl, s
 /// <summary>
 /// Online media fetcher for the composer. Sources (all optional, jujuvincebros
 /// explicitly excluded by project rule):
-///  - Arcade Database (adb.arcadeitalia.net) — no key, MAME sets: marquee, flyer,
+///  - Arcade Database (adb.arcadeitalia.net) - no key, MAME sets: marquee, flyer,
 ///    cabinet, title (mirrors the reference artwork packs). Checked by default.
-///  - SteamGridDB — API key: clean logos, grids, heroes.
-///  - TheGamesDB — API key: fanarts, banners, clear logos.
-///  - ScreenScraper — only offered when DEV credentials resolve
+///  - SteamGridDB - API key: clean logos, grids, heroes.
+///  - TheGamesDB - API key: fanarts, banners, clear logos.
+///  - ScreenScraper - only offered when DEV credentials resolve
 ///    (<see cref="ScreenScraperCredentials"/>); ssid/sspassword picked up from
 ///    Options or es_settings.cfg. Unchecked by default: APIExpose already
 ///    mirrors ScreenScraper locally, this is the on-demand complement.

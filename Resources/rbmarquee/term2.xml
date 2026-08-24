@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- Généré par rbmarquee-gen — provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
+<!-- Généré par rbmarquee-gen - provenance: layImport:default.lay. Corrigeable à la main : ce fichier prime tant qu'il existe. -->
 <!-- Dédoublonné à la main : l'import répétait une <lamp> par <map> qui la visait, soit
      12 entrées pour 3 régions réelles. Comme UpdateLamps apparie par ID, les doublons
      recevaient la même valeur et redessinaient la même zone (2 dégradés radiaux chacun,

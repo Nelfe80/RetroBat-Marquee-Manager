@@ -50,7 +50,7 @@ public sealed record DmdProbeResult(
 /// probe never opens the DMD itself: pushing frames stays an explicit user action,
 /// so an unplugged or powered-off panel never blocks the setup. Ports claimed by
 /// the sibling LedManager plugin (LedManager.ini [Serial:*] Port=COMx) are labeled
-/// as LED panels WITHOUT opening them — a COM5 that is really the button panel no
+/// as LED panels WITHOUT opening them - a COM5 that is really the button panel no
 /// longer reads as a DMD candidate.
 /// </summary>
 public static class DmdProbe
@@ -82,7 +82,7 @@ public static class DmdProbe
             ToolsFolder: tools);
     }
 
-    /// <summary>COM ports the LedManager plugin declares for its Pico senders —
+    /// <summary>COM ports the LedManager plugin declares for its Pico senders -
     /// read from its ini, never by opening the port (a single process owns a COM).</summary>
     private static IReadOnlyDictionary<string, string> ReadLedManagerPorts(string pluginRoot)
     {

@@ -10,7 +10,7 @@ using MarqueeManager.Setup.Localization;
 
 namespace MarqueeManager.Setup.Data;
 
-/// <summary>The §20.1 default surface policies (no per-target deltas yet — those
+/// <summary>The §20.1 default surface policies (no per-target deltas yet - those
 /// arrive with the media-presentation store in lot 2).</summary>
 public static class PresentationDefaults
 {
@@ -85,7 +85,7 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
                 if (shared.HasComposition("systems", frontend)) return Found(shared.PngPath("systems", frontend), "creation");
                 return AssetLookup.Missing;
             case SourceKind.UserDrop:
-                // SYSTEM scope uses the FRONTEND name (mame.png, not arcade.png) — a
+                // SYSTEM scope uses the FRONTEND name (mame.png, not arcade.png) - a
                 // per-system asset the user manages by the system they see in ES.
                 return DropFolder(categoryRoot, "systems", frontend);
             case SourceKind.Dynamic:
@@ -97,7 +97,7 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
             case SourceKind.Generated:
                 // ONLY the surface's general template. It used to fall back to the
                 // APIExpose autogen, so the card showed a ✓ on "general template" for a
-                // surface that has none — the view and the runtime then disagreed on
+                // surface that has none - the view and the runtime then disagreed on
                 // what that very card meant.
                 var gabaritCache = GabaritRenderer.CachePath(_pluginRoot, categoryRoot, ctx.SurfaceId, frontend);
                 return File.Exists(gabaritCache) ? Found(gabaritCache, "gabarit") : AssetLookup.Missing;
@@ -110,7 +110,7 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
 
     /// <summary>Mirror of the runtime's DynamicSurfaceRenderer.CachePath. The preview
     /// shows the NAVIGATION render; the ingame one lives beside it under
-    /// "ingame.png" (second preview deliberately deferred — UX).</summary>
+    /// "ingame.png" (second preview deliberately deferred - UX).</summary>
     private string DynamicCachePath(string categoryRoot, string surfaceId, string system, string? rom)
         => DynamicCachePath(categoryRoot, surfaceId, new[] { system }, rom);
 
@@ -172,7 +172,7 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
         {
             case SourceKind.Personal:
                 // the composer saves per-surface (media\<cat>\surfaces\<id>\<sys>\<rom>),
-                // then at the category level — SAME store the card's Édite/Supprimer and
+                // then at the category level - SAME store the card's Édite/Supprimer and
                 // the runtime read, so the card shows the creation instead of "absent"
                 var perSurface = new MarqueeProjectStore(_pluginRoot, categoryRoot, ctx.SurfaceId);
                 if (perSurface.HasComposition(system, rom)) return Found(perSurface.PngPath(system, rom), "creation");
@@ -188,11 +188,11 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
                 var dynGame = DynamicCachePath(categoryRoot, ctx.SurfaceId, new[] { system, ctx.SystemKey ?? system }, rom);
                 return File.Exists(dynGame) ? Found(dynGame, "dynamic") : AssetLookup.Missing;
             case SourceKind.Generated:
-                // ONLY the surface's game gabarit — no autogen substitution (see above).
+                // ONLY the surface's game gabarit - no autogen substitution (see above).
                 var gabaritCache = GabaritRenderer.GameCachePath(_pluginRoot, categoryRoot, ctx.SurfaceId, system, rom);
                 return File.Exists(gabaritCache) ? Found(gabaritCache, "gabarit") : AssetLookup.Missing;
             case SourceKind.Scraped:
-                // the REAL marquee only. The screenmarquee is a different media — on
+                // the REAL marquee only. The screenmarquee is a different media - on
                 // arcade it is unwanted, and it already carries its own logo, so laying
                 // another one over it is exactly the mess this forbids.
                 return FromLibrary(root, "scraped", @"artwork\marquee\marquee.png", @"artwork\marquee\marquee.jpg");
@@ -201,7 +201,7 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
             case SourceKind.SystemFallback:
                 // Not a source of its own: it means "whatever the SYSTEM scope shows".
                 // Resolving it here is what turns a black rectangle into the actual
-                // image the player would get — the card must tell the truth like every
+                // image the player would get - the card must tell the truth like every
                 // other one, even though it is never selectable (see ResolutionCard).
                 return ResolveSystemFallback(category, categoryRoot, ctx);
             default:
@@ -210,7 +210,7 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
     }
 
     /// <summary>Replays the SYSTEM chain, in its own order, on a system-scoped copy of
-    /// the context. First hit wins — exactly what the runtime would end up showing.</summary>
+    /// the context. First hit wins - exactly what the runtime would end up showing.</summary>
     private AssetLookup ResolveSystemFallback(string category, string categoryRoot, ResolutionContext ctx)
     {
         var systemContext = ctx with { Scope = MediaScope.System, Rom = null, StableGameId = null };
@@ -235,7 +235,7 @@ public sealed class SetupMediaAssetResolver : IMediaAssetResolver
     private static readonly string[] DropExtensions = { ".png", ".jpg", ".jpeg", ".gif", ".webp" };
 
     /// <summary>The user drop folder media\&lt;cat&gt;s\user\&lt;segments&gt;.&lt;ext&gt;, first
-    /// existing extension — the same location the runtime's chain "user" link reads.</summary>
+    /// existing extension - the same location the runtime's chain "user" link reads.</summary>
     private AssetLookup DropFolder(string categoryRoot, params string[] segments)
     {
         var parts = new List<string> { _pluginRoot, "media", categoryRoot, "user" };
@@ -293,7 +293,7 @@ public sealed record ChainLink(
 /// <summary>
 /// Setup-facing facade: builds the resolution context from a surface and runs the
 /// SHARED resolver with the Setup adapters. This is what the new "Mes systèmes /
-/// Mes jeux" reads — the exact engine the runtime will use, no ES launch, nothing
+/// Mes jeux" reads - the exact engine the runtime will use, no ES launch, nothing
 /// written or generated.
 /// </summary>
 public sealed class MediaResolutionPreview
@@ -345,7 +345,7 @@ public sealed class MediaResolutionPreview
     {
         var target = TargetOf(surface, screens);
         // arcade family (mame, fbneo…) keeps its own settings under the frontend key,
-        // but its media lives under the canonical "arcade" folder — carry both.
+        // but its media lives under the canonical "arcade" folder - carry both.
         var canonical = GameMediaCatalog.ArcadeAliases.Contains(system) ? "arcade" : system;
         return new ResolutionContext(surface.Id, surface.Category, target.Width, target.Height, scope,
             FrontendSystem: system, CanonicalSystem: canonical,
@@ -364,7 +364,7 @@ public sealed class MediaResolutionPreview
         => Resolve(SystemContext(surface, screens, system));
 
     /// <summary>Per-link state of the whole chain for one target: enabled, present
-    /// and which one currently WINS — powers the block UI with its winner check.</summary>
+    /// and which one currently WINS - powers the block UI with its winner check.</summary>
     public IReadOnlyList<ChainLink> DescribeChain(ResolutionContext context)
     {
         var policy = _policies.PolicyFor(context);
@@ -428,7 +428,7 @@ public sealed class MediaResolutionPreview
     };
 
     /// <summary>The exact file the user should drop for the "Mon dossier médias" link
-    /// of this context — shown on the card so the drop location is discoverable.</summary>
+    /// of this context - shown on the card so the drop location is discoverable.</summary>
     public static string DropTarget(ResolutionContext ctx)
     {
         var categoryRoot = ctx.Category.ToLowerInvariant() switch
@@ -478,13 +478,13 @@ public static class ResolutionText
 
     public static string Trace(ResolutionTraceEntry entry) => entry.Code switch
     {
-        TraceCodes.SourceDisabled => $"{Link(entry.Link)} — {L.T("désactivée", "disabled")}",
-        TraceCodes.SourceMissing => $"{Link(entry.Link)} — {L.T("absente", "absent")}",
-        TraceCodes.SourceInvalid => $"{Link(entry.Link)} — {L.T("invalide", "invalid")}",
-        TraceCodes.TemplateIngredientsMissing => $"{Link(entry.Link)} — {L.T("ingrédients manquants", "ingredients missing")}",
-        TraceCodes.AdaptationRequired => $"{Link(entry.Link)} — {L.T("adaptation à générer", "adaptation to generate")}",
-        TraceCodes.AdaptationStale => $"{Link(entry.Link)} — {L.T("adaptation obsolète", "adaptation stale")}",
-        TraceCodes.SourceSelected => $"{Link(entry.Link)} — {L.T("utilisée", "used")}",
+        TraceCodes.SourceDisabled => $"{Link(entry.Link)} - {L.T("désactivée", "disabled")}",
+        TraceCodes.SourceMissing => $"{Link(entry.Link)} - {L.T("absente", "absent")}",
+        TraceCodes.SourceInvalid => $"{Link(entry.Link)} - {L.T("invalide", "invalid")}",
+        TraceCodes.TemplateIngredientsMissing => $"{Link(entry.Link)} - {L.T("ingrédients manquants", "ingredients missing")}",
+        TraceCodes.AdaptationRequired => $"{Link(entry.Link)} - {L.T("adaptation à générer", "adaptation to generate")}",
+        TraceCodes.AdaptationStale => $"{Link(entry.Link)} - {L.T("adaptation obsolète", "adaptation stale")}",
+        TraceCodes.SourceSelected => $"{Link(entry.Link)} - {L.T("utilisée", "used")}",
         TraceCodes.FallbackSystem => "→ " + L.T("chaîne du système", "system chain"),
         TraceCodes.FallbackNeutral => Link(ResolutionSource.Neutral),
         TraceCodes.IdentityFrontendMissing => L.T("(système frontend manquant)", "(frontend system missing)"),

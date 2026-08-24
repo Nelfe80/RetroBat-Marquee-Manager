@@ -66,7 +66,7 @@ public sealed class ChainPreviewCharacterizationTests : IDisposable
 
     // Documents TODAY's order: the scraped marquee beats the generated one.
     // The rework INTENTIONALLY flips this (generated is tried first but only wins
-    // when valid) — this test is the before-picture for the migration diff.
+    // when valid) - this test is the before-picture for the migration diff.
     [Fact]
     public void ScrapedMarquee_BeatsGenerated_Today()
     {

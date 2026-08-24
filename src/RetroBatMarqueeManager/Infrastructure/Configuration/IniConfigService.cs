@@ -98,7 +98,7 @@ public sealed class IniConfigService : IConfigService
     /// <summary>true (défaut) = composition matérielle WPF (GPU) ; false force
     /// RenderMode.SoftwareOnly (rendu logiciel/CPU). Utile sur borne dont le pilote
     /// GPU pose des artefacts/instabilités. Ne déporte PAS le raster Skia du moteur
-    /// lumière sur le GPU (celui-ci reste CPU) — c'est la présentation WPF qui bascule.</summary>
+    /// lumière sur le GPU (celui-ci reste CPU) - c'est la présentation WPF qui bascule.</summary>
     public bool GpuAcceleration => Bool("Settings", "GpuAcceleration", true);
 
     public bool LiveScoreEnabled => Bool("LiveData", "ScoreEnabled", true);
@@ -142,7 +142,7 @@ public sealed class IniConfigService : IConfigService
         return new TargetBounds(values[0], values[1], values[2], values[3]);
     }
 
-    /// <summary>Surface ids receiving a content/stream — the fanout every ws
+    /// <summary>Surface ids receiving a content/stream - the fanout every ws
     /// handler routes through. Dynamic surfaces when surfaces.json is valid,
     /// otherwise the historical [Screens] behavior via the legacy converter.</summary>
     public IReadOnlyList<string> GetTargetsForContent(string source)

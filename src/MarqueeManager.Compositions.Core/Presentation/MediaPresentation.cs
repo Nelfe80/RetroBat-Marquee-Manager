@@ -34,14 +34,14 @@ public sealed record TargetPolicy(
             if (GameId is not null) return Eq(GameId, context.StableGameId);
             if (Rom is not null) return Eq(Rom, context.Rom);
             // no game pinned: the entry speaks for EVERY game of the system. It only
-            // reaches here with a system named — a delta meant for the whole surface
+            // reaches here with a system named - a delta meant for the whole surface
             // belongs in the surface's base, not in a target entry.
             return FrontendSystem is not null || CanonicalSystem is not null;
         }
         return true;
     }
 
-    /// <summary>How narrowly this entry aims — a system-wide game entry must be laid
+    /// <summary>How narrowly this entry aims - a system-wide game entry must be laid
     /// down BEFORE a game's own, or the broad answer would overwrite the precise one.</summary>
     public int Specificity => Scope == MediaScope.Game && GameId is null && Rom is null ? 0 : 1;
 
@@ -51,7 +51,7 @@ public sealed record TargetPolicy(
 /// <summary>
 /// The whole <c>state/media-presentation.json</c> (schema
 /// marqueemanager.media-presentation.v1): per-surface base deltas plus a flat list
-/// of target deltas. Pure data — reading/writing the file lives in the Setup and
+/// of target deltas. Pure data - reading/writing the file lives in the Setup and
 /// runtime; parsing/merging is shared here.
 /// </summary>
 public sealed record MediaPresentationDocument(

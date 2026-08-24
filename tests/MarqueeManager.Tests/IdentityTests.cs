@@ -3,7 +3,7 @@ using Xunit;
 
 namespace MarqueeManager.Tests;
 
-/// <summary>Identity rules from spec §19 — the fallback StableGameId and the
+/// <summary>Identity rules from spec §19 - the fallback StableGameId and the
 /// frontend/canonical distinction.</summary>
 public sealed class IdentityTests
 {

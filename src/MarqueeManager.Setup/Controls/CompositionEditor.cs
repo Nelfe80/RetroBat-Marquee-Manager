@@ -14,11 +14,11 @@ namespace MarqueeManager.Setup.Controls;
 
 /// <summary>
 /// Composition editor, Photoshop logic (patterns of RetroCreator's Designer):
-/// preset palette on the left (business presets, not bare primitives — click to
+/// preset palette on the left (business presets, not bare primitives - click to
 /// place intelligently), canvas at scale in the middle (drag/resize/snap), layers
 /// (eye/lock/reorder) and a 3-group shared-state inspector on the right, display
 /// STATE tabs at the top (Navigation ES | Ingame | Les deux), snapshot undo/redo.
-/// Coordinates stay FRACTIONS — the composition survives any surface size.
+/// Coordinates stay FRACTIONS - the composition survives any surface size.
 /// </summary>
 public sealed class CompositionEditor : Window
 {
@@ -39,7 +39,7 @@ public sealed class CompositionEditor : Window
     private Point _dragStart;
     private (double X, double Y, double W, double H) _origin;
 
-    // undo/redo by full snapshot (RetroCreator pattern — simple and reliable)
+    // undo/redo by full snapshot (RetroCreator pattern - simple and reliable)
     private readonly List<string> _history = new();
     private int _historyIndex = -1;
 
@@ -71,7 +71,7 @@ public sealed class CompositionEditor : Window
         _aspect = aspect;
         _state = initialState is "ingame" or "navigation" ? initialState : "navigation";
 
-        Title = L.T($"Création graphique — surface {surface.Id}", $"Graphic creation — surface {surface.Id}");
+        Title = L.T($"Création graphique - surface {surface.Id}", $"Graphic creation - surface {surface.Id}");
         Width = 1240;
         Height = 760;
         WindowState = WindowState.Maximized;
@@ -182,12 +182,12 @@ public sealed class CompositionEditor : Window
     // ================= palette =================
 
     /// <summary>
-    /// My setup places LIVE elements — things fed by the streams. Image composing
+    /// My setup places LIVE elements - things fed by the streams. Image composing
     /// belongs to My systems / My games, where a layout is built for a system or a game
     /// and resolved with that entry's media. Offering both here meant the same picture
     /// could be built in two places, from two screens, with no way to tell which won.
     /// </summary>
-    /// <summary>Named like the other palette groups — which are language-neutral, so the
+    /// <summary>Named like the other palette groups - which are language-neutral, so the
     /// French title went out untranslated in the English UI.</summary>
     private static string CardsGroup => "🃏 " + L.T("Cartes d'instructions", "Instruction cards");
 
@@ -206,7 +206,7 @@ public sealed class CompositionEditor : Window
             new("📊 Live", "Hiscores", () => new() { C("overlay.hiscore", 0.7, 0.05, 0.28, 0.6) }),
             new("📊 Live", L.T("Score live", "Live score"), () => new() { C("overlay.live.score", 0.02, 0.7, 0.3, 0.28) }),
             new("📊 Live", L.T("Timer live", "Live timer"), () => new() { C("overlay.live.timer", 0.68, 0.7, 0.3, 0.28) }),
-            // the game video is a LIVE element — it is fed by the stream and cannot be
+            // the game video is a LIVE element - it is fed by the stream and cannot be
             // baked into a composition, which is a still image by construction
             new("📊 Live", L.T("Vidéo du jeu", "Game video"),
                 () => new() { C("media.video", 0, 0, 1, 1, ("sources", "local")) }),
@@ -249,9 +249,9 @@ public sealed class CompositionEditor : Window
                     C("iccard.viewer", 0.5, 0, 0.5, 1, ("auto", "false")),
                     C("iccard.touch", 0.5, 0, 0.5, 1, ("action", "next-card"))
                 }),
-            new(CardsGroup, L.T("Zone tactile — fiche suivante", "Touch zone — next page"),
+            new(CardsGroup, L.T("Zone tactile - fiche suivante", "Touch zone - next page"),
                 () => new() { C("iccard.touch", 0.6, 0.8, 0.4, 0.2, ("action", "next-card")) }),
-            new(CardsGroup, L.T("Zone tactile — fiche précédente", "Touch zone — previous page"),
+            new(CardsGroup, L.T("Zone tactile - fiche précédente", "Touch zone - previous page"),
                 () => new() { C("iccard.touch", 0, 0.8, 0.4, 0.2, ("action", "previous-card")) }),
 
             new("🏆 RetroAchievements", L.T("Badges", "Badges"), () => new() { C("overlay.ra.badges", 0, 0.85, 1, 0.15) }),
@@ -590,7 +590,7 @@ public sealed class CompositionEditor : Window
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
         // While typing in a field (e.g. the leaderboard title), the editor shortcuts
-        // (Delete = remove layer, Ctrl+D/Z/Y…) must NOT fire — let the field handle the key.
+        // (Delete = remove layer, Ctrl+D/Z/Y…) must NOT fire - let the field handle the key.
         if (Keyboard.FocusedElement is System.Windows.Controls.TextBox) return;
 
         if (e.Key == Key.Delete && _selected != null)
@@ -630,7 +630,7 @@ public sealed class CompositionEditor : Window
     /// <summary>
     /// A slider for one numeric option, with its value written next to it. A slider
     /// rather than a text field: these are proportions you judge by eye on the marquee,
-    /// not numbers you know in advance — and it makes an out-of-range value impossible
+    /// not numbers you know in advance - and it makes an out-of-range value impossible
     /// to type.
     /// </summary>
     private static FrameworkElement OptionSlider(ComponentModel component, string key, double fallback,
@@ -698,7 +698,7 @@ public sealed class CompositionEditor : Window
         }
         if (players.SelectedItem == null) players.SelectedIndex = 0;
 
-        // The channels this composition actually has — read off its viewers. A free field
+        // The channels this composition actually has - read off its viewers. A free field
         // let a typo break the pairing in silence: the zone answered on "p2 " and the card
         // listened on "p2", and nothing happened when the player pressed.
         var known = new List<(string Tag, string Fr, string En)> { ("", "(automatique)", "(automatic)") };
@@ -721,8 +721,8 @@ public sealed class CompositionEditor : Window
         {
             var derived = InstructionCardChannel(Value("channel"), Value("role"), Value("player"));
             channelHint.Text = L.T(
-                $"Canal : {derived}. Une zone et une carte qui portent le même canal se répondent — laissez vide, il se déduit du joueur ou du rôle.",
-                $"Channel: {derived}. A zone and a card sharing a channel answer each other — leave empty and it follows the player or the role.");
+                $"Canal : {derived}. Une zone et une carte qui portent le même canal se répondent - laissez vide, il se déduit du joueur ou du rôle.",
+                $"Channel: {derived}. A zone and a card sharing a channel answer each other - leave empty and it follows the player or the role.");
         }
 
         players.SelectionChanged += (_, _) =>
@@ -742,13 +742,13 @@ public sealed class CompositionEditor : Window
             content.Children.Add(Ui.Row(L.T("Rôle affiché", "Displayed role"), role, labelWidth: LabelWidth));
             content.Children.Add(Ui.MutedLabel(L.T(
                 "Trois rôles seulement traversent la ludothèque : ce sont des pages thématiques qui portent le même nom d'un jeu à l'autre. "
-                + "Les personnages n'y sont pas — ils n'existent que dans leur jeu, et c'est le mode auto ci-dessous qui les suit. "
+                + "Les personnages n'y sont pas - ils n'existent que dans leur jeu, et c'est le mode auto ci-dessous qui les suit. "
                 + "« Toutes les fiches » est la bonne réponse tant qu'on ne sait pas qui joue.",
                 "Only three roles run across the library: topic pages carrying the same name from one game to the next. "
-                + "Characters are not there — they only exist in their own game, and the auto mode below is what follows them. "
+                + "Characters are not there - they only exist in their own game, and the auto mode below is what follows them. "
                 + "\"Every page\" is the right answer as long as nobody knows who is playing.")));
 
-            // Where this viewer sits when nobody has touched anything — and what it comes
+            // Where this viewer sits when nobody has touched anything - and what it comes
             // back to. Both were settings of the old touch profile; they belong to the
             // viewer, which is the thing that shows a card.
             content.Children.Add(Ui.Row(L.T("Carte au repos", "Resting card"),
@@ -757,9 +757,9 @@ public sealed class CompositionEditor : Window
                 Choice(component, "returnMs", "", Durations), labelWidth: LabelWidth));
             content.Children.Add(Ui.MutedLabel(L.T(
                 "La carte au repos est celle affichée au départ, et celle où l'on revient. "
-                + "Un jeu qui n'a pas cette page retombe sur la première — « fiche 5 » ne veut rien dire pour un jeu qui en a deux.",
+                + "Un jeu qui n'a pas cette page retombe sur la première - « fiche 5 » ne veut rien dire pour un jeu qui en a deux.",
                 "The resting card is the one shown at start, and the one it comes back to. "
-                + "A game without that page falls back to the first — \"page 5\" means nothing to a game that has two.")));
+                + "A game without that page falls back to the first - \"page 5\" means nothing to a game that has two.")));
 
             var auto = Ui.CheckBox(L.T(
                     "Suivre le personnage annoncé par le jeu",
@@ -774,7 +774,7 @@ public sealed class CompositionEditor : Window
                 "When the game can tell who was picked (.MEM files), the card switches to that character and cycles through HIS pages. "
                 + "Otherwise it walks everything: never someone else's card.")));
 
-            // Some cards hold every entry in one drawing — les armes de Ghouls'n Ghosts
+            // Some cards hold every entry in one drawing - les armes de Ghouls'n Ghosts
             // côte à côte. Là, ce n'est pas la carte qui change, c'est l'entrée qu'on
             // désigne dedans.
             var highlight = Ui.ComboBox(ControlWidth);
@@ -797,9 +797,9 @@ public sealed class CompositionEditor : Window
             };
             content.Children.Add(Ui.Row(L.T("Objet annoncé", "Announced item"), highlight, labelWidth: LabelWidth));
             content.Children.Add(Ui.MutedLabel(L.T(
-                "Certaines cartes réunissent toutes les entrées sur un seul dessin — les armes côte à côte. "
+                "Certaines cartes réunissent toutes les entrées sur un seul dessin - les armes côte à côte. "
                 + "Quand le jeu annonce celle qu'on vient de ramasser, elle est encadrée sur la carte. L'encadrement disparaît dès qu'on touche la zone.",
-                "Some cards hold every entry in a single drawing — weapons side by side. "
+                "Some cards hold every entry in a single drawing - weapons side by side. "
                 + "When the game announces the one just picked up, it gets framed on the card. The frame goes away as soon as the zone is touched.")));
         }
         else
@@ -828,10 +828,10 @@ public sealed class CompositionEditor : Window
             content.Children.Add(Ui.Row(L.T("Au toucher", "On tap"), actions, labelWidth: LabelWidth));
             content.Children.Add(Ui.MutedLabel(L.T(
                 "Chaque action marche sur N'IMPORTE QUEL jeu : on parcourt les fiches, on parcourt les rôles. "
-                + "Viser une fiche ou un rôle précis a existé et a été retiré — « la page 2 » désigne les armes ici et les points bonus ailleurs, "
+                + "Viser une fiche ou un rôle précis a existé et a été retiré - « la page 2 » désigne les armes ici et les points bonus ailleurs, "
                 + "et un personnage n'existe que dans son jeu. Le doigt navigue ; ce qui est propre au jeu, le jeu l'annonce.",
                 "Every action works on ANY game: walk through the pages, walk through the roles. "
-                + "Naming a page or a role was possible and was dropped — \"page 2\" holds the weapons here and the bonus points there, "
+                + "Naming a page or a role was possible and was dropped - \"page 2\" holds the weapons here and the bonus points there, "
                 + "and a character only exists in its own game. The finger navigates; what is game-specific, the game announces.")));
 
             var hint = Ui.CheckBox(L.T("Encadrer la zone", "Outline the zone"),
@@ -841,9 +841,9 @@ public sealed class CompositionEditor : Window
             content.Children.Add(hint);
             content.Children.Add(Ui.MutedLabel(L.T(
                 "Le rectangle EST la zone tactile : ce que vous dessinez ici est ce que le doigt peut presser. "
-                + "Rien n'est dessiné par défaut — un écran tactile qui marche n'a pas besoin d'être marqué.",
+                + "Rien n'est dessiné par défaut - un écran tactile qui marche n'a pas besoin d'être marqué.",
                 "The rectangle IS the touch zone: what you draw here is what a finger can press. "
-                + "Nothing is drawn by default — a touchscreen that works needs no marking.")));
+                + "Nothing is drawn by default - a touchscreen that works needs no marking.")));
 
             content.Children.Add(Ui.Row(L.T("Retour auto", "Auto return"),
                 Choice(component, "durationMs", "", Durations), labelWidth: LabelWidth));
@@ -861,7 +861,7 @@ public sealed class CompositionEditor : Window
     private const double ControlWidth = 130;
 
     /// <summary>
-    /// The roles worth offering: on 38 games carrying roles, 171 distinct names — and only
+    /// The roles worth offering: on 38 games carrying roles, 171 distinct names - and only
     /// these three run across the library. All the others name a CHARACTER, which exists
     /// only in its own game and which auto mode follows on its own, because the game
     /// announces it.
@@ -889,7 +889,7 @@ public sealed class CompositionEditor : Window
     };
 
     /// <summary>Delays offered to a zone. Free milliseconds invited a number nobody could
-    /// judge — 250 ms is a blink, 60 000 a forgotten card.</summary>
+    /// judge - 250 ms is a blink, 60 000 a forgotten card.</summary>
     private static readonly (string Tag, string Fr, string En)[] Durations =
     {
         ("", "Jamais", "Never"),
@@ -938,11 +938,11 @@ public sealed class CompositionEditor : Window
     /// <summary>
     /// The four RAILS of a surface, in render order. They are not layers you compose:
     /// they are the boundaries of the sandwich, and the rendering pipeline fixes their
-    /// order. Pinned means: eye only — no delete, no move. Losing one by recomposing is
+    /// order. Pinned means: eye only - no delete, no move. Losing one by recomposing is
     /// what silently disconnected a whole surface from the resolution chain.
     ///
     /// "lamps.scene" is WELDED to "lighting.engine": the rbmarquee lamps are painted
-    /// inside the lighting pass, over the lit artwork — nothing can be inserted between
+    /// inside the lighting pass, over the lit artwork - nothing can be inserted between
     /// the two.
     /// </summary>
     private static readonly string[] PinnedFront = { "effects.engine", "lamps.scene", "lighting.engine" };
@@ -957,7 +957,7 @@ public sealed class CompositionEditor : Window
     /// <summary>
     /// Overlays that only mean something WHILE PLAYING: a live score, a live timer, the
     /// RetroAchievements panels. There is no score, no run and no session to report
-    /// while browsing the library — shown there they were simply the last game's
+    /// while browsing the library - shown there they were simply the last game's
     /// figures, left on screen. The state is not a preference for these, so it is
     /// forced rather than offered.
     /// </summary>
@@ -999,7 +999,7 @@ public sealed class CompositionEditor : Window
         if (!components.Any(c => c.Type.Equals(PinnedBack, StringComparison.OrdinalIgnoreCase)))
             components.Insert(0, new ComponentModel { Type = PinnedBack });
 
-        // 2. the background is the floor — nothing renders under the game image
+        // 2. the background is the floor - nothing renders under the game image
         var back = components.First(c => c.Type.Equals(PinnedBack, StringComparison.OrdinalIgnoreCase));
         if (components.IndexOf(back) != 0)
         {
@@ -1044,9 +1044,9 @@ public sealed class CompositionEditor : Window
     private static string StateName(string state)
         => state == "ingame" ? L.T("En jeu", "Ingame") : L.T("Navigation ES", "ES browsing");
 
-    /// <summary>👁 shown here · ◌ absent from this state · — off everywhere.</summary>
+    /// <summary>👁 shown here · ◌ absent from this state · - off everywhere.</summary>
     private static string EyeGlyph(ComponentModel component, bool inState)
-        => !component.Visible ? "—" : inState ? "👁" : "◌";
+        => !component.Visible ? "-" : inState ? "👁" : "◌";
 
     /// <summary>
     /// The eye means "shown in THIS state". The two states are independent, but the
@@ -1123,12 +1123,12 @@ public sealed class CompositionEditor : Window
                 ? L.T("Uniquement en jeu : il n'y a ni score ni session a montrer pendant la navigation.",
                       "Ingame only: there is no score and no session to report while browsing.")
                 : !component.Visible
-                ? L.T("Éteint partout — cliquez pour rallumer ici.", "Off everywhere — click to switch it back on here.")
+                ? L.T("Éteint partout - cliquez pour rallumer ici.", "Off everywhere - click to switch it back on here.")
                 : inState
-                    ? L.T($"Affiché en {StateName(_state)} — cliquez pour le retirer de cet état.",
-                          $"Shown in {StateName(_state)} — click to drop it from this state.")
-                    : L.T($"Absent en {StateName(_state)} — cliquez pour l'y afficher.",
-                          $"Absent in {StateName(_state)} — click to show it here.");
+                    ? L.T($"Affiché en {StateName(_state)} - cliquez pour le retirer de cet état.",
+                          $"Shown in {StateName(_state)} - click to drop it from this state.")
+                    : L.T($"Absent en {StateName(_state)} - cliquez pour l'y afficher.",
+                          $"Absent in {StateName(_state)} - click to show it here.");
             row.Children.Add(eye);
             if (!pinned)
             {
@@ -1151,7 +1151,7 @@ public sealed class CompositionEditor : Window
                 row.Children.Add(buttons);
             }
 
-            // a live layer under the light is covered by the opaque lit artwork —
+            // a live layer under the light is covered by the opaque lit artwork -
             // say it here instead of letting it be discovered on the cabinet
             var covered = !pinned && lightingIndex >= 0 && position > lightingIndex
                           && LiveTypes.Contains(component.Type);
@@ -1193,7 +1193,7 @@ public sealed class CompositionEditor : Window
         var target = index + towardFront; // list order = back → front
         if (index < 0 || target < 0 || target >= _surface.Components.Count) return;
         // crossing a rail is how a layer changes zone (lit ↔ unlit); the background is
-        // the one that can never be crossed — nothing renders under the game image
+        // the one that can never be crossed - nothing renders under the game image
         if (_surface.Components[target].Type.Equals(PinnedBack, StringComparison.OrdinalIgnoreCase)) return;
         SnapshotHistory();
         (_surface.Components[index], _surface.Components[target]) = (_surface.Components[target], _surface.Components[index]);
@@ -1289,7 +1289,7 @@ public sealed class CompositionEditor : Window
         if (component.Type == "panel.controls")
         {
             // One component draws ONE player's panel. A two-player cabinet places two of
-            // them, each set to its side — that a press on panel 2 lights panel 2 is part
+            // them, each set to its side - that a press on panel 2 lights panel 2 is part
             // of what the wiring check verifies.
             var players = Ui.ComboBox(180);
             var currentPlayer = component.Options.TryGetValue("player", out var pv) && pv.Length > 0 ? pv : "1";
@@ -1319,8 +1319,8 @@ public sealed class CompositionEditor : Window
             content.Children.Add(PanelToggle("labels", "Afficher la fonction des boutons (aspect simple)", "Show what each button does (plain look)"));
             content.Children.Add(PanelToggle("system", "Afficher SELECT et START (aspect simple)", "Show SELECT and START (plain look)"));
             content.Children.Add(Ui.MutedLabel(L.T(
-                "Les boutons que le jeu n'utilise pas restent visibles, en transparence : le panneau montre la borne telle qu'elle est. Un appui physique allume le bouton correspondant — c'est ainsi qu'on vérifie son câblage.",
-                "Buttons the game does not use stay visible, faded: the panel shows the cabinet as it is. Pressing a physical button lights the matching one — that is how you check your wiring.")));
+                "Les boutons que le jeu n'utilise pas restent visibles, en transparence : le panneau montre la borne telle qu'elle est. Un appui physique allume le bouton correspondant - c'est ainsi qu'on vérifie son câblage.",
+                "Buttons the game does not use stay visible, faded: the panel shows the cabinet as it is. Pressing a physical button lights the matching one - that is how you check your wiring.")));
         }
         if (component.Type is "iccard.viewer" or "iccard.touch")
         {
@@ -1357,8 +1357,8 @@ public sealed class CompositionEditor : Window
             var suppress = false;
             string SourceNow() => component.Options.TryGetValue("source", out var s) && s.Length > 0 ? s : "local";
             string TitleDefault(string src) => src.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
-                ? L.T("{name} — CLASSEMENT MONDIAL", "{name} — WORLD RANKING")
-                : L.T("{name} — CLASSEMENT LOCAL", "{name} — LOCAL LEADERBOARD");
+                ? L.T("{name} - CLASSEMENT MONDIAL", "{name} - WORLD RANKING")
+                : L.T("{name} - CLASSEMENT LOCAL", "{name} - LOCAL LEADERBOARD");
             string MyRankDefault(string src) => src.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
                 ? L.T("★ TON RANG MONDIAL  {rank} / {of}", "★ YOUR WORLD RANK  {rank} / {of}")
                 : L.T("★ TON MEILLEUR ICI  {rank}   {score}", "★ YOUR BEST HERE  {rank}   {score}");
@@ -1424,8 +1424,8 @@ public sealed class CompositionEditor : Window
             content.Children.Add(Toggle("showMyRank", "Afficher mon meilleur rang (sous le classement)", "Show my best rank (below the board)", true));
             content.Children.Add(Ui.Row(L.T("Libellé du rang", "Rank label"), myRankBox, labelWidth: 90));
             content.Children.Add(Ui.MutedLabel(L.T(
-                "Modèle libre — {rank} {of} {score} {pseudo}. Local : ta meilleure ligne du jeu. NelfePlay : ton rang mondial certifié (ou une invitation à t'identifier).",
-                "Free template — {rank} {of} {score} {pseudo}. Local: your best line for the game. NelfePlay: your certified world rank (or a prompt to identify).")));
+                "Modèle libre - {rank} {of} {score} {pseudo}. Local : ta meilleure ligne du jeu. NelfePlay : ton rang mondial certifié (ou une invitation à t'identifier).",
+                "Free template - {rank} {of} {score} {pseudo}. Local: your best line for the game. NelfePlay: your certified world rank (or a prompt to identify).")));
         }
 
         _inspector.Children.Add(Group(1, L.T("Contenu", "Content"), content));
@@ -1499,8 +1499,8 @@ public sealed class CompositionEditor : Window
                 L.T("Corps", "Type size"),
                 value => value <= 0.001 ? L.T("auto", "auto") : $"{value * 100:0.0} %"));
             style.Children.Add(Ui.MutedLabel(L.T(
-                "Corps sur « auto » : le texte s'ajuste à sa zone. Sinon, une fraction de la hauteur de la surface — il garde sa taille quand on redimensionne la zone.",
-                "Type size on \"auto\": the text fits its own zone. Otherwise a fraction of the surface height — it keeps its size when the zone is resized.")));
+                "Corps sur « auto » : le texte s'ajuste à sa zone. Sinon, une fraction de la hauteur de la surface - il garde sa taille quand on redimensionne la zone.",
+                "Type size on \"auto\": the text fits its own zone. Otherwise a fraction of the surface height - it keeps its size when the zone is resized.")));
         }
         else if (component.Type.StartsWith("media."))
         {
@@ -1512,8 +1512,8 @@ public sealed class CompositionEditor : Window
         }
         else if (component.Type == "panel.controls")
         {
-            // The drawn views are APIExpose's own artwork — the very SVG it writes for
-            // EmulationStation themes — so the panel on the marquee and the panel in a
+            // The drawn views are APIExpose's own artwork - the very SVG it writes for
+            // EmulationStation themes - so the panel on the marquee and the panel in a
             // theme are the same picture. "Plain" needs no artwork at all, which is also
             // what a cabinet whose theme files were never generated falls back to.
             var looks = Ui.ComboBox(200);
@@ -1573,7 +1573,7 @@ public sealed class CompositionEditor : Window
         }
         else if (component.Type == "iccard.touch")
         {
-            // A touch zone is invisible by construction — that is its default and it is
+            // A touch zone is invisible by construction - that is its default and it is
             // the right one on a screen whose players know it. On a cabinet where they
             // do not, the zone has to be SEEN, and a tinted rectangle says "press here"
             // better than an outline does.

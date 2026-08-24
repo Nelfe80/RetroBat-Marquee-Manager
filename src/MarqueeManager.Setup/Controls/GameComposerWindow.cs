@@ -14,7 +14,7 @@ namespace MarqueeManager.Setup.Controls;
 /// The composition window for ONE game (or one system): the same editing
 /// experience everywhere. Top: pick WHICH surface of WHICH screen the
 /// composition targets (canvas locks to its real resolution, the export lands in
-/// that category's media folder). Left: the media BY TYPE — clicking "Fanart"
+/// that category's media folder). Left: the media BY TYPE - clicking "Fanart"
 /// opens a preview modal of every available fanart by source, click to place.
 /// Center: the layer canvas (drag, wheel = scale, inspector). Saving renders the
 /// PNG + project JSON and confirms in place.
@@ -53,7 +53,7 @@ public sealed class GameComposerWindow : Window
     /// the target selector to the surface picked in the calling view.</summary>
     /// <param name="sample">Entry the PREVIEW resolves against. A gabarit is stored under
     /// a synthetic identity ("__gabarit__" / "game-arcade"), so resolving tokens against
-    /// it found no metadata at all and every one of them fell back to its own name —
+    /// it found no metadata at all and every one of them fell back to its own name -
     /// the preview read "developer", "genre", "year" instead of the game's values.</param>
     public GameComposerWindow(string pluginRoot, string system, string rom, string displayName,
         IReadOnlyList<GameAsset> assets, string? initialSurfaceId = null, bool gabaritMode = false,
@@ -71,7 +71,7 @@ public sealed class GameComposerWindow : Window
         _downloadsDir = Path.Combine(pluginRoot, "media", "marquees", "downloads", Safe(system), Safe(rom));
         _mediaRoot = Path.GetFullPath(Path.Combine(pluginRoot, "..", "APIExpose", "media", "systems"));
 
-        Title = L.T($"Création graphique — {displayName}", $"Graphic creation — {displayName}");
+        Title = L.T($"Création graphique - {displayName}", $"Graphic creation - {displayName}");
         Width = 1180;
         Height = 760;
         WindowState = WindowState.Maximized;
@@ -101,7 +101,7 @@ public sealed class GameComposerWindow : Window
             targetPicker.Items.Add(new ComboBoxItem { Content = target.Label, Tag = target });
         }
         // select by TAG, never by index: the list is filtered, so an index into the
-        // unfiltered set pointed at another surface — or at nothing, leaving the picker
+        // unfiltered set pointed at another surface - or at nothing, leaving the picker
         // blank
         targetPicker.SelectedItem = targetPicker.Items.Cast<ComboBoxItem>()
             .FirstOrDefault(i => ReferenceEquals(i.Tag, _target)) ?? targetPicker.Items.Cast<ComboBoxItem>().FirstOrDefault();
@@ -128,7 +128,7 @@ public sealed class GameComposerWindow : Window
         DockPanel.SetDock(bar, Dock.Top);
         root.Children.Add(bar);
 
-        // status right below the actions — the feedback is impossible to miss
+        // status right below the actions - the feedback is impossible to miss
         _status.TextWrapping = TextWrapping.Wrap;
         _status.Margin = new Thickness(0, 0, 0, 6);
         DockPanel.SetDock(_status, Dock.Top);
@@ -205,7 +205,7 @@ public sealed class GameComposerWindow : Window
     private string LayerName(MarqueeLayer layer)
     {
         if (layer.Source == "text") return $"{L.T("Texte", "Text")} « {layer.Text} »";
-        // A layer is named EXACTLY as the palette button that placed it — the two lists
+        // A layer is named EXACTLY as the palette button that placed it - the two lists
         // read side by side, so they must speak the same words.
         if (GabaritAssets.Palette.FirstOrDefault(
                 e => e.Key.Equals(layer.AssetKey, StringComparison.OrdinalIgnoreCase)) is { } entry)
@@ -231,8 +231,8 @@ public sealed class GameComposerWindow : Window
         var models = _composer.LayerModels; // back → front
         if (models.Count == 0)
         {
-            _layersPanel.Children.Add(Ui.MutedLabel(L.T("Aucun calque — piochez un média à gauche.",
-                "No layer yet — pick a media on the left.")));
+            _layersPanel.Children.Add(Ui.MutedLabel(L.T("Aucun calque - piochez un média à gauche.",
+                "No layer yet - pick a media on the left.")));
             return;
         }
         _layersPanel.Children.Add(Ui.MutedLabel(L.T("Glissez une ligne pour changer l'ordre.",
@@ -263,8 +263,8 @@ public sealed class GameComposerWindow : Window
             });
             eye.Padding = new Thickness(4, 1, 4, 1);
             eye.Opacity = layer.Hidden ? 0.5 : 1.0;
-            eye.ToolTip = layer.Hidden ? L.T("Masqué — cliquer pour afficher", "Hidden — click to show")
-                                       : L.T("Visible — cliquer pour masquer", "Visible — click to hide");
+            eye.ToolTip = layer.Hidden ? L.T("Masqué - cliquer pour afficher", "Hidden - click to show")
+                                       : L.T("Visible - cliquer pour masquer", "Visible - click to hide");
             line.Children.Add(eye);
             var padlock = Ui.Button(layer.Locked ? "🔒" : "🔓", (_, _) =>
             {
@@ -272,8 +272,8 @@ public sealed class GameComposerWindow : Window
                 RenderSidePanels();
             });
             padlock.Padding = new Thickness(4, 1, 4, 1);
-            padlock.ToolTip = layer.Locked ? L.T("Verrouillé — cliquer pour déverrouiller", "Locked — click to unlock")
-                                           : L.T("Déverrouillé — cliquer pour verrouiller", "Unlocked — click to lock");
+            padlock.ToolTip = layer.Locked ? L.T("Verrouillé - cliquer pour déverrouiller", "Locked - click to unlock")
+                                           : L.T("Déverrouillé - cliquer pour verrouiller", "Unlocked - click to lock");
             line.Children.Add(padlock);
 
             // up/down arrows to reorder (alternative to drag & drop)
@@ -374,7 +374,7 @@ public sealed class GameComposerWindow : Window
 
         if (layer.IsTextBox)
         {
-            // the handles resize the RECTANGLE, so the reading size lives here — and
+            // the handles resize the RECTANGLE, so the reading size lives here - and
             // nowhere else. Mixing the two is what made the box only grow downwards.
             SliderRow(L.T("Corps du texte", "Type size"), 0.02, 0.30, layer.FontSize, v => layer.FontSize = v);
 
@@ -413,8 +413,8 @@ public sealed class GameComposerWindow : Window
             {
                 _inspectorPanel.Children.Add(Ui.MutedLabel(L.T("Contenu", "Content"), 11));
                 _inspectorPanel.Children.Add(Ui.MutedLabel(
-                    L.T($"{TokenLabel(layer.Text)} — rempli pour chaque jeu.",
-                        $"{TokenLabel(layer.Text)} — filled in per game.")));
+                    L.T($"{TokenLabel(layer.Text)} - rempli pour chaque jeu.",
+                        $"{TokenLabel(layer.Text)} - filled in per game.")));
             }
             else
             {
@@ -484,8 +484,8 @@ public sealed class GameComposerWindow : Window
                 if (w <= 0 || h <= 0) continue;
                 if (suspended) continue; // never displays anything: not a target at all
                 _targets.Add(new Target(
-                    L.T($"Surface {surface.Id} ({surface.Category}) — écran {screenIndex}, {w}×{h}",
-                        $"Surface {surface.Id} ({surface.Category}) — screen {screenIndex}, {w}×{h}"),
+                    L.T($"Surface {surface.Id} ({surface.Category}) - écran {screenIndex}, {w}×{h}",
+                        $"Surface {surface.Id} ({surface.Category}) - screen {screenIndex}, {w}×{h}"),
                     category, surface.Id, w, h, suspended));
             }
         }
@@ -531,7 +531,7 @@ public sealed class GameComposerWindow : Window
 
     /// <summary>Metadata of the entry being previewed, so the canvas shows a real title
     /// instead of "{name}". Missing values fall back to a readable placeholder rather
-    /// than to nothing — an empty layer cannot be positioned.</summary>
+    /// than to nothing - an empty layer cannot be positioned.</summary>
     private Dictionary<string, string> SampleTokens()
     {
         var catalog = new GameMediaCatalog(_pluginRoot);
@@ -565,7 +565,7 @@ public sealed class GameComposerWindow : Window
 
     /// <summary>A gabarit stores the paths of whatever entry it was last composed on,
     /// but the layout is generic: a resolvable layer shows its coloured placeholder,
-    /// or the sample's own medium while samples are on. Never another entry's picture —
+    /// or the sample's own medium while samples are on. Never another entry's picture -
     /// that is how a Sonic template ended up on every Mega Drive game.</summary>
     private void RemapForGabarit(MarqueeProject project)
     {
@@ -612,8 +612,8 @@ public sealed class GameComposerWindow : Window
         // empty target opens empty.
         _target = target;
         MountComposer(LoadProjectFor(target));
-        _status.Text = L.T($"Cible : {target.Label} — la création est propre à CETTE surface.",
-            $"Target: {target.Label} — the creation belongs to THIS surface.");
+        _status.Text = L.T($"Cible : {target.Label} - la création est propre à CETTE surface.",
+            $"Target: {target.Label} - the creation belongs to THIS surface.");
         _status.Foreground = Ui.Muted;
         RefreshDeleteButton();
     }
@@ -635,14 +635,14 @@ public sealed class GameComposerWindow : Window
         if (!entry.Served)
         {
             _status.Text = L.T(
-                $"{label} : le flux APIExpose ne transporte pas ce média — le calque ne s'affichera pas sur la surface.",
-                $"{label}: the APIExpose stream does not carry this medium — the layer will not display on the surface.");
+                $"{label} : le flux APIExpose ne transporte pas ce média - le calque ne s'affichera pas sur la surface.",
+                $"{label}: the APIExpose stream does not carry this medium - the layer will not display on the surface.");
             _status.Foreground = Ui.Error;
             return;
         }
         _status.Text = _showSamples
-            ? L.T($"{label} : l'échantillon n'en a pas — posé en repère, résolu jeu par jeu.",
-                  $"{label}: the sample has none — placed as a marker, resolved per entry.")
+            ? L.T($"{label} : l'échantillon n'en a pas - posé en repère, résolu jeu par jeu.",
+                  $"{label}: the sample has none - placed as a marker, resolved per entry.")
             : L.T($"{label} posé. Cochez « Afficher les échantillons » pour voir de vrais médias.",
                   $"{label} placed. Tick “Show samples” to see real media.");
         _status.Foreground = Ui.Muted;
@@ -656,7 +656,7 @@ public sealed class GameComposerWindow : Window
             && File.Exists(asset.Path) ? asset.Path : null, on);
     }
 
-    /// <summary>~900 characters of filler — the middle of the range a scraped
+    /// <summary>~900 characters of filler - the middle of the range a scraped
     /// description occupies, so a box sized on it holds a real one.</summary>
     private const string LoremIpsum =
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor "
@@ -701,11 +701,11 @@ public sealed class GameComposerWindow : Window
         // Say WHICH entry the palette is judging: greyed types are the ones this sample
         // lacks, and nothing about that should have to be guessed.
         var availableTypes = _assets.Select(a => a.Key).Distinct(StringComparer.OrdinalIgnoreCase).Count();
-        panel.Children.Add(Ui.MutedLabel(L.T($"Échantillon : {_sampleSystem} / {_sampleRom} — {availableTypes} type(s) disponible(s).",
-            $"Sample: {_sampleSystem} / {_sampleRom} — {availableTypes} type(s) available.")));
+        panel.Children.Add(Ui.MutedLabel(L.T($"Échantillon : {_sampleSystem} / {_sampleRom} - {availableTypes} type(s) disponible(s).",
+            $"Sample: {_sampleSystem} / {_sampleRom} - {availableTypes} type(s) available.")));
 
         // EVERY composable type is offered, always. Building the palette from what one
-        // sample game owns made a whole system's template offer four buttons — the
+        // sample game owns made a whole system's template offer four buttons - the
         // template is generic, the picture comes from the entry it renders for.
         var samples = new CheckBox
         {
@@ -748,12 +748,12 @@ public sealed class GameComposerWindow : Window
                     }
                 },
                 ToolTip = !entry.Served
-                    ? L.T($"{label} — le flux APIExpose ne le transporte pas : composable ici, mais il ne s'affichera pas sur la surface.",
-                          $"{label} — the APIExpose stream does not carry it: composable here, but it will not display on the surface.")
+                    ? L.T($"{label} - le flux APIExpose ne le transporte pas : composable ici, mais il ne s'affichera pas sur la surface.",
+                          $"{label} - the APIExpose stream does not carry it: composable here, but it will not display on the surface.")
                     : owned
-                        ? L.T($"{label} — l'échantillon en possède un", $"{label} — the sample has one")
-                        : L.T($"{label} — posé en repère, résolu jeu par jeu",
-                              $"{label} — placed as a marker, resolved per entry"),
+                        ? L.T($"{label} - l'échantillon en possède un", $"{label} - the sample has one")
+                        : L.T($"{label} - posé en repère, résolu jeu par jeu",
+                              $"{label} - placed as a marker, resolved per entry"),
                 Margin = new Thickness(0, 2, 0, 2),
                 Padding = new Thickness(8, 4, 8, 4),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -790,8 +790,8 @@ public sealed class GameComposerWindow : Window
             var gradient = Ui.Button(L.T(fr, en), (_, _) =>
             {
                 _composer.AddMediaLayer(path, "gradient");
-                _status.Text = L.T("Gradient posé — étirez-le sur la zone du logo pour la lisibilité.",
-                    "Gradient placed — stretch it over the logo area for readability.");
+                _status.Text = L.T("Gradient posé - étirez-le sur la zone du logo pour la lisibilité.",
+                    "Gradient placed - stretch it over the logo area for readability.");
                 _status.Foreground = Ui.Muted;
             });
             gradient.Margin = new Thickness(0, 2, 0, 2);
@@ -802,7 +802,7 @@ public sealed class GameComposerWindow : Window
 
         panel.Children.Add(Ui.SectionHeader(L.T("Autres", "Other")));
         // A template's text is a TEMPLATE, never a frozen string: placing the window's
-        // display name wrote "General template — arcade games" onto the marquee, and the
+        // display name wrote "General template - arcade games" onto the marquee, and the
         // runtime drew it verbatim on every game of the system.
         // every palette button reads the same way: full width, label on the left
         void AddPaletteButton(FrameworkElement button)
@@ -829,7 +829,7 @@ public sealed class GameComposerWindow : Window
         AddPaletteButton(Ui.Button(L.T("Texte : joueurs", "Text: players"), (_, _) => _composer.AddTextLayer("{players}")));
         AddPaletteButton(Ui.Button(L.T("Texte : note", "Text: rating"), (_, _) => _composer.AddTextLayer("{rating}")));
 
-        // import your own image — used for EVERY system in a gabarit (its key never
+        // import your own image - used for EVERY system in a gabarit (its key never
         // matches a system asset, so it is not remapped), specific to a creation
         var import = Ui.Button(L.T("Importer une image…", "Import an image…"), (_, _) => ImportImage());
         import.Margin = new Thickness(0, 2, 0, 2);
@@ -945,8 +945,8 @@ public sealed class GameComposerWindow : Window
             store.SaveProject(_composer.BuildProject(_system, _rom));
             _composer.RenderPng(store.PngPath(_system, _rom));
             _status.Text = L.T(
-                $"✔ Création graphique enregistrée pour cette surface : {store.PngPath(_system, _rom)} — affichée à la prochaine sélection.",
-                $"✔ Graphic creation saved for this surface: {store.PngPath(_system, _rom)} — shown on the next selection.");
+                $"✔ Création graphique enregistrée pour cette surface : {store.PngPath(_system, _rom)} - affichée à la prochaine sélection.",
+                $"✔ Graphic creation saved for this surface: {store.PngPath(_system, _rom)} - shown on the next selection.");
             _status.Foreground = Ui.Ok;
             RefreshDeleteButton();
         }
@@ -959,12 +959,12 @@ public sealed class GameComposerWindow : Window
 
     private void DeleteComposition()
     {
-        // per-surface file AND the category-level legacy file — otherwise the
+        // per-surface file AND the category-level legacy file - otherwise the
         // old creation seeds the editor again and "keeps coming back"
         StoreFor(_target).Delete(_system, _rom);
         new MarqueeProjectStore(_pluginRoot, _target.Category).Delete(_system, _rom);
-        _status.Text = L.T("Création graphique supprimée — la chaîne de sources reprend la main.",
-            "Graphic creation deleted — the source chain takes over again.");
+        _status.Text = L.T("Création graphique supprimée - la chaîne de sources reprend la main.",
+            "Graphic creation deleted - the source chain takes over again.");
         _status.Foreground = Ui.Muted;
         RefreshDeleteButton();
     }

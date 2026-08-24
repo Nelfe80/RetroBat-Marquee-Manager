@@ -13,7 +13,7 @@ public sealed record MemSignal(string Action, string Family, string Description)
 /// base names of `rom.hashes[].label`. The line parser follows RetroCreator's
 /// MemSignalsParser rules: `action="X"` plus action_map values, entries flagged
 /// no_log/no_survey are dead (the wrapper skips them at load) and IGNORE/UNKNOWN
-/// are noise — none of those are offered as bindable signals.
+/// are noise - none of those are offered as bindable signals.
 /// </summary>
 public sealed partial class MemSignalCatalog
 {
@@ -91,7 +91,7 @@ public sealed partial class MemSignalCatalog
                 {
                     var name = open.Groups[1].Value;
                     // only the TOP-LEVEL "events" opens the section: some games
-                    // nest a family also named "events" (flow.events in garou) —
+                    // nest a family also named "events" (flow.events in garou) -
                     // it must stack as a family, not reset the section depth
                     if (name.Equals("events", StringComparison.OrdinalIgnoreCase) && !inEvents)
                     {
@@ -160,7 +160,7 @@ public sealed partial class MemSignalCatalog
 
     /// <summary>rom → .MEM path map for a system, built once per session. Primary
     /// source: the mem-curator alias.json referential (every known dump name,
-    /// slug variant and hash of a game → its canonical .MEM basename) — the
+    /// slug variant and hash of a game → its canonical .MEM basename) - the
     /// exact file the runtime wrapper resolves with. The header scan
     /// (rom.name + hash labels) only complements systems without alias.json.</summary>
     private SystemIndex IndexFor(string system)
@@ -204,7 +204,7 @@ public sealed partial class MemSignalCatalog
     }
 
     /// <summary>Loads alias.json (raw names, slugs, extensions, hashes → canonical
-    /// basename). Duplicate keys differing only by case are legal there — the
+    /// basename). Duplicate keys differing only by case are legal there - the
     /// case-insensitive index absorbs them. Returns false when the file is
     /// missing or unreadable.</summary>
     private static bool IndexAliases(string dir, Dictionary<string, string> index)

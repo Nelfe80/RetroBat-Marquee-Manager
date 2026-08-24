@@ -4,7 +4,7 @@
   (ingame.effects.xml attribut genre= et overrides\effects\genres\<slug>.json).
 
   ids    : identifiants numeriques ScreenScraper (champ Fields.genres des
-           metadata — independants de la langue, source preferee)
+           metadata - independants de la langue, source preferee)
   labels : morceaux de libelles (contains, insensible a la casse) en secours,
            FR et EN separes par |
 

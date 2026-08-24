@@ -33,7 +33,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private Viewbox _layViewbox = null!;
         private Canvas _layCanvas = null!;
 
-        // Lighting Engine Layer (Skia) — sits above legacy image/video/.lay, below overlays
+        // Lighting Engine Layer (Skia) - sits above legacy image/video/.lay, below overlays
         private readonly LightingSurfaceOptions? _lightingOptions;
         private WpfSkiaSurfaceHost? _lightingHost;
         // Animated ingame events: own renderer, own host, mounted ABOVE the media
@@ -48,7 +48,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private readonly int _dmdWidth;
         private readonly int _dmdHeight;
         /// <summary>The dynamic surface this window renders (null on legacy paths
-        /// that never went through GetSurfaces — tests, tooling).</summary>
+        /// that never went through GetSurfaces - tests, tooling).</summary>
         private readonly Core.Surfaces.SurfaceDefinition? _surface;
         // The flux background layer (_backgroundImage) is only shown when the composition
         // includes a visible media.flux component. A surface built without it (e.g. a topper
@@ -127,7 +127,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
         private string _activeScene = "navigation";
 
-        /// <summary>What this window is displaying right now — navigation or ingame.
+        /// <summary>What this window is displaying right now - navigation or ingame.
         /// A touch zone scoped to one of the two must not answer in the other.</summary>
         public string ActiveScene => _activeScene;
         private FrameworkElement? _mediaEffectOverlay;
@@ -246,7 +246,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         ///
         /// The built-in Skia layers are scoped here too (§4e): they used to keep
         /// painting out of their state while silently refusing the events routed to
-        /// them — a `lighting.engine` scoped `navigation` still lit the surface during
+        /// them - a `lighting.engine` scoped `navigation` still lit the surface during
         /// play. Visible and addressable now agree.</summary>
         public void SetDisplayScene(string scene)
         {
@@ -272,7 +272,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// editor's up/down arrows finally mean something for the engines too. Before
         /// this, every built-in sat at a hardcoded depth: a fullscreen `media.fanart`
         /// always won over the lighting engine and over the sprites, whatever the user
-        /// had ordered — the root cause of both bugs of this session.
+        /// had ordered - the root cause of both bugs of this session.
         ///
         /// A run of dynamic components becomes one ComponentHost; an engine closes the
         /// current run and takes its own slot. An engine declared twice (one per
@@ -280,7 +280,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// its FIRST declared position.
         ///
         /// Out of scope on purpose: the flux background, and the overlays (score, RA,
-        /// hiscore, OSD) which stay on their fixed upper slots — they are readability
+        /// hiscore, OSD) which stay on their fixed upper slots - they are readability
         /// panels, not part of the artwork stack.
         /// </summary>
         private void BuildOrderedSurfaceLayers()
@@ -318,7 +318,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             if (_effectsHost != null && !_mainGrid.Children.Contains(_effectsHost)) _mainGrid.Children.Add(_effectsHost);
         }
 
-        /// <summary>A built-in Skia layer follows its component's `when` scope — which
+        /// <summary>A built-in Skia layer follows its component's `when` scope - which
         /// for the two ENGINES is always "both", normalized at load: the lighting layer
         /// also draws the rbmarquee lamps driven by live MAME outputs, so it can never
         /// be navigation-only. Only applied once the layer has been started.
@@ -327,7 +327,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// The information overlays are BUILT-IN: ComponentHost skips them, so they have
         /// no visual in its list and RefreshVisibility never sees them. Their content is
         /// pushed by the services and stayed on screen for as long as nobody took it
-        /// away — which is why the badges of a finished session followed the user around
+        /// away - which is why the badges of a finished session followed the user around
         /// the library. New updates were already refused out of scope
         /// (WindowsWithComponent tests ActiveIn); what was missing was clearing what had
         /// already been drawn when the state changes.
@@ -360,10 +360,10 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             var visible = inScope && (!ReferenceEquals(host, _effectsHost) || _effectsHasContent);
             // Hidden, NOT Collapsed: Collapsed removes the element from layout, so
             // every effect would trigger a measure/arrange pass over the whole window
-            // — a layout storm on a layer that toggles several times a second.
+            // - a layout storm on a layer that toggles several times a second.
             host.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
 
-            // Suspended on SCOPE only — never on "nothing to draw". The effects renderer
+            // Suspended on SCOPE only - never on "nothing to draw". The effects renderer
             // announces new content from its OWN render thread, so a host suspended for
             // lack of content could never notice a sprite arriving: it would never wake.
             // An idle-but-in-scope layer keeps ticking at its idle rate instead.
@@ -436,7 +436,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private const int BadgeLockedOffsetY = 50; // locked badges: 14px peeking from bottom
         private readonly List<DispatcherTimer> _badgeAnimTimers = new();
 
-        // Speedrun persistent overlay — kept alive across scroll ticks, only Text properties updated
+        // Speedrun persistent overlay - kept alive across scroll ticks, only Text properties updated
         private FrameworkElement? _speedrunContainer;
         private Grid? _speedrunTimeGrid;
         private Grid? _speedrunLeaderboardIdGrid;
@@ -482,7 +482,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         // MAME Lamp Map
         private readonly Dictionary<string, List<Image>> _lampImages = new(StringComparer.OrdinalIgnoreCase);
 
-        // Latest-wins: only the last requested path is rendered — checked at dispatch time
+        // Latest-wins: only the last requested path is rendered - checked at dispatch time
         private volatile string? _latestImagePath;
         private volatile string? _latestVideoPath;
         // Monotonic marquee request id: a slow/late decode (or a stale snapshot that
@@ -531,7 +531,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             // / My games): it is always shown, full frame, at the very back. It used to
             // require a `media.flux` component, which made a surface silently ignore
             // everything that chain decided the moment the component was dropped while
-            // recomposing — the configuration "undid itself" with no trace. It is a
+            // recomposing - the configuration "undid itself" with no trace. It is a
             // behaviour, not a placeable layer: its rectangle was ignored anyway.
             // The only opt-out is an EXPLICIT media.flux marked hidden (the split
             // instruction card does exactly that).
@@ -808,7 +808,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// A surface that answers to the finger must NEVER take the focus.
         ///
         /// Touching the marquee sent the running game behind its launcher: the window
-        /// came forward, and the emulator lost the foreground — the player pressed a card
+        /// came forward, and the emulator lost the foreground - the player pressed a card
         /// and lost sight of his game. WS_EX_NOACTIVATE keeps the clicks (a non-activating
         /// window still receives them) and drops the activation, which is exactly what a
         /// display surface wants: it is looked at and touched, never worked in.
@@ -889,7 +889,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
         /// <summary>
         /// DMD mirror (render thread): the lighting frame downscaled to the physical
-        /// DMD, throttled to spare the USB link. Marquee 4:1 ≈ DMD 128×32 — direct fit.
+        /// DMD, throttled to spare the USB link. Marquee 4:1 ≈ DMD 128×32 - direct fit.
         /// </summary>
         private void MirrorFrameToDmd(SkiaSharp.SKBitmap front)
         {
@@ -957,7 +957,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         public void SetLightingOutput(string output, int value) => _lightingRenderer?.SetArcadeOutput(output, value);
 
         /// <summary>Animated ingame event: sprites and veils on the events layer.
-        /// `shake` is the exception — it belongs to no renderer, the window jolts its
+        /// `shake` is the exception - it belongs to no renderer, the window jolts its
         /// whole visual tree so the fanart and every media move with the sprites.</summary>
         public void TriggerIngameEffect(Application.Lighting.IngameEffectRule rule)
         {
@@ -980,7 +980,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private bool _shakeAttached;
 
         /// <summary>
-        /// Jolts the entire window content — background, video, .lay, lighting layer,
+        /// Jolts the entire window content - background, video, .lay, lighting layer,
         /// logo, dynamic components, events layer, overlays. Driven by
         /// CompositionTarget.Rendering (screen cadence, independent of the Skia render
         /// threads) and armed only while a shake runs, so it costs nothing at rest.
@@ -1042,7 +1042,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             var seq = System.Threading.Interlocked.Increment(ref _marqueeSeq);
 
             // The DYNAMIC marquee (lighting scene) must track EVERY selection right
-            // away — attract and ingame. The call is trivial (it only records the
+            // away - attract and ingame. The call is trivial (it only records the
             // request; the renderer generates on its own background thread and
             // coalesces to the latest), so it is never debounced nor gated. Gating it
             // by sequence made the lit marquee vanish during selection bursts.
@@ -1296,7 +1296,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
         public void UpdateBadgeTray(IReadOnlyList<(int Id, string Path, bool Unlocked)> badges)
         {
-            // Load bitmaps on a thread-pool thread — disk I/O never blocks the WPF UI thread.
+            // Load bitmaps on a thread-pool thread - disk I/O never blocks the WPF UI thread.
             // Freeze() makes each BitmapImage immutable so it can cross thread boundaries safely.
             _ = Task.Run(() =>
             {
@@ -1387,7 +1387,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// <summary>
         /// Creates the speedrun 2×2 overlay on first call, then only updates the
         /// Text properties of the three variable cells (time, rank, user).
-        /// Zero WPF object creation after the first frame — eliminates the 36-TextBlock
+        /// Zero WPF object creation after the first frame - eliminates the 36-TextBlock
         /// create/destroy cycle that ran every 100 ms.
         /// </summary>
         public void UpdateSpeedrunDisplay(string title, string detail, string? badgePath,
@@ -1419,7 +1419,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     SetOutlinedText(_speedrunCurrentRankGrid, "CURRENT " + displayCurrentRank);
                 }
 
-                // rotating users: airport split-flap feel — the pair slides in
+                // rotating users: airport split-flap feel - the pair slides in
                 // vertically with a motion blur on every change
                 var flap = userTime + rank + displayUser;
                 if (flap != _speedrunLastUser)
@@ -1529,7 +1529,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             layout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            // giant chrono filling the surface — outline stays tiny: each outline
+            // giant chrono filling the surface - outline stays tiny: each outline
             // level squares the TextBlock count and this text refreshes 10x/s
             _speedrunTimeGrid = CreateBitmapOutlinedText("0:00.00", 112, Brushes.White, 2);
             var chronoBox = new Viewbox
@@ -1859,7 +1859,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 catch { }
             }
 
-            // Three text phases — only title visible initially
+            // Three text phases - only title visible initially
             var titleBlock = CreateOutlinedText(title.ToUpperInvariant(), 62, Brushes.Gold, 4);
             var detailBlock = CreateOutlinedText(detail, 34, Brushes.White, 3);
             detailBlock.Opacity = 0;
@@ -1982,7 +1982,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             var startTime = DateTime.UtcNow;
             // Normal priority, NOT the DispatcherTimer default (Background): during
             // gameplay the UI thread is saturated (lighting presents at Render + live
-            // overlays), which starved Background ticks — the unlock banner then never
+            // overlays), which starved Background ticks - the unlock banner then never
             // reached its exit and stayed on screen forever.
             var timer = new DispatcherTimer(DispatcherPriority.Normal) { Interval = TimeSpan.FromMilliseconds(16) };
             timer.Tick += (_, _) =>
@@ -2286,8 +2286,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         }
 
         /// <summary>Lot 2: native WPF Top-N local leaderboard (rank · name · score) with the
-        /// title "&lt;GAME&gt; — LOCAL LEADERBOARD", shown when APIExpose sends the full ranking.
-        /// Rows flagged as new (highlightKeys) pulse briefly. Centered for now — Lot 4 will
+        /// title "&lt;GAME&gt; - LOCAL LEADERBOARD", shown when APIExpose sends the full ranking.
+        /// Rows flagged as new (highlightKeys) pulse briefly. Centered for now - Lot 4 will
         /// make it honor the rect drawn on the overlay.hiscore component in the Setup.</summary>
         private sealed class HiscoreBoard
         {
@@ -2329,7 +2329,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 bool Flag(string key, bool fallback)
                     => options != null && options.TryGetValue(key, out var v) ? !v.Equals("false", StringComparison.OrdinalIgnoreCase) : fallback;
 
-                // A surface shows one source (local / nelfeplay) — or "dual", which accepts
+                // A surface shows one source (local / nelfeplay) - or "dual", which accepts
                 // BOTH feeds and cycles them. Ignore a feed the component didn't ask for.
                 var compSource = Opt("source", "local");
                 var isDual = compSource.Equals("dual", StringComparison.OrdinalIgnoreCase);
@@ -2359,8 +2359,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 // Default title/footer wording is per-source; a custom value (even in dual)
                 // is honoured for both boards, since the operator asked for that text.
                 var defaultTitle = source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
-                    ? (fr ? "{name} — CLASSEMENT MONDIAL" : "{name} — WORLD RANKING")
-                    : (fr ? "{name} — CLASSEMENT LOCAL" : "{name} — LOCAL LEADERBOARD");
+                    ? (fr ? "{name} - CLASSEMENT MONDIAL" : "{name} - WORLD RANKING")
+                    : (fr ? "{name} - CLASSEMENT LOCAL" : "{name} - LOCAL LEADERBOARD");
 
                 var board = new HiscoreBoard
                 {
@@ -2615,7 +2615,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             };
 
             // The LIST only (rank | name | score) in its OWN Viewbox, so its scale never
-            // depends on the title width — a long title no longer shrinks the score.
+            // depends on the title width - a long title no longer shrinks the score.
             var listGrid = new Grid();
             listGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });                     // rank
             listGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // name
@@ -3073,7 +3073,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
         /// <summary>
         /// Empties the surface's media: no image, no video, no lighting scene. The
-        /// missing counterpart of DisplayImage — without it, an entry with no media of
+        /// missing counterpart of DisplayImage - without it, an entry with no media of
         /// its own simply kept the previous one's, and a single topper or instruction
         /// card followed the user across the whole library.
         /// Supersedes any decode still in flight, or a late one would restore what we

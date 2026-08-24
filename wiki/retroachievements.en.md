@@ -1,6 +1,6 @@
 # RetroAchievements
 
-MarqueeManager displays your RetroAchievements session in real time: hardcore/softcore mode, score, unlocked achievements, active challenges and leaderboards — on the DMD, the LCD and the marquee.
+MarqueeManager displays your RetroAchievements session in real time: hardcore/softcore mode, score, unlocked achievements, active challenges and leaderboards - on the DMD, the LCD and the marquee.
 
 !!! note "APIExpose owns your account"
     MarqueeManager never contacts the RetroAchievements API: credentials, network calls and RA media belong to APIExpose. Here, we only display.

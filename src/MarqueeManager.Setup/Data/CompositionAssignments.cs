@@ -24,7 +24,7 @@ public sealed class CompositionAssignments
         _ => new[] { "composition", "user", "marquee", "screenmarquee", "generated", "logo", "fanart" }
     };
 
-    /// <summary>Default chains — MUST stay aligned with the runtime resolver.</summary>
+    /// <summary>Default chains - MUST stay aligned with the runtime resolver.</summary>
     public static string[] DefaultChain(string category) => category switch
     {
         "topper" => new[] { "composition", "user", "topper" },
@@ -183,7 +183,7 @@ public sealed class CompositionAssignments
     }
 
     /// <summary>Rebuilds the sidecar .index.json (file → canonical rom) of a user
-    /// folder — the runtime consults it for alias-named files.</summary>
+    /// folder - the runtime consults it for alias-named files.</summary>
     public int ReindexUserFolder(string category, string system, GameIdentityIndex identity)
     {
         var folder = UserFolder(category, system);

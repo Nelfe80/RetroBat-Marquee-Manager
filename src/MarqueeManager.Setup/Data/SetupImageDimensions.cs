@@ -5,7 +5,7 @@ using MarqueeManager.Compositions.Core.Geometry;
 namespace MarqueeManager.Setup.Data;
 
 /// <summary>
-/// Reads image pixel dimensions from the file HEADER only — never a full decode
+/// Reads image pixel dimensions from the file HEADER only - never a full decode
 /// (spec §27). Covers PNG / JPEG / GIF / BMP / WEBP(VP8/VP8L/VP8X). Returns null
 /// for anything it cannot read cheaply; the caller degrades to "unreadable".
 /// </summary>

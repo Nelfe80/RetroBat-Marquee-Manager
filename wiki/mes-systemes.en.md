@@ -6,13 +6,13 @@
 
 ## System & surface
 
-Pick the **system** (only those with installed games appear; mame, fbneo… keep their own creations) and the **surface** on the same row. **Suspended** surfaces (whose screen is excluded from MarqueeManager) are hidden by default — a “Show suspended surfaces” box brings them back.
+Pick the **system** (only those with installed games appear; mame, fbneo… keep their own creations) and the **surface** on the same row. **Suspended** surfaces (whose screen is excluded from MarqueeManager) are hidden by default - a “Show suspended surfaces” box brings them back.
 
 ## The resolution cards
 
 Below the pickers, one card per source, **from most general to most specific**:
 
-- **General template — all systems**: the generic layout (see below), rendered with the current system's media.
+- **General template - all systems**: the generic layout (see below), rendered with the current system's media.
 - **My creation for this system**: your dedicated composition, with **Compose / Edit** and **Delete**.
 - **My media folder**: a raw file you drop in (see below).
 - **Scraped marquee** then **Laid-out logo**: the automatic sources.
@@ -29,4 +29,4 @@ The **template** (“gabarit”) is a generic layout (fanart + gradient + logo, 
 
 ## My media folder
 
-Drop a file (PNG/JPG) for a system: the card's **Open the folder** button creates and opens the exact location, even before anything is selected. At the **system** level the file takes the **system name as shown in ES** — e.g. `media\marquees\user\systems\mame.png` (not `arcade.png`). Once a file is present, the “My media folder” card becomes selectable and outranks the template and the scraped source.
+Drop a file (PNG/JPG) for a system: the card's **Open the folder** button creates and opens the exact location, even before anything is selected. At the **system** level the file takes the **system name as shown in ES** - e.g. `media\marquees\user\systems\mame.png` (not `arcade.png`). Once a file is present, the “My media folder” card becomes selectable and outranks the template and the scraped source.

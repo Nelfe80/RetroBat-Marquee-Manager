@@ -2,7 +2,7 @@ namespace RetroBatMarqueeManager.Core;
 
 /// <summary>One line of a local hiscore leaderboard as provided by APIExpose
 /// (its HiscoreExtractionResult.Scores collection). Rank may be empty when the
-/// source has no explicit rank — the renderer falls back to the row position.</summary>
+/// source has no explicit rank - the renderer falls back to the row position.</summary>
 public sealed record HiscoreRow(string Rank, string Name, string Score);
 
 /// <summary>"Your rank" line drawn under a leaderboard, carried as raw data so the window
