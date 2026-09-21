@@ -6,7 +6,6 @@ Installing MarqueeManager is a single **installer**: download, run, activate.
 
 - a working **RetroBat** installation;
 - the **[APIExpose](https://github.com/Nelfe80/RetroBat-APIExpose/releases/latest/download/APIExpose-Cabinet-Setup.exe)** plugin installed and running - it feeds media and data to MarqueeManager;
-- the **[.NET 8 Desktop runtime](https://dotnet.microsoft.com/download/dotnet/8.0)**;
 - at least one secondary screen (marquee, topper…) or a DMD, physical or virtual.
 
 ## Installation

@@ -6,7 +6,6 @@ Installer MarqueeManager tient en un **installateur** : on télécharge, on lanc
 
 - une installation **RetroBat** fonctionnelle ;
 - le plugin **[APIExpose](https://github.com/Nelfe80/RetroBat-APIExpose/releases/latest/download/APIExpose-Cabinet-Setup.exe)** installé et fonctionnel - c'est lui qui fournit médias et données à MarqueeManager ;
-- le **[runtime .NET 8 Desktop](https://dotnet.microsoft.com/download/dotnet/8.0)** ;
 - au moins un écran secondaire (marquee, topper…) ou un DMD, physique ou virtuel.
 
 ## Installation
