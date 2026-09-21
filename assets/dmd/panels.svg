@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 176" font-family="system-ui, sans-serif" fill="none">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#4f9fe0"/>
+    </marker>
+  </defs>
+
+  <!-- data flow -->
+  <line x1="50" y1="22" x2="512" y2="22" stroke="#4f9fe0" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="281" y="15" fill="#4f9fe0" font-size="12" text-anchor="middle">HUB75 data</text>
+
+  <!-- left panel -->
+  <rect x="40" y="46" width="200" height="104" rx="6" stroke="#7c8697" stroke-width="2" fill="#7c86971a"/>
+  <text x="140" y="102" fill="#7c8697" font-size="15" text-anchor="middle">64 × 32</text>
+  <text x="50" y="138" fill="#7c8697" font-size="12">IN</text>
+  <text x="230" y="138" fill="#7c8697" font-size="12" text-anchor="end">OUT</text>
+
+  <!-- right panel -->
+  <rect x="320" y="46" width="200" height="104" rx="6" stroke="#7c8697" stroke-width="2" fill="#7c86971a"/>
+  <text x="420" y="102" fill="#7c8697" font-size="15" text-anchor="middle">64 × 32</text>
+  <text x="330" y="138" fill="#7c8697" font-size="12">IN</text>
+  <text x="510" y="138" fill="#7c8697" font-size="12" text-anchor="end">OUT</text>
+
+  <!-- OUT(left) -> IN(right) ribbon -->
+  <line x1="240" y1="98" x2="320" y2="98" stroke="#4f9fe0" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="280" y="90" fill="#4f9fe0" font-size="11" text-anchor="middle">HUB75</text>
+
+  <!-- right OUT left free -->
+  <line x1="520" y1="98" x2="545" y2="98" stroke="#7c8697" stroke-width="2" stroke-dasharray="3 3"/>
+</svg>

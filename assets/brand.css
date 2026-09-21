@@ -1,0 +1,20 @@
+/* Couleurs NelfeTech, reprises du kit de marque NELFE.
+
+   Material peint le bandeau avec la primaire : on y met la teinte profonde,
+   sinon le titre blanc n'y tiendrait pas. La teinte vive va sur les liens.
+   Le selecteur vise [data-md-color-primary] et non :root, que le theme
+   l'emporterait en specificite. */
+[data-md-color-primary] {
+  --md-primary-fg-color:        #0B5E7A;
+  --md-primary-fg-color--light: #18C8FF;
+  --md-primary-fg-color--dark:  #0B5E7A;
+}
+[data-md-color-accent] {
+  --md-accent-fg-color: #18C8FF;
+  --md-accent-fg-color--transparent: #18C8FF1f;
+}
+[data-md-color-scheme="default"] { --md-typeset-a-color: #0B5E7A; }
+[data-md-color-scheme="slate"] {
+  --md-accent-fg-color: #5FDCFF;
+  --md-typeset-a-color: #5FDCFF;
+}

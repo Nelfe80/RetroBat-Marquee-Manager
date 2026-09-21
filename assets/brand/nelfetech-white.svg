@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="img" aria-label="NelfeTech">
+  <title>NelfeTech (blanc)</title>
+  <rect x="20.0" y="20.0" width="960.0" height="960.0" fill="none" stroke="#FFFFFF" stroke-width="40.0"/>
+  <g transform="translate(185.0 185.0) scale(0.63)" fill="#FFFFFF">
+    <path d="M 62.5 6.9 L 81.3 6.9 L 937.5 820.9 L 937.5 993.1 L 723.2 993.1 L 62.5 358 Z"/>
+    <path d="M 923.5 0 L 937.5 0 L 937.5 700.2 L 565.3 343.3 Z"/>
+    <path d="M 63.6 475.1 L 347.2 747.3 L 87.5 1000 L 61.8 1000 Z"/>
+  </g>
+</svg>
