@@ -68,46 +68,142 @@ public sealed class DmdService : IDmdService
         PrepareDmdDeviceConfig(folder);
         if (_wrapper.Load(folder))
         {
-            var optimizationReset = await OptimizeZeDmdAsync(cancellationToken);
-            if (_zeDmdAbsent)
-            {
-                // The ZeDMD library has just scanned every port and found nothing:
-                // DmdDevice.Open() would run the same scan, fail, reset, wait and scan
-                // again - about ten seconds spent confirming an absence.
-                _logger.LogWarning("No ZeDMD answered on any port; native DMD open skipped.");
-            }
-            else
-            {
-            // The probe found the panel: hand its port to DmdDevice so Open() goes
-            // straight to it instead of scanning every serial port again.
-            if (string.IsNullOrWhiteSpace(_config.ZeDmdPort) && !string.IsNullOrWhiteSpace(_wrapper.DiscoveredPort))
-                PrepareDmdDeviceConfig(folder, _wrapper.DiscoveredPort);
-            var openStarted = System.Diagnostics.Stopwatch.StartNew();
-            var opened = _wrapper.Open();
-            _logger.LogInformation("DMD open returned {Result} in {Elapsed} ms", opened, openStarted.ElapsedMilliseconds);
-            if (opened < 0)
-            {
-                if (optimizationReset)
-                {
-                    _logger.LogWarning("DMD open failed after ZeDMD optimization reset; retrying without a second hardware reset.");
-                }
-                else
-                {
-                    _logger.LogWarning("DMD open failed; performing one private hardware reset before retry.");
-                    _wrapper.HwReset(string.IsNullOrWhiteSpace(_config.ZeDmdPort) ? null : _config.ZeDmdPort);
-                }
-                await Task.Delay(3000, cancellationToken);
-                opened = _wrapper.Open();
-            }
-            _initialized = opened >= 0;
+            _initialized = await OpenNativeAsync(folder, cancellationToken);
             _nativeOpen = _initialized;
-            }
         }
         if (!_initialized) _logger.LogWarning("Native DMD unavailable; private dmdext fallback remains available for media playback.");
         _notificationWorker = Task.Run(() => RunNotificationsAsync(_lifetime.Token), _lifetime.Token);
         _rotationWorker = Task.Run(() => RunPersistentRotationAsync(_lifetime.Token), _lifetime.Token);
         if (_config.DmdAsyncMediaPipeline)
             _mediaPipelineWorker = Task.Run(() => RunMediaPipelineAsync(_lifetime.Token), _lifetime.Token);
+        if (_wrapper.IsLoaded && IsUsbZeDmd)
+            _ = Task.Run(() => WatchPanelAsync(folder, _lifetime.Token), _lifetime.Token);
+    }
+
+    private bool IsUsbZeDmd =>
+        _config.DmdModel.StartsWith("zedmd", StringComparison.OrdinalIgnoreCase)
+        && !_config.DmdModel.Contains("wifi", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The serial port the open panel answers on, when known.</summary>
+    private string? _activePort;
+
+    /// <summary>
+    /// Probe then open. Used at start and each time the panel comes back.
+    /// </summary>
+    private async Task<bool> OpenNativeAsync(string folder, CancellationToken cancellationToken)
+    {
+        _zeDmdAbsent = false;
+        PrepareDmdDeviceConfig(folder);
+        var optimizationReset = await OptimizeZeDmdAsync(cancellationToken);
+        if (_zeDmdAbsent)
+        {
+            // The ZeDMD library has just scanned every port and found nothing:
+            // DmdDevice.Open() would run the same scan, fail, reset, wait and scan
+            // again - about ten seconds spent confirming an absence.
+            _logger.LogWarning("No ZeDMD answered on any port; native DMD open skipped.");
+            return false;
+        }
+
+        // The probe found the panel: hand its port to DmdDevice so Open() goes
+        // straight to it instead of scanning every serial port again.
+        var port = string.IsNullOrWhiteSpace(_config.ZeDmdPort) ? _wrapper.DiscoveredPort : _config.ZeDmdPort;
+        if (string.IsNullOrWhiteSpace(_config.ZeDmdPort) && !string.IsNullOrWhiteSpace(port))
+            PrepareDmdDeviceConfig(folder, port);
+        var openStarted = System.Diagnostics.Stopwatch.StartNew();
+        var opened = _wrapper.Open();
+        _logger.LogInformation("DMD open returned {Result} in {Elapsed} ms", opened, openStarted.ElapsedMilliseconds);
+        if (opened < 0)
+        {
+            if (optimizationReset)
+            {
+                _logger.LogWarning("DMD open failed after ZeDMD optimization reset; retrying without a second hardware reset.");
+            }
+            else
+            {
+                _logger.LogWarning("DMD open failed; performing one private hardware reset before retry.");
+                _wrapper.HwReset(string.IsNullOrWhiteSpace(_config.ZeDmdPort) ? null : _config.ZeDmdPort);
+            }
+            await Task.Delay(3000, cancellationToken);
+            opened = _wrapper.Open();
+        }
+        _activePort = opened >= 0 && !string.IsNullOrWhiteSpace(port) ? port : null;
+        return opened >= 0;
+    }
+
+    private static HashSet<string> SerialPorts()
+    {
+        try { return new HashSet<string>(System.IO.Ports.SerialPort.GetPortNames(), StringComparer.OrdinalIgnoreCase); }
+        catch { return new HashSet<string>(StringComparer.OrdinalIgnoreCase); }
+    }
+
+    /// <summary>
+    /// Follows the panel being unplugged and plugged back. Nothing used to: a ZeDMD
+    /// that lost its cable for a second stayed dark until MarqueeManager was restarted,
+    /// and one plugged in after the start was never seen at all. The list of serial
+    /// ports is read once a second (a registry read); the panel is only probed when
+    /// that list changes.
+    /// </summary>
+    private async Task WatchPanelAsync(string folder, CancellationToken cancellationToken)
+    {
+        var known = SerialPorts();
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(1000, cancellationToken);
+                var now = SerialPorts();
+                // a pinball owns the panel, or dmdext is playing a video on it: not ours to judge
+                if (_externalControl || _stopped || _ownedDmdExt != null)
+                {
+                    known = now;
+                    continue;
+                }
+
+                if (_nativeOpen && _activePort is { } port && !now.Contains(port))
+                {
+                    _logger.LogWarning("DMD unplugged ({Port}); waiting for it to come back.", port);
+                    try
+                    {
+                        lock (_nativeRenderSync) CloseNative();
+                    }
+                    catch (Exception ex) { _logger.LogDebug(ex, "Closing the unplugged DMD failed"); }
+                    _nativeOpen = false;
+                    _activePort = null;
+                    lock (_sync) _displayedMediaKey = null;
+                }
+
+                var appeared = now.Any(candidate => !known.Contains(candidate));
+                known = now;
+                if (_nativeOpen || !appeared) continue;
+
+                // let the firmware boot before knocking
+                await Task.Delay(1500, cancellationToken);
+                if (_externalControl || _stopped) continue;
+                _logger.LogInformation("A serial port appeared; looking for the DMD.");
+                try
+                {
+                    _nativeOpen = await OpenNativeAsync(folder, cancellationToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger.LogWarning(ex, "Reopening the DMD failed");
+                    _nativeOpen = false;
+                }
+                if (_nativeOpen)
+                {
+                    _initialized = true;
+                    _logger.LogInformation("DMD is back on {Port}.", _activePort ?? "?");
+                    lock (_sync)
+                    {
+                        _displayedMediaKey = null;
+                        _displayedPersistentOwner = null;
+                    }
+                    await RenderTopAsync(cancellationToken);
+                }
+                known = SerialPorts();
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
 
     private async Task<bool> OptimizeZeDmdAsync(CancellationToken cancellationToken)
