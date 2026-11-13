@@ -27,6 +27,8 @@
          be tested at all - and it is written dependency-free precisely for that. -->
     <Compile Include="..\..\src\RetroBatMarqueeManager\Application\Services\InstructionCardCatalog.cs"
              Link="Linked\InstructionCardCatalog.cs" />
+    <Compile Include="..\..\src\RetroBatMarqueeManager\Application\Services\ApiExposeLink.cs"
+             Link="Linked\ApiExposeLink.cs" />
   </ItemGroup>
 
 </Project>

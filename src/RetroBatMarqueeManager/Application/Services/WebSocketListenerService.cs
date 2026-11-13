@@ -684,8 +684,23 @@ public sealed class WebSocketListenerService : BackgroundService
         {
             if (coalesce && StateStreams.Contains(stream))
             {
-                var mailbox = Channel.CreateUnbounded<JsonDocument>(
-                    new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
+                // bounded: if rendering stalls, the backlog must not grow without limit.
+                // The oldest message goes first - on a state stream it is the one most
+                // likely to describe a selection the user has already left.
+                var name = stream;
+                var mailbox = Channel.CreateBounded<JsonDocument>(
+                    new BoundedChannelOptions(MailboxCapacity)
+                    {
+                        SingleReader = true,
+                        SingleWriter = true,
+                        FullMode = BoundedChannelFullMode.DropOldest
+                    },
+                    dropped =>
+                    {
+                        dropped.Dispose();
+                        if (Interlocked.Increment(ref _mailboxDrops) % 100 == 1)
+                            _logger.LogWarning("{Stream}: processing is behind, oldest pending message dropped", name);
+                    });
                 _mailboxes[stream] = mailbox;
                 tasks.Add(DrainLatestAsync(stream, mailbox.Reader, stoppingToken));
             }
@@ -694,29 +709,77 @@ public sealed class WebSocketListenerService : BackgroundService
         return Task.WhenAll(tasks);
     }
 
+    private const int MailboxCapacity = 512;
+    private long _mailboxDrops;
+
+    /// <summary>The cabinet key for the configured APIExpose, empty when none is needed
+    /// (loopback) or none is known. Read at each use: the Setup may have just written it.</summary>
+    private string ApiKey() => ApiExposeLink.ApiKeyFor(
+        _config.ApiExposeWebSocketBaseUrl, _config.GetValue("Settings", "ApiExposeApiKey"), _config.BaseDirectory);
+
     private async Task ListenAsync(string stream, CancellationToken cancellationToken)
     {
+        var attempt = 0;
         while (!cancellationToken.IsCancellationRequested)
         {
+            string failure;
+            var keyPresented = false;
+            var connectedAt = DateTime.MinValue;
             try
             {
                 using var socket = new ClientWebSocket();
+                socket.Options.KeepAliveInterval = TimeSpan.FromSeconds(20);
+                var key = ApiKey();
+                if (key.Length > 0)
+                {
+                    socket.Options.SetRequestHeader(ApiExposeLink.ApiKeyHeader, key);
+                    keyPresented = true;
+                }
                 var uri = new Uri($"{_config.ApiExposeWebSocketBaseUrl}/ws/{stream}");
                 await socket.ConnectAsync(uri, cancellationToken);
+                connectedAt = DateTime.UtcNow;
                 _logger.LogInformation("Connected to APIExpose {Stream} stream", stream);
                 // A release that happened while we were disconnected will never arrive:
                 // start from a dark panel rather than from a button we only THINK is held.
                 if (stream.Equals("panel", StringComparison.OrdinalIgnoreCase)) _surfaces.ReleasePanelInputs();
                 await ReceiveAsync(socket, stream, cancellationToken);
+                // a clean close is still a lost stream: it waits like any other, or an
+                // API that accepts then closes (while it starts) is hammered in a loop
+                failure = "closed by APIExpose";
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
             catch (Exception ex)
             {
-                _logger.LogWarning("APIExpose {Stream} stream disconnected: {Message}; retrying in 5 seconds", stream, ex.Message);
-                try { await Task.Delay(5000, cancellationToken); }
-                catch (OperationCanceledException) { break; }
+                failure = ApiExposeLink.DescribeFailure(
+                    ex.Message, ApiExposeLink.IsLoopback(_config.ApiExposeWebSocketBaseUrl), keyPresented);
             }
+
+            if (cancellationToken.IsCancellationRequested) break;
+            // a stream that held for a while starts over from a short wait
+            if (connectedAt != DateTime.MinValue && DateTime.UtcNow - connectedAt > TimeSpan.FromSeconds(30)) attempt = 0;
+            attempt++;
+            var delay = ApiExposeLink.ReconnectDelay(attempt, Random.Shared.NextDouble());
+            // said once, then every tenth attempt: eleven streams repeating the same
+            // sentence every few seconds buried everything else in the log
+            if (attempt == 1 || attempt % 10 == 0)
+                _logger.LogWarning("APIExpose {Stream} stream lost: {Reason}; attempt {Attempt}, next in {Seconds:0} s", stream, failure, attempt, delay.TotalSeconds);
+            else
+                _logger.LogDebug("APIExpose {Stream} stream still lost: {Reason}; attempt {Attempt}", stream, failure, attempt);
+            try { await Task.Delay(delay, cancellationToken); }
+            catch (OperationCanceledException) { break; }
         }
+    }
+
+    /// <summary>
+    /// GET on APIExpose with the cabinet key when one is needed. The key travels on the
+    /// REQUEST, never on the shared client: that client also calls Twitch and YouTube.
+    /// </summary>
+    private async Task<HttpResponseMessage> ApiGetAsync(string pathAndQuery, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, HttpBaseUrl() + pathAndQuery);
+        var key = ApiKey();
+        if (key.Length > 0) request.Headers.TryAddWithoutValidation(ApiExposeLink.ApiKeyHeader, key);
+        return await VideoHttp.SendAsync(request, ct).ConfigureAwait(false);
     }
 
     private async Task ReceiveAsync(ClientWebSocket socket, string stream, CancellationToken cancellationToken)
@@ -1286,6 +1349,14 @@ public sealed class WebSocketListenerService : BackgroundService
         var rom = gamePath.Length > 0 ? Path.GetFileNameWithoutExtension(gamePath) : Text(selection, "Game", "game");
         var genre = Text(selection, "Genre", "genre");
         var genreIds = Text(selection, "Genres", "genres");
+        // APIExpose publishes the genre with the entry's text fields, not in Selection:
+        // without this the per-genre effect layers never found a genre
+        if (genre.Length == 0 || genreIds.Length == 0)
+        {
+            var fields = Child(Child(payload, "Text", "text"), "Fields", "fields");
+            if (genre.Length == 0) genre = Text(fields, "genre");
+            if (genreIds.Length == 0) genreIds = Text(fields, "genres");
+        }
 
         if (year == null && developer.Length == 0 && publisher.Length == 0 && gameName.Length == 0 && system.Length == 0)
             return null;
@@ -1652,6 +1723,9 @@ public sealed class WebSocketListenerService : BackgroundService
 
     private void HandleHiscore(JsonElement root, CancellationToken cancellationToken)
     {
+        // the stream also carries the console capture diagnostics: a score that was
+        // IGNORED must not be announced as a high score
+        if (!ApiExposeLink.IsHiscoreTable(Text(root, "Type", "type"))) return;
         var payload = Payload(root);
         var rom = NormalizeRom(Text(payload, "RomName", "romName", "Rom", "rom"));
         if (rom.Length == 0) rom = NormalizeRom(Text(payload, "GamePath", "gamePath", "RomPath", "romPath"));
@@ -1738,8 +1812,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
     private async Task FetchHiscoreLeaderboardAsync(string rom, CancellationToken ct)
     {
-        var url = $"{HttpBaseUrl()}/api/v1/hiscores";
-        using var response = await VideoHttp.GetAsync(url, ct).ConfigureAwait(false);
+        using var response = await ApiGetAsync("/api/v1/hiscores", ct).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode) return; // no running/selected game, not found, error
         var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         // Selection may have moved on while the request was in flight.
@@ -1805,8 +1878,7 @@ public sealed class WebSocketListenerService : BackgroundService
 
     private async Task FetchWorldLeaderboardAsync(string rom, CancellationToken ct)
     {
-        var url = $"{HttpBaseUrl()}/api/v1/nelfeplay/records/leaderboard";
-        using var response = await VideoHttp.GetAsync(url, ct).ConfigureAwait(false);
+        using var response = await ApiGetAsync("/api/v1/nelfeplay/records/leaderboard", ct).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode) return;
         var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         if (ct.IsCancellationRequested || !rom.Equals(_selectedRom, StringComparison.OrdinalIgnoreCase)) return;
@@ -1838,11 +1910,11 @@ public sealed class WebSocketListenerService : BackgroundService
         var paired = root.TryGetProperty("paired", out var pd) && pd.ValueKind == JsonValueKind.True;
         if (root.TryGetProperty("me", out var me) && me.ValueKind == JsonValueKind.Object)
         {
-            var rank = me.TryGetProperty("rank", out var rk) && rk.ValueKind == JsonValueKind.Number ? rk.GetInt32() : 0;
+            var rank = me.TryGetProperty("rank", out var rk) ? ApiExposeLink.Count(rk) : 0;
             if (rank > 0)
             {
-                var of = me.TryGetProperty("of", out var o) && o.ValueKind == JsonValueKind.Number ? o.GetInt32() : 0;
-                var score = me.TryGetProperty("score", out var sc) && sc.ValueKind == JsonValueKind.Number ? sc.GetInt32().ToString() : string.Empty;
+                var of = me.TryGetProperty("of", out var o) ? ApiExposeLink.Count(o) : 0;
+                var score = me.TryGetProperty("score", out var sc) ? ApiExposeLink.ScoreText(sc) : string.Empty;
                 return new Core.HiscoreMyRank(true, true, paired, rank.ToString(), of, score, string.Empty);
             }
         }
