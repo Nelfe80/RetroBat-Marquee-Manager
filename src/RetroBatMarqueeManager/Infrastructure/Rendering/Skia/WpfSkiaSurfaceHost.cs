@@ -68,6 +68,11 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
     /// effects beat crisp-but-stuttering ones. Recovers when the load drops.</summary>
     private double _adaptiveScale = 1.0;
 
+    /// <summary>Cadence the screen has shown it can take; starts unlimited and is
+    /// lowered when rendered frames keep waiting behind a present still in flight.</summary>
+    private int _fpsCeiling = int.MaxValue;
+    private const int MinFpsCeiling = 8;
+
     public double CurrentFps { get; private set; }
 
     /// <summary>
@@ -204,6 +209,8 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         var clock = Stopwatch.StartNew();
         var fpsFrames = 0;
         var skipsThisWindow = 0;
+        var heldThisWindow = 0;
+        var calmWindows = 0;
         var fpsWindowStart = 0L;
         var lastFpsLog = 0L;
 
@@ -216,8 +223,9 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
             }
 
             var frameStart = clock.ElapsedTicks;
-            // §6: pace to what the content actually needs, never above the config cap
-            var targetFps = Math.Clamp(Math.Min(_fpsLimit, _renderer?.DesiredFps ?? _fpsLimit), 1, 240);
+            // §6: pace to what the content actually needs, never above the config cap -
+            // nor above what the screen has shown it can take (see the governor below)
+            var targetFps = Math.Clamp(Math.Min(Math.Min(_fpsLimit, _fpsCeiling), _renderer?.DesiredFps ?? _fpsLimit), 1, 240);
             var frameTicks = Stopwatch.Frequency / targetFps;
 
             // §6 "Dimensions logiques stables": the renderer always sees the FULL
@@ -232,7 +240,16 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
             {
                 var sizeChanged = logicalWidth != _lastLogicalWidth || logicalHeight != _lastLogicalHeight
                                   || physicalWidth != _lastPhysicalWidth || physicalHeight != _lastPhysicalHeight;
-                if (sizeChanged || _renderer.WantsFrame(clock.Elapsed))
+                // The previous frame has not reached the screen yet: drawing another one
+                // now only produces a frame that will be thrown away. On a slow display
+                // path (a USB screen, a loaded machine) half the frames were rendered for
+                // nothing, and that wasted raster is what starved everything else.
+                if (!sizeChanged && Volatile.Read(ref _presentQueued) == 1)
+                {
+                    _metrics.RecordHeld();
+                    heldThisWindow++;
+                }
+                else if (sizeChanged || _renderer.WantsFrame(clock.Elapsed))
                 {
                     try
                     {
@@ -273,7 +290,27 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 // draw. Without this, a SPARSE renderer (the ingame events layer only
                 // draws while an effect plays) is permanently read as "can't keep up"
                 // and gets pinned at half resolution for no reason.
-                if (fpsFrames >= targetFps / 3 && skipsThisWindow == 0)
+                // Governor: when the screen cannot take the cadence, asking for fewer
+                // frames is the only thing that helps - a smaller buffer is stretched
+                // back to the full window, so the display path carries just as much.
+                if (heldThisWindow > Math.Max(2, targetFps / 4))
+                {
+                    calmWindows = 0;
+                    var lowered = Math.Max(MinFpsCeiling, (int)(Math.Min(_fpsCeiling, targetFps) * 0.75));
+                    if (lowered < _fpsCeiling)
+                    {
+                        _fpsCeiling = lowered;
+                        _logger.LogInformation("Lighting surface: the screen takes fewer frames than rendered ({Held} held of {Target}); cadence capped at {Fps} FPS", heldThisWindow, targetFps, _fpsCeiling);
+                    }
+                }
+                else if (heldThisWindow == 0 && _fpsCeiling < _fpsLimit && ++calmWindows >= 20)
+                {
+                    // twenty calm seconds: try a little more, one step at a time
+                    calmWindows = 0;
+                    _fpsCeiling = Math.Min(_fpsLimit, _fpsCeiling + Math.Max(1, _fpsCeiling / 5));
+                }
+
+                if (fpsFrames >= targetFps / 3 && skipsThisWindow == 0 && heldThisWindow == 0)
                 {
                     if (CurrentFps < targetFps * 0.70 && _adaptiveScale > 0.5)
                     {
@@ -288,6 +325,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 _presentedFps = Interlocked.Exchange(ref _presentsThisWindow, 0) * (double)Stopwatch.Frequency / (now - fpsWindowStart);
                 fpsFrames = 0;
                 skipsThisWindow = 0;
+                heldThisWindow = 0;
                 fpsWindowStart = now;
                 if (now - lastFpsLog >= 5 * Stopwatch.Frequency)
                 {

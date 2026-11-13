@@ -32,6 +32,9 @@ public sealed class RenderMetrics
 
     public void RecordRender(double ms) { Interlocked.Increment(ref _renderedFrames); _renderMs.Add(ms); }
     public void RecordSkip() => Interlocked.Increment(ref _skippedFrames);
+    /// <summary>A frame NOT rendered because the previous one had not been presented yet.</summary>
+    public void RecordHeld() => Interlocked.Increment(ref _heldFrames);
+    private long _heldFrames;
     public void RecordPresent(double swapLockWaitMs, double writePixelsMs)
     {
         Interlocked.Increment(ref _presentedFrames);
@@ -67,7 +70,7 @@ public sealed class RenderMetrics
 
         return $"[RenderMetrics] {width}x{height} scale={adaptiveScale:P0} | "
              + $"renderedFps={rendered / seconds:F1} presentedFps={presented / seconds:F1} "
-             + $"skipped={skipped} droppedPresents={dropped} | "
+             + $"skipped={skipped} held={Interlocked.Exchange(ref _heldFrames, 0)} droppedPresents={dropped} | "
              + $"renderMs p50={rP50:F1} p95={rP95:F1} p99={rP99:F1} | "
              + $"writePixelsMs p95={wP95:F1} swapLockWaitMs p95={sP95:F1} | "
              + $"mapGenMs={Volatile.Read(ref _lastMapGenerationMs):F0} sprites={_activeSpriteCount} | "
