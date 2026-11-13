@@ -69,7 +69,22 @@ public sealed class DmdService : IDmdService
         if (_wrapper.Load(folder))
         {
             var optimizationReset = await OptimizeZeDmdAsync(cancellationToken);
+            if (_zeDmdAbsent)
+            {
+                // The ZeDMD library has just scanned every port and found nothing:
+                // DmdDevice.Open() would run the same scan, fail, reset, wait and scan
+                // again - about ten seconds spent confirming an absence.
+                _logger.LogWarning("No ZeDMD answered on any port; native DMD open skipped.");
+            }
+            else
+            {
+            // The probe found the panel: hand its port to DmdDevice so Open() goes
+            // straight to it instead of scanning every serial port again.
+            if (string.IsNullOrWhiteSpace(_config.ZeDmdPort) && !string.IsNullOrWhiteSpace(_wrapper.DiscoveredPort))
+                PrepareDmdDeviceConfig(folder, _wrapper.DiscoveredPort);
+            var openStarted = System.Diagnostics.Stopwatch.StartNew();
             var opened = _wrapper.Open();
+            _logger.LogInformation("DMD open returned {Result} in {Elapsed} ms", opened, openStarted.ElapsedMilliseconds);
             if (opened < 0)
             {
                 if (optimizationReset)
@@ -86,6 +101,7 @@ public sealed class DmdService : IDmdService
             }
             _initialized = opened >= 0;
             _nativeOpen = _initialized;
+            }
         }
         if (!_initialized) _logger.LogWarning("Native DMD unavailable; private dmdext fallback remains available for media playback.");
         _notificationWorker = Task.Run(() => RunNotificationsAsync(_lifetime.Token), _lifetime.Token);
@@ -106,6 +122,9 @@ public sealed class DmdService : IDmdService
             if (!_wrapper.HwOpen(cachedPort))
             {
                 _logger.LogWarning("[ZeDMD] Hardware optimization skipped: HwOpen failed.");
+                // only the USB models are found by this scan: a Wi-Fi ZeDMD is not
+                // absent just because no serial port answered
+                _zeDmdAbsent = !_config.DmdModel.Contains("wifi", StringComparison.OrdinalIgnoreCase);
                 return false;
             }
 
@@ -139,8 +158,11 @@ public sealed class DmdService : IDmdService
         }
     }
 
-    private void PrepareDmdDeviceConfig(string folder)
+    private bool _zeDmdAbsent;
+
+    private void PrepareDmdDeviceConfig(string folder, string? port = null)
     {
+        if (string.IsNullOrWhiteSpace(port)) port = _config.ZeDmdPort;
         try
         {
             Directory.CreateDirectory(folder);
@@ -164,7 +186,12 @@ public sealed class DmdService : IDmdService
             foreach (var model in models)
             {
                 lines.Add($"[{model}]");
-                lines.Add($"enabled = {model.Equals(selected, StringComparison.OrdinalIgnoreCase).ToString().ToLowerInvariant()}");
+                var isSelected = model.Equals(selected, StringComparison.OrdinalIgnoreCase);
+                lines.Add($"enabled = {isSelected.ToString().ToLowerInvariant()}");
+                // a known port disables DmdDevice's own discovery, which scans every
+                // serial port and takes about twelve seconds
+                if (isSelected && model is "zedmd" or "zedmdhd" && !string.IsNullOrWhiteSpace(port))
+                    lines.Add($"port = {port.Trim()}");
                 lines.Add(string.Empty);
             }
 
