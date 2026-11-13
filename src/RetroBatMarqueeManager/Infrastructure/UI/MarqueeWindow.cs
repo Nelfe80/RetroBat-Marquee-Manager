@@ -510,6 +510,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private const int WS_EX_NOACTIVATE = 0x08000000;
 
         private const uint SWP_SHOWWINDOW = 0x0040;
+        private const uint SWP_NOACTIVATE = 0x0010;
         private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         private static readonly Lazy<System.Drawing.Text.PrivateFontCollection?> SpeedrunFontCollection = new(LoadSpeedrunFontCollection);
 
@@ -542,6 +543,11 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             this.Background = Brushes.Black;
             this.ShowInTaskbar = false;
             this.Topmost = true;
+            // A surface is something to look at, never the window the keyboard talks
+            // to. Without this every Show() - at start, and at each scene change, when
+            // a surface scoped to navigation comes back as the game ends - took the
+            // foreground away from EmulationStation at the very moment it returned.
+            this.ShowActivated = false;
             this.Title = "RetroBat Marquee Player";
 
             InitializeLayers();
@@ -834,6 +840,10 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         /// <summary>Set before Show() for the surfaces wired to taps.</summary>
         public bool NeverActivate { get; set; }
 
+        /// <summary>WPF thread. Puts the window back where its screen is now: called
+        /// when Windows reports a change of screens (one plugged in, moved, resized).</summary>
+        public void Reposition() => PositionWindow();
+
         private void PositionWindow()
         {
             try
@@ -876,7 +886,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     top,
                     width,
                     height,
-                    SWP_SHOWWINDOW
+                    // placed and shown, never activated: SetWindowPos activates by default
+                    SWP_SHOWWINDOW | SWP_NOACTIVATE
                 );
             }
             catch (Exception ex)

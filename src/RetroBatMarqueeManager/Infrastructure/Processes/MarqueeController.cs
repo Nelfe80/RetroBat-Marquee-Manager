@@ -10,7 +10,19 @@ public sealed class MarqueeController : IDisposable
     private readonly IConfigService _config;
     private readonly IDmdService _dmd;
     private readonly ILogger<MarqueeController> _logger;
-    private readonly Dictionary<string, List<MarqueeWindow>> _windows = new(StringComparer.OrdinalIgnoreCase);
+    // Replaced, never mutated: the stream threads read it while the WPF thread opens
+    // and closes windows as screens come and go.
+    private volatile Dictionary<string, List<MarqueeWindow>> _windows = new(StringComparer.OrdinalIgnoreCase);
+    // WPF thread only: which screen each window was opened on.
+    private readonly Dictionary<MarqueeWindow, int> _windowScreens = new();
+    private LightingSurfaceOptions? _lightingOptions;
+    private LightingSurfaceOptions? _effectsOptions;
+    private System.Windows.Threading.Dispatcher? _uiDispatcher;
+    private System.Windows.Threading.DispatcherTimer? _screenChangeTimer;
+    // What each surface was last asked to show, so a window opened later (a screen
+    // plugged in after the start) does not stay black until the next selection.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Path, Application.Lighting.LightingSceneMeta? Meta, bool Video)> _lastMedia
+        = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Core.Surfaces.SurfaceDefinition> _surfaces = new(StringComparer.OrdinalIgnoreCase);
     private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private Thread? _uiThread;
@@ -88,6 +100,10 @@ public sealed class MarqueeController : IDisposable
             if (unmanaged.Count > 0)
                 _logger.LogInformation("Screens excluded from MarqueeManager: {Screens}", string.Join(", ", unmanaged));
 
+            _lightingOptions = lightingOptions;
+            _effectsOptions = effectsOptions;
+            _uiDispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
+
             // dynamic surfaces (state\surfaces.json) or their legacy [Screens] equivalent
             foreach (var surface in _config.GetSurfaces())
             {
@@ -101,7 +117,7 @@ public sealed class MarqueeController : IDisposable
                     // screen 0), and an excluded screen never gets a window
                     if (screen < 0 || screen >= screens.Length)
                     {
-                        _logger.LogWarning("Surface {Id}: screen index {Screen} is out of range (0..{Max}); ignored, no window",
+                        _logger.LogWarning("Surface {Id}: screen index {Screen} is out of range (0..{Max}); no window until that screen is plugged in",
                             surface.Id, screen, screens.Length - 1);
                         continue;
                     }
@@ -112,51 +128,146 @@ public sealed class MarqueeController : IDisposable
                         continue;
                     }
 
-                    var lighting = surface.HasVisibleComponent("lighting.engine") ? lightingOptions : null;
-                    // the events layer has its own host: it must exist even where no
-                    // lighting scene does (fanart surface, video marquee, iccard…)
-                    var effects = surface.HasVisibleComponent("effects.engine") ? effectsOptions : null;
-                    var window = new MarqueeWindow(screen, _logger,
-                        lighting,
-                        surface.Bounds,
-                        lighting != null && _config.LightingDmdMirror && _config.DmdEnabled ? _dmd : null,
-                        _config.DmdWidth, _config.DmdHeight,
-                        surface,
-                        effects);
-                    if (!_windows.TryGetValue(surface.Id, out var list)) _windows[surface.Id] = list = new();
-                    list.Add(window);
-                    // a surface answers to the finger when it IS an instruction card
-                    // surface (historical touch profile) or when the user drew zones on it
-                    if (surface.Category.Equals("iccard", StringComparison.OrdinalIgnoreCase)
-                        || surface.HasVisibleComponent("iccard.touch"))
-                    {
-                        var tapped = surface;
-                        var source = window;
-                        window.SurfaceTapped += (fx, fy) =>
-                            SurfaceTapped?.Invoke(tapped, source.ActiveScene, fx, fy);
-                        // and it must never come forward: a finger on the marquee sent the
-                        // running game behind its launcher
-                        window.NeverActivate = true;
-                    }
-                    window.Show();
-                    // apply the INITIAL display state: an ingame-only surface must
-                    // not sit over ES from startup until the first scene event
-                    window.SetDisplayScene("navigation");
-                    // …and whatever the panel stream said before this window existed
-                    ReplayPanelState(window);
-                    _logger.LogInformation("Surface {Id} ({Category}) opened on screen {Screen}, bounds={Bounds}",
-                        surface.Id, surface.Category, screen, surface.Bounds);
+                    OpenWindow(surface, screen);
                 }
             }
             _ready.TrySetResult();
-            if (_windows.Count > 0) System.Windows.Threading.Dispatcher.Run();
+
+            // A screen plugged in or unplugged after the start used to change nothing
+            // here: its surface stayed without a window (or its window stayed on a
+            // screen that had gone) until MarqueeManager was restarted. Windows fires
+            // this several times per change, so the work waits for the dust to settle.
+            _screenChangeTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
+            _screenChangeTimer.Tick += (_, _) =>
+            {
+                _screenChangeTimer!.Stop();
+                try { SyncWindowsWithScreens(); }
+                catch (Exception ex) { _logger.LogError(ex, "Following the screen change failed"); }
+            };
+            Microsoft.Win32.SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+
+            // always: even with no window yet, the thread must stay to open one when
+            // its screen arrives
+            System.Windows.Threading.Dispatcher.Run();
         }
         catch (Exception ex)
         {
             _ready.TrySetException(ex);
             _logger.LogError(ex, "WPF surface thread failed");
         }
+        finally
+        {
+            Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+        }
     }
+
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e)
+        => _uiDispatcher?.BeginInvoke(new Action(() =>
+        {
+            // restart the wait at each notification of the same change
+            _screenChangeTimer?.Stop();
+            _screenChangeTimer?.Start();
+        }));
+
+    /// <summary>WPF thread. Creates the window of a surface on a screen, registers it,
+    /// and gives it what the streams already said.</summary>
+    private void OpenWindow(Core.Surfaces.SurfaceDefinition surface, int screen)
+    {
+        var lighting = surface.HasVisibleComponent("lighting.engine") ? _lightingOptions : null;
+        // the events layer has its own host: it must exist even where no
+        // lighting scene does (fanart surface, video marquee, iccard…)
+        var effects = surface.HasVisibleComponent("effects.engine") ? _effectsOptions : null;
+        var window = new MarqueeWindow(screen, _logger,
+            lighting,
+            surface.Bounds,
+            lighting != null && _config.LightingDmdMirror && _config.DmdEnabled ? _dmd : null,
+            _config.DmdWidth, _config.DmdHeight,
+            surface,
+            effects);
+
+        var next = new Dictionary<string, List<MarqueeWindow>>(_windows, StringComparer.OrdinalIgnoreCase);
+        next[surface.Id] = next.TryGetValue(surface.Id, out var current)
+            ? new List<MarqueeWindow>(current) { window }
+            : new List<MarqueeWindow> { window };
+        _windows = next;
+        _windowScreens[window] = screen;
+
+        // a surface answers to the finger when it IS an instruction card
+        // surface (historical touch profile) or when the user drew zones on it
+        if (surface.Category.Equals("iccard", StringComparison.OrdinalIgnoreCase)
+            || surface.HasVisibleComponent("iccard.touch"))
+        {
+            var tapped = surface;
+            var source = window;
+            window.SurfaceTapped += (fx, fy) =>
+                SurfaceTapped?.Invoke(tapped, source.ActiveScene, fx, fy);
+            // and it must never come forward: a finger on the marquee sent the
+            // running game behind its launcher
+            window.NeverActivate = true;
+        }
+        window.Show();
+        // apply the INITIAL display state: an ingame-only surface must
+        // not sit over ES from startup until the first scene event
+        window.SetDisplayScene(_displayScene);
+        // …and whatever the panel stream said before this window existed
+        ReplayPanelState(window);
+        if (_lastMedia.TryGetValue(surface.Id, out var media) && File.Exists(media.Path))
+        {
+            if (media.Video) window.DisplayVideo(media.Path); else window.DisplayImage(media.Path, media.Meta);
+        }
+        _logger.LogInformation("Surface {Id} ({Category}) opened on screen {Screen}, bounds={Bounds}",
+            surface.Id, surface.Category, screen, surface.Bounds);
+    }
+
+    /// <summary>
+    /// WPF thread. Brings the windows in line with the screens Windows reports now:
+    /// closes those whose screen has gone, moves the others to where their screen is,
+    /// opens those whose screen has arrived.
+    /// </summary>
+    private void SyncWindowsWithScreens()
+    {
+        var screens = System.Windows.Forms.Screen.AllScreens;
+        _logger.LogInformation("Screens changed: {Count} screen(s) now", screens.Length);
+        for (var i = 0; i < screens.Length; i++)
+            _logger.LogInformation("Detected screen {Index}: {DeviceName}, Primary={Primary}, Bounds={Bounds}",
+                i, screens[i].DeviceName, screens[i].Primary, screens[i].Bounds);
+
+        var unmanaged = _config.GetUnmanagedScreenIndices();
+        foreach (var (window, screen) in _windowScreens.ToArray())
+        {
+            if (screen >= 0 && screen < screens.Length && !unmanaged.Contains(screen))
+            {
+                window.Reposition();
+                continue;
+            }
+
+            var next = new Dictionary<string, List<MarqueeWindow>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in _windows)
+            {
+                var kept = pair.Value.Where(candidate => !ReferenceEquals(candidate, window)).ToList();
+                if (kept.Count > 0) next[pair.Key] = kept;
+            }
+            _windows = next;
+            _windowScreens.Remove(window);
+            _logger.LogInformation("Screen {Screen} has gone; its surface window is closed", screen);
+            try { window.StopPlayback(); window.Close(); }
+            catch (Exception ex) { _logger.LogDebug(ex, "Closing the window of a removed screen failed"); }
+        }
+
+        foreach (var surface in _surfaces.Values)
+        {
+            if (surface.Category.Equals("dmd-physical", StringComparison.OrdinalIgnoreCase)) continue;
+            foreach (var screen in surface.Screens)
+            {
+                if (screen < 0 || screen >= screens.Length || unmanaged.Contains(screen)) continue;
+                var open = _windows.TryGetValue(surface.Id, out var list)
+                           && list.Any(candidate => _windowScreens.TryGetValue(candidate, out var at) && at == screen);
+                if (!open) OpenWindow(surface, screen);
+            }
+        }
+    }
+
+    private volatile string _displayScene = "navigation";
 
     public bool HasTarget(string target) => GetWindows(target).Count > 0;
 
@@ -174,16 +285,18 @@ public sealed class MarqueeController : IDisposable
             return Task.CompletedTask;
         }
         var windows = GetWindows(target);
-        if (windows.Count == 0)
-        {
-            _logger.LogDebug("Ignoring media for disabled target {Target}: {Path}", target, path);
-            return Task.CompletedTask;
-        }
         var video = new[] { ".mp4", ".webm", ".avi", ".mkv", ".mov" }.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
         // the chain resolver already decided? never second-guess it - otherwise
         // the historical preferences stay the safety net
         if (!resolved && !video && SurfaceOf(target)?.Category.Equals("marquee", StringComparison.OrdinalIgnoreCase) == true)
             path = PreferUserComposition(path, lightingMeta) ?? PreferRealMarquee(path);
+        // remembered even with no window: its screen may be plugged in later
+        _lastMedia[target] = (path, lightingMeta, video);
+        if (windows.Count == 0)
+        {
+            _logger.LogDebug("Ignoring media for disabled target {Target}: {Path}", target, path);
+            return Task.CompletedTask;
+        }
         _logger.LogInformation("Displaying {Kind} on target {Target} ({WindowCount} window(s)): {Path}", video ? "video" : "image", target, windows.Count, path);
         foreach (var window in windows)
         {
@@ -589,6 +702,7 @@ public sealed class MarqueeController : IDisposable
     /// topper, one card, one fanart ends up following the whole library.</summary>
     public void ClearMedia(string target)
     {
+        _lastMedia.TryRemove(target, out _);
         foreach (var window in GetWindows(target)) window.ClearMedia();
     }
 
@@ -604,6 +718,7 @@ public sealed class MarqueeController : IDisposable
     /// <summary>Display state switch, broadcast to every surface.</summary>
     public void SetDisplayScene(string scene)
     {
+        _displayScene = scene;
         foreach (var window in AllWindows()) window.SetDisplayScene(scene);
     }
 
@@ -624,6 +739,6 @@ public sealed class MarqueeController : IDisposable
     public void Dispose()
     {
         foreach (var window in AllWindows()) window.Dispatcher.BeginInvoke(new Action(window.Close));
-        _windows.Clear();
+        _windows = new Dictionary<string, List<MarqueeWindow>>(StringComparer.OrdinalIgnoreCase);
     }
 }
