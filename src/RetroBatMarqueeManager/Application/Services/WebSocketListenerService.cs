@@ -1627,7 +1627,22 @@ public sealed class WebSocketListenerService : BackgroundService
         // the two drawn views of this same panel, written by APIExpose for the themes -
         // read from the path the stream gives, never from a folder we went looking for
         var svg = Child(payload, "Svg", "svg");
-        _surfaces.UpdatePanelArt(ReadArt(Child(svg, "Top", "top")), ReadArt(Child(svg, "Front", "front")));
+        var topArt = ReadArt(Child(svg, "Top", "top"), out var topWhy);
+        var frontArt = ReadArt(Child(svg, "Front", "front"), out var frontWhy);
+        _surfaces.UpdatePanelArt(topArt, frontArt);
+
+        // A drawn view that cannot be used falls back to the plain shapes, and three
+        // panels set to three different looks then show the same thing. Said once per
+        // cause, or a support log has nothing to explain it with.
+        var why = $"top: {topWhy}; front: {frontWhy}";
+        if (!string.Equals(why, _panelArtDiagnosis, StringComparison.Ordinal))
+        {
+            _panelArtDiagnosis = why;
+            if (topArt is null || frontArt is null)
+                _logger.LogWarning("Panel artwork unavailable, plain panel shown instead ({Why})", why);
+            else
+                _logger.LogInformation("Panel artwork in use ({Why})", why);
+        }
 
         if (stickColor != null && !string.Equals(stickColor, _panelStickColor, StringComparison.OrdinalIgnoreCase))
         {
@@ -1651,15 +1666,32 @@ public sealed class WebSocketListenerService : BackgroundService
     /// <summary>One drawn view: where the file is, how big the drawing is, and where
     /// each button landed in it. Null when APIExpose drew nothing for this game - the
     /// panel then falls back to its own plain shapes.</summary>
-    private Core.Surfaces.PanelBoardArt? ReadArt(JsonElement view)
+    private string _panelArtDiagnosis = string.Empty;
+
+    private Core.Surfaces.PanelBoardArt? ReadArt(JsonElement view, out string why)
     {
-        if (view.ValueKind != JsonValueKind.Object) return null;
-        var path = ResolveLocal(Text(view, "Path", "path"), Text(view, "PathRoot", "pathRoot"));
-        if (path is null) return null;
+        why = "ok";
+        if (view.ValueKind != JsonValueKind.Object)
+        {
+            why = "APIExpose sent no drawing";
+            return null;
+        }
+
+        var announced = Text(view, "Path", "path");
+        var path = ResolveLocal(announced, Text(view, "PathRoot", "pathRoot"));
+        if (path is null)
+        {
+            why = $"file not found: {announced}";
+            return null;
+        }
 
         var width = Number(view, "Width", "width");
         var height = Number(view, "Height", "height");
-        if (width is not > 0 || height is not > 0) return null;
+        if (width is not > 0 || height is not > 0)
+        {
+            why = "drawing without a size";
+            return null;
+        }
 
         var buttons = new List<Core.Surfaces.PanelArtButton>();
         var list = Child(view, "Buttons", "buttons");
@@ -1678,9 +1710,13 @@ public sealed class WebSocketListenerService : BackgroundService
 
         // a drawing whose buttons we cannot place would light nothing: better the plain
         // panel, which at least answers when a button is pressed
-        return buttons.Count > 0
-            ? new Core.Surfaces.PanelBoardArt(path, width.Value, height.Value, buttons)
-            : null;
+        if (buttons.Count == 0)
+        {
+            why = "drawing without button positions";
+            return null;
+        }
+
+        return new Core.Surfaces.PanelBoardArt(path, width.Value, height.Value, buttons);
     }
 
     /// <summary>A physical press, already resolved to a slot by APIExpose: the panel
