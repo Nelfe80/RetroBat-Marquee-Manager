@@ -211,6 +211,7 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
         var skipsThisWindow = 0;
         var heldThisWindow = 0;
         var calmWindows = 0;
+        var strugglingWindows = 0;
         var fpsWindowStart = 0L;
         var lastFpsLog = 0L;
 
@@ -293,7 +294,13 @@ public sealed class WpfSkiaSurfaceHost : System.Windows.Controls.Image, IDisposa
                 // Governor: when the screen cannot take the cadence, asking for fewer
                 // frames is the only thing that helps - a smaller buffer is stretched
                 // back to the full window, so the display path carries just as much.
-                if (heldThisWindow > Math.Max(2, targetFps / 4))
+                // Two windows in a row, and never on a cadence already at the floor: the
+                // first second of a surface (first present, images still decoding)
+                // always holds a few frames, and one such second capped a surface that
+                // then ran perfectly well (measured 13/11: "4 held of 4").
+                var struggling = targetFps > MinFpsCeiling && heldThisWindow > Math.Max(2, targetFps / 4);
+                strugglingWindows = struggling ? strugglingWindows + 1 : 0;
+                if (struggling && strugglingWindows >= 2)
                 {
                     calmWindows = 0;
                     var lowered = Math.Max(MinFpsCeiling, (int)(Math.Min(_fpsCeiling, targetFps) * 0.75));
