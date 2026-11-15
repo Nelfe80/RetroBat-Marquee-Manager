@@ -29,6 +29,8 @@
              Link="Linked\InstructionCardCatalog.cs" />
     <Compile Include="..\..\src\RetroBatMarqueeManager\Application\Services\ApiExposeLink.cs"
              Link="Linked\ApiExposeLink.cs" />
+    <Compile Include="..\..\src\RetroBatMarqueeManager\Application\Services\ApiExposeSignals.cs"
+             Link="Linked\ApiExposeSignals.cs" />
   </ItemGroup>
 
 </Project>
