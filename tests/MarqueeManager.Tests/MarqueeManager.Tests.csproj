@@ -33,4 +33,9 @@
              Link="Linked\ApiExposeSignals.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Real replies of APIExpose, kept as they were served (local paths removed). -->
+    <None Include="Fixtures\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

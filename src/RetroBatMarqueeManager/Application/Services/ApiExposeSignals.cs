@@ -389,9 +389,15 @@ public static class InstrumentPlan
 
     /// <summary>
     /// The signal a component shows. <paramref name="wanted"/> is what the operator chose:
-    /// a full identifier, the end of one ("resources.bombs", "bombs"), a unit, or "auto".
-    /// Auto takes what a player looks at first - what can run out - in a fixed order, so
-    /// a component left on auto does not jump from one role to another between games.
+    /// a full identifier, the end of one ("bombs", "power.level"), a unit, or "auto".
+    ///
+    /// A role is matched on the END of the identifier: the games' semantics write
+    /// "players.1.bombs" as well as "players.1.resources.bombs", and "bombs" must find
+    /// both without ever finding "players.1.bombs.used".
+    ///
+    /// Auto takes what a player looks at first - what can run out - among the roles
+    /// below, in that order, and nothing else: a frame counter or a section timer is
+    /// also "a counter", and drawing it as a bar of ammunition would be a lie.
     /// </summary>
     public static SemanticSignal? Pick(IReadOnlyList<SemanticSignal> signals, int player, string? wanted)
     {
@@ -404,13 +410,16 @@ public static class InstrumentPlan
                    ?? mine.FirstOrDefault(s => s.Unit.Equals(want, StringComparison.OrdinalIgnoreCase));
         }
 
-        foreach (var role in new[] { "ammo", "bombs", "lives", "energy", "health", "shield" })
+        foreach (var role in AutoRoles)
         {
-            var byRole = mine.FirstOrDefault(s => Depletes(s) && s.Id.Contains(role, StringComparison.OrdinalIgnoreCase));
+            var byRole = mine.FirstOrDefault(s => Depletes(s) && s.Id.EndsWith("." + role, StringComparison.OrdinalIgnoreCase));
             if (byRole != null) return byRole;
         }
-        return mine.FirstOrDefault(Depletes) ?? mine.FirstOrDefault();
+        return null;
     }
+
+    /// <summary>What "auto" may show, most urgent first.</summary>
+    public static readonly IReadOnlyList<string> AutoRoles = new[] { "ammo", "bombs", "lives", "health", "energy", "shield" };
 
     /// <summary>A quantity the player spends: it has a floor, and reaching it means something.</summary>
     public static bool Depletes(SemanticSignal signal) => signal.Kind is "counter" or "gauge";

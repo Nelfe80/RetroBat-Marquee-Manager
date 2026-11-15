@@ -1,0 +1,486 @@
+{
+ "schema": "nelfeplay.deck.semantics/1",
+ "launchId": "",
+ "systemId": "fbneo",
+ "rom": "19xx",
+ "memRom": "19xx-the-war-against-destiny",
+ "definitionFile": null,
+ "smemFile": null,
+ "status": "loaded",
+ "smemSha256": "77e0213924436001154dbe58955296869694e62ede3212597efdf6d993b11d1a",
+ "memSha256": "f345b2b7e739eea1f1f744ace32aa8ddfbd35bd2f1574fb1a50da8650c0ca19b",
+ "version": 2,
+ "game": {
+  "system": "arcade",
+  "slug": "19xx-the-war-against-destiny",
+  "title": "19XX: The War Against Destiny"
+ },
+ "errors": [],
+ "warnings": [],
+ "signals": [
+  {
+   "id": "players.1.bombs",
+   "player": 1,
+   "kind": "counter",
+   "unit": "bomb",
+   "label": "Bombs",
+   "short": "BOMB",
+   "from": [
+    {
+     "address": "0xFF8305",
+     "action": "BOMB_FIRED",
+     "player": null
+    },
+    {
+     "address": "0xFF8305",
+     "action": "AMMO_GAIN",
+     "player": 1
+    }
+   ],
+   "values": [],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 0
+   },
+   "min": 0,
+   "max": null,
+   "initial": 3,
+   "quality": "qualified",
+   "available": true
+  },
+  {
+   "id": "players.2.bombs",
+   "player": 2,
+   "kind": "counter",
+   "unit": "bomb",
+   "label": "Bombs",
+   "short": "BOMB",
+   "from": [
+    {
+     "address": "0xFF8405",
+     "action": "BOMB_FIRED",
+     "player": 2
+    },
+    {
+     "address": "0xFF8405",
+     "action": "AMMO_GAIN",
+     "player": 2
+    }
+   ],
+   "values": [],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 0
+   },
+   "min": 0,
+   "max": null,
+   "initial": 3,
+   "quality": "partial",
+   "available": true
+  },
+  {
+   "id": "players.1.power.level",
+   "player": 1,
+   "kind": "level",
+   "unit": null,
+   "label": "Shot",
+   "short": "SHOT",
+   "from": [
+    {
+     "address": "0xFF8337",
+     "action": "WEAPON_STATE",
+     "player": 1
+    },
+    {
+     "address": "0xFF8337",
+     "action": "WEAPON_UPGRADE",
+     "player": 1
+    }
+   ],
+   "values": [
+    {
+     "raw": 0,
+     "rawMin": null,
+     "rawMax": null,
+     "value": 1,
+     "label": "Normal"
+    },
+    {
+     "raw": 255,
+     "rawMin": null,
+     "rawMax": null,
+     "value": 2,
+     "label": "Boosted"
+    }
+   ],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 0
+   },
+   "min": 1,
+   "max": 2,
+   "initial": 1,
+   "quality": "qualified",
+   "available": true
+  },
+  {
+   "id": "players.2.power.level",
+   "player": 2,
+   "kind": "level",
+   "unit": null,
+   "label": "Shot",
+   "short": "SHOT",
+   "from": [
+    {
+     "address": "0xFF8437",
+     "action": "WEAPON_STATE",
+     "player": 2
+    },
+    {
+     "address": "0xFF8437",
+     "action": "WEAPON_UPGRADE",
+     "player": 2
+    }
+   ],
+   "values": [
+    {
+     "raw": 0,
+     "rawMin": null,
+     "rawMax": null,
+     "value": 1,
+     "label": "Normal"
+    },
+    {
+     "raw": 255,
+     "rawMin": null,
+     "rawMax": null,
+     "value": 2,
+     "label": "Boosted"
+    }
+   ],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 0
+   },
+   "min": 1,
+   "max": 2,
+   "initial": 1,
+   "quality": "partial",
+   "available": true
+  },
+  {
+   "id": "players.1.weapon.id",
+   "player": 1,
+   "kind": "enum",
+   "unit": null,
+   "label": "Weapon",
+   "short": "WPN",
+   "from": [
+    {
+     "address": "0xFF82F1",
+     "action": "WEAPON_SELECTED",
+     "player": 1
+    }
+   ],
+   "values": [
+    {
+     "raw": 0,
+     "rawMin": null,
+     "rawMax": null,
+     "value": null,
+     "label": "Base"
+    },
+    {
+     "raw": 4,
+     "rawMin": null,
+     "rawMax": null,
+     "value": null,
+     "label": "Vulcan"
+    },
+    {
+     "raw": 8,
+     "rawMin": null,
+     "rawMax": null,
+     "value": null,
+     "label": "Homing"
+    },
+    {
+     "raw": 12,
+     "rawMin": null,
+     "rawMax": null,
+     "value": null,
+     "label": "Laser"
+    }
+   ],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 0
+   },
+   "min": null,
+   "max": null,
+   "initial": 0,
+   "quality": "qualified",
+   "available": true
+  },
+  {
+   "id": "players.2.weapon.id",
+   "player": 2,
+   "kind": "enum",
+   "unit": null,
+   "label": "Weapon",
+   "short": "WPN",
+   "from": [
+    {
+     "address": "0xFF83F1",
+     "action": "WEAPON_SELECTED",
+     "player": 2
+    }
+   ],
+   "values": [
+    {
+     "raw": 0,
+     "rawMin": null,
+     "rawMax": null,
+     "value": null,
+     "label": "Base"
+    },
+    {
+     "raw": 4,
+     "rawMin": null,
+     "rawMax": null,
+     "value": null,
+     "label": "Vulcan"
+    },
+    {
+     "raw": 8,
+     "rawMin": null,
+     "rawMax": null,
+     "value": null,
+     "label": "Homing"
+    },
+    {
+     "raw": 12,
+     "rawMin": null,
+     "rawMax": null,
+     "value": null,
+     "label": "Laser"
+    }
+   ],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 0
+   },
+   "min": null,
+   "max": null,
+   "initial": 0,
+   "quality": "partial",
+   "available": true
+  },
+  {
+   "id": "players.1.game.19xx.bomb_power",
+   "player": 1,
+   "kind": "level",
+   "unit": null,
+   "label": "Bomb power",
+   "short": "BPWR",
+   "from": [
+    {
+     "address": "0xFF830F",
+     "action": "RESOURCE_LOSE",
+     "player": null
+    }
+   ],
+   "values": [],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 0
+   },
+   "min": null,
+   "max": null,
+   "initial": null,
+   "quality": "unproven",
+   "available": false
+  },
+  {
+   "id": "stage",
+   "player": null,
+   "kind": "level",
+   "unit": null,
+   "label": "Stage",
+   "short": "STG",
+   "from": [
+    {
+     "address": "0xFF4DD4",
+     "action": "PROGRESSION_STAGE",
+     "player": null
+    }
+   ],
+   "values": [],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 1
+   },
+   "min": 1,
+   "max": 7,
+   "initial": 1,
+   "quality": "qualified",
+   "available": true
+  },
+  {
+   "id": "boss.state",
+   "player": null,
+   "kind": "enum",
+   "unit": null,
+   "label": "Boss",
+   "short": "BOSS",
+   "from": [
+    {
+     "address": "0xFF51F4",
+     "action": "BATTLE_START",
+     "player": null
+    },
+    {
+     "address": "0xFF51F4",
+     "action": "BATTLE_END",
+     "player": null
+    }
+   ],
+   "values": [
+    {
+     "raw": 0,
+     "rawMin": null,
+     "rawMax": null,
+     "value": 0,
+     "label": "None"
+    },
+    {
+     "raw": 32767,
+     "rawMin": null,
+     "rawMax": null,
+     "value": 1,
+     "label": "Arriving"
+    },
+    {
+     "raw": null,
+     "rawMin": 1,
+     "rawMax": 32766,
+     "value": 2,
+     "label": "Fighting"
+    }
+   ],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 0
+   },
+   "min": null,
+   "max": null,
+   "initial": 0,
+   "quality": "qualified",
+   "available": true
+  },
+  {
+   "id": "boss.hp_max",
+   "player": null,
+   "kind": "counter",
+   "unit": "hp",
+   "label": "Boss HP",
+   "short": "HP",
+   "from": [
+    {
+     "address": "0xFF51F4",
+     "action": "BATTLE_START",
+     "player": null
+    }
+   ],
+   "values": [],
+   "scale": {
+    "num": 1,
+    "den": 1,
+    "add": 0
+   },
+   "min": 1,
+   "max": 32766,
+   "initial": null,
+   "quality": "qualified",
+   "available": true
+  }
+ ],
+ "instruments": [
+  {
+   "id": "p1.bombs",
+   "label": "Bombs",
+   "player": 1,
+   "show": "counter",
+   "signals": [
+    "players.1.bombs"
+   ]
+  },
+  {
+   "id": "p1.shot",
+   "label": "Shot",
+   "player": 1,
+   "show": "level",
+   "signals": [
+    "players.1.power.level",
+    "players.1.weapon.id"
+   ]
+  },
+  {
+   "id": "p1.bomb_power",
+   "label": "Bomb power",
+   "player": 1,
+   "show": "level",
+   "signals": [
+    "players.1.game.19xx.bomb_power"
+   ]
+  },
+  {
+   "id": "p2.bombs",
+   "label": "Bombs",
+   "player": 2,
+   "show": "counter",
+   "signals": [
+    "players.2.bombs"
+   ]
+  },
+  {
+   "id": "p2.shot",
+   "label": "Shot",
+   "player": 2,
+   "show": "level",
+   "signals": [
+    "players.2.power.level",
+    "players.2.weapon.id"
+   ]
+  },
+  {
+   "id": "stage",
+   "label": "Stage",
+   "player": null,
+   "show": "level",
+   "signals": [
+    "stage"
+   ]
+  },
+  {
+   "id": "boss",
+   "label": "Boss",
+   "player": null,
+   "show": "state",
+   "signals": [
+    "boss.state",
+    "boss.hp_max"
+   ]
+  }
+ ],
+ "revision": 0
+}

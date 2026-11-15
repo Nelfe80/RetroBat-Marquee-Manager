@@ -1319,8 +1319,8 @@ public sealed class CompositionEditor : Window
             foreach (var (tag, fr, en) in new[]
                      {
                          ("auto", "Automatique (ce qui s'épuise)", "Automatic (what runs out)"),
-                         ("resources.ammo", "Munitions", "Ammunition"),
-                         ("resources.bombs", "Bombes", "Bombs"),
+                         ("ammo", "Munitions", "Ammunition"),
+                         ("bombs", "Bombes", "Bombs"),
                          ("lives", "Vies", "Lives"),
                          ("health", "Énergie", "Health"),
                          ("shield", "Bouclier", "Shield"),

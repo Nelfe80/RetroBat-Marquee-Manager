@@ -345,9 +345,29 @@ public class ApiExposeSignalsTests
     }
 
     [Fact]
-    public void A_game_with_only_a_weapon_name_still_has_something_to_show()
-        => Assert.Equal("players.1.weapon.id",
-            InstrumentPlan.Pick(new[] { Signal("players.1.weapon.id", kind: "enum") }, 1, "auto")!.Id);
+    public void Auto_never_draws_a_timer_or_a_used_count_as_a_reserve()
+    {
+        var signals = new[]
+        {
+            Signal("players.1.section.0.time", unit: "frame"),
+            Signal("players.1.stun.timeout", unit: "frame"),
+            Signal("players.1.bombs.used", unit: "bomb"),
+            Signal("players.1.weapon.id", kind: "enum")
+        };
+
+        Assert.Null(InstrumentPlan.Pick(signals, 1, "auto"));
+        // …but what the operator names is shown, whatever it is
+        Assert.Equal("players.1.weapon.id", InstrumentPlan.Pick(signals, 1, "weapon.id")!.Id);
+    }
+
+    [Fact]
+    public void A_role_finds_both_spellings_the_games_use()
+    {
+        Assert.Equal("players.1.bombs", InstrumentPlan.Pick(new[] { Signal("players.1.bombs.used"), Signal("players.1.bombs") }, 1, "bombs")!.Id);
+        Assert.Equal("players.1.resources.bombs", InstrumentPlan.Pick(new[] { Signal("players.1.resources.bombs") }, 1, "bombs")!.Id);
+        Assert.Equal("players.1.lives", InstrumentPlan.Pick(new[] { Signal("players.1.bombs"), Signal("players.1.lives") }, 1, "lives")!.Id);
+        Assert.Equal("players.1.bombs", InstrumentPlan.Pick(new[] { Signal("players.1.lives"), Signal("players.1.bombs") }, 1, "auto")!.Id);
+    }
 
     [Theory]
     [InlineData(null, 3L, 3L, 3L, 3)]      // no declared maximum: what the game starts with
@@ -422,4 +442,37 @@ public class ApiExposeSignalsTests
     [InlineData(null)]
     public void An_unknown_status_says_nothing(string? status)
         => Assert.Null(VerdictBanner.For(status, 100, 1, "1CC", french: false));
+
+    // ── against a real reply of APIExpose 1.9.185 ────────────────────────────
+
+    [Fact]
+    public void A_real_reply_for_19xx_gives_its_bombs_and_follows_them()
+    {
+        var reply = Json(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "semantics-19xx.json")));
+        var semantics = new SignalSemantics();
+
+        Assert.True(semantics.Load(reply));
+
+        Assert.Equal(10, semantics.Signals.Count);
+        var bombs = InstrumentPlan.Pick(semantics.Signals, 1, "auto");
+        Assert.Equal("players.1.bombs", bombs!.Id);
+        Assert.Equal("BOMB", InstrumentPlan.Caption(bombs));
+        Assert.Equal(3, Assert.Single(semantics.Readings, r => r.Signal.Id == "players.1.bombs").Value);
+        Assert.Equal(3, InstrumentPlan.Places(bombs, 3, 3));
+
+        // a bomb is dropped, then the last ones
+        Assert.Equal(2, Assert.Single(semantics.Apply("0xFF8305", "BOMB_FIRED", 1, 2)).Value);
+        var none = Assert.Single(semantics.Apply("0xFF8305", "BOMB_FIRED", 1, 0));
+        Assert.True(InstrumentPlan.IsEmpty(none.Signal, none.Value));
+        Assert.Equal("EMPTY", InstrumentPlan.EmptyText(none.Signal, null, french: false));
+
+        // player 2 has his own, untouched by player 1's
+        Assert.Equal("players.2.bombs", InstrumentPlan.Pick(semantics.Signals, 2, "bombs")!.Id);
+        Assert.Equal(3, Assert.Single(semantics.Readings, r => r.Signal.Id == "players.2.bombs").Value);
+
+        // the shot level carries the game's own word
+        var shot = Assert.Single(semantics.Apply("0xFF8337", "WEAPON_STATE", 1, 255));
+        Assert.Equal("players.1.power.level", shot.Signal.Id);
+        Assert.Equal("Boosted", shot.Text);
+    }
 }
