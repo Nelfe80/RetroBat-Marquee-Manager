@@ -54,6 +54,7 @@ public sealed class SurfacesView : UserControl
         ("iccard.viewer", "Carte d'instructions (rôle / joueur)", "Instruction card (role / player)"),
         ("iccard.touch", "Zone tactile (carte d'instructions)", "Touch zone (instruction card)"),
         ("panel.controls", "Panneau de contrôle (joueur)", "Control panel (player)"),
+        ("overlay.instrument", "Instrument du jeu (munitions, bombes, vies…)", "Game instrument (ammo, bombs, lives…)"),
         ("shape.gradient", "Gradient (lisibilité)", "Gradient (readability)"),
         ("external.web", "Web embarqué (Twitch, YouTube…)", "Embedded web (Twitch, YouTube…)")
     };
@@ -405,6 +406,7 @@ public sealed class SurfacesView : UserControl
                 "shape.gradient" => "color",
                 "media.video" => "sources",
                 "panel.controls" => "player",
+                "overlay.instrument" => "signal",
                 _ => null
             };
             if (optionKey != null)

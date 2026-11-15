@@ -72,6 +72,8 @@ public sealed class ComponentHost : Canvas
         {
             Image image => image.Source != null,
             InstructionCardView card => card.Picture.Source != null,
+            // an instrument the running game does not have is not an empty frame
+            InstrumentView instrument => instrument.HasContent,
             ContentControl host => host.Content != null,
             TextBlock text => text.Text.Length > 0,
             _ => true // shapes, gradients, web views
@@ -226,6 +228,29 @@ public sealed class ComponentHost : Canvas
         }
     }
 
+    /// <summary>The signals of the game that just started - or none when it ended. Each
+    /// instrument picks its own; one that finds nothing disappears.</summary>
+    public void ApplyInstrumentGame(
+        IReadOnlyList<RetroBatMarqueeManager.Application.Services.SemanticSignal> signals,
+        IReadOnlyList<RetroBatMarqueeManager.Application.Services.SemanticReading> readings)
+    {
+        foreach (var (definition, element) in _visuals)
+        {
+            if (element is not InstrumentView instrument) continue;
+            instrument.SetGame(signals, readings);
+            RefreshVisibility(definition, element);
+        }
+    }
+
+    /// <summary>One signal moved: the instruments showing it redraw, the others ignore it.</summary>
+    public void ApplyInstrumentReading(RetroBatMarqueeManager.Application.Services.SemanticReading reading)
+    {
+        foreach (var (_, element) in _visuals)
+        {
+            if (element is InstrumentView instrument) instrument.Apply(reading);
+        }
+    }
+
     /// <summary>A physical press, already resolved to a slot by APIExpose. Only the
     /// panel of the player who pressed lights up - that a press on panel 2 lights
     /// panel 2 is itself part of what the check verifies.</summary>
@@ -343,6 +368,16 @@ public sealed class ComponentHost : Canvas
                     component.Option("bg"),
                     Fraction(component.Option("bgOpacity"), 0.5),
                     Fraction(component.Option("bgPadding"), 0.03));
+
+            case "overlay.instrument":
+                // one component per signal and per player: ammunition for player 1 and
+                // bombs for player 2 are two instruments, each placed where it belongs
+                return new InstrumentView(
+                    int.TryParse(component.Option("player", "1"), out var instrumentPlayer) ? instrumentPlayer : 1,
+                    component.Option("signal", "auto"),
+                    component.Option("emptyText"),
+                    component.Option("labels", "true") != "false",
+                    component.Option("color", "gold"));
 
             case "iccard.touch":
                 return BuildTouchZone(component);

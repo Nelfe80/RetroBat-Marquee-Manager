@@ -220,6 +220,11 @@ public sealed class CompositionEditor : Window
             new("📊 Live", L.T("Panneau de contrôle", "Control panel"),
                 () => new() { C("panel.controls", 0.25, 0.5, 0.5, 0.45, ("player", "1")) }),
 
+            // What the running game holds in reserve, read from its signals: ammunition,
+            // bombs, lives. In game only - while browsing there is no game to read.
+            new("📊 Live", L.T("Instrument (munitions, bombes…)", "Instrument (ammo, bombs…)"),
+                () => new() { C("overlay.instrument", 0.03, 0.78, 0.4, 0.18, ("player", "1"), ("signal", "auto")) }),
+
             // A card and the finger that turns it. They are two separate layers on
             // purpose: the card can sit on the topper while the buttons are on a
             // touchscreen, and a zone can drive a viewer that is not on its surface.
@@ -974,7 +979,9 @@ public sealed class CompositionEditor : Window
         "overlay.ra.info", "overlay.ra.badges", "overlay.ra.speedrun",
         // the panel lights up under the player's fingers: a baked copy would be a
         // photograph of a panel nobody is pressing
-        "panel.controls"
+        "panel.controls",
+        // an instrument is the game's memory, read as it changes
+        "overlay.instrument"
     };
 
     private static string PinnedLabel(string type) => type.ToLowerInvariant() switch
@@ -1286,6 +1293,68 @@ public sealed class CompositionEditor : Window
                 "D'où vient ce média ? Flux APIExpose du jeu courant, selon les priorités du système (Mes systèmes).",
                 "Where does this media come from? The current game's APIExpose stream, per the system priorities (My systems).")));
         }
+        if (component.Type == "overlay.instrument")
+        {
+            // One component shows ONE signal of ONE player. The list is fixed on purpose:
+            // these are the roles the games' semantics name, and "automatic" covers a
+            // cabinet whose owner does not want to choose per game.
+            var players = Ui.ComboBox(180);
+            var currentPlayer = component.Options.TryGetValue("player", out var ipv) && ipv.Length > 0 ? ipv : "1";
+            for (var player = 1; player <= 4; player++)
+            {
+                var item = new ComboBoxItem { Content = L.T($"Joueur {player}", $"Player {player}"), Tag = player.ToString() };
+                players.Items.Add(item);
+                if (item.Tag as string == currentPlayer) players.SelectedItem = item;
+            }
+            if (players.SelectedItem == null) players.SelectedIndex = 0;
+            players.SelectionChanged += (_, _) =>
+            {
+                if ((players.SelectedItem as ComboBoxItem)?.Tag is string tag) component.Options["player"] = tag;
+            };
+            content.Children.Add(Ui.Row(L.T("Joueur", "Player"), players, labelWidth: 90));
+
+            var roles = Ui.ComboBox(220);
+            var currentRole = component.Options.TryGetValue("signal", out var isv) && isv.Length > 0 ? isv : "auto";
+            var known = false;
+            foreach (var (tag, fr, en) in new[]
+                     {
+                         ("auto", "Automatique (ce qui s'épuise)", "Automatic (what runs out)"),
+                         ("resources.ammo", "Munitions", "Ammunition"),
+                         ("resources.bombs", "Bombes", "Bombs"),
+                         ("lives", "Vies", "Lives"),
+                         ("health", "Énergie", "Health"),
+                         ("shield", "Bouclier", "Shield"),
+                         ("power.level", "Niveau de tir", "Shot level"),
+                         ("weapon.id", "Arme en main", "Weapon in hand")
+                     })
+            {
+                var item = new ComboBoxItem { Content = L.T(fr, en), Tag = tag };
+                roles.Items.Add(item);
+                if (tag.Equals(currentRole, StringComparison.OrdinalIgnoreCase)) { roles.SelectedItem = item; known = true; }
+            }
+            // a signal typed by hand in the surface list stays selectable as it is
+            if (!known)
+            {
+                var item = new ComboBoxItem { Content = currentRole, Tag = currentRole };
+                roles.Items.Add(item);
+                roles.SelectedItem = item;
+            }
+            roles.SelectionChanged += (_, _) =>
+            {
+                if ((roles.SelectedItem as ComboBoxItem)?.Tag is string tag) component.Options["signal"] = tag;
+            };
+            content.Children.Add(Ui.Row(L.T("Signal", "Signal"), roles, labelWidth: 90));
+
+            var caption = Ui.CheckBox(L.T("Afficher le nom du signal", "Show the signal's name"),
+                !component.Options.TryGetValue("labels", out var ilv) || !ilv.Equals("false", StringComparison.OrdinalIgnoreCase));
+            caption.Checked += (_, _) => component.Options["labels"] = "true";
+            caption.Unchecked += (_, _) => component.Options["labels"] = "false";
+            content.Children.Add(caption);
+
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "Une barre horizontale : une case par unité (bombes, vies), ou une barre continue quand il y en a trop pour les compter (munitions). À zéro, la barre laisse place à un mot qui clignote : « RECHARGEZ » pour des munitions, « VIDE » sinon. L'instrument ne s'affiche que pour un jeu dont les signaux sont décrits (fichier .SMEM), et seulement en jeu.",
+                "A horizontal bar: one block per unit (bombs, lives), or a continuous bar when there are too many to count (ammunition). At zero the bar gives way to a blinking word: \"RELOAD\" for ammunition, \"EMPTY\" otherwise. The instrument only shows for a game whose signals are described (.SMEM file), and only in game.")));
+        }
         if (component.Type == "panel.controls")
         {
             // One component draws ONE player's panel. A two-player cabinet places two of
@@ -1357,7 +1426,7 @@ public sealed class CompositionEditor : Window
             var suppress = false;
             string SourceNow() => component.Options.TryGetValue("source", out var s) && s.Length > 0 ? s : "local";
             string TitleDefault(string src) => src.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
-                ? L.T("{name} - CLASSEMENT MONDIAL", "{name} - WORLD RANKING")
+                ? L.T("{name} - CLASSEMENT MONDIAL {mode}", "{name} - WORLD RANKING {mode}")
                 : L.T("{name} - CLASSEMENT LOCAL", "{name} - LOCAL LEADERBOARD");
             string MyRankDefault(string src) => src.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
                 ? L.T("★ TON RANG MONDIAL  {rank} / {of}", "★ YOUR WORLD RANK  {rank} / {of}")
