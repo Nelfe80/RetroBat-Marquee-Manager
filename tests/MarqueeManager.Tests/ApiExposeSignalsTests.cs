@@ -549,4 +549,47 @@ public class ApiExposeSignalsTests
         Assert.Null(InstrumentPlan.Pick(semantics.Signals, 1, "bombs"));
         Assert.Equal("RELOAD", InstrumentPlan.RunDryNotice(new SemanticReading(ammo, 0, ""), french: false)!.Value.Detail);
     }
+
+    // ── who plays a MULTIPLAYER match ────────────────────────────────────────
+
+    private const string MultiplayerState = """
+        { "rooms": [
+            { "room": "r-1", "game": "sf2ce", "state": "playing",
+              "players": [
+                { "handle": "bob", "pseudo": "Bob", "seat": 2, "host": false, "you": false, "rating": { "value": 1479.6, "matches": 12 } },
+                { "handle": "alice", "pseudo": "Alice", "seat": 1, "host": true, "you": true, "rating": { "value": 1520.2, "matches": 30 } } ],
+              "ended": { "winner_seat": 2, "duration_s": 140 } },
+            { "room": "r-2", "game": "bublbobl", "state": "waiting",
+              "players": [ { "handle": "carol", "pseudo": "", "seat": 1 }, { "handle": "dave", "pseudo": "Dave", "seat": 2 } ] } ],
+          "invitations": [], "error": null }
+        """;
+
+    [Fact]
+    public void A_versus_names_both_players_with_their_rating_in_seat_order()
+        => Assert.Equal("ALICE (1520) vs BOB (1480)", MatchCard.Players(Json(MultiplayerState), "r-1", coop: false));
+
+    [Fact]
+    public void A_coop_names_the_partners_without_ranking_them()
+    {
+        Assert.Equal("ALICE & BOB", MatchCard.Players(Json(MultiplayerState), "r-1", coop: true));
+        // a player without a pseudo keeps his handle, one without a rating has none shown
+        Assert.Equal("CAROL vs DAVE", MatchCard.Players(Json(MultiplayerState), "r-2", coop: false));
+    }
+
+    [Fact]
+    public void The_winner_is_the_player_on_the_winning_seat()
+    {
+        Assert.Equal("BOB", MatchCard.Winner(Json(MultiplayerState), "r-1"));
+        Assert.Equal(string.Empty, MatchCard.Winner(Json(MultiplayerState), "r-2"));
+    }
+
+    [Fact]
+    public void An_unknown_room_names_nobody()
+    {
+        Assert.Equal(string.Empty, MatchCard.Players(Json(MultiplayerState), "r-9", coop: false));
+        // two rooms and no room named: no way to tell which one, so nobody
+        Assert.Equal(string.Empty, MatchCard.Players(Json(MultiplayerState), "", coop: false));
+        Assert.Equal(string.Empty, MatchCard.Players(default, "r-1", coop: false));
+        Assert.Equal(string.Empty, MatchCard.Winner(default, "r-1"));
+    }
 }

@@ -2119,19 +2119,41 @@ public sealed class WebSocketListenerService : BackgroundService
         var type = Text(root, "Type", "type");
         var french = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
             .Equals("fr", StringComparison.OrdinalIgnoreCase);
+        var payload = Payload(root);
+        if (type.Equals("multiplayer.state", StringComparison.OrdinalIgnoreCase))
+        {
+            // kept for the match notices: the match events only name the room, the state
+            // is where its players and their ratings are (replayed on connection)
+            lock (_multiplayerLock) _multiplayerState = payload.Clone();
+            return;
+        }
+
+        var room = Text(payload, "Room", "room");
+        JsonElement state;
+        lock (_multiplayerLock) state = _multiplayerState;
         if (type.Equals("multiplayer.match.started", StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogInformation("Multiplayer match started");
-            _surfaces.SetInformation("multiplayer-match", "MULTIPLAYER",
-                french ? "LA RENCONTRE COMMENCE" : "THE MATCH BEGINS", null, false, 6000);
+            // Coop is only said at the end; at the start a versus line is the neutral one
+            var players = MatchCard.Players(state, room, coop: false);
+            _logger.LogInformation("Multiplayer match started ({Known})", players.Length > 0 ? "players known" : "players unknown");
+            _surfaces.SetInformation("multiplayer-match",
+                french ? "MULTIPLAYER · LA RENCONTRE COMMENCE" : "MULTIPLAYER · THE MATCH BEGINS", players, null, false, 8000);
         }
         else if (type.Equals("multiplayer.match.ended", StringComparison.OrdinalIgnoreCase))
         {
+            var coop = Child(payload, "Coop", "coop").ValueKind == JsonValueKind.True;
+            var winner = coop ? string.Empty : MatchCard.Winner(state, room);
+            var detail = winner.Length > 0
+                ? (french ? "VICTOIRE DE " : "WINNER: ") + winner
+                : MatchCard.Players(state, room, coop);
             _logger.LogInformation("Multiplayer match ended");
-            _surfaces.SetInformation("multiplayer-match", "MULTIPLAYER",
-                french ? "RENCONTRE TERMINÉE" : "MATCH OVER", null, false, 6000);
+            _surfaces.SetInformation("multiplayer-match",
+                french ? "MULTIPLAYER · RENCONTRE TERMINÉE" : "MULTIPLAYER · MATCH OVER", detail, null, false, 8000);
         }
     }
+
+    private readonly object _multiplayerLock = new();
+    private JsonElement _multiplayerState;
 
     /// <summary>
     /// The streams APIExpose added in 1.9.185. They are only opened once the API says it

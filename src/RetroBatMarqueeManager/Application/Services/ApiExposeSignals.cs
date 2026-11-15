@@ -563,6 +563,97 @@ public static class VerdictBanner
     }
 }
 
+/// <summary>
+/// Who plays a MULTIPLAYER match, read from the last <c>multiplayer.state</c>: the match
+/// events themselves only name the room.
+/// </summary>
+public static class MatchCard
+{
+    /// <summary>
+    /// "ALICE (1520) vs BOB (1480)" for a versus, "ALICE &amp; BOB" for a co-op, in seat
+    /// order. Empty when the state does not know the room - the notice then says only
+    /// that a match begins, which is true, rather than naming the wrong players.
+    /// </summary>
+    public static string Players(JsonElement state, string? room, bool coop)
+    {
+        var found = Room(state, room);
+        if (found.ValueKind != JsonValueKind.Object
+            || !found.TryGetProperty("players", out var players) || players.ValueKind != JsonValueKind.Array) return string.Empty;
+
+        var seated = new List<(int Seat, string Text)>();
+        var order = 0;
+        foreach (var player in players.EnumerateArray())
+        {
+            order++;
+            if (player.ValueKind != JsonValueKind.Object) continue;
+            var name = Name(player);
+            if (name.Length == 0) continue;
+            var seat = player.TryGetProperty("seat", out var s) && s.ValueKind == JsonValueKind.Number && s.TryGetInt32(out var n) ? n : 100 + order;
+            // a rating is a versus matter: co-op partners are not ranked against each other
+            var rating = coop ? null : Rating(player);
+            seated.Add((seat, rating is null ? name : name + " (" + rating + ")"));
+        }
+        if (seated.Count < 2) return string.Empty;
+        return string.Join(coop ? " & " : " vs ", seated.OrderBy(p => p.Seat).Select(p => p.Text));
+    }
+
+    /// <summary>The winner's name at the end of a versus, empty when none is declared.</summary>
+    public static string Winner(JsonElement state, string? room)
+    {
+        var found = Room(state, room);
+        if (found.ValueKind != JsonValueKind.Object) return string.Empty;
+        if (!found.TryGetProperty("ended", out var ended) || ended.ValueKind != JsonValueKind.Object) return string.Empty;
+        if (!ended.TryGetProperty("winner_seat", out var w) || w.ValueKind != JsonValueKind.Number || !w.TryGetInt32(out var seat)) return string.Empty;
+        if (!found.TryGetProperty("players", out var players) || players.ValueKind != JsonValueKind.Array) return string.Empty;
+        foreach (var player in players.EnumerateArray())
+        {
+            if (player.ValueKind == JsonValueKind.Object
+                && player.TryGetProperty("seat", out var s) && s.ValueKind == JsonValueKind.Number && s.TryGetInt32(out var n) && n == seat)
+                return Name(player);
+        }
+        return string.Empty;
+    }
+
+    private static JsonElement Room(JsonElement state, string? room)
+    {
+        if (state.ValueKind != JsonValueKind.Object
+            || !state.TryGetProperty("rooms", out var rooms) || rooms.ValueKind != JsonValueKind.Array) return default;
+        var wanted = (room ?? string.Empty).Trim();
+        JsonElement only = default;
+        var count = 0;
+        foreach (var candidate in rooms.EnumerateArray())
+        {
+            if (candidate.ValueKind != JsonValueKind.Object) continue;
+            count++;
+            only = candidate;
+            if (wanted.Length > 0 && candidate.TryGetProperty("room", out var id) && id.ValueKind == JsonValueKind.String
+                && wanted.Equals(id.GetString(), StringComparison.OrdinalIgnoreCase)) return candidate;
+        }
+        // a match event that names no room can only be about the one room there is
+        return wanted.Length == 0 && count == 1 ? only : default;
+    }
+
+    private static string Name(JsonElement player)
+    {
+        foreach (var key in new[] { "pseudo", "handle" })
+        {
+            if (player.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.String)
+            {
+                var text = (v.GetString() ?? string.Empty).Trim();
+                if (text.Length > 0) return text.ToUpperInvariant();
+            }
+        }
+        return string.Empty;
+    }
+
+    private static string? Rating(JsonElement player)
+    {
+        if (!player.TryGetProperty("rating", out var rating) || rating.ValueKind != JsonValueKind.Object) return null;
+        if (!rating.TryGetProperty("value", out var value) || value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out var number)) return null;
+        return Math.Round(number).ToString("0", CultureInfo.InvariantCulture);
+    }
+}
+
 /// <summary>Which named streams this APIExpose serves (<c>GET /api/v1/ws/streams</c>).</summary>
 public static class NamedStreams
 {
