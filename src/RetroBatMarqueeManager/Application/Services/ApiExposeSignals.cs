@@ -462,6 +462,22 @@ public static class InstrumentPlan
         return reloads ? (french ? "RECHARGEZ" : "RELOAD") : (french ? "VIDE" : "EMPTY");
     }
 
+    /// <summary>
+    /// What a small display (the DMD) says when a reserve runs dry: a short notice, then
+    /// back to what it was showing. Null for anything that is not one of the reserves a
+    /// player watches - the DMD is too small to announce every signal of a game.
+    /// </summary>
+    public static (string Title, string Detail)? RunDryNotice(SemanticReading reading, bool french)
+    {
+        var signal = reading.Signal;
+        if (!IsEmpty(signal, reading.Value)) return null;
+        if (!AutoRoles.Any(role => signal.Id.EndsWith("." + role, StringComparison.OrdinalIgnoreCase))) return null;
+        var title = Caption(signal);
+        // one player is the rule; the number is only said when it tells two apart
+        if (signal.Player > 1) title = (title + " P" + signal.Player.ToString(CultureInfo.InvariantCulture)).Trim();
+        return (title, EmptyText(signal, null, french));
+    }
+
     /// <summary>The short name drawn next to the bar.</summary>
     public static string Caption(SemanticSignal signal)
     {

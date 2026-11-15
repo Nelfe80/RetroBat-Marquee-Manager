@@ -475,4 +475,31 @@ public class ApiExposeSignalsTests
         Assert.Equal("players.1.power.level", shot.Signal.Id);
         Assert.Equal("Boosted", shot.Text);
     }
+
+    // ── the DMD only speaks when a reserve runs dry ──────────────────────────
+
+    [Fact]
+    public void A_reserve_that_runs_dry_is_announced_once_it_is_empty()
+    {
+        var bombs = Signal("players.1.bombs", unit: "bomb", shortName: "BOMB");
+
+        Assert.Null(InstrumentPlan.RunDryNotice(new SemanticReading(bombs, 1, ""), french: false));
+        var notice = InstrumentPlan.RunDryNotice(new SemanticReading(bombs, 0, ""), french: false);
+        Assert.Equal(("BOMB", "EMPTY"), notice!.Value);
+    }
+
+    [Fact]
+    public void The_second_players_notice_says_whose_it_is()
+    {
+        var ammo = Signal("players.2.ammo", player: 2, shortName: "AMMO");
+
+        Assert.Equal(("AMMO P2", "RECHARGEZ"), InstrumentPlan.RunDryNotice(new SemanticReading(ammo, 0, ""), french: true)!.Value);
+    }
+
+    [Fact]
+    public void A_timer_reaching_zero_is_not_announced()
+    {
+        Assert.Null(InstrumentPlan.RunDryNotice(new SemanticReading(Signal("players.1.stun.timeout", unit: "frame"), 0, ""), french: false));
+        Assert.Null(InstrumentPlan.RunDryNotice(new SemanticReading(Signal("players.1.weapon.id", kind: "enum"), 0, ""), french: false));
+    }
 }

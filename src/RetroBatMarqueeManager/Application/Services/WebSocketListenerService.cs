@@ -2033,7 +2033,25 @@ public sealed class WebSocketListenerService : BackgroundService
         if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt64(out var raw)) return;
         var player = Integer(signal, "Player", "player") ?? Integer(payload, "Player", "player");
         foreach (var reading in _semantics.Apply(Text(signal, "Address", "address"), Text(signal, "Name", "name"), player, raw))
+        {
             _surfaces.SetInstrumentReading(reading);
+            AnnounceRunDryOnDmd(reading);
+        }
+    }
+
+    /// <summary>
+    /// The DMD has no room for a bar beside the game's logo: it says the one thing worth
+    /// interrupting for - a reserve that just ran dry - then goes back to the logo.
+    /// [DMD] InstrumentAlerts=false turns it off.
+    /// </summary>
+    private void AnnounceRunDryOnDmd(SemanticReading reading)
+    {
+        if (!_config.DmdEnabled || _pinballDmdActive) return;
+        if (_config.GetValue("DMD", "InstrumentAlerts", "true").Equals("false", StringComparison.OrdinalIgnoreCase)) return;
+        var french = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
+            .Equals("fr", StringComparison.OrdinalIgnoreCase);
+        if (InstrumentPlan.RunDryNotice(reading, french) is not { } notice) return;
+        _ = _dmd.ShowNotificationAsync("instrument", notice.Title, notice.Detail, null, 2500, 90, CancellationToken.None);
     }
 
     /// <summary>
