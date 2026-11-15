@@ -1453,6 +1453,17 @@ public sealed class CompositionEditor : Window
                 suppress = false;
             };
             content.Children.Add(Ui.Row(L.T("Source", "Source"), sourceCombo, labelWidth: 90));
+            // The world board follows the mode being played (1CC, 1LC, a game's own mode).
+            // A game can have several: showing them all, one after the other, is a choice -
+            // it means more requests to the site and a longer cycle on the marquee.
+            content.Children.Add(Ui.Row(L.T("Modes (monde)", "Modes (world)"),
+                Combo("worldModes", "played",
+                    ("played", "Le mode joué", "The mode being played"),
+                    ("all", "Tous les modes du jeu, à tour de rôle", "All the game's modes, in turn")),
+                labelWidth: 90));
+            content.Children.Add(Ui.MutedLabel(L.T(
+                "{mode} dans le titre = le mode classé (1CC, 1LC, 1CC MULTI…).",
+                "{mode} in the title = the mode ranked (1CC, 1LC, 1CC MULTI…).")));
             // Rows: a free number, or "Dynamique" which fits the count to the available zone.
             var isDynRows = !component.Options.TryGetValue("rows", out var rowsVal)
                 || string.IsNullOrWhiteSpace(rowsVal)

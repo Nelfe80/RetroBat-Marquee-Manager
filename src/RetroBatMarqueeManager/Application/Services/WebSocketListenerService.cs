@@ -1953,6 +1953,37 @@ public sealed class WebSocketListenerService : BackgroundService
                 info.Label.Length > 0 ? info.Label : "not given", info.Ruleset, info.Source);
         }
 
+        var rows = WorldRows(board);
+        if (rows.Count == 0) return;
+        _surfaces.SetHiscoreLeaderboard(rom, _selectedSystem ?? string.Empty, rows, "nelfeplay",
+            WorldMyRank(root) with { Mode = info.Label, Difficulty = info.Difficulty });
+
+        // the mode now on the main board must not also sit among the others
+        if (info.Ruleset.Length > 0)
+            _surfaces.SetHiscoreLeaderboard(rom, _selectedSystem ?? string.Empty, Array.Empty<Core.HiscoreRow>(), WorldBoard.FeedOf(info.Ruleset));
+        if (!_surfaces.WantsAllWorldModes()) return;
+
+        // A surface asked for every mode of the game: each one is its own request, made
+        // one after the other - the site is not asked five boards at once for a marquee.
+        foreach (var (ruleset, label) in WorldBoard.OtherModes(root))
+        {
+            if (ct.IsCancellationRequested || !rom.Equals(_selectedRom, StringComparison.OrdinalIgnoreCase)) return;
+            using var other = await ApiGetAsync("/api/v1/nelfeplay/records/leaderboard?ruleset=" + Uri.EscapeDataString(ruleset), ct).ConfigureAwait(false);
+            if (!other.IsSuccessStatusCode) continue;
+            using var otherDocument = JsonDocument.Parse(await other.Content.ReadAsStringAsync(ct).ConfigureAwait(false));
+            var otherRoot = otherDocument.RootElement;
+            if (ct.IsCancellationRequested || !rom.Equals(_selectedRom, StringComparison.OrdinalIgnoreCase)) return;
+            var otherRows = otherRoot.TryGetProperty("leaderboard", out var otherBoard) && otherBoard.ValueKind == JsonValueKind.Array
+                ? WorldRows(otherBoard)
+                : new List<Core.HiscoreRow>();
+            // an empty mode is dropped rather than shown as an empty table
+            _surfaces.SetHiscoreLeaderboard(rom, _selectedSystem ?? string.Empty, otherRows, WorldBoard.FeedOf(ruleset),
+                WorldMyRank(otherRoot) with { Mode = label });
+        }
+    }
+
+    private static List<Core.HiscoreRow> WorldRows(JsonElement board)
+    {
         var rows = new List<Core.HiscoreRow>();
         foreach (var entry in board.EnumerateArray())
         {
@@ -1963,9 +1994,7 @@ public sealed class WebSocketListenerService : BackgroundService
             var player = (anon || !entry.TryGetProperty("player", out var pl)) ? "ANON" : (pl.GetString() ?? "ANON");
             rows.Add(new Core.HiscoreRow(rank, player, score));
         }
-        if (rows.Count == 0) return;
-        _surfaces.SetHiscoreLeaderboard(rom, _selectedSystem ?? string.Empty, rows, "nelfeplay",
-            WorldMyRank(root) with { Mode = info.Label, Difficulty = info.Difficulty });
+        return rows;
     }
 
     private string _worldBoardLabel = string.Empty;

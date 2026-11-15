@@ -44,6 +44,40 @@ public static class WorldBoard
             Str(root, "played_ruleset"), Difficulty(root));
     }
 
+    /// <summary>
+    /// The game's other leaderboards, in the order APIExpose lists them: every mode but
+    /// the one this reply already ranks. A surface set to show all modes asks for each in
+    /// turn. Capped: a marquee cycling through ten boards never comes back to the first.
+    /// </summary>
+    public static IReadOnlyList<(string Ruleset, string Label)> OtherModes(JsonElement root, int max = 4)
+    {
+        var others = new List<(string, string)>();
+        if (root.ValueKind != JsonValueKind.Object
+            || !root.TryGetProperty("modes", out var modes) || modes.ValueKind != JsonValueKind.Array) return others;
+        var current = Str(root, "ruleset");
+        foreach (var mode in modes.EnumerateArray())
+        {
+            if (others.Count >= max) break;
+            if (mode.ValueKind != JsonValueKind.Object) continue;
+            var ruleset = Str(mode, "ruleset");
+            if (ruleset.Length == 0 || ruleset.Equals(current, StringComparison.OrdinalIgnoreCase)) continue;
+            if (mode.TryGetProperty("selected", out var selected) && selected.ValueKind == JsonValueKind.True) continue;
+            var label = Str(mode, "label");
+            others.Add((ruleset, label.Length > 0 ? label : ruleset.ToUpperInvariant()));
+        }
+        return others;
+    }
+
+    /// <summary>The feed name of one mode's world board. The main board - the mode being
+    /// played - keeps the historical name, so a surface that never asked for the other
+    /// modes sees exactly what it always saw.</summary>
+    public static string FeedOf(string ruleset) => "nelfeplay:" + ruleset.Trim().ToLowerInvariant();
+
+    /// <summary>True for the world feed and for each of its per-mode feeds.</summary>
+    public static bool IsWorldFeed(string? source)
+        => source != null && (source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
+                              || source.StartsWith("nelfeplay:", StringComparison.OrdinalIgnoreCase));
+
     /// <summary>The reply describes APIExpose's CURRENT game, not the one we asked about:
     /// when it names another system than the selection, it answers a selection the user
     /// has already left. An older APIExpose names no system - nothing to compare.</summary>
@@ -119,7 +153,19 @@ public sealed class LaunchTracker
 
 /// <summary>One meaning of the running game's memory: "player 1's bombs", "the shot level".</summary>
 public sealed record SemanticSignal(
-    string Id, int Player, string Kind, string Unit, string Label, string Short, long? Min, long? Max, long? Initial);
+    string Id, int Player, string Kind, string Unit, string Label, string Short, long? Min, long? Max, long? Initial)
+{
+    /// <summary>The role APIExpose gives the signal ("bombs", "lives", "ammo"), whatever
+    /// the spelling of its identifier. Empty from an APIExpose that does not send it: the
+    /// end of the identifier is then what names the role.</summary>
+    public string Role { get; init; } = string.Empty;
+
+    /// <summary>True when this signal plays <paramref name="role"/>.</summary>
+    public bool Plays(string role)
+        => Role.Length > 0
+            ? Role.Equals(role, StringComparison.OrdinalIgnoreCase)
+            : Id.EndsWith("." + role, StringComparison.OrdinalIgnoreCase);
+}
 
 /// <summary>The current reading of a signal. <see cref="Text"/> is the game's own word
 /// for the value when the semantics give one ("Vulcan"), else empty.</summary>
@@ -203,7 +249,10 @@ public sealed class SignalSemantics
                     (int)(Num(item, "Player", "player") ?? PlayerOf(id)),
                     Str(item, "Kind", "kind").ToLowerInvariant(),
                     Str(item, "Unit", "unit"), Str(item, "Label", "label"), Str(item, "Short", "short"),
-                    Num(item, "Min", "min"), Num(item, "Max", "max"), Num(item, "Initial", "initial"));
+                    Num(item, "Min", "min"), Num(item, "Max", "max"), Num(item, "Initial", "initial"))
+                {
+                    Role = Str(item, "Role", "role").Trim().ToLowerInvariant()
+                };
 
                 var from = new List<Source>();
                 foreach (var line in List(item, "From", "from"))
@@ -406,13 +455,14 @@ public static class InstrumentPlan
         if (want.Length > 0 && !want.Equals("auto", StringComparison.OrdinalIgnoreCase))
         {
             return signals.FirstOrDefault(s => s.Id.Equals(want, StringComparison.OrdinalIgnoreCase))
+                   ?? mine.FirstOrDefault(s => s.Role.Equals(want, StringComparison.OrdinalIgnoreCase))
                    ?? mine.FirstOrDefault(s => s.Id.EndsWith("." + want, StringComparison.OrdinalIgnoreCase))
                    ?? mine.FirstOrDefault(s => s.Unit.Equals(want, StringComparison.OrdinalIgnoreCase));
         }
 
         foreach (var role in AutoRoles)
         {
-            var byRole = mine.FirstOrDefault(s => Depletes(s) && s.Id.EndsWith("." + role, StringComparison.OrdinalIgnoreCase));
+            var byRole = mine.FirstOrDefault(s => Depletes(s) && s.Plays(role));
             if (byRole != null) return byRole;
         }
         return null;
@@ -456,7 +506,7 @@ public static class InstrumentPlan
     public static string EmptyText(SemanticSignal signal, string? custom, bool french)
     {
         if (!string.IsNullOrWhiteSpace(custom)) return custom.Trim();
-        var what = (signal.Unit + " " + signal.Id).ToLowerInvariant();
+        var what = (signal.Unit + " " + signal.Id + " " + signal.Role).ToLowerInvariant();
         var reloads = what.Contains("ammo") || what.Contains("bullet") || what.Contains("round")
                       || what.Contains("clip") || what.Contains("shell") || what.Contains("magazine");
         return reloads ? (french ? "RECHARGEZ" : "RELOAD") : (french ? "VIDE" : "EMPTY");
@@ -471,7 +521,7 @@ public static class InstrumentPlan
     {
         var signal = reading.Signal;
         if (!IsEmpty(signal, reading.Value)) return null;
-        if (!AutoRoles.Any(role => signal.Id.EndsWith("." + role, StringComparison.OrdinalIgnoreCase))) return null;
+        if (!AutoRoles.Any(signal.Plays)) return null;
         var title = Caption(signal);
         // one player is the rule; the number is only said when it tells two apart
         if (signal.Player > 1) title = (title + " P" + signal.Player.ToString(CultureInfo.InvariantCulture)).Trim();

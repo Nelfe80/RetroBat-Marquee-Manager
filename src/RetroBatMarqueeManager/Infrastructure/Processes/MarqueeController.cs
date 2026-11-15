@@ -499,6 +499,19 @@ public sealed class MarqueeController : IDisposable
 
     /// <summary>True when at least one overlay.hiscore surface uses this data source
     /// (local / nelfeplay). Lets the listener fetch the world ranking only when composed.</summary>
+    /// <summary>True when a surface asked for the world board of EVERY mode of the game
+    /// (worldModes=all), not only the one being played: the listener then fetches the
+    /// others. Nothing more is fetched for a cabinet that never asked.</summary>
+    public bool WantsAllWorldModes()
+        => _surfaces.Values.Any(surface =>
+        {
+            var options = surface.Component("overlay.hiscore")?.Options;
+            if (options is null) return false;
+            var source = options.TryGetValue("source", out var s) && s.Length > 0 ? s : "local";
+            return (source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase) || source.Equals("dual", StringComparison.OrdinalIgnoreCase))
+                   && options.TryGetValue("worldModes", out var m) && m.Equals("all", StringComparison.OrdinalIgnoreCase);
+        });
+
     public bool HasHiscoreSource(string source)
         => _surfaces.Values.Any(surface =>
         {

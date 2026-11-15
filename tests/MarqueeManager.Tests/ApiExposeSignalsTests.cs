@@ -502,4 +502,51 @@ public class ApiExposeSignalsTests
         Assert.Null(InstrumentPlan.RunDryNotice(new SemanticReading(Signal("players.1.stun.timeout", unit: "frame"), 0, ""), french: false));
         Assert.Null(InstrumentPlan.RunDryNotice(new SemanticReading(Signal("players.1.weapon.id", kind: "enum"), 0, ""), french: false));
     }
+
+    // ── the game's other modes, and the role APIExpose normalises ────────────
+
+    [Fact]
+    public void The_other_modes_are_every_mode_but_the_one_on_the_main_board()
+    {
+        var root = Json("""
+            { "ruleset": "1cc-power-up", "modes": [
+                { "ruleset": "1cc", "label": "1CC", "selected": false },
+                { "ruleset": "1cc-power-up", "label": "1CC-PU", "selected": true },
+                { "ruleset": "1lc", "label": "", "selected": false },
+                { "ruleset": "1cc-multi", "label": "1CC MULTI", "selected": false } ] }
+            """);
+
+        Assert.Equal(new[] { ("1cc", "1CC"), ("1lc", "1LC"), ("1cc-multi", "1CC MULTI") }, WorldBoard.OtherModes(root));
+        Assert.Equal(2, WorldBoard.OtherModes(root, max: 2).Count);
+        Assert.Empty(WorldBoard.OtherModes(Json("""{ "ruleset": "1cc" }""")));
+    }
+
+    [Theory]
+    [InlineData("nelfeplay", true)]
+    [InlineData("NelfePlay:1lc", true)]
+    [InlineData("local", false)]
+    [InlineData("nelfeplayer", false)]
+    [InlineData(null, false)]
+    public void A_per_mode_board_is_still_a_world_board(string? source, bool expected)
+        => Assert.Equal(expected, WorldBoard.IsWorldFeed(source));
+
+    [Fact]
+    public void A_role_given_by_the_api_wins_over_the_spelling_of_the_identifier()
+    {
+        var semantics = new SignalSemantics();
+        semantics.Load(Json("""
+            { "LaunchId": "l", "Rom": "t2", "Status": "loaded", "Signals": [
+                { "Id": "players.1.gun.left", "Player": 1, "Kind": "counter", "Role": "Ammo",
+                  "From": [ { "Address": "0x10", "Action": "SHOT" } ], "Initial": 30, "Available": true },
+                { "Id": "players.1.bombs.used", "Player": 1, "Kind": "counter", "Role": "",
+                  "From": [ { "Address": "0x11", "Action": "BOMB" } ], "Available": true } ] }
+            """));
+
+        var ammo = InstrumentPlan.Pick(semantics.Signals, 1, "auto");
+        Assert.Equal("players.1.gun.left", ammo!.Id);
+        Assert.Equal("players.1.gun.left", InstrumentPlan.Pick(semantics.Signals, 1, "ammo")!.Id);
+        // a named role is exact: "bombs" is not played by the count of bombs used
+        Assert.Null(InstrumentPlan.Pick(semantics.Signals, 1, "bombs"));
+        Assert.Equal("RELOAD", InstrumentPlan.RunDryNotice(new SemanticReading(ammo, 0, ""), french: false)!.Value.Detail);
+    }
 }

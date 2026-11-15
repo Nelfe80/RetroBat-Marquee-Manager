@@ -2340,8 +2340,10 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
         private string? _gameAccentPath;                   // media the accent was computed from (skip recompute)
         private HiscoreBoard? CurrentHiscoreBoard
             => _hiscoreBoards.Count == 0 ? null : _hiscoreBoards[Math.Clamp(_hiscoreBoardIndex, 0, _hiscoreBoards.Count - 1)];
-        private static int HiscoreSourceOrder(string source) // "d'abord le nelfeplay"
-            => source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase) ? 0 : 1;
+        // world first: the mode being played, then the game's other modes, then local
+        private static int HiscoreSourceOrder(string source)
+            => source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase) ? 0
+                : RetroBatMarqueeManager.Application.Services.WorldBoard.IsWorldFeed(source) ? 1 : 2;
         private const int HiscoreMaxTotal = 100; // top 100 per machine per game
 
         public void SetHiscoreLeaderboard(string owner, string game, string system,
@@ -2362,7 +2364,12 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 // BOTH feeds and cycles them. Ignore a feed the component didn't ask for.
                 var compSource = Opt("source", "local");
                 var isDual = compSource.Equals("dual", StringComparison.OrdinalIgnoreCase);
-                if (!isDual && !string.Equals(source, compSource, StringComparison.OrdinalIgnoreCase)) return;
+                // "nelfeplay:1lc" is the world board of one more mode of the game: it belongs
+                // to the world source, and only to a component that asked for every mode
+                var isModeFeed = source.Contains(':');
+                var baseSource = isModeFeed ? source[..source.IndexOf(':')] : source;
+                if (!isDual && !string.Equals(baseSource, compSource, StringComparison.OrdinalIgnoreCase)) return;
+                if (isModeFeed && !Opt("worldModes", "played").Equals("all", StringComparison.OrdinalIgnoreCase)) return;
 
                 // Empty feed for this source: drop its slot; keep the other board in dual.
                 if (rows == null || rows.Count == 0)
@@ -2387,7 +2394,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     .Equals("fr", StringComparison.OrdinalIgnoreCase);
                 // Default title/footer wording is per-source; a custom value (even in dual)
                 // is honoured for both boards, since the operator asked for that text.
-                var defaultTitle = source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
+                var defaultTitle = RetroBatMarqueeManager.Application.Services.WorldBoard.IsWorldFeed(source)
                     ? (fr ? "{name} - CLASSEMENT MONDIAL {mode}" : "{name} - WORLD RANKING {mode}")
                     : (fr ? "{name} - CLASSEMENT LOCAL" : "{name} - LOCAL LEADERBOARD");
 
@@ -2408,7 +2415,13 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 // Upsert this source's board, world first so dual shows nelfeplay then local.
                 _hiscoreBoards.RemoveAll(b => b.Source.Equals(source, StringComparison.OrdinalIgnoreCase));
                 _hiscoreBoards.Add(board);
-                _hiscoreBoards.Sort((a, b) => HiscoreSourceOrder(a.Source).CompareTo(HiscoreSourceOrder(b.Source)));
+                // Sort is not stable: the feed name settles the order of the per-mode boards,
+                // or they would swap places from one refresh to the next
+                _hiscoreBoards.Sort((a, b) =>
+                {
+                    var order = HiscoreSourceOrder(a.Source).CompareTo(HiscoreSourceOrder(b.Source));
+                    return order != 0 ? order : string.CompareOrdinal(a.Source, b.Source);
+                });
                 _hiscoreBoardIndex = Math.Clamp(_hiscoreBoardIndex, 0, _hiscoreBoards.Count - 1);
 
                 RenderHiscorePage();
@@ -2745,7 +2758,7 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             {
                 var frTag = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
                     .Equals("fr", StringComparison.OrdinalIgnoreCase);
-                var tagText = board.Source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
+                var tagText = RetroBatMarqueeManager.Application.Services.WorldBoard.IsWorldFeed(board.Source)
                     ? "NELFEPLAY · " + (frTag ? "MONDIAL" : "WORLD")
                       // which board this is: a 1LC run must not be read against the 1CC table
                       + (board.ModeLabel.Length > 0 ? " · " + board.ModeLabel : string.Empty)
