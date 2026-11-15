@@ -927,6 +927,9 @@ public sealed class WebSocketListenerService : BackgroundService
             case "multiplayer":
                 HandleMultiplayer(root);
                 return;
+            case "speedrun":
+                HandleSpeedrun(root);
+                return;
             case "timer":
                 await _presentation.HandleTimerAsync(root, cancellationToken);
                 return;
@@ -2174,7 +2177,7 @@ public sealed class WebSocketListenerService : BackgroundService
                     var wanted = AnnouncedStreams.Where(names.Contains).ToArray();
                     if (wanted.Length == 0)
                     {
-                        _logger.LogInformation("APIExpose does not serve the scoring and multiplayer streams (older version): not opened");
+                        _logger.LogInformation("APIExpose does not serve the scoring, multiplayer and speedrun streams (older version): not opened");
                         return;
                     }
                     await Task.WhenAll(wanted.Select(stream => ListenAsync(stream, cancellationToken))).ConfigureAwait(false);
@@ -2195,7 +2198,19 @@ public sealed class WebSocketListenerService : BackgroundService
         }
     }
 
-    private static readonly string[] AnnouncedStreams = { "scoring", "multiplayer" };
+    private static readonly string[] AnnouncedStreams = { "scoring", "multiplayer", "speedrun" };
+
+    /// <summary>ws/speedrun: a NelfePlay challenge that reaches its finish line closes on
+    /// the spot (APIExpose 1.9.185) - its time and score are announced as a notice.</summary>
+    private void HandleSpeedrun(JsonElement root)
+    {
+        if (!Text(root, "Type", "type").Equals("speedrun.challenge.finished", StringComparison.OrdinalIgnoreCase)) return;
+        var french = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
+            .Equals("fr", StringComparison.OrdinalIgnoreCase);
+        if (ChallengeBanner.For(Payload(root), french) is not { } banner) return;
+        _logger.LogInformation("Challenge finished: {Detail}", banner.Detail);
+        _surfaces.SetInformation("challenge-finished", banner.Title, banner.Detail, null, false, 10000);
+    }
 
     private async Task HandleFrontendAsync(JsonElement root, CancellationToken cancellationToken)
     {

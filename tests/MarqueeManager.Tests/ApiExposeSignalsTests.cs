@@ -592,4 +592,32 @@ public class ApiExposeSignalsTests
         Assert.Equal(string.Empty, MatchCard.Players(default, "r-1", coop: false));
         Assert.Equal(string.Empty, MatchCard.Winner(default, "r-1"));
     }
+
+    // ── a challenge that reaches its finish line ─────────────────────────────
+
+    [Fact]
+    public void A_finished_challenge_says_its_time_and_its_score()
+    {
+        var banner = ChallengeBanner.For(Json("""
+            { "sessionId": "s", "challengeId": "metal-slug-3.rambo", "frames": 10703, "display": "3:00.84",
+              "rate": 59.18, "ranked": true, "score": 245600, "penaltyFrames": 0 }
+            """), french: true);
+
+        Assert.Equal(("CHALLENGE TERMINÉ", "3:00.84 · SCORE 245 600"), banner!.Value);
+    }
+
+    [Fact]
+    public void A_run_that_does_not_count_says_so()
+    {
+        var banner = ChallengeBanner.For(Json("""{ "display": "1:02.10", "ranked": false, "score": 0 }"""), french: false);
+
+        Assert.Equal(("CHALLENGE COMPLETE", "1:02.10 · NOT RANKED"), banner!.Value);
+    }
+
+    [Theory]
+    [InlineData("""{ "ranked": true, "score": 100 }""")]
+    [InlineData("""{ "display": "  " }""")]
+    [InlineData("""[]""")]
+    public void Without_a_time_there_is_nothing_to_announce(string json)
+        => Assert.Null(ChallengeBanner.For(Json(json), french: false));
 }

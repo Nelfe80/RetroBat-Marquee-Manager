@@ -536,6 +536,33 @@ public static class InstrumentPlan
     }
 }
 
+/// <summary>What the marquee says when a NelfePlay challenge reaches its finish line.</summary>
+public static class ChallengeBanner
+{
+    /// <summary>
+    /// Title and detail for a <c>speedrun.challenge.finished</c>: the time as APIExpose
+    /// displays it, the score read at the finish, and whether the run counts. Null when
+    /// the event carries no time - there is then nothing true to announce.
+    /// </summary>
+    public static (string Title, string Detail)? For(JsonElement payload, bool french)
+    {
+        if (payload.ValueKind != JsonValueKind.Object) return null;
+        var time = payload.TryGetProperty("display", out var d) && d.ValueKind == JsonValueKind.String
+            ? (d.GetString() ?? string.Empty).Trim()
+            : string.Empty;
+        if (time.Length == 0) return null;
+
+        var parts = new List<string> { time };
+        if (payload.TryGetProperty("score", out var s) && s.ValueKind == JsonValueKind.Number && s.TryGetInt64(out var score) && score > 0)
+            parts.Add("SCORE " + score.ToString("N0", CultureInfo.InvariantCulture).Replace(",", " "));
+        // a run that does not count says so: the time on the marquee must not be read
+        // as a time that entered the board
+        if (payload.TryGetProperty("ranked", out var r) && r.ValueKind == JsonValueKind.False)
+            parts.Add(french ? "NON CLASSÉ" : "NOT RANKED");
+        return (french ? "CHALLENGE TERMINÉ" : "CHALLENGE COMPLETE", string.Join(" · ", parts));
+    }
+}
+
 /// <summary>What the marquee says when a certified score comes back from the site.</summary>
 public static class VerdictBanner
 {
