@@ -94,6 +94,22 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 foreach (var host in _componentHosts) host.ApplyPanelArt(top, front);
             }));
 
+        /// <summary>The running game's signals (none: no game, or a game without semantics).</summary>
+        public void UpdateInstrumentGame(
+            IReadOnlyList<RetroBatMarqueeManager.Application.Services.SemanticSignal> signals,
+            IReadOnlyList<RetroBatMarqueeManager.Application.Services.SemanticReading> readings)
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.ApplyInstrumentGame(signals, readings);
+            }));
+
+        /// <summary>One signal of the running game moved.</summary>
+        public void UpdateInstrumentReading(RetroBatMarqueeManager.Application.Services.SemanticReading reading)
+            => Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var host in _componentHosts) host.ApplyInstrumentReading(reading);
+            }));
+
         /// <summary>A physical press or release, resolved to a slot.</summary>
         public void SetPanelInput(int player, int? slot, string? system, bool pressed)
             => Dispatcher.BeginInvoke(new Action(() =>
@@ -2312,6 +2328,8 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
             public string Align = "middle";      // vertical placement in the zone: top|middle|bottom
             public string ColorSpec = "gold";    // rank/score tint: gold|auto|<named>|#RRGGBB
             public string? Footer;               // "your best rank" line drawn under the grid, all pages
+            public string ModeLabel = "";        // world board: the mode it ranks ("1CC", "1LC", "1CC-PU")
+            public string Difficulty = "";       // world board: difficulty read in the running game
         }
         // One board per source. In "dual" mode both may be present and the page timer cycles
         // world → local → world…; a single-source component keeps exactly one entry.
@@ -2370,11 +2388,12 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                 // Default title/footer wording is per-source; a custom value (even in dual)
                 // is honoured for both boards, since the operator asked for that text.
                 var defaultTitle = source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
-                    ? (fr ? "{name} - CLASSEMENT MONDIAL" : "{name} - WORLD RANKING")
+                    ? (fr ? "{name} - CLASSEMENT MONDIAL {mode}" : "{name} - WORLD RANKING {mode}")
                     : (fr ? "{name} - CLASSEMENT LOCAL" : "{name} - LOCAL LEADERBOARD");
 
                 var board = new HiscoreBoard
                 {
+                    ModeLabel = myRank?.Mode ?? string.Empty, Difficulty = myRank?.Difficulty ?? string.Empty,
                     Owner = owner, Source = source, Game = game, Sys = system, Rows = rows,
                     Highlight = highlightKeys ?? System.Array.Empty<string>(),
                     ShowTitle = Flag("showTitle", true), ShowRank = Flag("showRank", true), HighlightOn = Flag("highlight", true),
@@ -2679,7 +2698,9 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
 
             if (board.ShowTitle)
             {
-                var titleText = FormatHiscoreTitle(board.TitleTemplate, board.Game, board.Sys);
+                // {mode} first: a custom title keeps its own wording, with or without the token
+                var titleText = FormatHiscoreTitle(
+                    RetroBatMarqueeManager.Application.Services.WorldBoard.TitleWithMode(board.TitleTemplate, board.ModeLabel), board.Game, board.Sys);
                 if (pages > 1) titleText += $"   ({board.Page + 1}/{pages})";
                 var title = CreateOutlinedText(titleText, 26, Brushes.White, 2,
                     TextAlignment.Center, System.Windows.HorizontalAlignment.Center);
@@ -2726,6 +2747,9 @@ namespace RetroBatMarqueeManager.Infrastructure.UI
                     .Equals("fr", StringComparison.OrdinalIgnoreCase);
                 var tagText = board.Source.Equals("nelfeplay", StringComparison.OrdinalIgnoreCase)
                     ? "NELFEPLAY · " + (frTag ? "MONDIAL" : "WORLD")
+                      // which board this is: a 1LC run must not be read against the 1CC table
+                      + (board.ModeLabel.Length > 0 ? " · " + board.ModeLabel : string.Empty)
+                      + (board.Difficulty.Length > 0 ? " · " + board.Difficulty : string.Empty)
                     : "LOCAL";
                 var tag = CreateOutlinedText(tagText, 13, new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF)), 1,
                     TextAlignment.Center, System.Windows.HorizontalAlignment.Center);

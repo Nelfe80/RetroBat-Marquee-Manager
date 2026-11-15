@@ -706,6 +706,7 @@ public sealed class WebSocketListenerService : BackgroundService
             }
             tasks.Add(ListenAsync(stream, stoppingToken));
         }
+        tasks.Add(ListenToAnnouncedStreamsAsync(stoppingToken));
         return Task.WhenAll(tasks);
     }
 
@@ -913,7 +914,18 @@ public sealed class WebSocketListenerService : BackgroundService
                 await _presentation.HandleRetroAchievementsAsync(root, cancellationToken);
                 return;
             case "score":
+                if (_worldBoardAwaitsFirstScore)
+                {
+                    _worldBoardAwaitsFirstScore = false;
+                    RefreshWorldBoard();
+                }
                 await _presentation.HandleScoreAsync(root, cancellationToken);
+                return;
+            case "scoring":
+                HandleScoring(root);
+                return;
+            case "multiplayer":
+                HandleMultiplayer(root);
                 return;
             case "timer":
                 await _presentation.HandleTimerAsync(root, cancellationToken);
@@ -1924,6 +1936,23 @@ public sealed class WebSocketListenerService : BackgroundService
         if (!(root.TryGetProperty("present", out var present) && present.ValueKind == JsonValueKind.True)) return;
         if (!root.TryGetProperty("leaderboard", out var board) || board.ValueKind != JsonValueKind.Array) return;
 
+        // The route answers for APIExpose's current game and for the mode being played
+        // (1LC, a game's own mode) - no longer always the 1CC. The label says which.
+        var info = WorldBoard.Read(root);
+        // Said, not enforced: inside a collection the frontend names the collection where
+        // APIExpose names the game's machine, and refusing the board on that difference
+        // would blank it exactly where it matters most. The selected rom, checked above,
+        // is what ties this reply to the selection.
+        if (!WorldBoard.IsForSelection(info, _selectedSystem))
+            _logger.LogDebug("World leaderboard answers for {System}, selection is {Selected}", info.System, _selectedSystem);
+        _worldBoardRuleset = info.Ruleset;
+        if (!string.Equals(info.Label, _worldBoardLabel, StringComparison.Ordinal))
+        {
+            _worldBoardLabel = info.Label;
+            _logger.LogInformation("World leaderboard mode: {Label} ({Ruleset}, {Source})",
+                info.Label.Length > 0 ? info.Label : "not given", info.Ruleset, info.Source);
+        }
+
         var rows = new List<Core.HiscoreRow>();
         foreach (var entry in board.EnumerateArray())
         {
@@ -1935,8 +1964,22 @@ public sealed class WebSocketListenerService : BackgroundService
             rows.Add(new Core.HiscoreRow(rank, player, score));
         }
         if (rows.Count == 0) return;
-        _surfaces.SetHiscoreLeaderboard(rom, _selectedSystem ?? string.Empty, rows, "nelfeplay", WorldMyRank(root));
+        _surfaces.SetHiscoreLeaderboard(rom, _selectedSystem ?? string.Empty, rows, "nelfeplay",
+            WorldMyRank(root) with { Mode = info.Label, Difficulty = info.Difficulty });
     }
+
+    private string _worldBoardLabel = string.Empty;
+    private string _worldBoardRuleset = string.Empty;
+
+    /// <summary>One start per launch (LaunchId, APIExpose 1.9.185).</summary>
+    private readonly LaunchTracker _launches = new();
+
+    /// <summary>The meaning of the running game's signals, and their current values.</summary>
+    private readonly SignalSemantics _semantics = new();
+
+    /// <summary>The mode is chosen on the title screen, after the game has started: the
+    /// world board is asked again at the first score of the run.</summary>
+    private volatile bool _worldBoardAwaitsFirstScore;
 
     /// <summary>"Your rank" under the WORLD board, from the me{} block records/leaderboard
     /// embeds: the certified rank if any, else a paired/unpaired state the window turns into
@@ -1956,6 +1999,134 @@ public sealed class WebSocketListenerService : BackgroundService
         }
         return new Core.HiscoreMyRank(true, false, paired, string.Empty, 0, string.Empty, string.Empty);
     }
+
+    /// <summary>Asks the world board again for the selected game, when a surface shows it.</summary>
+    private void RefreshWorldBoard()
+    {
+        var rom = _selectedRom;
+        if (!string.IsNullOrEmpty(rom) && _surfaces.HasHiscoreSource("nelfeplay")) ScheduleWorldFetch(rom);
+    }
+
+    /// <summary>
+    /// <c>deck.semantics</c> (ws/ingame since APIExpose 1.9.185, replayed on connection
+    /// while a game runs): what the game's signals MEAN. The instruments are rebuilt for
+    /// it; a game without semantics clears them.
+    /// </summary>
+    private void HandleSemantics(JsonElement payload)
+    {
+        var changed = _semantics.Load(payload);
+        var signals = _semantics.Signals;
+        _surfaces.SetInstrumentGame(signals, _semantics.Readings);
+        if (changed)
+        {
+            _logger.LogInformation("Game semantics: {Status}, {Count} signal(s) for {Rom}",
+                Text(payload, "Status", "status"), signals.Count, _semantics.Rom);
+        }
+    }
+
+    /// <summary>A memory change of the running game, matched against the semantics. A
+    /// change that is not one of their signals is none of the instruments' business.</summary>
+    private void ApplySignalToInstruments(JsonElement payload, JsonElement signal)
+    {
+        if (signal.ValueKind != JsonValueKind.Object || !_semantics.HasSignals) return;
+        var value = Child(signal, "Value", "value");
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt64(out var raw)) return;
+        var player = Integer(signal, "Player", "player") ?? Integer(payload, "Player", "player");
+        foreach (var reading in _semantics.Apply(Text(signal, "Address", "address"), Text(signal, "Name", "name"), player, raw))
+            _surfaces.SetInstrumentReading(reading);
+    }
+
+    /// <summary>
+    /// ws/scoring: what became of the run. The verdict comes back from the site after the
+    /// game, so it is shown as a notice on the surfaces that carry notices.
+    /// </summary>
+    private void HandleScoring(JsonElement root)
+    {
+        if (!Text(root, "Type", "type").Equals("scoring.verdict", StringComparison.OrdinalIgnoreCase)) return;
+        var payload = Payload(root);
+        var score = Child(payload, "Score", "score");
+        var rank = Child(payload, "Rank", "rank");
+        var french = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
+            .Equals("fr", StringComparison.OrdinalIgnoreCase);
+        var status = Text(payload, "Status", "status");
+        // the label known here is the one of the board on screen: it only names this
+        // verdict's mode when both are the same ruleset
+        var sameMode = _worldBoardRuleset.Length > 0
+            && _worldBoardRuleset.Equals(Text(payload, "Ruleset", "ruleset"), StringComparison.OrdinalIgnoreCase);
+        var banner = VerdictBanner.For(
+            status,
+            score.ValueKind == JsonValueKind.Number && score.TryGetInt64(out var s) ? s : 0,
+            rank.ValueKind == JsonValueKind.Number && rank.TryGetInt64(out var r) ? r : null,
+            sameMode ? _worldBoardLabel : string.Empty,
+            french);
+        _logger.LogInformation("Scoring verdict: {Status} ({Ruleset})", status, Text(payload, "Ruleset", "ruleset"));
+        if (banner is null) return;
+        _surfaces.SetInformation("scoring-verdict", banner.Value.Title, banner.Value.Detail, null, false, 9000);
+        // a published score changed the board the marquee is showing
+        if (status.Equals("published", StringComparison.OrdinalIgnoreCase)) RefreshWorldBoard();
+    }
+
+    /// <summary>ws/multiplayer: the start and the end of a match, as a notice.</summary>
+    private void HandleMultiplayer(JsonElement root)
+    {
+        var type = Text(root, "Type", "type");
+        var french = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
+            .Equals("fr", StringComparison.OrdinalIgnoreCase);
+        if (type.Equals("multiplayer.match.started", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogInformation("Multiplayer match started");
+            _surfaces.SetInformation("multiplayer-match", "MULTIPLAYER",
+                french ? "LA RENCONTRE COMMENCE" : "THE MATCH BEGINS", null, false, 6000);
+        }
+        else if (type.Equals("multiplayer.match.ended", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogInformation("Multiplayer match ended");
+            _surfaces.SetInformation("multiplayer-match", "MULTIPLAYER",
+                french ? "RENCONTRE TERMINÉE" : "MATCH OVER", null, false, 6000);
+        }
+    }
+
+    /// <summary>
+    /// The streams APIExpose added in 1.9.185. They are only opened once the API says it
+    /// serves them: asking an older API for a stream it does not have would retry for ever.
+    /// The listing is asked again until the API answers (it may still be starting).
+    /// </summary>
+    private async Task ListenToAnnouncedStreamsAsync(CancellationToken cancellationToken)
+    {
+        var attempt = 0;
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                using var response = await ApiGetAsync("/api/v1/ws/streams", cancellationToken).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    var names = NamedStreams.Announced(await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+                    var wanted = AnnouncedStreams.Where(names.Contains).ToArray();
+                    if (wanted.Length == 0)
+                    {
+                        _logger.LogInformation("APIExpose does not serve the scoring and multiplayer streams (older version): not opened");
+                        return;
+                    }
+                    await Task.WhenAll(wanted.Select(stream => ListenAsync(stream, cancellationToken))).ConfigureAwait(false);
+                    return;
+                }
+                // an API that answers but has no such route is an older one: nothing to wait for
+                if ((int)response.StatusCode == 404) return;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { return; }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Stream listing not available yet: {Message}", ex.Message);
+            }
+
+            attempt++;
+            try { await Task.Delay(ApiExposeLink.ReconnectDelay(attempt, Random.Shared.NextDouble()), cancellationToken).ConfigureAwait(false); }
+            catch (OperationCanceledException) { return; }
+        }
+    }
+
+    private static readonly string[] AnnouncedStreams = { "scoring", "multiplayer" };
 
     private async Task HandleFrontendAsync(JsonElement root, CancellationToken cancellationToken)
     {
@@ -2013,6 +2184,11 @@ public sealed class WebSocketListenerService : BackgroundService
             _lay.Clear();
             _presentation.MarkGameEnded();
             _runningRom = null;
+            _launches.Ended(Text(payload, "LaunchId", "launchId"));
+            _worldBoardAwaitsFirstScore = false;
+            // the signals of a game that is over mean nothing for the next one
+            _semantics.Clear();
+            _surfaces.SetInstrumentGame(Array.Empty<SemanticSignal>(), Array.Empty<SemanticReading>());
             CancelDeferredEffects();
             if (_pinballDmdActive) ReleasePinballDmd("game ended");
             // back to the frontend: sounds return, audible re-ignition
@@ -2023,6 +2199,15 @@ public sealed class WebSocketListenerService : BackgroundService
             return;
         }
         if (!type.Equals("ui.game.started", StringComparison.OrdinalIgnoreCase) && !type.Equals("ui.game.started.raw", StringComparison.OrdinalIgnoreCase)) return;
+        // APIExpose can announce one launch twice - its own launcher, then the frontend's
+        // hook. The second announcement is the same game already running: replaying the
+        // launch effects on it is the power cycle seen twice.
+        var launchId = Text(payload, "LaunchId", "launchId");
+        if (_launches.IsRepeatedStart(launchId))
+        {
+            _logger.LogInformation("Frontend game started event ignored: launch {Launch} is already running", launchId);
+            return;
+        }
         // a new play session: drop any effect still pending from the previous one
         CancelDeferredEffects();
         _displayScene = "ingame";
@@ -2039,6 +2224,10 @@ public sealed class WebSocketListenerService : BackgroundService
         var rom = ExtractRom(payload);
         if (rom.Length > 0) _runningRom = rom;
         _logger.LogInformation("Frontend game started event received: {Type}, system={System}, rom={Rom}", type, system, rom);
+        // the board follows the mode being played: ask again now that a game runs, and
+        // once more at the first score (the mode is picked on the title screen)
+        _worldBoardAwaitsFirstScore = true;
+        RefreshWorldBoard();
         if (system.Length > 0 && _config.ActiveSystemsDmd.Contains(system))
         {
             ActivatePinballDmd(system);
@@ -2100,7 +2289,13 @@ public sealed class WebSocketListenerService : BackgroundService
         // APIExpose wrapper events are EventEnvelopes: the semantic action lives in
         // Payload.actionType or Payload.signal.Name (same extraction as LedManager)
         var payload = Payload(root);
+        if (Text(root, "Type", "type").Equals("deck.semantics", StringComparison.OrdinalIgnoreCase))
+        {
+            HandleSemantics(payload);
+            return;
+        }
         var signal = Child(payload, "Signal", "signal");
+        ApplySignalToInstruments(payload, signal);
 
         var action = Text(root, "Action", "action");
         if (action.Length == 0) action = Text(payload, "ActionType", "actionType", "Action", "action");

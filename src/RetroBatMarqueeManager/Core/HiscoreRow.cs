@@ -11,4 +11,13 @@ public sealed record HiscoreRow(string Rank, string Name, string Score);
 /// the game when Present, else a not-ranked-yet note. Empty strings when a value is absent.</summary>
 public sealed record HiscoreMyRank(
     bool World, bool Present, bool Paired,
-    string Rank, int Of, string Score, string Pseudo);
+    string Rank, int Of, string Score, string Pseudo)
+{
+    /// <summary>The world board's mode as APIExpose labels it ("1CC", "1LC", "1CC-PU"),
+    /// empty for a local board or an APIExpose that does not say.</summary>
+    public string Mode { get; init; } = string.Empty;
+
+    /// <summary>The difficulty read in the running game ("DIFFICULTY 3"), empty when
+    /// nothing was measured.</summary>
+    public string Difficulty { get; init; } = string.Empty;
+}

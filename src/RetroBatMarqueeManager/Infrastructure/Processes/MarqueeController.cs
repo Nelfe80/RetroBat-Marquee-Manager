@@ -412,6 +412,44 @@ public sealed class MarqueeController : IDisposable
         if (config != null) window.UpdatePanelConfig(config);
         foreach (var (player, slots) in buttons) window.UpdatePanelButtons(player, slots);
         if (top != null || front != null) window.UpdatePanelArt(top, front);
+
+        // …and the running game's instruments: a screen plugged in mid-game shows the
+        // ammunition as it stands, not an empty bar until the next shot
+        IReadOnlyList<RetroBatMarqueeManager.Application.Services.SemanticSignal> signals;
+        IReadOnlyList<RetroBatMarqueeManager.Application.Services.SemanticReading> readings;
+        lock (_panelLock)
+        {
+            signals = _instrumentSignals;
+            readings = _instrumentReadings.Values.ToArray();
+        }
+        if (signals.Count > 0) window.UpdateInstrumentGame(signals, readings);
+    }
+
+    private IReadOnlyList<RetroBatMarqueeManager.Application.Services.SemanticSignal> _instrumentSignals
+        = Array.Empty<RetroBatMarqueeManager.Application.Services.SemanticSignal>();
+    private readonly Dictionary<string, RetroBatMarqueeManager.Application.Services.SemanticReading> _instrumentReadings
+        = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>The signals of the game that just started, with what is already known of
+    /// them. An empty list clears every instrument (game over, or no semantics).</summary>
+    public void SetInstrumentGame(
+        IReadOnlyList<RetroBatMarqueeManager.Application.Services.SemanticSignal> signals,
+        IReadOnlyList<RetroBatMarqueeManager.Application.Services.SemanticReading> readings)
+    {
+        lock (_panelLock)
+        {
+            _instrumentSignals = signals;
+            _instrumentReadings.Clear();
+            foreach (var reading in readings) _instrumentReadings[reading.Signal.Id] = reading;
+        }
+        foreach (var window in AllWindows()) window.UpdateInstrumentGame(signals, readings);
+    }
+
+    /// <summary>One signal of the running game moved.</summary>
+    public void SetInstrumentReading(RetroBatMarqueeManager.Application.Services.SemanticReading reading)
+    {
+        lock (_panelLock) _instrumentReadings[reading.Signal.Id] = reading;
+        foreach (var window in AllWindows()) window.UpdateInstrumentReading(reading);
     }
 
     /// <summary>The drawn panel (both views) → the components that asked for artwork.</summary>
