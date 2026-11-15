@@ -620,4 +620,56 @@ public class ApiExposeSignalsTests
     [InlineData("""[]""")]
     public void Without_a_time_there_is_nothing_to_announce(string json)
         => Assert.Null(ChallengeBanner.For(Json(json), french: false));
+
+    // ── a game shows what is its own before what is its system's ────────────
+
+    private const string GameWheel = @"E:\RetroBat\plugins\APIExpose\media\systems\arcade\games\dmnfrnt\ui\wheels\wheel.png";
+    private const string GameMarquee = @"E:\RetroBat\plugins\APIExpose\media\systems\arcade\games\dino\artwork\marquee\marquee.png";
+    private const string GameDmd = "E:/RetroBat/plugins/APIExpose/media/systems/arcade/games/19xx/artwork/marquee/generated-dmd.png";
+    private const string SystemMarquee = @"E:\RetroBat\plugins\APIExpose\media\systems\arcade\artwork\marquee\generated-system-marquee.fbneo.png";
+    private const string SystemDmd = @"E:\RetroBat\plugins\APIExpose\media\systems\arcade\artwork\marquee\generated-system-dmd.png";
+    private const string SystemWheel = @"E:\RetroBat\plugins\APIExpose\media\systems\amiga\ui\wheels\wheel.png";
+
+    [Theory]
+    [InlineData(GameWheel, false)]
+    [InlineData(GameDmd, false)]
+    [InlineData(SystemMarquee, true)]
+    [InlineData(SystemDmd, true)]
+    [InlineData(SystemWheel, true)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void A_file_outside_a_games_folder_is_the_systems_own(string? path, bool expected)
+        => Assert.Equal(expected, SurfaceVisual.IsSystemLevel(path));
+
+    [Fact]
+    public void A_game_without_a_marquee_shows_its_logo_not_its_systems_marquee()
+        => Assert.Equal(GameWheel, SurfaceVisual.Marquee(gameScope: true, marquee: null, generated: SystemMarquee, logo: GameWheel));
+
+    [Fact]
+    public void A_scraped_marquee_still_comes_first()
+        => Assert.Equal(GameMarquee, SurfaceVisual.Marquee(true, GameMarquee, SystemMarquee, GameWheel));
+
+    [Fact]
+    public void A_game_with_nothing_of_its_own_falls_back_to_its_system()
+        => Assert.Equal(SystemMarquee, SurfaceVisual.Marquee(true, null, SystemMarquee, null));
+
+    [Fact]
+    public void A_system_keeps_the_order_it_always_had()
+        => Assert.Equal(SystemMarquee, SurfaceVisual.Marquee(gameScope: false, null, SystemMarquee, SystemWheel));
+
+    [Fact]
+    public void On_the_dmd_a_game_shows_its_own_visual_then_its_logo_then_its_system()
+    {
+        Assert.Equal(GameDmd, SurfaceVisual.Dmd(true, null, null, GameDmd, GameWheel));
+        // the visual was never generated for this game: APIExpose sends the system's
+        Assert.Equal(GameWheel, SurfaceVisual.Dmd(true, null, null, SystemDmd, GameWheel));
+        Assert.Equal(SystemDmd, SurfaceVisual.Dmd(true, null, null, SystemDmd, null));
+    }
+
+    [Fact]
+    public void A_system_without_a_dmd_visual_shows_its_logo_instead_of_the_previous_system()
+    {
+        Assert.Equal(SystemWheel, SurfaceVisual.Dmd(gameScope: false, null, null, null, SystemWheel));
+        Assert.Null(SurfaceVisual.Dmd(false, null, null, null, null));
+    }
 }

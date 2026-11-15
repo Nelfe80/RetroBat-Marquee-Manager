@@ -536,6 +536,54 @@ public static class InstrumentPlan
     }
 }
 
+/// <summary>
+/// Which visual a surface shows for an entry, when the stream offers several.
+///
+/// APIExpose fills the fields of a GAME snapshot with the SYSTEM's own visual when the
+/// game has none of that kind: <c>GeneratedMarquee</c> of a game without a marquee is its
+/// system's generated marquee, and its generated DMD is its system's. Taken at face value
+/// they outranked the game's own logo - a game with a logo and a fanart showed the logo
+/// of its system. The rule here: for a game, what belongs to the game comes first, and
+/// the system's visual is the last resort, never a stand-in ranked above the game's.
+/// </summary>
+public static class SurfaceVisual
+{
+    /// <summary>True for a file of the system itself, not of one of its games: APIExpose
+    /// keeps every game's media under a "games" folder.</summary>
+    public static bool IsSystemLevel(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        var normalized = path.Replace((char)92, '/');
+        return normalized.IndexOf("/games/", StringComparison.OrdinalIgnoreCase) < 0;
+    }
+
+    /// <summary>The marquee offered by the stream, by rank. For a game: its scraped
+    /// marquee, its own generated one, its logo, and only then its system's.</summary>
+    public static string? Marquee(bool gameScope, string? marquee, string? generated, string? logo)
+    {
+        if (!gameScope) return First(marquee, generated, logo);
+        return First(
+            Own(marquee), Own(generated), Own(logo),
+            // nothing of the game's own: the system's visual is better than a dark surface
+            marquee, generated, logo);
+    }
+
+    /// <summary>The DMD offered by the stream, by rank: an animation, a still, the
+    /// generated visual, then the logo. For a game, its own first.</summary>
+    public static string? Dmd(bool gameScope, string? animation, string? still, string? generated, string? logo)
+    {
+        if (!gameScope) return First(animation, still, generated, logo);
+        return First(
+            Own(animation), Own(still), Own(generated), Own(logo),
+            animation, still, generated, logo);
+    }
+
+    private static string? Own(string? path) => IsSystemLevel(path) ? null : path;
+
+    private static string? First(params string?[] candidates)
+        => candidates.FirstOrDefault(c => !string.IsNullOrWhiteSpace(c));
+}
+
 /// <summary>What the marquee says when a NelfePlay challenge reaches its finish line.</summary>
 public static class ChallengeBanner
 {

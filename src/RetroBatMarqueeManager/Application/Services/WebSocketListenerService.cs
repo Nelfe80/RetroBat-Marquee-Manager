@@ -158,13 +158,30 @@ public sealed class WebSocketListenerService : BackgroundService
         }
         else
         {
-            foreach (var spelling in Application.Media.CompositionChainResolver.SystemNames(system))
+            // The frontend's own name first (fbneo), then the system APIExpose files the
+            // game under (arcade): FBNeo's games are arcade games, and a template drawn for
+            // arcade is theirs too. Only "mame" used to be bridged, so every other arcade
+            // frontend fell back to its system's marquee.
+            var names = Application.Media.CompositionChainResolver.SystemNames(system).ToList();
+            var filedUnder = _lastMarqueeMeta;
+            if (filedUnder?.System is { Length: > 0 } canonical
+                && string.Equals(filedUnder.Rom, rom, StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var name in Application.Media.CompositionChainResolver.SystemNames(canonical))
+                    if (!names.Contains(name, StringComparer.OrdinalIgnoreCase)) names.Add(name);
+            }
+            foreach (var spelling in names)
             {
                 var candidate = Application.Media.GabaritSkiaRenderer.GameScopeFor(spelling);
                 if (!_gabaritRenderer.HasGabarit(category, surfaceId, candidate)) continue;
                 scope = candidate;
                 break;
             }
+            // No template for this system: the one composed for ALL games, when the
+            // surface has one. The renderer already knew that fallback; this early return
+            // kept it from ever being reached.
+            if (scope == null && _gabaritRenderer.HasGabarit(category, surfaceId, "game"))
+                scope = Application.Media.GabaritSkiaRenderer.GameScopeFor(system);
             if (scope == null) return;
         }
 
@@ -978,7 +995,14 @@ public sealed class WebSocketListenerService : BackgroundService
             _lastMarqueeKinds["logo"] = MediaPath(media, "Logo");
             _lastMarqueeKinds["fanart"] = MediaPath(media, "Fanart");
             _lastMarqueeKinds["marquee"] = MediaPath(media, "Marquee");
-            _lastMarqueeKinds["generated"] = MediaPath(media, "GeneratedMarquee");
+            // For a game, APIExpose puts its SYSTEM's generated marquee in this field when
+            // the game has none of its own. Filed under its real name: left as "generated"
+            // it outranked the game's logo in every chain, and a game with a logo and a
+            // fanart showed its system's marquee.
+            var generatedMarquee = MediaPath(media, "GeneratedMarquee");
+            var systemOwned = !systemScope && SurfaceVisual.IsSystemLevel(generatedMarquee);
+            _lastMarqueeKinds["generated"] = systemOwned ? null : generatedMarquee;
+            _lastMarqueeKinds["generated-system"] = systemOwned ? generatedMarquee : null;
             _lastMarqueeKinds["screenmarquee"] = MediaPath(media, "ScreenMarquee");
             _lastMarqueeKinds["screenmarquee-small"] = MediaPath(media, "ScreenMarqueeSmall");
             _lastMarqueeKinds["topper"] = MediaPath(media, "Topper");
@@ -1009,7 +1033,8 @@ public sealed class WebSocketListenerService : BackgroundService
         // own priority (marquee > generated > logo) stays the last resort
         var chained = _compositionChains.Resolve("marquee", resolveMeta, systemScope, SnapshotKind);
         var marquee = chained
-                      ?? MediaPath(media, "Marquee") ?? MediaPath(media, "GeneratedMarquee") ?? MediaPath(media, "Logo");
+                      ?? SurfaceVisual.Marquee(!systemScope,
+                          MediaPath(media, "Marquee"), MediaPath(media, "GeneratedMarquee"), MediaPath(media, "Logo"));
         // may be null: a creation, a gabarit or the surface's own composition can still
         // carry this entry, so they are resolved BEFORE deciding to clear
         {
@@ -1097,11 +1122,22 @@ public sealed class WebSocketListenerService : BackgroundService
             "generated" => generatedDmdPath,
             _ => null
         });
-        // may be null: a creation or a gabarit can still carry this entry
-        var dmdPath = chainedDmd ?? FirstAnimation(dmd) ?? stillDmdPath ?? generatedDmdPath;
+        // may be null: a creation or a gabarit can still carry this entry.
+        // The logo closes the list: a game whose DMD visual was never generated shows its
+        // own logo rather than its system's DMD, and a system without any DMD visual shows
+        // its logo rather than staying on the system the user just left.
+        var dmdPath = chainedDmd
+                      ?? SurfaceVisual.Dmd(!systemScope, FirstAnimation(dmd), stillDmdPath, generatedDmdPath, MediaPath(media, "Logo"));
         // Keep the generated game DMD behind text even when an animation is preferred while idle.
         if (dmdPath != null)
-            await _dmd.SetBaseMediaAsync(dmdPath, cancellationToken, generatedDmdPath ?? stillDmdPath ?? dmdPath);
+        {
+            var ownGenerated = !systemScope && SurfaceVisual.IsSystemLevel(generatedDmdPath) ? null : generatedDmdPath;
+            await _dmd.SetBaseMediaAsync(dmdPath, cancellationToken, ownGenerated ?? stillDmdPath ?? dmdPath);
+        }
+        else
+        {
+            _logger.LogInformation("DMD: the stream offers no visual for {Entry}, the previous one stays", snapshotMeta?.Rom ?? _selectedSystem);
+        }
         foreach (var target in _config.GetTargetsForContent("dmd"))
         {
             var surfaceCreation = _compositionChains.SurfaceCreation("dmd", target, resolveMeta, systemScope);
